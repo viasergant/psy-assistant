@@ -1,0 +1,1 @@
+Jira project name: PSY-ASSISTANT, code is PA-

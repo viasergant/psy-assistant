@@ -1,6 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/psyassistant
+    url: ${DB_URL:jdbc:postgresql://192.168.10.146:5432/psyassistant}
+    username: ${DB_USERNAME:psyassistant}
+    password: ${DB_PASSWORD:psyassistant}
   jpa:
     hibernate:
       ddl-auto: create-drop

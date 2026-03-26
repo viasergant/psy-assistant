@@ -1,0 +1,10 @@
+{
+  "app.title": "PSY Assistant CRM",
+  "nav.leads": "Leads",
+  "nav.clients": "Clients",
+  "nav.schedule": "Schedule",
+  "nav.sessions": "Sessions",
+  "nav.billing": "Billing",
+  "nav.reports": "Reports",
+  "nav.admin": "Admin"
+}

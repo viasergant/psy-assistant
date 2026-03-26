@@ -1,0 +1,22 @@
+<p-toolbar>
+  <ng-template #start>
+    <span class="app-title">{{ 'app.title' | transloco }}</span>
+  </ng-template>
+</p-toolbar>
+
+<div class="layout">
+  <nav class="sidebar">
+    <ul>
+      <li><a routerLink="/clients" routerLinkActive="active">{{ 'nav.clients' | transloco }}</a></li>
+      <li><a routerLink="/leads" routerLinkActive="active">{{ 'nav.leads' | transloco }}</a></li>
+      <li><a routerLink="/schedule" routerLinkActive="active">{{ 'nav.schedule' | transloco }}</a></li>
+      <li><a routerLink="/sessions" routerLinkActive="active">{{ 'nav.sessions' | transloco }}</a></li>
+      <li><a routerLink="/billing" routerLinkActive="active">{{ 'nav.billing' | transloco }}</a></li>
+      <li><a routerLink="/reports" routerLinkActive="active">{{ 'nav.reports' | transloco }}</a></li>
+      <li><a routerLink="/admin" routerLinkActive="active">{{ 'nav.admin' | transloco }}</a></li>
+    </ul>
+  </nav>
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,50 @@
+.layout {
+  display: flex;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--p-surface-100, #f8f9fa);
+  border-right: 1px solid var(--p-surface-200, #e9ecef);
+  padding: 1rem 0;
+  overflow-y: auto;
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li a {
+    display: block;
+    padding: 0.75rem 1.25rem;
+    color: var(--p-text-color, #212529);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: var(--p-surface-200, #e9ecef);
+    }
+
+    &.active {
+      background: var(--p-primary-100, #e0e7ff);
+      color: var(--p-primary-600, #4f46e5);
+      font-weight: 600;
+    }
+  }
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.app-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}

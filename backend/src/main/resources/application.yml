@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: psy-assistant
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/psyassistant}
+    username: ${DB_USERNAME:psyassistant}
+    password: ${DB_PASSWORD:psyassistant}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: deferred
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

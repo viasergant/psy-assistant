@@ -156,20 +156,26 @@ public class AdminUserController {
 
     // ---- helpers -------------------------------------------------------
 
+    /** Maximum allowed page size to prevent loading excessive data in one request. */
+    private static final int MAX_PAGE_SIZE = 100;
+
     /**
      * Parses a {@code field,direction} sort string (e.g. {@code createdAt,desc}) into a
-     * {@link Pageable}. Falls back to {@code createdAt DESC} on parse errors.
+     * {@link Pageable}.  Page index is clamped to zero-or-above; page size is clamped to
+     * [1, {@value MAX_PAGE_SIZE}].  Falls back to {@code createdAt DESC} on sort parse errors.
      */
     private Pageable buildPageable(final int page, final int size, final String sort) {
+        int safePage = Math.max(0, page);
+        int clampedSize = Math.max(1, Math.min(size, MAX_PAGE_SIZE));
         try {
             String[] parts = sort.split(",");
             String field = parts[0].trim();
             Sort.Direction direction = parts.length > 1
                     ? Sort.Direction.fromString(parts[1].trim())
                     : Sort.Direction.DESC;
-            return PageRequest.of(page, size, Sort.by(direction, field));
+            return PageRequest.of(safePage, clampedSize, Sort.by(direction, field));
         } catch (Exception ex) {
-            return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+            return PageRequest.of(safePage, clampedSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         }
     }
 }

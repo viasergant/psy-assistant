@@ -92,9 +92,10 @@ public class AuthService {
         User user = userRepository.findByEmail(request.email()).orElse(null);
 
         // Always run BCrypt to prevent timing-based user-enumeration attacks.
-        // Use a dummy hash when the user does not exist.
+        // The dummy hash is a valid BCrypt hash so the encoder does not throw.
+        // It was generated from a random string and will never match any real password.
         String hashToCheck = (user != null) ? user.getPasswordHash()
-                : "$2a$12$invalidhashpaddingtomatchbcryptlength00000000000000000000";
+                : "$2a$12$n9Rg0LXkEBWvl2rBYFPMCe0RjH1iExbRKIpSA3CqMy7KsBqDNLfIi";
         boolean passwordMatches = passwordEncoder.matches(request.password(), hashToCheck);
 
         if (user == null || !passwordMatches) {

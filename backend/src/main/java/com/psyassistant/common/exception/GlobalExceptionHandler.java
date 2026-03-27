@@ -3,6 +3,7 @@ package com.psyassistant.common.exception;
 import com.psyassistant.auth.service.AuthException;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.crm.leads.InvalidStatusTransitionException;
 import com.psyassistant.users.DuplicateEmailException;
 import com.psyassistant.users.SelfDeactivationException;
 import jakarta.persistence.EntityNotFoundException;
@@ -164,6 +165,28 @@ public class GlobalExceptionHandler {
                         HttpStatus.BAD_REQUEST.value(),
                         ex.getMessage(),
                         "SELF_DEACTIVATION_FORBIDDEN",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles invalid lead status transition attempts (422).
+     *
+     * @param ex      the invalid transition exception
+     * @param request the current HTTP request
+     * @return 422 Unprocessable Entity with machine-readable code
+     */
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStatusTransition(
+            final InvalidStatusTransitionException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.unprocessableEntity().body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                        ex.getMessage(),
+                        "INVALID_STATUS_TRANSITION",
                         request.getRequestURI()
                 )
         );

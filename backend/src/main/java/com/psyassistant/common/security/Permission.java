@@ -22,6 +22,9 @@ public enum Permission {
     /** Create, update, and close leads. */
     MANAGE_LEADS,
 
+    /** Read lead records. */
+    READ_LEADS,
+
     // ---- Sessions --------------------------------------------------------
     /** Read session records for clients assigned to the requesting therapist only. */
     READ_OWN_SESSIONS,

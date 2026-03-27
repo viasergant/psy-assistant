@@ -16,7 +16,14 @@ springdoc:
     path: /swagger-ui.html
 
 management:
+  endpoint:
+    health:
+      show-details: always
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,metrics,prometheus,info,env,beans
+logging:
+  level:
+    root: DEBUG
+    com.psyassistant: DEBUG

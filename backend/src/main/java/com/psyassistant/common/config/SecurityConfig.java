@@ -40,8 +40,12 @@ public class SecurityConfig {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
             )
             .authorizeHttpRequests(auth -> auth
+                // Sensitive Actuator endpoints are blocked for all callers unconditionally
+                .requestMatchers("/actuator/env", "/actuator/beans").denyAll()
+                // Health check is public (e.g., load balancer probes)
                 .requestMatchers("/actuator/health").permitAll()
-                // TODO PA-62: Lock down other actuator endpoints in a later security story
+                // Remaining Actuator endpoints require authentication
+                .requestMatchers("/actuator/**").authenticated()
                 .anyRequest().authenticated()
             );
         // TODO PA-62: JwtAuthenticationFilter to be added in JWT auth story

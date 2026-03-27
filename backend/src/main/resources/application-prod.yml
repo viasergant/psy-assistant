@@ -9,16 +9,15 @@ springdoc:
   api-docs:
     enabled: false
 
+management:
+  endpoint:
+    health:
+      show-details: when-authorized
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
 logging:
   level:
     root: WARN
     com.psyassistant: INFO
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: never

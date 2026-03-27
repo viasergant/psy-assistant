@@ -18,7 +18,16 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,metrics,prometheus,info
   endpoint:
     health:
-      show-details: never
+      show-details: when-authorized
+      cache:
+        time-to-live: 10s
+  metrics:
+    tags:
+      application: ${spring.application.name}
+logging:
+  level:
+    root: INFO
+    com.psyassistant: INFO

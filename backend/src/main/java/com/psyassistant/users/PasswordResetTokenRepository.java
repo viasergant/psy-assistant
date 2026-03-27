@@ -3,6 +3,7 @@ package com.psyassistant.users;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -29,5 +30,7 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
      *
      * @param userId the user whose tokens should be purged
      */
-    void deleteAllByUserId(UUID userId);
+    @Modifying
+    @Query("DELETE FROM PasswordResetToken t WHERE t.user.id = :userId")
+    void deleteAllByUserId(@Param("userId") UUID userId);
 }

@@ -226,6 +226,27 @@ class AuthServiceTest {
                 .isEqualTo(AuthException.ErrorCode.TOKEN_EXPIRED);
     }
 
+    /**
+     * Bug fix AC: a deactivated user with a valid refresh token must be rejected
+     * at the refresh endpoint — the old token must be deleted and TOKEN_EXPIRED thrown.
+     */
+    @Test
+    void refreshWithDeactivatedUserRejectsAndDeletesToken() {
+        RefreshToken stored = mock(RefreshToken.class);
+        when(stored.getUser()).thenReturn(disabledUser);
+        when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
+        when(refreshTokenRepository.findActiveByHash(anyString()))
+                .thenReturn(Optional.of(stored));
+
+        assertThatThrownBy(() -> authService.refresh("raw-token", "127.0.0.1"))
+                .isInstanceOf(AuthException.class)
+                .extracting(e -> ((AuthException) e).getCode())
+                .isEqualTo(AuthException.ErrorCode.TOKEN_EXPIRED);
+
+        // The stale token must be invalidated to prevent replay attacks
+        verify(refreshTokenRepository).delete(stored);
+    }
+
     @Test
     void logoutWithValidTokenDeletesSession() {
         RefreshToken stored = mock(RefreshToken.class);

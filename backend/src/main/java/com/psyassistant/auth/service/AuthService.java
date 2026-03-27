@@ -165,6 +165,18 @@ public class AuthService {
 
         User user = stored.getUser();
 
+        // Guard: reject refresh for deactivated accounts
+        if (!user.isActive()) {
+            refreshTokenRepository.delete(stored);
+            refreshTokenRepository.flush();
+            recordFailure(EVENT_TOKEN_REFRESH, user.getId().toString(),
+                    user.getEmail(), ipAddress, requestId, "ACCOUNT_DISABLED");
+            LOG.info("event=TOKEN_REFRESH_DENIED userId={} reason=ACCOUNT_DISABLED requestId={}",
+                    user.getId(), requestId);
+            throw new AuthException(AuthException.ErrorCode.TOKEN_EXPIRED,
+                    "Account disabled");
+        }
+
         // Rotate: delete old, insert new
         refreshTokenRepository.delete(stored);
         refreshTokenRepository.flush();

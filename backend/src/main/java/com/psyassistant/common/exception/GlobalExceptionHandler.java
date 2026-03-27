@@ -1,6 +1,9 @@
 package com.psyassistant.common.exception;
 
 import com.psyassistant.auth.service.AuthException;
+import com.psyassistant.users.DuplicateEmailException;
+import com.psyassistant.users.SelfDeactivationException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import org.slf4j.Logger;
@@ -88,6 +91,72 @@ public class GlobalExceptionHandler {
                         HttpStatus.BAD_REQUEST.value(),
                         detail,
                         "VALIDATION_ERROR",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles attempts to create a user with an already-registered email address (409).
+     *
+     * @param ex      the duplicate email exception
+     * @param request the current HTTP request
+     * @return 409 Conflict with machine-readable code
+     */
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateEmail(
+            final DuplicateEmailException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage(),
+                        "DUPLICATE_EMAIL",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles attempts by an admin to deactivate their own account (400).
+     *
+     * @param ex      the self-deactivation exception
+     * @param request the current HTTP request
+     * @return 400 Bad Request
+     */
+    @ExceptionHandler(SelfDeactivationException.class)
+    public ResponseEntity<ErrorResponse> handleSelfDeactivation(
+            final SelfDeactivationException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.BAD_REQUEST.value(),
+                        ex.getMessage(),
+                        "SELF_DEACTIVATION_FORBIDDEN",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles resource-not-found exceptions from the JPA layer (404).
+     *
+     * @param ex      the entity not found exception
+     * @param request the current HTTP request
+     * @return 404 Not Found
+     */
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEntityNotFound(
+            final EntityNotFoundException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.NOT_FOUND.value(),
+                        ex.getMessage(),
+                        "NOT_FOUND",
                         request.getRequestURI()
                 )
         );

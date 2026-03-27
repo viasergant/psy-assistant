@@ -71,7 +71,8 @@ public final class RolePermissions {
                 Permission.READ_ALL_SESSION_NOTES,
                 Permission.READ_CARE_PLANS,
                 Permission.READ_TEAM_WORKLOAD,
-                Permission.READ_REPORTS
+                Permission.READ_REPORTS,
+                Permission.READ_LEADS
         )));
 
         map.put(UserRole.FINANCE, Collections.unmodifiableSet(EnumSet.of(

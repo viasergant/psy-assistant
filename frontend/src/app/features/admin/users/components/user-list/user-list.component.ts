@@ -171,25 +171,24 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
     }
     h1 { margin: 0; font-size: 1.5rem; }
     .btn-primary {
-      padding: .5rem 1.25rem; background: #4299e1; color: #fff;
-      border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;
+      padding: .5rem 1.25rem; background: #0EA5A0; color: #fff;
+      border: none; border-radius: 8px; cursor: pointer; font-size: .9375rem; font-weight: 600;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
     }
+    .btn-primary:hover { background: #0C9490; box-shadow: 0 4px 12px rgba(14,165,160,.28); }
+    .btn-primary:active { background: #0A8480; box-shadow: none; }
     .filters {
       display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
     }
     .filter-group {
-      display: flex; flex-direction: column; gap: .25rem;
+      display: flex; flex-direction: column; gap: .35rem;
     }
-    .filter-group label { font-size: .85rem; font-weight: 500; color: #4a5568; }
-    .filter-group select {
-      padding: .4rem .75rem; border: 1px solid #cbd5e0;
-      border-radius: 4px; font-size: .95rem;
-    }
-    .state-msg { color: #718096; padding: 2rem 0; text-align: center; }
+    .filter-group label { font-size: .8125rem; font-weight: 500; color: #374151; }
+    .state-msg { color: #64748B; padding: 2rem 0; text-align: center; }
     .alert-error {
-      padding: .75rem; background: #fff5f5;
-      border: 1px solid #fc8181; border-radius: 4px;
-      color: #c53030; margin-bottom: 1rem;
+      padding: .75rem 1rem; background: #FEF2F2;
+      border: 1px solid #FECACA; border-radius: 8px;
+      color: #DC2626; margin-bottom: 1rem; font-size: .875rem;
     }
     .table-wrapper { overflow-x: auto; }
     table {
@@ -205,8 +204,9 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
     .sort-btn {
       background: none; border: none; cursor: pointer;
       font-weight: 600; font-size: inherit; padding: 0;
+      color: #0F172A;
     }
-    .sort-btn:hover { text-decoration: underline; }
+    .sort-btn:hover { color: #0EA5A0; }
     .badge {
       display: inline-block; padding: .2rem .6rem;
       border-radius: 999px; font-size: .8rem; font-weight: 500;
@@ -218,21 +218,25 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
     .actions-cell { white-space: nowrap; }
     .btn-action {
       padding: .3rem .75rem; margin-right: .4rem;
-      border: 1px solid #cbd5e0; border-radius: 4px;
-      background: #fff; cursor: pointer; font-size: .85rem;
+      border: 1.5px solid #D1D5DB; border-radius: 6px;
+      background: #fff; cursor: pointer; font-size: .8125rem;
+      color: #374151; font-weight: 500;
+      transition: background 0.12s ease, border-color 0.12s ease;
     }
-    .btn-action:hover { background: #f7fafc; }
-    .btn-danger { border-color: #fc8181; color: #c53030; }
-    .btn-danger:hover { background: #fff5f5; }
+    .btn-action:hover { background: #F9FAFB; border-color: #9CA3AF; }
+    .btn-danger { border-color: #FECACA; color: #DC2626; }
+    .btn-danger:hover { background: #FEF2F2; border-color: #FCA5A5; }
     .pagination {
       display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem;
     }
     .pagination button {
-      padding: .4rem .9rem; border: 1px solid #cbd5e0;
-      border-radius: 4px; background: #fff; cursor: pointer; font-size: 1.1rem;
+      padding: .4rem .9rem; border: 1.5px solid #D1D5DB;
+      border-radius: 6px; background: #fff; cursor: pointer; font-size: 1.1rem;
+      color: #374151;
     }
-    .pagination button:disabled { opacity: .4; cursor: not-allowed; }
-    .total-count { color: #718096; font-size: .9rem; margin-top: .5rem; }
+    .pagination button:hover:not(:disabled) { background: #F9FAFB; border-color: #9CA3AF; }
+    .pagination button:disabled { opacity: .35; cursor: not-allowed; }
+    .total-count { color: #64748B; font-size: .875rem; margin-top: .5rem; }
     .sr-only {
       position: absolute; width: 1px; height: 1px;
       padding: 0; margin: -1px; overflow: hidden;

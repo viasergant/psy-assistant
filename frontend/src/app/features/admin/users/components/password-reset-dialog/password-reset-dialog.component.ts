@@ -58,25 +58,29 @@ import { UserSummary } from '../../models/user.model';
     h2 { margin: 0 0 1rem; font-size: 1.25rem; }
     p { margin: 0 0 1.5rem; line-height: 1.5; }
     .alert-error {
-      padding: .75rem; background: #fff5f5;
-      border: 1px solid #fc8181; border-radius: 4px;
-      color: #c53030; margin-bottom: 1rem;
+      padding: .75rem 1rem; background: #FEF2F2;
+      border: 1px solid #FECACA; border-radius: 8px;
+      color: #DC2626; margin-bottom: 1rem; font-size: .875rem;
     }
     .alert-success {
-      padding: .75rem; background: #f0fff4;
-      border: 1px solid #68d391; border-radius: 4px;
-      color: #276749; margin-bottom: 1rem;
+      padding: .75rem 1rem; background: #F0FDF4;
+      border: 1px solid #86EFAC; border-radius: 8px;
+      color: #166534; margin-bottom: 1rem; font-size: .875rem;
     }
     .actions {
       display: flex; justify-content: flex-end; gap: .75rem;
     }
     button {
-      padding: .5rem 1.25rem; border-radius: 4px;
-      border: none; cursor: pointer; font-size: 1rem;
+      padding: .6rem 1.25rem; border-radius: 8px;
+      border: none; cursor: pointer; font-size: .9375rem;
+      font-family: inherit; font-weight: 500;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
     }
-    button:first-child { background: #edf2f7; color: #2d3748; }
-    button:last-child { background: #e53e3e; color: #fff; }
-    button:disabled { opacity: .6; cursor: not-allowed; }
+    button:first-child { background: #F1F5F9; color: #374151; border: 1.5px solid #E2E8F0; }
+    button:first-child:hover:not(:disabled) { background: #E2E8F0; }
+    button:last-child { background: #DC2626; color: #fff; }
+    button:last-child:hover:not(:disabled) { background: #B91C1C; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
   `]
 })
 export class PasswordResetDialogComponent {

@@ -85,25 +85,36 @@ import { UserRole, UserSummary } from '../../models/user.model';
     }
     label { font-weight: 500; margin-bottom: .25rem; }
     .field-row label { margin-bottom: 0; }
-    input[type="text"], select {
-      padding: .5rem .75rem; border: 1px solid #cbd5e0;
-      border-radius: 4px; font-size: 1rem;
+    input[type="text"] {
+      appearance: none;
+      padding: .6rem .875rem; border: 1.5px solid #D1D5DB;
+      border-radius: 8px; font-size: .9375rem;
+      font-family: inherit; color: #0F172A; background: #fff;
+      outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
+    input[type="text"]:hover { border-color: #9CA3AF; }
+    input[type="text"]:focus { border-color: #0EA5A0; box-shadow: 0 0 0 3px rgba(14,165,160,.15); }
     .alert-error {
-      padding: .75rem; background: #fff5f5;
-      border: 1px solid #fc8181; border-radius: 4px;
-      color: #c53030; margin-bottom: 1rem;
+      padding: .75rem 1rem; background: #FEF2F2;
+      border: 1px solid #FECACA; border-radius: 8px;
+      color: #DC2626; margin-bottom: 1rem; font-size: .875rem;
     }
     .actions {
       display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.5rem;
     }
     button {
-      padding: .5rem 1.25rem; border-radius: 4px;
-      border: none; cursor: pointer; font-size: 1rem;
+      padding: .6rem 1.25rem; border-radius: 8px;
+      border: none; cursor: pointer; font-size: .9375rem;
+      font-family: inherit; font-weight: 500;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
     }
-    button[type="submit"] { background: #4299e1; color: #fff; }
-    button[type="button"] { background: #edf2f7; color: #2d3748; }
-    button:disabled { opacity: .6; cursor: not-allowed; }
+    button[type="submit"] { background: #0EA5A0; color: #fff; }
+    button[type="submit"]:hover:not(:disabled) {
+      background: #0C9490; box-shadow: 0 4px 12px rgba(14,165,160,.28);
+    }
+    button[type="button"] { background: #F1F5F9; color: #374151; border: 1.5px solid #E2E8F0; }
+    button[type="button"]:hover:not(:disabled) { background: #E2E8F0; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
   `]
 })
 export class EditUserDialogComponent implements OnInit {

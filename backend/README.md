@@ -53,9 +53,12 @@ backend/
 | `DB_URL`      | `jdbc:postgresql://localhost:5432/psyassistant` | JDBC connection URL |
 | `DB_USERNAME` | `psyassistant`                           | Database username        |
 | `DB_PASSWORD` | `psyassistant`                           | Database password        |
+| `JWT_SECRET`  | local profile only: built-in dev fallback | JWT signing secret (required outside local dev unless overridden in config) |
 
-For local development the defaults provided in `application.yml` match the Docker Compose
-service configuration so no extra setup is required.
+For local development, the defaults provided by `application.yml` and
+`application-local.yml` match the Docker Compose service configuration, and the
+`local` profile also supplies a dev-only JWT secret fallback so no extra setup is
+required.
 
 Sensitive credentials must never be committed. Place them in
 `src/main/resources/application-secrets.properties` (git-ignored) or supply them as
@@ -74,5 +77,5 @@ This runs compilation, tests, and Checkstyle validation.
 | Profile | Purpose                                      |
 |---------|----------------------------------------------|
 | (none)  | Base config; datasource from env vars        |
-| `local` | PostgreSQL via Docker Compose, Swagger UI enabled, `create-drop` DDL |
+| `local` | PostgreSQL via Docker Compose, Swagger UI enabled, Flyway-managed DDL |
 | `prod`  | Swagger UI disabled, tighter logging         |

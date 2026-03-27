@@ -1,12 +1,18 @@
 spring:
+  flyway:
+    clean-disabled: false   # required for LocalFlywayConfig; clean() is blocked by default in Flyway 9+
   datasource:
     url: ${DB_URL:jdbc:postgresql://192.168.10.146:5432/psyassistant}
     username: ${DB_USERNAME:psyassistant}
     password: ${DB_PASSWORD:psyassistant}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none   # Flyway owns DDL; create-drop conflicts with flyway_schema_history
     show-sql: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:local-dev-jwt-secret-change-me-32-bytes-minimum}
 
 springdoc:
   api-docs:
@@ -25,5 +31,5 @@ management:
         include: health,metrics,prometheus,info,env,beans
 logging:
   level:
-    root: DEBUG
+    root: INFO
     com.psyassistant: DEBUG

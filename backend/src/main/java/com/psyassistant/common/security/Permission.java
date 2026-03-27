@@ -1,0 +1,72 @@
+package com.psyassistant.common.security;
+
+/**
+ * Fine-grained permissions that can be held by a {@link com.psyassistant.users.UserRole}.
+ *
+ * <p>Permissions are emitted as plain authority strings in the JWT {@code roles} claim
+ * (without the {@code ROLE_} prefix).  They are used with Spring Security's
+ * {@code hasAuthority()} check in {@code @PreAuthorize} annotations at the service layer.
+ *
+ * <p>The authoritative mapping of roles to permissions lives in
+ * {@link RolePermissions}.
+ */
+public enum Permission {
+
+    // ---- Client / lead management ----------------------------------------
+    /** Create, update, and archive client and lead records. */
+    MANAGE_CLIENTS,
+
+    /** Create, update, and cancel appointments. */
+    MANAGE_APPOINTMENTS,
+
+    /** Create, update, and close leads. */
+    MANAGE_LEADS,
+
+    // ---- Sessions --------------------------------------------------------
+    /** Read session records for clients assigned to the requesting therapist only. */
+    READ_OWN_SESSIONS,
+
+    /** Read session records for all clients regardless of assignment. */
+    READ_ALL_SESSIONS,
+
+    // ---- Session notes ---------------------------------------------------
+    /** Create and update session notes for sessions the therapist owns. */
+    WRITE_SESSION_NOTE,
+
+    /** Read session notes for sessions assigned to the requesting therapist only. */
+    READ_OWN_SESSION_NOTES,
+
+    /** Read session notes for all sessions regardless of assignment. */
+    READ_ALL_SESSION_NOTES,
+
+    // ---- Care plans ------------------------------------------------------
+    /** Read care plan documents. */
+    READ_CARE_PLANS,
+
+    // ---- Finance ---------------------------------------------------------
+    /** Create, update, and void invoices. */
+    MANAGE_INVOICES,
+
+    /** Record and reconcile payments and refunds. */
+    MANAGE_PAYMENTS,
+
+    /** Access financial summary and detailed reports. */
+    READ_FINANCIAL_REPORTS,
+
+    // ---- Reporting / workload --------------------------------------------
+    /** View team workload dashboards. */
+    READ_TEAM_WORKLOAD,
+
+    /** Access operational and clinical reports. */
+    READ_REPORTS,
+
+    // ---- Administration --------------------------------------------------
+    /** Create, update, deactivate, and change roles of internal user accounts. */
+    MANAGE_USERS,
+
+    /** Access the audit log. */
+    VIEW_AUDIT_LOG,
+
+    /** Read and write system-level configuration settings. */
+    MANAGE_SYSTEM_CONFIG
+}

@@ -1,12 +1,18 @@
 package com.psyassistant.common.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.psyassistant.common.audit.AuditLog;
+import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.common.exception.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import javax.crypto.spec.SecretKeySpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,9 +23,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -35,14 +44,22 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * <p>Uses Spring OAuth2 Resource Server to validate HS256-signed JWTs.
  * BCrypt (strength 12) is used for password hashing. The refresh token
  * endpoints and Actuator health check are permitted without a JWT.
+ *
+ * <p>Every HTTP 403 (access denied) is recorded as an {@code ACCESS_DENIED}
+ * audit log entry via {@link AuditLogService}.  This covers both filter-chain
+ * level denials (URL-namespace rules) and method-security denials
+ * (re-thrown {@link org.springframework.security.access.AccessDeniedException}
+ * from controllers that are handled by {@link com.psyassistant.common.exception.GlobalExceptionHandler}).
  */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityConfig.class);
     private static final String HMAC_SHA256 = "HmacSHA256";
     private static final int BCRYPT_STRENGTH = 12;
+    private static final String ACCESS_DENIED_EVENT = "ACCESS_DENIED";
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
@@ -53,8 +70,27 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
+    private final AuditLogService auditLogService;
+
+    /**
+     * Constructs the security config with the required audit log service.
+     *
+     * @param auditLogService service for recording security events
+     */
+    public SecurityConfig(final AuditLogService auditLogService) {
+        this.auditLogService = auditLogService;
+    }
+
     /**
      * Configures the primary security filter chain with JWT resource server support.
+     *
+     * <p>URL-namespace rules (Layer 1 of RBAC enforcement):
+     * <ul>
+     *   <li>{@code /api/v1/admin/**} — {@code ROLE_SYSTEM_ADMINISTRATOR} only</li>
+     *   <li>{@code /api/v1/finance/**} — {@code ROLE_FINANCE} or {@code ROLE_SYSTEM_ADMINISTRATOR}</li>
+     *   <li>{@code /api/v1/sessions/*&#47;notes} — THERAPIST, SUPERVISOR, or SYSTEM_ADMINISTRATOR</li>
+     *   <li>All other {@code /api/v1/**} — any authenticated user</li>
+     * </ul>
      *
      * @param http          the {@link HttpSecurity} builder provided by Spring Security
      * @param jwtDecoder    the JWT decoder bean
@@ -76,7 +112,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/actuator/**").authenticated()
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/v1/admin/**")
+                    .hasRole("SYSTEM_ADMINISTRATOR")
+                .requestMatchers("/api/v1/finance/**")
+                    .hasAnyRole("FINANCE", "SYSTEM_ADMINISTRATOR")
+                .requestMatchers("/api/v1/sessions/*/notes")
+                    .hasAnyRole("THERAPIST", "SUPERVISOR", "SYSTEM_ADMINISTRATOR")
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
@@ -87,14 +128,21 @@ public class SecurityConfig {
                 .authenticationEntryPoint((request, response, ex) ->
                     writeError(response, objectMapper, HttpStatus.UNAUTHORIZED,
                             "TOKEN_EXPIRED", request.getRequestURI()))
-                .accessDeniedHandler((request, response, ex) ->
+                .accessDeniedHandler((request, response, ex) -> {
+                    recordAccessDeniedAuditLog(request);
                     writeError(response, objectMapper, HttpStatus.FORBIDDEN,
-                            "FORBIDDEN", request.getRequestURI()))
+                            "ACCESS_DENIED", request.getRequestURI());
+                })
             )
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) ->
                     writeError(response, objectMapper, HttpStatus.UNAUTHORIZED,
                             "TOKEN_EXPIRED", request.getRequestURI()))
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    recordAccessDeniedAuditLog(request);
+                    writeError(response, objectMapper, HttpStatus.FORBIDDEN,
+                            "ACCESS_DENIED", request.getRequestURI());
+                })
             );
 
         return http.build();
@@ -160,6 +208,38 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    // ---- private helpers -----------------------------------------------
+
+    private void recordAccessDeniedAuditLog(final HttpServletRequest request) {
+        try {
+            UUID userId = extractUserId();
+            AuditLog entry = new AuditLog.Builder(ACCESS_DENIED_EVENT)
+                    .userId(userId)
+                    .detail(request.getRequestURI())
+                    .outcome("FAILURE")
+                    .build();
+            auditLogService.record(entry);
+        } catch (Exception ex) {
+            LOG.warn("Failed to record ACCESS_DENIED audit log for uri={}: {}",
+                    request.getRequestURI(), ex.getMessage());
+        }
+    }
+
+    private UUID extractUserId() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+                String subject = jwt.getSubject();
+                if (subject != null) {
+                    return UUID.fromString(subject);
+                }
+            }
+        } catch (Exception ignored) {
+            // If we cannot extract the user ID, record null
+        }
+        return null;
     }
 
     private void writeError(

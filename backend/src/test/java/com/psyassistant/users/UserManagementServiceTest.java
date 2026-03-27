@@ -62,7 +62,7 @@ class UserManagementServiceTest {
                 userRepository, resetTokenRepository, auditLogService, passwordEncoder);
         adminId = UUID.randomUUID();
         targetId = UUID.randomUUID();
-        activeUser = makeUser(targetId, "user@example.com", UserRole.USER, true);
+        activeUser = makeUser(targetId, "user@example.com", UserRole.THERAPIST, true);
     }
 
     // ---- createUser -------------------------------------------------------
@@ -76,7 +76,7 @@ class UserManagementServiceTest {
                 .thenAnswer(inv -> inv.getArgument(0));
 
         UserSummaryDto dto = service.createUser(
-                new CreateUserRequest("new@example.com", "Alice Smith", UserRole.USER), adminId);
+                new CreateUserRequest("new@example.com", "Alice Smith", UserRole.THERAPIST), adminId);
 
         assertThat(dto.email()).isEqualTo("new@example.com");
         assertThat(dto.fullName()).isEqualTo("Alice Smith");
@@ -91,7 +91,7 @@ class UserManagementServiceTest {
 
         assertThatThrownBy(() ->
                 service.createUser(
-                        new CreateUserRequest("dup@example.com", "Bob", UserRole.USER), adminId))
+                        new CreateUserRequest("dup@example.com", "Bob", UserRole.THERAPIST), adminId))
                 .isInstanceOf(DuplicateEmailException.class)
                 .hasMessageContaining("dup@example.com");
 
@@ -106,9 +106,9 @@ class UserManagementServiceTest {
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         UserSummaryDto dto = service.updateUser(
-                targetId, new PatchUserRequest(null, UserRole.ADMIN, null), adminId);
+                targetId, new PatchUserRequest(null, UserRole.SYSTEM_ADMINISTRATOR, null), adminId);
 
-        assertThat(dto.role()).isEqualTo(UserRole.ADMIN);
+        assertThat(dto.role()).isEqualTo(UserRole.SYSTEM_ADMINISTRATOR);
         verify(auditLogService).record(any());
     }
 
@@ -118,7 +118,7 @@ class UserManagementServiceTest {
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Same role — no audit expected
-        service.updateUser(targetId, new PatchUserRequest(null, UserRole.USER, null), adminId);
+        service.updateUser(targetId, new PatchUserRequest(null, UserRole.THERAPIST, null), adminId);
 
         verify(auditLogService, never()).record(any());
     }
@@ -139,7 +139,7 @@ class UserManagementServiceTest {
 
     @Test
     void updateUserReactivatesAccountAndAudits() {
-        User inactiveUser = makeUser(targetId, "inactive@example.com", UserRole.USER, false);
+        User inactiveUser = makeUser(targetId, "inactive@example.com", UserRole.THERAPIST, false);
         when(userRepository.findById(targetId)).thenReturn(Optional.of(inactiveUser));
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -154,7 +154,7 @@ class UserManagementServiceTest {
 
     @Test
     void updateUserThrowsSelfDeactivationExceptionWhenAdminDeactivatesSelf() {
-        User selfAdmin = makeUser(adminId, "admin@example.com", UserRole.ADMIN, true);
+        User selfAdmin = makeUser(adminId, "admin@example.com", UserRole.SYSTEM_ADMINISTRATOR, true);
         when(userRepository.findById(adminId)).thenReturn(Optional.of(selfAdmin));
 
         assertThatThrownBy(() ->
@@ -253,7 +253,7 @@ class UserManagementServiceTest {
         when(userRepository.findAll(any(Specification.class), any(PageRequest.class)))
                 .thenReturn(emptyPage);
 
-        service.listUsers(UserRole.ADMIN, true, PageRequest.of(0, 20));
+        service.listUsers(UserRole.SYSTEM_ADMINISTRATOR, true, PageRequest.of(0, 20));
 
         // Specification is passed down — verified by confirming the repository was called
         verify(userRepository).findAll(any(Specification.class), any(PageRequest.class));

@@ -233,15 +233,17 @@ public class AuthService {
     // ---- private helpers -----------------------------------------------
 
     private void enforceSessionCap(final User user) {
-        int cap = user.getRole() == UserRole.ADMIN ? maxAdminSessions : maxUserSessions;
+        boolean isAdminRole = user.getRole() == UserRole.SYSTEM_ADMINISTRATOR
+                || user.getRole() == UserRole.ADMIN;
+        int cap = isAdminRole ? maxAdminSessions : maxUserSessions;
         long active = refreshTokenRepository.countActiveSessions(user.getId());
 
         if (active >= cap) {
-            if (user.getRole() == UserRole.ADMIN) {
+            if (isAdminRole) {
                 // Admin cap=1: delete all existing sessions
                 refreshTokenRepository.deleteAllByUserId(user.getId());
             } else {
-                // User cap=5: evict the oldest session
+                // Other roles cap=5: evict the oldest session
                 List<RefreshToken> oldest =
                         refreshTokenRepository.findOldestActiveByUserId(user.getId());
                 if (!oldest.isEmpty()) {

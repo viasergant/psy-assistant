@@ -1,6 +1,8 @@
 package com.psyassistant.auth.service;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.psyassistant.common.security.Permission;
+import com.psyassistant.common.security.RolePermissions;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRole;
 import jakarta.annotation.PostConstruct;
@@ -9,6 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
@@ -31,10 +34,15 @@ import org.springframework.stereotype.Service;
  * <p>Access tokens are HS256-signed JWTs. Refresh tokens are random UUIDs that
  * are stored only as their SHA-256 hex digests in the database.
  *
- * <p>Token TTLs differ by role:
+ * <p>The {@code roles} claim in the JWT contains both the {@code ROLE_X} value
+ * (consumed by Spring Security's {@code hasRole()} checks in the filter chain)
+ * and all {@link Permission} names for the role (consumed by
+ * {@code hasAuthority()} checks in {@code @PreAuthorize} annotations).
+ *
+ * <p>Token TTLs by role:
  * <ul>
- *   <li>ADMIN: access=15 min, refresh=24 h</li>
- *   <li>USER: access=60 min, refresh=15 d</li>
+ *   <li>SYSTEM_ADMINISTRATOR: access=15 min, refresh=24 h</li>
+ *   <li>All other roles: access=60 min, refresh=15 d</li>
  * </ul>
  */
 @Service
@@ -86,6 +94,12 @@ public class TokenService {
     /**
      * Builds and signs a JWT access token for the given user.
      *
+     * <p>The {@code roles} claim contains:
+     * <ol>
+     *   <li>The {@code ROLE_X} value for the user's role (for {@code hasRole()} checks)</li>
+     *   <li>All {@link Permission} names granted to the role (for {@code hasAuthority()} checks)</li>
+     * </ol>
+     *
      * @param user the authenticated user
      * @return signed JWT string
      */
@@ -93,12 +107,14 @@ public class TokenService {
         Instant now = Instant.now();
         Duration ttl = accessTtlFor(user.getRole());
 
+        List<String> authorities = buildAuthorities(user.getRole());
+
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(issuer)
                 .subject(user.getId().toString())
                 .issuedAt(now)
                 .expiresAt(now.plus(ttl))
-                .claim(ROLES_CLAIM, List.of("ROLE_" + user.getRole().name()))
+                .claim(ROLES_CLAIM, authorities)
                 .build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
@@ -143,14 +159,41 @@ public class TokenService {
     /**
      * Returns the refresh TTL for the given role.
      *
+     * <p>SYSTEM_ADMINISTRATOR tokens expire in 24 hours; all other roles in 15 days.
+     *
      * @param role user role
      * @return refresh token duration
      */
     public Duration refreshTtlFor(final UserRole role) {
-        return role == UserRole.ADMIN ? adminRefreshTtl : userRefreshTtl;
+        return role == UserRole.SYSTEM_ADMINISTRATOR || role == UserRole.ADMIN
+                ? adminRefreshTtl
+                : userRefreshTtl;
+    }
+
+    // ---- private helpers -------------------------------------------------
+
+    /**
+     * Builds the full authority list for the JWT {@code roles} claim.
+     *
+     * <p>The list starts with {@code ROLE_X} and is followed by all
+     * {@link Permission} names (without any {@code ROLE_} prefix) from
+     * {@link RolePermissions}.
+     *
+     * @param role the user role
+     * @return mutable list of authority strings for the JWT claim
+     */
+    private List<String> buildAuthorities(final UserRole role) {
+        List<String> authorities = new ArrayList<>();
+        authorities.add("ROLE_" + role.name());
+        for (Permission permission : RolePermissions.permissionsFor(role)) {
+            authorities.add(permission.name());
+        }
+        return authorities;
     }
 
     private Duration accessTtlFor(final UserRole role) {
-        return role == UserRole.ADMIN ? adminAccessTtl : userAccessTtl;
+        return role == UserRole.SYSTEM_ADMINISTRATOR || role == UserRole.ADMIN
+                ? adminAccessTtl
+                : userAccessTtl;
     }
 }

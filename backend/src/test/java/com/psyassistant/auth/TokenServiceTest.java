@@ -3,10 +3,13 @@ package com.psyassistant.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.psyassistant.auth.service.TokenService;
+import com.psyassistant.common.security.Permission;
+import com.psyassistant.common.security.RolePermissions;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRole;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,35 +34,82 @@ class TokenServiceTest {
     @Autowired
     private JwtDecoder jwtDecoder;
 
-    private User adminUser;
-    private User regularUser;
+    private User sysAdminUser;
+    private User therapistUser;
 
     @BeforeEach
     void setUp() {
-        adminUser = new User("admin@example.com", "hash", UserRole.ADMIN, true);
-        setUserId(adminUser, UUID.randomUUID());
+        sysAdminUser = new User("admin@example.com", "hash", UserRole.SYSTEM_ADMINISTRATOR, true);
+        setUserId(sysAdminUser, UUID.randomUUID());
 
-        regularUser = new User("user@example.com", "hash", UserRole.USER, true);
-        setUserId(regularUser, UUID.randomUUID());
+        therapistUser = new User("user@example.com", "hash", UserRole.THERAPIST, true);
+        setUserId(therapistUser, UUID.randomUUID());
     }
 
     @Test
-    void buildAccessTokenForAdminContainsCorrectClaims() {
-        String token = tokenService.buildAccessToken(adminUser);
+    void buildAccessTokenForSystemAdminContainsRoleAuthority() {
+        String token = tokenService.buildAccessToken(sysAdminUser);
 
         var jwt = jwtDecoder.decode(token);
 
         assertThat(jwt.getClaimAsString("iss")).isEqualTo("psy-assistant");
-        assertThat(jwt.getSubject()).isEqualTo(adminUser.getId().toString());
-        assertThat(jwt.getClaimAsStringList("roles")).containsExactly("ROLE_ADMIN");
+        assertThat(jwt.getSubject()).isEqualTo(sysAdminUser.getId().toString());
+        assertThat(jwt.getClaimAsStringList("roles")).contains("ROLE_SYSTEM_ADMINISTRATOR");
         assertThat(jwt.getIssuedAt()).isNotNull();
         assertThat(jwt.getExpiresAt()).isAfter(Instant.now());
     }
 
     @Test
-    void adminTokenExpiresIn15Minutes() {
+    void buildAccessTokenForSystemAdminContainsPermissions() {
+        String token = tokenService.buildAccessToken(sysAdminUser);
+        var jwt = jwtDecoder.decode(token);
+
+        List<String> roles = jwt.getClaimAsStringList("roles");
+        // SYSTEM_ADMINISTRATOR should have MANAGE_USERS and VIEW_AUDIT_LOG
+        assertThat(roles).contains(
+                Permission.MANAGE_USERS.name(),
+                Permission.VIEW_AUDIT_LOG.name(),
+                Permission.MANAGE_SYSTEM_CONFIG.name()
+        );
+    }
+
+    @Test
+    void buildAccessTokenForTherapistContainsCorrectPermissions() {
+        String token = tokenService.buildAccessToken(therapistUser);
+        var jwt = jwtDecoder.decode(token);
+
+        List<String> roles = jwt.getClaimAsStringList("roles");
+        assertThat(roles).contains("ROLE_THERAPIST");
+        // THERAPIST permissions
+        assertThat(roles).contains(
+                Permission.READ_OWN_SESSIONS.name(),
+                Permission.WRITE_SESSION_NOTE.name(),
+                Permission.READ_OWN_SESSION_NOTES.name(),
+                Permission.READ_CARE_PLANS.name()
+        );
+        // THERAPIST must NOT have admin permissions
+        assertThat(roles).doesNotContain(
+                Permission.MANAGE_USERS.name(),
+                Permission.VIEW_AUDIT_LOG.name(),
+                Permission.READ_ALL_SESSIONS.name()
+        );
+    }
+
+    @Test
+    void rolesClaimContainsExactlyRoleAndPermissionsForRole() {
+        String token = tokenService.buildAccessToken(therapistUser);
+        var jwt = jwtDecoder.decode(token);
+
+        List<String> roles = jwt.getClaimAsStringList("roles");
+        // Should contain ROLE_THERAPIST + all THERAPIST permissions
+        int expectedSize = 1 + RolePermissions.permissionsFor(UserRole.THERAPIST).size();
+        assertThat(roles).hasSize(expectedSize);
+    }
+
+    @Test
+    void systemAdminTokenExpiresIn15Minutes() {
         Instant before = Instant.now();
-        String token = tokenService.buildAccessToken(adminUser);
+        String token = tokenService.buildAccessToken(sysAdminUser);
         var jwt = jwtDecoder.decode(token);
 
         Duration diff = Duration.between(before, jwt.getExpiresAt());
@@ -67,9 +117,9 @@ class TokenServiceTest {
     }
 
     @Test
-    void userTokenExpiresIn60Minutes() {
+    void therapistTokenExpiresIn60Minutes() {
         Instant before = Instant.now();
-        String token = tokenService.buildAccessToken(regularUser);
+        String token = tokenService.buildAccessToken(therapistUser);
         var jwt = jwtDecoder.decode(token);
 
         Duration diff = Duration.between(before, jwt.getExpiresAt());
@@ -77,14 +127,32 @@ class TokenServiceTest {
     }
 
     @Test
-    void adminRefreshTtlIs24Hours() {
-        Duration ttl = tokenService.refreshTtlFor(UserRole.ADMIN);
+    void systemAdminRefreshTtlIs24Hours() {
+        Duration ttl = tokenService.refreshTtlFor(UserRole.SYSTEM_ADMINISTRATOR);
         assertThat(ttl).isEqualTo(Duration.ofHours(24));
     }
 
     @Test
-    void userRefreshTtlIs15Days() {
-        Duration ttl = tokenService.refreshTtlFor(UserRole.USER);
+    void therapistRefreshTtlIs15Days() {
+        Duration ttl = tokenService.refreshTtlFor(UserRole.THERAPIST);
+        assertThat(ttl).isEqualTo(Duration.ofDays(15));
+    }
+
+    @Test
+    void receptionAdminStaffRefreshTtlIs15Days() {
+        Duration ttl = tokenService.refreshTtlFor(UserRole.RECEPTION_ADMIN_STAFF);
+        assertThat(ttl).isEqualTo(Duration.ofDays(15));
+    }
+
+    @Test
+    void financeRefreshTtlIs15Days() {
+        Duration ttl = tokenService.refreshTtlFor(UserRole.FINANCE);
+        assertThat(ttl).isEqualTo(Duration.ofDays(15));
+    }
+
+    @Test
+    void supervisorRefreshTtlIs15Days() {
+        Duration ttl = tokenService.refreshTtlFor(UserRole.SUPERVISOR);
         assertThat(ttl).isEqualTo(Duration.ofDays(15));
     }
 

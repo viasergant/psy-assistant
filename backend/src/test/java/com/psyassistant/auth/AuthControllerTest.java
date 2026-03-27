@@ -14,6 +14,7 @@ import com.psyassistant.auth.dto.LoginResponse;
 import com.psyassistant.auth.service.AuthException;
 import com.psyassistant.auth.service.AuthResult;
 import com.psyassistant.auth.service.AuthService;
+import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.common.config.SecurityConfig;
 import com.psyassistant.common.exception.GlobalExceptionHandler;
 import com.psyassistant.users.UserRole;
@@ -46,6 +47,9 @@ class AuthControllerTest {
     @MockitoBean
     private AuthService authService;
 
+    @MockitoBean
+    private AuditLogService auditLogService;
+
     /**
      * Scenario 1: POST /api/v1/auth/login with valid credentials returns 200,
      * accessToken in body, and refreshToken as HttpOnly cookie.
@@ -53,7 +57,7 @@ class AuthControllerTest {
     @Test
     void validLoginReturns200WithTokens() throws Exception {
         LoginResponse resp = new LoginResponse("jwt-abc", Instant.now().plusSeconds(900), "Bearer");
-        AuthResult result = new AuthResult(resp, "raw-refresh-uuid", UserRole.USER,
+        AuthResult result = new AuthResult(resp, "raw-refresh-uuid", UserRole.THERAPIST,
                 Duration.ofDays(15));
         when(authService.authenticate(any(), anyString())).thenReturn(result);
 
@@ -90,7 +94,7 @@ class AuthControllerTest {
     @Test
     void validRefreshCookieReturns200WithNewTokens() throws Exception {
         LoginResponse resp = new LoginResponse("new-jwt", Instant.now().plusSeconds(900), "Bearer");
-        AuthResult result = new AuthResult(resp, "new-raw-refresh", UserRole.USER,
+        AuthResult result = new AuthResult(resp, "new-raw-refresh", UserRole.THERAPIST,
                 Duration.ofDays(15));
         when(authService.refresh(anyString(), anyString())).thenReturn(result);
 
@@ -162,7 +166,8 @@ class AuthControllerTest {
     @Test
     void successfulLoginSetsHttpOnlyCookie() throws Exception {
         LoginResponse resp = new LoginResponse("jwt", Instant.now().plusSeconds(900), "Bearer");
-        AuthResult result = new AuthResult(resp, "refresh-val", UserRole.USER, Duration.ofDays(15));
+        AuthResult result = new AuthResult(resp, "refresh-val", UserRole.THERAPIST,
+                Duration.ofDays(15));
         when(authService.authenticate(any(), anyString())).thenReturn(result);
 
         mockMvc.perform(post("/api/v1/auth/login")

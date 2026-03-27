@@ -1,16 +1,22 @@
 package com.psyassistant.common.exception;
 
 import com.psyassistant.auth.service.AuthException;
+import com.psyassistant.common.audit.AuditLog;
+import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.users.DuplicateEmailException;
 import com.psyassistant.users.SelfDeactivationException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -20,11 +26,27 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  *
  * <p>No stack trace is included in the response body; stack traces are written to the
  * application log only.
+ *
+ * <p>Every {@link AccessDeniedException} (HTTP 403) is recorded to the audit log
+ * with event type {@code ACCESS_DENIED}, the authenticated user's ID, and the
+ * requested URI before the error response is returned.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final String ACCESS_DENIED_EVENT = "ACCESS_DENIED";
+
+    private final AuditLogService auditLogService;
+
+    /**
+     * Constructs the handler with the required audit log service.
+     *
+     * @param auditLogService service for persisting security event records
+     */
+    public GlobalExceptionHandler(final AuditLogService auditLogService) {
+        this.auditLogService = auditLogService;
+    }
 
     /**
      * Handles domain-level authentication failures (invalid credentials, expired token, etc.).
@@ -51,20 +73,27 @@ public class GlobalExceptionHandler {
     /**
      * Handles Spring Security access-denied events (403).
      *
+     * <p>Records an {@code ACCESS_DENIED} audit log entry with the authenticated
+     * user's ID and the requested URI before returning the 403 response.
+     *
      * @param ex      the access denied exception
      * @param request the current HTTP request
-     * @return 403 response
+     * @return 403 response with code {@code ACCESS_DENIED}
      */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(
             final AccessDeniedException ex,
             final HttpServletRequest request) {
+
+        UUID userId = extractUserId();
+        recordAccessDeniedAuditLog(userId, request.getRequestURI());
+
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
                 new ErrorResponse(
                         Instant.now(),
                         HttpStatus.FORBIDDEN.value(),
                         "Access denied",
-                        "FORBIDDEN",
+                        ACCESS_DENIED_EVENT,
                         request.getRequestURI()
                 )
         );
@@ -182,5 +211,51 @@ public class GlobalExceptionHandler {
                         request.getRequestURI()
                 )
         );
+    }
+
+    // ---- private helpers -------------------------------------------------
+
+    /**
+     * Extracts the authenticated user's UUID from the JWT subject claim, or returns
+     * {@code null} if no JWT is present in the security context.
+     *
+     * @return user UUID or null for unauthenticated contexts
+     */
+    private UUID extractUserId() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+                String subject = jwt.getSubject();
+                if (subject != null) {
+                    return UUID.fromString(subject);
+                }
+            }
+        } catch (Exception ignored) {
+            // If we cannot extract the user ID, record null — audit log must never throw
+        }
+        return null;
+    }
+
+    /**
+     * Persists an {@code ACCESS_DENIED} audit log entry.
+     *
+     * <p>Any exception from the audit service is swallowed — audit failures must
+     * never prevent the 403 response from reaching the caller.
+     *
+     * @param userId       authenticated user UUID (may be null)
+     * @param requestedUri the URI that triggered the access denial
+     */
+    private void recordAccessDeniedAuditLog(final UUID userId, final String requestedUri) {
+        try {
+            AuditLog entry = new AuditLog.Builder(ACCESS_DENIED_EVENT)
+                    .userId(userId)
+                    .detail(requestedUri)
+                    .outcome("FAILURE")
+                    .build();
+            auditLogService.record(entry);
+        } catch (Exception ex) {
+            LOG.warn("Failed to record ACCESS_DENIED audit log for uri={}: {}",
+                    requestedUri, ex.getMessage());
+        }
     }
 }

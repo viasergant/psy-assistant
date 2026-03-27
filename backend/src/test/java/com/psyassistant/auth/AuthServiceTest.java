@@ -36,7 +36,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 /**
  * Unit tests for {@link AuthService}.
  *
- * <p>Covers: valid login, wrong password, disabled account, session cap for ADMIN and USER.
+ * <p>Covers: valid login, wrong password, disabled account,
+ * session cap for SYSTEM_ADMINISTRATOR and THERAPIST.
  */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -59,7 +60,7 @@ class AuthServiceTest {
     private AuthService authService;
 
     private User activeUser;
-    private User adminUser;
+    private User sysAdminUser;
     private User disabledUser;
 
     @BeforeEach
@@ -70,9 +71,9 @@ class AuthServiceTest {
         ReflectionTestUtils.setField(authService, "maxAdminSessions", 1);
         ReflectionTestUtils.setField(authService, "maxUserSessions", 5);
 
-        activeUser = makeUser("user@example.com", UserRole.USER, true);
-        adminUser = makeUser("admin@example.com", UserRole.ADMIN, true);
-        disabledUser = makeUser("disabled@example.com", UserRole.USER, false);
+        activeUser = makeUser("user@example.com", UserRole.THERAPIST, true);
+        sysAdminUser = makeUser("admin@example.com", UserRole.SYSTEM_ADMINISTRATOR, true);
+        disabledUser = makeUser("disabled@example.com", UserRole.THERAPIST, false);
     }
 
     @Test
@@ -84,7 +85,7 @@ class AuthServiceTest {
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
         when(tokenService.buildAccessToken(any())).thenReturn("jwt-token");
         when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
-        when(tokenService.refreshTtlFor(UserRole.USER)).thenReturn(Duration.ofDays(15));
+        when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         AuthResult result = authService.authenticate(
@@ -136,25 +137,25 @@ class AuthServiceTest {
     }
 
     @Test
-    void adminAtCapDeletesAllSessions() {
-        when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(adminUser));
+    void systemAdminAtCapDeletesAllSessions() {
+        when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(sysAdminUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(refreshTokenRepository.countActiveSessions(any())).thenReturn(1L);
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
         when(tokenService.buildAccessToken(any())).thenReturn("jwt-token");
         when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
-        when(tokenService.refreshTtlFor(UserRole.ADMIN)).thenReturn(Duration.ofHours(24));
+        when(tokenService.refreshTtlFor(UserRole.SYSTEM_ADMINISTRATOR)).thenReturn(Duration.ofHours(24));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         authService.authenticate(
                 new LoginRequest("admin@example.com", "pass"), "127.0.0.1");
 
-        verify(refreshTokenRepository).deleteAllByUserId(adminUser.getId());
+        verify(refreshTokenRepository).deleteAllByUserId(sysAdminUser.getId());
     }
 
     @Test
-    void userUnderCapDoesNotEvict() {
+    void therapistUnderCapDoesNotEvict() {
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(activeUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(refreshTokenRepository.countActiveSessions(any())).thenReturn(3L);
@@ -162,7 +163,7 @@ class AuthServiceTest {
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
         when(tokenService.buildAccessToken(any())).thenReturn("jwt-token");
         when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
-        when(tokenService.refreshTtlFor(UserRole.USER)).thenReturn(Duration.ofDays(15));
+        when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         authService.authenticate(
@@ -173,7 +174,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void userAtCapEvictsOldestSession() {
+    void therapistAtCapEvictsOldestSession() {
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(activeUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(refreshTokenRepository.countActiveSessions(any())).thenReturn(5L);
@@ -181,7 +182,7 @@ class AuthServiceTest {
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
         when(tokenService.buildAccessToken(any())).thenReturn("jwt-token");
         when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
-        when(tokenService.refreshTtlFor(UserRole.USER)).thenReturn(Duration.ofDays(15));
+        when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         RefreshToken oldest = mock(RefreshToken.class);
@@ -204,7 +205,7 @@ class AuthServiceTest {
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
         when(tokenService.buildAccessToken(any())).thenReturn("jwt-token");
         when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
-        when(tokenService.refreshTtlFor(UserRole.USER)).thenReturn(Duration.ofDays(15));
+        when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         AuthResult result = authService.refresh("raw-token", "127.0.0.1");

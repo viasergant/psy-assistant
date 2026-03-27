@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.common.config.SecurityConfig;
 import com.psyassistant.common.exception.GlobalExceptionHandler;
 import com.psyassistant.users.DuplicateEmailException;
@@ -38,6 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Web-layer tests for {@link AdminUserController}.
  *
  * <p>Verifies HTTP status codes, JSON shape, security enforcement, and error mappings.
+ * All admin endpoints require {@code ROLE_SYSTEM_ADMINISTRATOR}.
  */
 @WebMvcTest(controllers = AdminUserController.class)
 @Import({SecurityConfig.class, GlobalExceptionHandler.class})
@@ -53,6 +55,9 @@ class AdminUserControllerTest {
     @MockitoBean
     private UserManagementService userManagementService;
 
+    @MockitoBean
+    private AuditLogService auditLogService;
+
     private static final String BASE = "/api/v1/admin/users";
     private static final UUID ADMIN_ID = UUID.randomUUID();
     private static final UUID USER_ID = UUID.randomUUID();
@@ -60,23 +65,42 @@ class AdminUserControllerTest {
     // ---- listUsers -------------------------------------------------------
 
     @Test
-    void listUsersReturns200ForAdmin() throws Exception {
+    void listUsersReturns200ForSystemAdministrator() throws Exception {
         UserPageResponse page = new UserPageResponse(List.of(), 0, 0, 0, 20);
         when(userManagementService.listUsers(any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get(BASE)
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test
-    void listUsersReturns403ForNonAdmin() throws Exception {
+    void listUsersReturns403ForTherapist() throws Exception {
         mockMvc.perform(get(BASE)
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_THERAPIST"))
                                 .jwt(j -> j.subject(UUID.randomUUID().toString()))))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+    }
+
+    @Test
+    void listUsersReturns403ForFinance() throws Exception {
+        mockMvc.perform(get(BASE)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_FINANCE"))
+                                .jwt(j -> j.subject(UUID.randomUUID().toString()))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+    }
+
+    @Test
+    void listUsersReturns403ForSupervisor() throws Exception {
+        mockMvc.perform(get(BASE)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SUPERVISOR"))
+                                .jwt(j -> j.subject(UUID.randomUUID().toString()))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
     }
 
     @Test
@@ -90,19 +114,31 @@ class AdminUserControllerTest {
     @Test
     void createUserReturns201OnSuccess() throws Exception {
         UserSummaryDto dto = new UserSummaryDto(
-                USER_ID, "new@example.com", "Alice", UserRole.USER, true,
+                USER_ID, "new@example.com", "Alice", UserRole.THERAPIST, true,
                 Instant.now(), Instant.now());
         when(userManagementService.createUser(any(), any())).thenReturn(dto);
 
         mockMvc.perform(post(BASE)
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new CreateUserRequest("new@example.com", "Alice", UserRole.USER))))
+                                new CreateUserRequest("new@example.com", "Alice", UserRole.THERAPIST))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("new@example.com"))
                 .andExpect(jsonPath("$.active").value(true));
+    }
+
+    @Test
+    void createUserReturns403ForTherapist() throws Exception {
+        mockMvc.perform(post(BASE)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_THERAPIST"))
+                                .jwt(j -> j.subject(UUID.randomUUID().toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new CreateUserRequest("new@example.com", "Alice", UserRole.THERAPIST))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
     }
 
     @Test
@@ -111,11 +147,11 @@ class AdminUserControllerTest {
                 .thenThrow(new DuplicateEmailException("dup@example.com"));
 
         mockMvc.perform(post(BASE)
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new CreateUserRequest("dup@example.com", "Bob", UserRole.USER))))
+                                new CreateUserRequest("dup@example.com", "Bob", UserRole.THERAPIST))))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("DUPLICATE_EMAIL"));
     }
@@ -123,21 +159,21 @@ class AdminUserControllerTest {
     @Test
     void createUserReturns400OnMissingEmail() throws Exception {
         mockMvc.perform(post(BASE)
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"fullName\":\"Alice\",\"role\":\"USER\"}"))
+                        .content("{\"fullName\":\"Alice\",\"role\":\"THERAPIST\"}"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void createUserReturns400OnInvalidEmail() throws Exception {
         mockMvc.perform(post(BASE)
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new CreateUserRequest("not-an-email", "Alice", UserRole.USER))))
+                                new CreateUserRequest("not-an-email", "Alice", UserRole.THERAPIST))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -146,18 +182,18 @@ class AdminUserControllerTest {
     @Test
     void updateUserReturns200OnSuccess() throws Exception {
         UserSummaryDto dto = new UserSummaryDto(
-                USER_ID, "user@example.com", "Updated", UserRole.ADMIN, true,
+                USER_ID, "user@example.com", "Updated", UserRole.SYSTEM_ADMINISTRATOR, true,
                 Instant.now(), Instant.now());
         when(userManagementService.updateUser(eq(USER_ID), any(), any())).thenReturn(dto);
 
         mockMvc.perform(patch(BASE + "/" + USER_ID)
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new PatchUserRequest(null, UserRole.ADMIN, null))))
+                                new PatchUserRequest(null, UserRole.SYSTEM_ADMINISTRATOR, null))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.role").value("ADMIN"));
+                .andExpect(jsonPath("$.role").value("SYSTEM_ADMINISTRATOR"));
     }
 
     @Test
@@ -166,7 +202,7 @@ class AdminUserControllerTest {
                 .thenThrow(new SelfDeactivationException());
 
         mockMvc.perform(patch(BASE + "/" + ADMIN_ID)
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
@@ -181,7 +217,7 @@ class AdminUserControllerTest {
                 .thenThrow(new EntityNotFoundException("User not found"));
 
         mockMvc.perform(patch(BASE + "/" + USER_ID)
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
@@ -198,7 +234,7 @@ class AdminUserControllerTest {
                 .thenReturn("deadbeef");
 
         mockMvc.perform(post(BASE + "/" + USER_ID + "/password-reset")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString()))))
                 .andExpect(status().isNoContent());
     }
@@ -209,7 +245,7 @@ class AdminUserControllerTest {
                 .thenThrow(new EntityNotFoundException("User not found"));
 
         mockMvc.perform(post(BASE + "/" + USER_ID + "/password-reset")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString()))))
                 .andExpect(status().isNotFound());
     }

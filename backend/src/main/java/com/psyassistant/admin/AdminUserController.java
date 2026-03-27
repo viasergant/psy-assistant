@@ -33,11 +33,11 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Admin REST endpoints for managing internal user accounts.
  *
- * <p>All methods require the {@code ROLE_ADMIN} authority.
+ * <p>All methods require the {@code ROLE_SYSTEM_ADMINISTRATOR} authority.
  */
 @RestController
 @RequestMapping("/api/v1/admin/users")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
 @Tag(name = "Admin — User Management",
         description = "Create, list, edit role/status, and reset passwords for internal users")
 public class AdminUserController {

@@ -1,30 +1,82 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  accessTokenExpiresAt: string;
+  tokenType: string;
+}
+
+/**
+ * Manages the authenticated session using an in-memory BehaviorSubject.
+ *
+ * The access token is NEVER persisted to localStorage or sessionStorage.
+ * After a page reload the APP_INITIALIZER calls /api/v1/auth/refresh using
+ * the HttpOnly cookie to rehydrate the token silently.
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly TOKEN_KEY = 'access_token';
+  private readonly apiBase = '/api/v1/auth';
 
-  constructor(private router: Router) {}
+  /** In-memory access token — null means unauthenticated. */
+  private readonly tokenSubject = new BehaviorSubject<string | null>(null);
 
+  /** Observable stream of the current access token. */
+  readonly token$ = this.tokenSubject.asObservable();
+
+  constructor(private http: HttpClient, private router: Router) {}
+
+  /** Returns the current in-memory access token. */
   get token(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return this.tokenSubject.getValue();
   }
 
+  /** Returns true when an access token is present in memory. */
   isAuthenticated(): boolean {
-    return !!this.token;
+    return this.token !== null;
   }
 
+  /**
+   * Sends login credentials and stores the returned access token in memory.
+   * The refresh token arrives as an HttpOnly cookie (no JS access needed).
+   */
+  login(credentials: LoginRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiBase}/login`, credentials).pipe(
+      tap(response => this.tokenSubject.next(response.accessToken))
+    );
+  }
+
+  /**
+   * Exchanges the HttpOnly refresh-token cookie for a new access token.
+   * Called by the APP_INITIALIZER on app boot and by the JwtInterceptor on 401.
+   */
+  refreshToken(): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${this.apiBase}/refresh`, {}, { withCredentials: true })
+      .pipe(tap(response => this.tokenSubject.next(response.accessToken)));
+  }
+
+  /**
+   * Sets the in-memory access token directly (used by APP_INITIALIZER after
+   * a successful silent refresh).
+   */
   setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
+    this.tokenSubject.next(token);
   }
 
-  clearToken(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-  }
-
+  /** Clears the in-memory token and navigates to the login page. */
   logout(): void {
-    this.clearToken();
+    this.http
+      .post(`${this.apiBase}/logout`, {}, { withCredentials: true })
+      .subscribe({ error: () => {} }); // fire-and-forget
+    this.tokenSubject.next(null);
     this.router.navigate(['/auth/login']);
   }
 }

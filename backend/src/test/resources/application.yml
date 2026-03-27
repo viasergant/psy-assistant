@@ -13,6 +13,8 @@ spring:
     jpa:
       repositories:
         bootstrap-mode: deferred
+  flyway:
+    enabled: false
 
 management:
   endpoints:
@@ -22,3 +24,22 @@ management:
   endpoint:
     health:
       show-details: never
+
+app:
+  jwt:
+    secret: test-secret-key-that-is-at-least-32-bytes-long
+    issuer: psy-assistant
+  security:
+    token-ttl:
+      admin:
+        access: PT15M
+        refresh: PT24H
+      user:
+        access: PT60M
+        refresh: P15D
+    session:
+      max:
+        admin: 1
+        user: 5
+  cors:
+    allowed-origins: http://localhost:4200

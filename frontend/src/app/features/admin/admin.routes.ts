@@ -1,12 +1,16 @@
 import { Routes } from '@angular/router';
-import { Component } from '@angular/core';
-
-@Component({
-  standalone: true,
-  template: `<h1>Admin — coming soon</h1>`
-})
-export class AdminPlaceholderComponent {}
 
 export default [
-  { path: '', component: AdminPlaceholderComponent }
+  {
+    path: '',
+    redirectTo: 'users',
+    pathMatch: 'full'
+  },
+  {
+    path: 'users',
+    loadComponent: () =>
+      import('./users/components/user-list/user-list.component').then(
+        m => m.UserListComponent
+      )
+  }
 ] satisfies Routes;

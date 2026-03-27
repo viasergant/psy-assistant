@@ -31,6 +31,9 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @Column(name = "full_name", length = 255)
+    private String fullName;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private UserRole role;
@@ -67,6 +70,21 @@ public class User {
     }
 
     /**
+     * Constructs a new user with a full name.
+     *
+     * @param email        unique email address
+     * @param passwordHash BCrypt hash of the password
+     * @param fullName     display name
+     * @param role         user role
+     * @param active       whether the account is active
+     */
+    public User(final String email, final String passwordHash, final String fullName,
+                final UserRole role, final boolean active) {
+        this(email, passwordHash, role, active);
+        this.fullName = fullName;
+    }
+
+    /**
      * Returns the user's surrogate primary key.
      *
      * @return UUID
@@ -94,6 +112,25 @@ public class User {
     }
 
     /**
+     * Returns the user's full display name.
+     *
+     * @return full name or null if not set
+     */
+    public String getFullName() {
+        return fullName;
+    }
+
+    /**
+     * Sets the user's full display name and updates the updatedAt timestamp.
+     *
+     * @param fullName new full name
+     */
+    public void setFullName(final String fullName) {
+        this.fullName = fullName;
+        this.updatedAt = Instant.now();
+    }
+
+    /**
      * Returns the user's role.
      *
      * @return role
@@ -103,12 +140,32 @@ public class User {
     }
 
     /**
+     * Sets the user's role and updates the updatedAt timestamp.
+     *
+     * @param role new role
+     */
+    public void setRole(final UserRole role) {
+        this.role = role;
+        this.updatedAt = Instant.now();
+    }
+
+    /**
      * Returns whether the account is active.
      *
      * @return true if active
      */
     public boolean isActive() {
         return active;
+    }
+
+    /**
+     * Sets the account active status and updates the updatedAt timestamp.
+     *
+     * @param active new status
+     */
+    public void setActive(final boolean active) {
+        this.active = active;
+        this.updatedAt = Instant.now();
     }
 
     /**

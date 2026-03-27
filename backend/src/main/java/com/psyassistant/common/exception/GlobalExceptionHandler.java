@@ -4,6 +4,7 @@ import com.psyassistant.auth.service.AuthException;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.crm.leads.InvalidStatusTransitionException;
+import com.psyassistant.crm.leads.LeadAlreadyConvertedException;
 import com.psyassistant.users.DuplicateEmailException;
 import com.psyassistant.users.SelfDeactivationException;
 import jakarta.persistence.EntityNotFoundException;
@@ -166,6 +167,32 @@ public class GlobalExceptionHandler {
                         ex.getMessage(),
                         "SELF_DEACTIVATION_FORBIDDEN",
                         request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles attempts to convert a lead that has already been converted (409).
+     *
+     * <p>Returns a {@link ConversionErrorResponse} that includes the {@code existingClientId}
+     * so the caller can navigate to the existing client record.
+     *
+     * @param ex      the already-converted exception
+     * @param request the current HTTP request
+     * @return 409 Conflict with machine-readable code and optional existingClientId
+     */
+    @ExceptionHandler(LeadAlreadyConvertedException.class)
+    public ResponseEntity<ConversionErrorResponse> handleLeadAlreadyConverted(
+            final LeadAlreadyConvertedException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ConversionErrorResponse(
+                        Instant.now(),
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage(),
+                        "LEAD_ALREADY_CONVERTED",
+                        request.getRequestURI(),
+                        ex.getExistingClientId()
                 )
         );
     }

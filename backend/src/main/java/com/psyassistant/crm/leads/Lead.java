@@ -56,6 +56,13 @@ public class Lead extends BaseEntity {
     @Column(name = "last_contact_date")
     private Instant lastContactDate;
 
+    /**
+     * UUID of the client record this lead was converted to.
+     * Populated only when {@code status == CONVERTED}.
+     */
+    @Column(name = "converted_client_id")
+    private UUID convertedClientId;
+
     /** All contact methods (email and/or phone) registered for this lead. */
     @OneToMany(mappedBy = "lead", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LeadContactMethod> contactMethods = new ArrayList<>();
@@ -131,6 +138,16 @@ public class Lead extends BaseEntity {
     /** Sets the last contact timestamp (system-controlled only). */
     public void setLastContactDate(final Instant lastContactDate) {
         this.lastContactDate = lastContactDate;
+    }
+
+    /** Returns the UUID of the client this lead was converted to (may be null). */
+    public UUID getConvertedClientId() {
+        return convertedClientId;
+    }
+
+    /** Sets the UUID of the client record this lead was converted to. */
+    public void setConvertedClientId(final UUID convertedClientId) {
+        this.convertedClientId = convertedClientId;
     }
 
     /**

@@ -1,6 +1,9 @@
 package com.psyassistant.crm.leads;
 
+import com.psyassistant.common.exception.ConversionErrorResponse;
 import com.psyassistant.common.exception.ErrorResponse;
+import com.psyassistant.crm.leads.dto.ConvertLeadRequest;
+import com.psyassistant.crm.leads.dto.ConvertLeadResponse;
 import com.psyassistant.crm.leads.dto.CreateLeadRequest;
 import com.psyassistant.crm.leads.dto.LeadDetailDto;
 import com.psyassistant.crm.leads.dto.LeadPageResponse;
@@ -211,6 +214,37 @@ public class LeadController {
     public ResponseEntity<LeadDetailDto> archiveLead(@PathVariable final UUID id) {
         UUID actorId = UserManagementService.currentPrincipalId();
         return ResponseEntity.ok(leadService.archiveLead(id, actorId));
+    }
+
+    // ---- convert lead to client -------------------------------------------
+
+    /**
+     * Atomically converts a QUALIFIED lead into a new client record.
+     *
+     * @param id      the lead's UUID
+     * @param request conversion payload
+     * @return 201 with {@link ConvertLeadResponse}, 422 if not QUALIFIED, 409 if already converted
+     */
+    @Operation(summary = "Convert lead to client",
+            description = "Atomically promotes a QUALIFIED lead to a full client record")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Lead converted to client",
+            content = @Content(schema = @Schema(implementation = ConvertLeadResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Lead not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "409", description = "Lead already converted",
+            content = @Content(schema = @Schema(implementation = ConversionErrorResponse.class))),
+        @ApiResponse(responseCode = "422", description = "Lead is not in QUALIFIED status",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/{id}/convert")
+    @PreAuthorize("hasAuthority('MANAGE_LEADS')")
+    public ResponseEntity<ConvertLeadResponse> convertLead(
+            @PathVariable final UUID id,
+            @Valid @RequestBody final ConvertLeadRequest request) {
+        UUID actorId = UserManagementService.currentPrincipalId();
+        ConvertLeadResponse response = leadService.convertLead(id, request, actorId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // ---- helpers ----------------------------------------------------------

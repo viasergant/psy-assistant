@@ -9,18 +9,19 @@ import java.util.UUID;
 /**
  * Full detail view of a single lead returned by create, update, and get-by-id endpoints.
  *
- * @param id              lead UUID
- * @param fullName        full display name
- * @param contactMethods  all contact methods
- * @param source          optional acquisition source
- * @param status          current lifecycle status
- * @param ownerId         optional owner user UUID
- * @param ownerName       optional owner display name (resolved by service)
- * @param notes           optional free-text notes
- * @param lastContactDate system-managed timestamp of most recent contact
- * @param createdAt       record creation timestamp
- * @param updatedAt       record last-modified timestamp
- * @param createdBy       email/name of the principal that created the record
+ * @param id                lead UUID
+ * @param fullName          full display name
+ * @param contactMethods    all contact methods
+ * @param source            optional acquisition source
+ * @param status            current lifecycle status
+ * @param ownerId           optional owner user UUID
+ * @param ownerName         optional owner display name (resolved by service)
+ * @param notes             optional free-text notes
+ * @param lastContactDate   system-managed timestamp of most recent contact
+ * @param createdAt         record creation timestamp
+ * @param updatedAt         record last-modified timestamp
+ * @param createdBy         email/name of the principal that created the record
+ * @param convertedClientId UUID of the client this lead was converted to, or null
  */
 public record LeadDetailDto(
         UUID id,
@@ -34,7 +35,8 @@ public record LeadDetailDto(
         Instant lastContactDate,
         Instant createdAt,
         Instant updatedAt,
-        String createdBy
+        String createdBy,
+        UUID convertedClientId
 ) {
 
     /**
@@ -61,7 +63,8 @@ public record LeadDetailDto(
                 lead.getLastContactDate(),
                 lead.getCreatedAt(),
                 lead.getUpdatedAt(),
-                lead.getCreatedBy()
+                lead.getCreatedBy(),
+                lead.getConvertedClientId()
         );
     }
 }

@@ -8,5 +8,12 @@ import { Component } from '@angular/core';
 export class ClientsPlaceholderComponent {}
 
 export default [
-  { path: '', component: ClientsPlaceholderComponent }
+  { path: '', component: ClientsPlaceholderComponent },
+  {
+    path: ':id',
+    loadComponent: () =>
+      import('./client-detail/client-detail.component').then(
+        m => m.ClientDetailComponent
+      )
+  }
 ] satisfies Routes;

@@ -1,12 +1,6 @@
 import { Routes } from '@angular/router';
-import { Component } from '@angular/core';
-
-@Component({
-  standalone: true,
-  template: `<h1>Leads — coming soon</h1>`
-})
-export class LeadsPlaceholderComponent {}
+import { LeadListComponent } from './components/lead-list/lead-list.component';
 
 export default [
-  { path: '', component: LeadsPlaceholderComponent }
+  { path: '', component: LeadListComponent }
 ] satisfies Routes;

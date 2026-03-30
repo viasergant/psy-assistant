@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.hibernate.Hibernate;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -144,6 +145,10 @@ public class TherapistProfileService {
 
         auditService.recordAuditEntry(saved.getId(), actorId, actorName, "CREATE", changes, null);
 
+        // Initialize lazy collections to avoid LazyInitializationException
+        Hibernate.initialize(saved.getSpecializations());
+        Hibernate.initialize(saved.getLanguages());
+
         return saved;
     }
 
@@ -240,10 +245,14 @@ public class TherapistProfileService {
      */
     @Transactional(readOnly = true)
     public TherapistProfile getProfile(UUID profileId) {
-        return profileRepository.findById(profileId)
+        TherapistProfile profile = profileRepository.findById(profileId)
             .orElseThrow(() -> new EntityNotFoundException(
                 "Therapist profile not found: " + profileId
             ));
+        // Initialize lazy collections to avoid LazyInitializationException
+        Hibernate.initialize(profile.getSpecializations());
+        Hibernate.initialize(profile.getLanguages());
+        return profile;
     }
 
     /**
@@ -268,10 +277,14 @@ public class TherapistProfileService {
      */
     @Transactional(readOnly = true)
     public TherapistProfile getProfileByEmail(String email) {
-        return profileRepository.findByEmailIgnoreCase(email)
+        TherapistProfile profile = profileRepository.findByEmailIgnoreCase(email)
             .orElseThrow(() -> new EntityNotFoundException(
                 "Therapist profile not found for email: " + email
             ));
+        // Initialize lazy collections to avoid LazyInitializationException
+        Hibernate.initialize(profile.getSpecializations());
+        Hibernate.initialize(profile.getLanguages());
+        return profile;
     }
 
     /**
@@ -337,6 +350,10 @@ public class TherapistProfileService {
         String actorName = getCurrentUsername();
         auditService.recordAuditEntry(saved.getId(), actorId, actorName, "UPDATE", changes, null);
 
+        // Initialize lazy collections to avoid LazyInitializationException
+        Hibernate.initialize(saved.getSpecializations());
+        Hibernate.initialize(saved.getLanguages());
+
         return saved;
     }
 
@@ -368,6 +385,10 @@ public class TherapistProfileService {
         UUID actorId = getCurrentUserId();
         String actorName = getCurrentUsername();
         auditService.recordAuditEntry(saved.getId(), actorId, actorName, "DEACTIVATE", changes, null);
+
+        // Initialize lazy collections to avoid LazyInitializationException
+        Hibernate.initialize(saved.getSpecializations());
+        Hibernate.initialize(saved.getLanguages());
 
         return saved;
     }
@@ -449,7 +470,13 @@ public class TherapistProfileService {
         }
 
         profile.setProfileCompletionStatus(TherapistProfile.ProfileCompletionStatus.COMPLETE);
-        return profileRepository.save(profile);
+        TherapistProfile saved = profileRepository.save(profile);
+        
+        // Initialize lazy collections to avoid LazyInitializationException
+        Hibernate.initialize(saved.getSpecializations());
+        Hibernate.initialize(saved.getLanguages());
+        
+        return saved;
     }
 
     /**

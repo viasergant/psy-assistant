@@ -7,6 +7,8 @@ import com.psyassistant.therapists.dto.UpdateTherapistProfileRequest;
 import com.psyassistant.therapists.service.TherapistProfileService;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/therapists")
 public class TherapistProfileController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TherapistProfileController.class);
 
     private final TherapistProfileService therapistProfileService;
 
@@ -115,6 +119,27 @@ public class TherapistProfileController {
     }
 
     /**
+     * GET /api/v1/therapists/by-email/{email}
+     * Retrieves a therapist profile by email address.
+     *
+     * <p>Required role: SYSTEM_ADMINISTRATOR
+     *
+     * @param email the therapist's email address
+     * @return 200 OK with the profile, or 404 if not found
+     */
+    @GetMapping("/by-email/{email:.+}")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
+    public ResponseEntity<TherapistProfileAdminDto> getTherapistByEmail(@PathVariable String email) {
+        try {
+            LOG.info("Fetching therapist profile by email: {}", email);
+            TherapistProfile profile = therapistProfileService.getProfileByEmail(email);
+            return ResponseEntity.ok(TherapistProfileAdminDto.fromAdmin(profile));
+        } catch (jakarta.persistence.EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
      * GET /api/v1/therapists/{id}
      * Retrieves a therapist profile by ID.
      *
@@ -128,26 +153,6 @@ public class TherapistProfileController {
     public ResponseEntity<TherapistProfileAdminDto> getTherapist(@PathVariable UUID id) {
         try {
             TherapistProfile profile = therapistProfileService.getProfile(id);
-            return ResponseEntity.ok(TherapistProfileAdminDto.fromAdmin(profile));
-        } catch (jakarta.persistence.EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    /**
-     * GET /api/v1/therapists/by-email/{email}
-     * Retrieves a therapist profile by email address.
-     *
-     * <p>Required role: SYSTEM_ADMINISTRATOR
-     *
-     * @param email the therapist's email address
-     * @return 200 OK with the profile, or 404 if not found
-     */
-    @GetMapping("/by-email/{email}")
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
-    public ResponseEntity<TherapistProfileAdminDto> getTherapistByEmail(@PathVariable String email) {
-        try {
-            TherapistProfile profile = therapistProfileService.getProfileByEmail(email);
             return ResponseEntity.ok(TherapistProfileAdminDto.fromAdmin(profile));
         } catch (jakarta.persistence.EntityNotFoundException e) {
             return ResponseEntity.notFound().build();

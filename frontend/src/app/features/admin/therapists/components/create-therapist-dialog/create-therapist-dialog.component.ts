@@ -11,6 +11,11 @@ import {
 import { UserCreationResponse } from '../../../users/models/user.model';
 import { TherapistAccountCreatedModalComponent } from '../../../components/therapist-account-created-modal/therapist-account-created-modal.component';
 
+interface TherapistWithAccountResponseDto {
+  userDetails: UserCreationResponse;
+  therapistProfile: any;
+}
+
 /**
  * Modal dialog for creating a new therapist account with temporary password.
  *
@@ -139,6 +144,7 @@ import { TherapistAccountCreatedModalComponent } from '../../../components/thera
     <!-- Credentials Modal shown after successful creation -->
     <app-therapist-account-created-modal
       *ngIf="showCredentialsModal"
+      [visible]="showCredentialsModal"
       [userData]="createdUser!"
       (close)="onCredentialsModalClose()"
       (viewProfile)="onViewProfile()"
@@ -385,18 +391,24 @@ export class CreateTherapistDialogComponent implements OnInit {
       primarySpecializationId: this.form.value.primarySpecializationId
     };
 
+    console.log('Submitting therapist creation payload:', payload);
+
     // Call the new endpoint that creates user AND profile atomically
-    this.http.post<{ userDetails: UserCreationResponse; therapistProfile: any }>(
+    this.http.post<TherapistWithAccountResponseDto>(
       '/api/v1/therapists/with-account', 
       payload
     ).subscribe({
       next: (response) => {
+        console.log('Therapist creation successful:', response);
         this.saving = false;
         this.createdUser = response.userDetails;
         this.showCredentialsModal = true;
+        console.log('showCredentialsModal set to:', this.showCredentialsModal);
+        console.log('createdUser:', this.createdUser);
         // Don't emit created yet - wait for credentials modal close
       },
       error: (err: HttpErrorResponse) => {
+        console.error('Therapist creation failed:', err);
         this.saving = false;
         this.serverError = this.mapError(err);
       }
@@ -428,12 +440,27 @@ export class CreateTherapistDialogComponent implements OnInit {
 
   private mapError(err: HttpErrorResponse): string {
     const code = err.error?.code as string | undefined;
+    
+    if (err.status === 401) {
+      return 'You are not authorized to perform this action. Please log in as an administrator.';
+    }
+    if (err.status === 403) {
+      return 'You do not have permission to create therapist accounts.';
+    }
     if (code === 'DUPLICATE_EMAIL') {
       return 'This email address is already registered.';
     }
-    if (err.status === 400 && err.error?.message) {
-      return err.error.message;
+    if (err.status === 400) {
+      if (err.error?.message) {
+        return err.error.message;
+      }
+      return 'Invalid request. Please check all fields are filled correctly.';
     }
+    if (err.status === 500) {
+      return 'Server error occurred. Please try again later or contact support.';
+    }
+    
+    console.error('Therapist creation error:', err);
     return 'Failed to create therapist account. Please try again.';
   }
 }

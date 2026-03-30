@@ -29,6 +29,7 @@ export class TherapistAccountCreatedModalComponent {
   @Input() visible = false;
   @Input() userData: UserCreationResponse | null = null;
   @Output() visibleChange = new EventEmitter<boolean>();
+  @Output() close = new EventEmitter<void>();
   @Output() viewProfile = new EventEmitter<string>();
 
   constructor(private messageService: MessageService) {}
@@ -77,9 +78,10 @@ export class TherapistAccountCreatedModalComponent {
   /**
    * Closes the modal.
    */
-  close(): void {
+  onClose(): void {
     this.visible = false;
     this.visibleChange.emit(false);
+    this.close.emit();
   }
 
   /**
@@ -89,6 +91,6 @@ export class TherapistAccountCreatedModalComponent {
     if (this.userData) {
       this.viewProfile.emit(this.userData.id);
     }
-    this.close();
+    this.onClose();
   }
 }

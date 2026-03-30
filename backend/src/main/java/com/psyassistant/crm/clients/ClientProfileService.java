@@ -200,6 +200,7 @@ public class ClientProfileService {
         List<String> normalized = normalizeTags(request.tags());
 
         clientTagRepository.deleteAllByClientId(client.getId());
+        clientTagRepository.flush();
         if (!normalized.isEmpty()) {
             List<ClientTag> tagEntities = normalized.stream()
                     .map(tag -> new ClientTag(client, tag))

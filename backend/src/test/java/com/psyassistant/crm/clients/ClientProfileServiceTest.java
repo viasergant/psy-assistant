@@ -18,6 +18,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -180,8 +181,10 @@ class ClientProfileServiceTest {
         );
 
         assertThat(dto.tags()).containsExactly("adult", "priority");
-        verify(clientTagRepository).deleteAllByClientId(clientId);
-        verify(clientTagRepository).saveAll(any());
+        InOrder inOrder = org.mockito.Mockito.inOrder(clientTagRepository);
+        inOrder.verify(clientTagRepository).deleteAllByClientId(clientId);
+        inOrder.verify(clientTagRepository).flush();
+        inOrder.verify(clientTagRepository).saveAll(any());
     }
 
     private Client makeClient(final UUID id, final Long version, final UUID assignedTherapistId) {

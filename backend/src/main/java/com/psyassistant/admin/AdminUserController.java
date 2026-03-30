@@ -5,6 +5,7 @@ import com.psyassistant.users.UserManagementService;
 import com.psyassistant.users.UserRole;
 import com.psyassistant.users.dto.CreateUserRequest;
 import com.psyassistant.users.dto.PatchUserRequest;
+import com.psyassistant.users.dto.UserCreationResponseDto;
 import com.psyassistant.users.dto.UserPageResponse;
 import com.psyassistant.users.dto.UserSummaryDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -100,6 +101,46 @@ public class AdminUserController {
             @Valid @RequestBody final CreateUserRequest request) {
         UUID actorId = UserManagementService.currentPrincipalId();
         UserSummaryDto created = userManagementService.createUser(request, actorId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    /**
+     * Creates a new therapist user account with a secure temporary password.
+     *
+     * <p>This endpoint is specifically for creating therapist accounts in the streamlined
+     * onboarding workflow. It generates a secure random password and returns it in the
+     * response so the admin can communicate it to the therapist securely.</p>
+     *
+     * <p>The created user has {@code mustChangePassword=true} and will be redirected
+     * to the password change screen on first login.</p>
+     *
+     * @param request validated creation payload (role must be THERAPIST)
+     * @return 201 with {@link UserCreationResponseDto} including temporary password
+     */
+    @Operation(summary = "Create therapist with temporary password",
+            description = "Creates a therapist account with a secure temporary password for admin handoff")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Therapist created with temporary password",
+            content = @Content(schema = @Schema(implementation = UserCreationResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Validation error or non-therapist role",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "409", description = "Email already registered",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/therapists")
+    public ResponseEntity<UserCreationResponseDto> createTherapistWithTemporaryPassword(
+            @Valid @RequestBody final CreateUserRequest request) {
+
+        // Validate that role is THERAPIST
+        if (request.role() != UserRole.THERAPIST) {
+            throw new IllegalArgumentException("This endpoint is only for creating therapist accounts");
+        }
+
+        UUID actorId = UserManagementService.currentPrincipalId();
+        UserCreationResponseDto created = userManagementService.createUserWithTemporaryPassword(
+            request,
+            actorId
+        );
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 

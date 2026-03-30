@@ -7,6 +7,14 @@ export interface IdNamePair {
   name: string;
 }
 
+/** Profile completion status for therapist onboarding workflow. */
+export type ProfileCompletionStatus = 'INCOMPLETE' | 'COMPLETE';
+
+export const PROFILE_COMPLETION_LABELS: Record<ProfileCompletionStatus, string> = {
+  INCOMPLETE: 'Incomplete',
+  COMPLETE: 'Complete'
+};
+
 export interface TherapistProfile {
   id: string;
   email: string;
@@ -16,6 +24,7 @@ export interface TherapistProfile {
   bio?: string;
   active: boolean;
   version: number;
+  profileCompletionStatus: ProfileCompletionStatus;
   specializations: IdNamePair[];
   languages: IdNamePair[];
   createdAt: string;

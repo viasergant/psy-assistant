@@ -32,6 +32,7 @@
     "@angular/router": "^20.3.0",
     "@jsverse/transloco": "^7.5.0",
     "@primeuix/themes": "^1.0.6",
+    "jwt-decode": "^4.0.0",
     "primeicons": "^7.0.0",
     "primeng": "^20.0.0",
     "rxjs": "~7.8.0",

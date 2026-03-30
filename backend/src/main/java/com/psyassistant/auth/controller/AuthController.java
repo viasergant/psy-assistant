@@ -1,5 +1,6 @@
 package com.psyassistant.auth.controller;
 
+import com.psyassistant.auth.dto.FirstLoginPasswordChangeDto;
 import com.psyassistant.auth.dto.LoginRequest;
 import com.psyassistant.auth.dto.LoginResponse;
 import com.psyassistant.auth.service.AuthResult;
@@ -15,9 +16,11 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -119,6 +122,43 @@ public class AuthController {
         authService.logout(rawToken, getClientIp(http));
         clearRefreshCookie(response);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Changes a user's password on first login when mustChangePassword is true.
+     *
+     * <p>Requires authentication. Validates the current temporary password, sets
+     * the new password, clears the mustChangePassword flag, and returns new tokens.
+     *
+     * @param dto           password change request
+     * @param principalName authenticated user's UUID (from JWT)
+     * @param response      HTTP response (used to set new refresh token cookie)
+     * @param http          servlet request (used to extract caller IP)
+     * @return 200 with {@link LoginResponse} containing new tokens
+     */
+    @Operation(summary = "Change password on first login",
+            description = "Required for users with mustChangePassword=true. "
+                    + "Validates current password, sets new password, returns new tokens.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Password changed successfully",
+            content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Validation error",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Current password incorrect or authentication required",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/first-login-password-change")
+    public ResponseEntity<LoginResponse> changePasswordFirstLogin(
+            @Valid @RequestBody final FirstLoginPasswordChangeDto dto,
+            @AuthenticationPrincipal final String principalName,
+            final HttpServletResponse response,
+            final HttpServletRequest http) {
+
+        UUID userId = UUID.fromString(principalName);
+        AuthResult result = authService.changePasswordFirstLogin(
+                userId, dto, getClientIp(http));
+        setRefreshCookie(response, result);
+        return ResponseEntity.ok(result.loginResponse());
     }
 
     // ---- helpers -------------------------------------------------------

@@ -1,0 +1,95 @@
+<p-toast></p-toast>
+
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="account-created-dialog"
+  [style]="{ width: '540px' }">
+  
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <i class="pi pi-check-circle success-icon"></i>
+      <h2>Therapist Account Created</h2>
+    </div>
+  </ng-template>
+
+  <div class="dialog-content">
+    <p class="intro-text">
+      User account for <strong>{{ userData?.fullName || userData?.email }}</strong> has been created.
+    </p>
+
+    <div class="credentials-section">
+      <div class="credentials-header">
+        <i class="pi pi-key"></i>
+        <span>TEMPORARY LOGIN CREDENTIALS</span>
+      </div>
+
+      <div class="credentials-body">
+        <div class="credential-row">
+          <span class="label">Email:</span>
+          <span class="value">{{ userData?.email }}</span>
+        </div>
+        <div class="credential-row">
+          <span class="label">Password:</span>
+          <span class="value password">{{ userData?.temporaryPassword }}</span>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <p-button
+          label="Copy Credentials"
+          icon="pi pi-copy"
+          (onClick)="copyCredentials()"
+          styleClass="p-button-outlined copy-btn">
+        </p-button>
+        <p-button
+          label="Copy Password Only"
+          icon="pi pi-copy"
+          (onClick)="copyPassword()"
+          styleClass="p-button-outlined copy-btn">
+        </p-button>
+      </div>
+    </div>
+
+    <p-message
+      severity="warn"
+      styleClass="w-full mt-4"
+      [closable]="false">
+      <ng-template pTemplate>
+        <div class="warning-content">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>This password will only be shown once.</span>
+        </div>
+      </ng-template>
+    </p-message>
+
+    <div class="next-steps">
+      <h4>Next Steps:</h4>
+      <ol>
+        <li>Share these credentials securely with the therapist</li>
+        <li>Therapist will be prompted to complete their profile on first login</li>
+        <li>Therapist can update their password after logging in</li>
+      </ol>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        label="View Therapist Profile"
+        icon="pi pi-user"
+        (onClick)="onViewProfile()"
+        styleClass="p-button-text">
+      </p-button>
+      <p-button
+        label="Done"
+        icon="pi pi-check"
+        (onClick)="close()"
+        styleClass="p-button-primary">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,42 +1,51 @@
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Component, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
-  TherapistProfile,
   EMPLOYMENT_STATUS_OPTIONS,
   EMPLOYMENT_STATUS_LABELS,
   IdNamePair
 } from '../../models/therapist.model';
+import { UserCreationResponse } from '../../../users/models/user.model';
+import { TherapistAccountCreatedModalComponent } from '../../../components/therapist-account-created-modal/therapist-account-created-modal.component';
 
 /**
- * Modal dialog for creating a new therapist profile.
+ * Modal dialog for creating a new therapist account with temporary password.
  *
- * Emits `created` with the server-returned TherapistProfile on success,
+ * Simplified creation flow:
+ * - Admin provides: name, email, phone, employment status, primary specialization
+ * - System generates secure temporary password
+ * - Admin receives credentials to communicate to therapist
+ * - Therapist completes profile on first login
+ *
+ * Emits `created` with UserCreationResponse on success,
  * or `cancelled` when the user dismisses without saving.
  */
 @Component({
   selector: 'app-create-therapist-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TherapistAccountCreatedModalComponent],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="create-therapist-title">
       <div class="dialog">
-        <h2 id="create-therapist-title">Create Therapist Profile</h2>
+        <h2 id="create-therapist-title">Create Therapist Account</h2>
+        <p class="subtitle">Create a therapist account. The system will generate a secure temporary password.</p>
 
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
           <div class="field">
-            <label for="name">Full name <span aria-hidden="true">*</span></label>
+            <label for="fullName">Full name <span aria-hidden="true">*</span></label>
             <input
-              id="name"
+              id="fullName"
               type="text"
-              formControlName="name"
-              [attr.aria-invalid]="isInvalid('name')"
+              formControlName="fullName"
+              [attr.aria-invalid]="isInvalid('fullName')"
               aria-required="true"
+              placeholder="Enter therapist's full name"
             />
-            <span *ngIf="isInvalid('name')" class="error-msg" role="alert">
+            <span *ngIf="isInvalid('fullName')" class="error-msg" role="alert">
               Full name is required.
             </span>
           </div>
@@ -50,6 +59,7 @@ import {
               autocomplete="off"
               [attr.aria-invalid]="isInvalid('email')"
               aria-required="true"
+              placeholder="therapist@example.com"
             />
             <span *ngIf="isInvalid('email')" class="error-msg" role="alert">
               Enter a valid email address.
@@ -63,6 +73,7 @@ import {
               type="tel"
               formControlName="phone"
               [attr.aria-invalid]="isInvalid('phone')"
+              placeholder="+1 (555) 123-4567"
             />
           </div>
 
@@ -84,47 +95,31 @@ import {
           </div>
 
           <div class="field">
-            <label for="specializations">Specializations <span aria-hidden="true">*</span></label>
-            <div class="checkbox-group" [attr.aria-invalid]="isInvalid('specializationIds')">
-              <label *ngFor="let spec of availableSpecializations" class="checkbox-label">
-                <input
-                  type="checkbox"
-                  [value]="spec.id"
-                  (change)="onSpecializationChange($event, spec.id)"
-                />
+            <label for="primarySpecialization">Primary Specialization <span aria-hidden="true">*</span></label>
+            <select
+              id="primarySpecialization"
+              formControlName="primarySpecializationId"
+              [attr.aria-invalid]="isInvalid('primarySpecializationId')"
+              aria-required="true">
+              <option value="">— select —</option>
+              <option *ngFor="let spec of availableSpecializations" [value]="spec.id">
                 {{ spec.name }}
-              </label>
-            </div>
-            <span *ngIf="isInvalid('specializationIds')" class="error-msg" role="alert">
-              Select at least one specialization.
+              </option>
+            </select>
+            <span *ngIf="isInvalid('primarySpecializationId')" class="error-msg" role="alert">
+              Select a primary specialization.
             </span>
+            <small class="help-text">Therapist can add more specializations later in their profile</small>
           </div>
 
-          <div class="field">
-            <label for="languages">Languages <span aria-hidden="true">*</span></label>
-            <div class="checkbox-group" [attr.aria-invalid]="isInvalid('languageIds')">
-              <label *ngFor="let lang of availableLanguages" class="checkbox-label">
-                <input
-                  type="checkbox"
-                  [value]="lang.id"
-                  (change)="onLanguageChange($event, lang.id)"
-                />
-                {{ lang.name }}
-              </label>
+          <div class="info-box">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z" fill="currentColor"/>
+            </svg>
+            <div>
+              <strong>After creation:</strong>
+              <p>A secure temporary password will be generated. The therapist must change it on first login and complete their profile.</p>
             </div>
-            <span *ngIf="isInvalid('languageIds')" class="error-msg" role="alert">
-              Select at least one language.
-            </span>
-          </div>
-
-          <div class="field">
-            <label for="bio">Biography / About</label>
-            <textarea
-              id="bio"
-              formControlName="bio"
-              rows="4"
-              placeholder="Brief professional biography..."
-            ></textarea>
           </div>
 
           <div *ngIf="serverError" class="alert-error" role="alert">
@@ -134,12 +129,20 @@ import {
           <div class="actions">
             <button type="button" (click)="cancel()" [disabled]="saving">Cancel</button>
             <button type="submit" [disabled]="saving">
-              {{ saving ? 'Creating…' : 'Create therapist' }}
+              {{ saving ? 'Creating…' : 'Create account' }}
             </button>
           </div>
         </form>
       </div>
     </div>
+
+    <!-- Credentials Modal shown after successful creation -->
+    <app-therapist-account-created-modal
+      *ngIf="showCredentialsModal"
+      [userData]="createdUser!"
+      (close)="onCredentialsModalClose()"
+      (viewProfile)="onViewProfile()"
+    ></app-therapist-account-created-modal>
   `,
   styles: [`
     .dialog-overlay {
@@ -216,37 +219,36 @@ import {
     input[aria-invalid="true"]:focus, select[aria-invalid="true"]:focus {
       box-shadow: 0 0 0 4px rgba(220,38,38,.1);
     }
-    .checkbox-group {
-      display: flex;
-      flex-direction: column;
-      gap: .625rem;
-      padding: .875rem;
-      border: 1.5px solid var(--color-border, #E2E8F0);
-      border-radius: 10px;
-      background: #FAFBFC;
-      max-height: 180px;
-      overflow-y: auto;
+    .help-text {
+      color: var(--color-text-secondary, #64748B);
+      font-size: .8125rem;
+      margin-top: .375rem;
     }
-    .checkbox-label {
+    .info-box {
       display: flex;
-      align-items: center;
-      gap: .625rem;
-      cursor: pointer;
-      padding: .5rem;
-      border-radius: 6px;
-      transition: background 0.15s;
-      font-weight: 400;
+      gap: .875rem;
+      padding: 1rem;
+      background: #EFF6FF;
+      border: 1.5px solid #BFDBFE;
+      border-radius: 10px;
+      margin-bottom: 1.25rem;
+      color: #1E40AF;
+    }
+    .info-box svg {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      color: #3B82F6;
+    }
+    .info-box strong {
+      display: block;
+      margin-bottom: .25rem;
       font-size: .9375rem;
     }
-    .checkbox-label:hover {
-      background: #F1F5F9;
-    }
-    .checkbox-label input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
+    .info-box p {
       margin: 0;
-      padding: 0;
+      font-size: .8125rem;
+      line-height: 1.5;
     }
     .error-msg {
       color: var(--color-error, #DC2626);
@@ -261,6 +263,11 @@ import {
       color: var(--color-error, #DC2626);
       margin-bottom: 1.25rem;
       font-size: .875rem;
+    }
+    .subtitle {
+      color: var(--color-text-secondary, #64748B);
+      font-size: .875rem;
+      margin: -.875rem 0 1.5rem;
     }
     .actions {
       display: flex; justify-content: flex-end;
@@ -305,7 +312,7 @@ export class CreateTherapistDialogComponent implements OnInit {
   readonly employmentStatuses = EMPLOYMENT_STATUS_OPTIONS;
   readonly statusLabels = EMPLOYMENT_STATUS_LABELS;
 
-  @Output() created = new EventEmitter<TherapistProfile>();
+  @Output() created = new EventEmitter<UserCreationResponse>();
   @Output() cancelled = new EventEmitter<void>();
 
   form: FormGroup;
@@ -313,31 +320,29 @@ export class CreateTherapistDialogComponent implements OnInit {
   serverError: string | null = null;
 
   availableSpecializations: IdNamePair[] = [];
-  availableLanguages: IdNamePair[] = [];
-
-  selectedSpecializationIds: string[] = [];
-  selectedLanguageIds: string[] = [];
+  
+  showCredentialsModal = false;
+  createdUser: UserCreationResponse | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private therapistService: TherapistManagementService
+    private therapistService: TherapistManagementService,
+    private http: HttpClient
   ) {
     this.form = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(255)]],
+      fullName: ['', [Validators.required, Validators.maxLength(255)]],
       email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
       phone: ['', Validators.maxLength(50)],
       employmentStatus: ['', Validators.required],
-      specializationIds: [[], Validators.required],
-      languageIds: [[], Validators.required],
-      bio: ['', Validators.maxLength(2000)]
+      primarySpecializationId: ['', Validators.required]
     });
   }
 
   ngOnInit(): void {
-    this.loadDropdownOptions();
+    this.loadSpecializations();
   }
 
-  loadDropdownOptions(): void {
+  loadSpecializations(): void {
     this.therapistService.getSpecializations().subscribe({
       next: (data) => {
         this.availableSpecializations = data;
@@ -346,35 +351,6 @@ export class CreateTherapistDialogComponent implements OnInit {
         this.serverError = 'Failed to load specializations. Please refresh the page.';
       }
     });
-
-    this.therapistService.getLanguages().subscribe({
-      next: (data) => {
-        this.availableLanguages = data;
-      },
-      error: () => {
-        this.serverError = 'Failed to load languages. Please refresh the page.';
-      }
-    });
-  }
-
-  onSpecializationChange(event: Event, id: string): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    if (checked) {
-      this.selectedSpecializationIds.push(id);
-    } else {
-      this.selectedSpecializationIds = this.selectedSpecializationIds.filter(sid => sid !== id);
-    }
-    this.form.patchValue({ specializationIds: this.selectedSpecializationIds });
-  }
-
-  onLanguageChange(event: Event, id: string): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    if (checked) {
-      this.selectedLanguageIds.push(id);
-    } else {
-      this.selectedLanguageIds = this.selectedLanguageIds.filter(lid => lid !== id);
-    }
-    this.form.patchValue({ languageIds: this.selectedLanguageIds });
   }
 
   /** Returns true when the field is invalid and touched. */
@@ -383,7 +359,7 @@ export class CreateTherapistDialogComponent implements OnInit {
     return !!ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched);
   }
 
-  /** Submits the form to the API. */
+  /** Submits the form to create therapist with temporary password. */
   submit(): void {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
@@ -393,20 +369,40 @@ export class CreateTherapistDialogComponent implements OnInit {
 
     const payload = {
       ...this.form.value,
-      specializationIds: this.selectedSpecializationIds,
-      languageIds: this.selectedLanguageIds
+      role: 'THERAPIST' // Required by backend
     };
 
-    this.therapistService.createTherapist(payload).subscribe({
-      next: (therapist) => {
+    // Call the new admin endpoint that creates therapist with temporary password
+    this.http.post<UserCreationResponse>('/api/v1/admin/users/therapists', payload).subscribe({
+      next: (response) => {
         this.saving = false;
-        this.created.emit(therapist);
+        this.createdUser = response;
+        this.showCredentialsModal = true;
+        // Don't emit created yet - wait for credentials modal close
       },
       error: (err: HttpErrorResponse) => {
         this.saving = false;
         this.serverError = this.mapError(err);
       }
     });
+  }
+
+  /** Called when credentials modal is closed. */
+  onCredentialsModalClose(): void {
+    this.showCredentialsModal = false;
+    // Emit created event to parent
+    if (this.createdUser) {
+      this.created.emit(this.createdUser);
+    }
+  }
+
+  /** Called when "View Profile" is clicked in credentials modal. */
+  onViewProfile(): void {
+    this.showCredentialsModal = false;
+    if (this.createdUser) {
+      this.created.emit(this.createdUser);
+    }
+    // Parent component should handle navigation to profile
   }
 
   /** Dismisses the dialog without saving. */
@@ -419,6 +415,9 @@ export class CreateTherapistDialogComponent implements OnInit {
     if (code === 'DUPLICATE_EMAIL') {
       return 'This email address is already registered.';
     }
-    return 'Failed to create therapist. Please try again.';
+    if (err.status === 400 && err.error?.message) {
+      return err.error.message;
+    }
+    return 'Failed to create therapist account. Please try again.';
   }
 }

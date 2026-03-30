@@ -41,6 +41,9 @@ public class User {
     @Column(nullable = false)
     private boolean active;
 
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -62,6 +65,7 @@ public class User {
     public User(final String email, final String passwordHash,
                 final UserRole role, final boolean active) {
         this.email = email;
+        this.mustChangePassword = false;
         this.passwordHash = passwordHash;
         this.role = role;
         this.active = active;
@@ -184,5 +188,37 @@ public class User {
      */
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    /**
+     * Returns whether the user must change their password on next login.
+     *
+     * @return true if password change is required
+     */
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    /**
+     * Sets whether the user must change their password on next login,
+     * and updates the updatedAt timestamp.
+     *
+     * @param mustChangePassword whether password change is required
+     */
+    public void setMustChangePassword(final boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
+        this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Updates the user's password hash and clears the mustChangePassword flag.
+     * Updates the updatedAt timestamp.
+     *
+     * @param newPasswordHash new BCrypt password hash
+     */
+    public void updatePasswordHash(final String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+        this.mustChangePassword = false;
+        this.updatedAt = Instant.now();
     }
 }

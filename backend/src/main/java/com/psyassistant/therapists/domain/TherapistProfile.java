@@ -4,6 +4,8 @@ import com.psyassistant.common.audit.BaseEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -57,6 +59,11 @@ public class TherapistProfile extends BaseEntity {
     /** Whether the profile is active (true) or deactivated (false). */
     @Column(name = "active", nullable = false)
     private Boolean active = true;
+
+    /** Profile completion status for tracking onboarding progress. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "profile_completion_status", nullable = false, length = 20)
+    private ProfileCompletionStatus profileCompletionStatus = ProfileCompletionStatus.INCOMPLETE;
 
     /** Optimistic locking version for profile updates. */
     @Version
@@ -225,6 +232,24 @@ public class TherapistProfile extends BaseEntity {
 
     public TherapistPhoto getPhoto() {
         return photo;
+    }
+
+    public ProfileCompletionStatus getProfileCompletionStatus() {
+        return profileCompletionStatus;
+    }
+
+    public void setProfileCompletionStatus(ProfileCompletionStatus profileCompletionStatus) {
+        this.profileCompletionStatus = profileCompletionStatus;
+    }
+
+    /**
+     * Enum representing the completion status of a therapist profile during onboarding.
+     */
+    public enum ProfileCompletionStatus {
+        /** Profile is incomplete and therapist needs to finish onboarding. */
+        INCOMPLETE,
+        /** Profile is complete with all required information. */
+        COMPLETE
     }
 
     public void setPhoto(TherapistPhoto photo) {

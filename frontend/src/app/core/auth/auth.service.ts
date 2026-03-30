@@ -14,6 +14,11 @@ export interface LoginResponse {
   tokenType: string;
 }
 
+export interface FirstLoginPasswordChangeRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 /**
  * Manages the authenticated session using an in-memory BehaviorSubject.
  *
@@ -78,5 +83,15 @@ export class AuthService {
       .subscribe({ error: () => {} }); // fire-and-forget
     this.tokenSubject.next(null);
     this.router.navigate(['/auth/login']);
+  }
+
+  /**
+   * Changes password on first login when user has mustChangePassword flag.
+   * Returns new auth tokens after successful password change.
+   */
+  changePasswordFirstLogin(request: FirstLoginPasswordChangeRequest): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${this.apiBase}/first-login-password-change`, request)
+      .pipe(tap(response => this.tokenSubject.next(response.accessToken)));
   }
 }

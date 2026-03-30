@@ -4,6 +4,7 @@ import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.users.dto.CreateUserRequest;
 import com.psyassistant.users.dto.PatchUserRequest;
+import com.psyassistant.users.dto.UserCreationResponseDto;
 import com.psyassistant.users.dto.UserPageResponse;
 import com.psyassistant.users.dto.UserSummaryDto;
 import jakarta.persistence.EntityNotFoundException;
@@ -55,6 +56,13 @@ public class UserManagementService {
 
     /** Placeholder hash used when creating users; forces a password reset before first login. */
     private static final String UNUSABLE_PASSWORD = "UNUSABLE";
+
+    /** Characters allowed in auto-generated temporary passwords. */
+    private static final String PASSWORD_CHARS =
+            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
+
+    /** Length of auto-generated temporary passwords. */
+    private static final int TEMP_PASSWORD_LENGTH = 12;
 
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository resetTokenRepository;
@@ -249,6 +257,77 @@ public class UserManagementService {
 
         return rawToken;
     }
+
+    /**
+     * Creates a new user account with an auto-generated temporary password.
+     *
+     * <p>The plain-text password is returned in the response and must be securely
+     * shared with the new user by the admin. The user is flagged with
+     * {@code mustChangePassword=true} and will be required to set a permanent
+     * password on first login.
+     *
+     * <p>This method is intended for therapist onboarding workflows where admins
+     * create accounts and manually share credentials.
+     *
+     * @param request  validated creation request
+     * @param actorId  UUID of the admin performing the action (for audit)
+     * @return creation response including the temporary password
+     * @throws DuplicateEmailException if the email is already registered
+     */
+    @Transactional
+    public UserCreationResponseDto createUserWithTemporaryPassword(
+            final CreateUserRequest request, final UUID actorId) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new DuplicateEmailException(request.email());
+        }
+
+        UserRole normalizedRole = request.role().canonical();
+
+        // Generate secure temporary password
+        String temporaryPassword = generateTemporaryPassword();
+        String passwordHash = passwordEncoder.encode(temporaryPassword);
+
+        User user = new User(request.email(), passwordHash, request.fullName(),
+                normalizedRole, true);
+        user.setMustChangePassword(true);
+        userRepository.save(user);
+
+        auditLogService.record(new AuditLog.Builder(EVENT_USER_CREATED)
+                .userId(actorId)
+                .emailAttempted(request.email())
+                .outcome(OUTCOME_SUCCESS)
+                .detail("targetUserId=" + user.getId() + " requestedRole=" + request.role()
+                        + " persistedRole=" + normalizedRole + " temporaryPassword=true")
+                .build());
+
+        LOG.info("event=USER_CREATED actorId={} targetUserId={} requestedRole={} "
+                + "persistedRole={} temporaryPassword=true",
+                actorId, user.getId(), request.role(), normalizedRole);
+
+        return UserCreationResponseDto.from(user, temporaryPassword);
+    }
+
+    // ---- private helpers -----------------------------------------------
+
+    /**
+     * Generates a cryptographically secure random password (12 characters).
+     *
+     * <p>Contains mixed case letters, numbers, and special characters to meet
+     * typical password complexity requirements. Excludes visually ambiguous
+     * characters (0, O, 1, l, I).
+     *
+     * @return random password string
+     */
+    private String generateTemporaryPassword() {
+        SecureRandom random = new SecureRandom();
+        StringBuilder password = new StringBuilder(TEMP_PASSWORD_LENGTH);
+        for (int i = 0; i < TEMP_PASSWORD_LENGTH; i++) {
+            int index = random.nextInt(PASSWORD_CHARS.length());
+            password.append(PASSWORD_CHARS.charAt(index));
+        }
+        return password.toString();
+    }
+
 
     // ---- private helpers -----------------------------------------------
 

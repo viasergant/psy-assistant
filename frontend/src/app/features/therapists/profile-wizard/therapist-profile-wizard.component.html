@@ -1,0 +1,277 @@
+<div class="wizard-container">
+  <p-toast></p-toast>
+  
+  <div class="wizard-card">
+    <div class="wizard-header">
+      <h1>Complete Your Profile</h1>
+      <p class="subtitle">Help us understand your expertise and preferences</p>
+    </div>
+
+    <p-stepper [(value)]="currentStep">
+      <!-- Step 1: Personal Information -->
+      <p-step-panel header="Personal Information">
+        <ng-template pTemplate="content">
+          <form [formGroup]="personalInfoForm" class="step-content">
+            <h3>Personal Information</h3>
+            <p class="step-description">Basic information about you</p>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="fullName">Full Name <span class="required">*</span></label>
+                <input 
+                  pInputText 
+                  id="fullName" 
+                  formControlName="fullName"
+                  placeholder="Enter your full name"
+                  [class.p-invalid]="hasError(personalInfoForm, 'fullName')"
+                />
+                <small class="p-error" *ngIf="hasError(personalInfoForm, 'fullName')">
+                  {{ getErrorMessage(personalInfoForm, 'fullName') }}
+                </small>
+              </div>
+
+              <div class="form-field">
+                <label for="phone">Phone Number</label>
+                <input 
+                  pInputText 
+                  id="phone" 
+                  formControlName="phone"
+                  placeholder="+1234567890"
+                  [class.p-invalid]="hasError(personalInfoForm, 'phone')"
+                />
+                <small class="p-error" *ngIf="hasError(personalInfoForm, 'phone')">
+                  {{ getErrorMessage(personalInfoForm, 'phone') }}
+                </small>
+              </div>
+
+              <div class="form-field">
+                <label for="contactPhone">Contact Phone (if different)</label>
+                <input 
+                  pInputText 
+                  id="contactPhone" 
+                  formControlName="contactPhone"
+                  placeholder="+1234567890"
+                  [class.p-invalid]="hasError(personalInfoForm, 'contactPhone')"
+                />
+              </div>
+
+              <div class="form-field full-width">
+                <label for="bio">Professional Bio <span class="required">*</span></label>
+                <textarea 
+                  pTextarea 
+                  id="bio" 
+                  formControlName="bio"
+                  rows="5"
+                  maxlength="500"
+                  placeholder="Tell us about your experience and approach..."
+                  [class.p-invalid]="hasError(personalInfoForm, 'bio')"
+                ></textarea>
+                <small class="char-count">{{ personalInfoForm.get('bio')?.value?.length || 0 }}/500</small>
+                <small class="p-error" *ngIf="hasError(personalInfoForm, 'bio')">
+                  {{ getErrorMessage(personalInfoForm, 'bio') }}
+                </small>
+              </div>
+            </div>
+
+            <div class="step-actions">
+              <p-button label="Save & Continue" icon="pi pi-arrow-right" (onClick)="nextStep()"></p-button>
+              <p-button label="Complete Later" styleClass="p-button-text" (onClick)="completeLater()"></p-button>
+            </div>
+          </form>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- Step 2: Credentials -->
+      <p-step-panel header="Credentials">
+        <ng-template pTemplate="content">
+          <form [formGroup]="credentialsForm" class="step-content">
+            <h3>Credentials & Qualifications</h3>
+            <p class="step-description">Your professional licenses and education</p>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="professionalTitle">Professional Title <span class="required">*</span></label>
+                <p-select 
+                  id="professionalTitle"
+                  formControlName="professionalTitle"
+                  [options]="professionalTitleOptions"
+                  placeholder="Select your title"
+                  optionLabel="label"
+                  optionValue="value"
+                  [class.p-invalid]="hasError(credentialsForm, 'professionalTitle')"
+                ></p-select>
+                <small class="p-error" *ngIf="hasError(credentialsForm, 'professionalTitle')">
+                  {{ getErrorMessage(credentialsForm, 'professionalTitle') }}
+                </small>
+              </div>
+
+              <div class="form-field">
+                <label for="yearsOfExperience">Years of Experience</label>
+                <p-inputNumber 
+                  id="yearsOfExperience"
+                  formControlName="yearsOfExperience"
+                  [min]="0"
+                  [max]="70"
+                  placeholder="0"
+                ></p-inputNumber>
+              </div>
+
+              <div class="form-field full-width">
+                <label for="licenseNumbers">License Numbers</label>
+                <textarea 
+                  pTextarea 
+                  id="licenseNumbers" 
+                  formControlName="licenseNumbers"
+                  rows="2"
+                  placeholder="Enter license numbers (one per line)"
+                ></textarea>
+                <small class="help-text">Enter each license number on a separate line</small>
+              </div>
+
+              <div class="form-field full-width">
+                <label for="credentials">Credentials & Certifications</label>
+                <textarea 
+                  pTextarea 
+                  id="credentials" 
+                  formControlName="credentials"
+                  rows="3"
+                  placeholder="List your credentials (e.g., PhD, PsyD, LMFT, etc.)"
+                ></textarea>
+              </div>
+
+              <div class="form-field full-width">
+                <label for="education">Education</label>
+                <textarea 
+                  pTextarea 
+                  id="education" 
+                  formControlName="education"
+                  rows="3"
+                  placeholder="Your educational background"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="step-actions">
+              <p-button label="Back" icon="pi pi-arrow-left" (onClick)="previousStep()" styleClass="p-button-outlined"></p-button>
+              <p-button label="Save & Continue" icon="pi pi-arrow-right" (onClick)="nextStep()"></p-button>
+            </div>
+          </form>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- Step 3: Specializations -->
+      <p-step-panel header="Specializations">
+        <ng-template pTemplate="content">
+          <form [formGroup]="specializationsForm" class="step-content">
+            <h3>Specializations & Languages</h3>
+            <p class="step-description">What areas do you specialize in?</p>
+
+            <div class="form-grid">
+              <div class="form-field full-width">
+                <label for="specializationIds">Specializations <span class="required">*</span></label>
+                <p-multiSelect 
+                  id="specializationIds"
+                  formControlName="specializationIds"
+                  [options]="specializations"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Select your specializations"
+                  [filter]="true"
+                  filterPlaceholder="Search specializations"
+                  [class.p-invalid]="hasError(specializationsForm, 'specializationIds')"
+                  display="chip"
+                ></p-multiSelect>
+                <small class="p-error" *ngIf="hasError(specializationsForm, 'specializationIds')">
+                  {{ getErrorMessage(specializationsForm, 'specializationIds') }}
+                </small>
+                <small class="help-text">Select at least one specialization</small>
+              </div>
+
+              <div class="form-field full-width">
+                <label for="languageIds">Languages <span class="required">*</span></label>
+                <p-multiSelect 
+                  id="languageIds"
+                  formControlName="languageIds"
+                  [options]="languages"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Select languages you speak"
+                  [filter]="true"
+                  filterPlaceholder="Search languages"
+                  [class.p-invalid]="hasError(specializationsForm, 'languageIds')"
+                  display="chip"
+                ></p-multiSelect>
+                <small class="p-error" *ngIf="hasError(specializationsForm, 'languageIds')">
+                  {{ getErrorMessage(specializationsForm, 'languageIds') }}
+                </small>
+                <small class="help-text">Select at least one language</small>
+              </div>
+            </div>
+
+            <div class="step-actions">
+              <p-button label="Back" icon="pi pi-arrow-left" (onClick)="previousStep()" styleClass="p-button-outlined"></p-button>
+              <p-button label="Save & Continue" icon="pi pi-arrow-right" (onClick)="nextStep()"></p-button>
+            </div>
+          </form>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- Step 4: Pricing (Optional) -->
+      <p-step-panel header="Availability & Pricing">
+        <ng-template pTemplate="content">
+          <form [formGroup]="pricingForm" class="step-content">
+            <h3>Availability & Pricing</h3>
+            <p class="step-description">Set your session preferences (optional - can be configured later)</p>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="sessionDuration">Default Session Duration</label>
+                <p-select 
+                  id="sessionDuration"
+                  formControlName="sessionDuration"
+                  [options]="sessionDurationOptions"
+                  placeholder="Select duration"
+                  optionLabel="label"
+                  optionValue="value"
+                ></p-select>
+              </div>
+
+              <div class="form-field">
+                <label for="baseRate">Base Rate (per session)</label>
+                <p-inputNumber 
+                  id="baseRate"
+                  formControlName="baseRate"
+                  mode="currency"
+                  currency="USD"
+                  [min]="0"
+                  placeholder="0.00"
+                ></p-inputNumber>
+              </div>
+
+              <div class="form-field full-width">
+                <div class="checkbox-field">
+                  <p-checkbox 
+                    id="acceptsInsurance"
+                    formControlName="acceptsInsurance"
+                    [binary]="true"
+                  ></p-checkbox>
+                  <label for="acceptsInsurance">I accept insurance</label>
+                </div>
+              </div>
+
+              <div class="info-message">
+                <i class="pi pi-info-circle"></i>
+                <p>You can configure detailed pricing rules, availability schedules, and insurance details later in your profile settings.</p>
+              </div>
+            </div>
+
+            <div class="step-actions">
+              <p-button label="Back" icon="pi pi-arrow-left" (onClick)="previousStep()" styleClass="p-button-outlined"></p-button>
+              <p-button label="Complete Profile" icon="pi pi-check" (onClick)="submitProfile()" [loading]="loading"></p-button>
+            </div>
+          </form>
+        </ng-template>
+      </p-step-panel>
+    </p-stepper>
+  </div>
+</div>

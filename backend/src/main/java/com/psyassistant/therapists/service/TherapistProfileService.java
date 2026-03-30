@@ -300,6 +300,126 @@ public class TherapistProfileService {
         return !profileRepository.existsByEmailIgnoreCaseExcludingId(email, excludeProfileId);
     }
 
+    // ========== Profile Completion Methods ==========
+
+    /**
+     * Checks and updates the completion status of a therapist profile.
+     *
+     * <p>A profile is considered complete when it meets these criteria:
+     * <ul>
+     *   <li>Name is not blank</li>
+     *   <li>Email is not blank</li>
+     *   <li>At least one specialization is specified</li>
+     *   <li>At least one language is specified</li>
+     *   <li>Professional bio is present</li>
+     * </ul>
+     *
+     * @param profileId the therapist profile UUID
+     * @return the updated profile completion status
+     * @throws EntityNotFoundException if profile not found
+     */
+    @Transactional
+    public TherapistProfile.ProfileCompletionStatus checkAndUpdateProfileCompletion(UUID profileId) {
+        TherapistProfile profile = profileRepository.findById(profileId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Therapist profile not found: " + profileId));
+
+        boolean isComplete = isProfileComplete(profile);
+        TherapistProfile.ProfileCompletionStatus newStatus = isComplete
+                ? TherapistProfile.ProfileCompletionStatus.COMPLETE
+                : TherapistProfile.ProfileCompletionStatus.INCOMPLETE;
+
+        if (profile.getProfileCompletionStatus() != newStatus) {
+            profile.setProfileCompletionStatus(newStatus);
+            profileRepository.save(profile);
+        }
+
+        return newStatus;
+    }
+
+    /**
+     * Marks a therapist profile as complete if it meets all requirements.
+     *
+     * <p>This method validates that all required fields are filled before
+     * marking the profile as complete. If validation fails, an exception is thrown.
+     *
+     * @param profileId the therapist profile UUID
+     * @return the updated profile
+     * @throws EntityNotFoundException if profile not found
+     * @throws IllegalStateException if profile doesn't meet completion requirements
+     */
+    @Transactional
+    public TherapistProfile markProfileComplete(UUID profileId) {
+        TherapistProfile profile = profileRepository.findById(profileId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Therapist profile not found: " + profileId));
+
+        if (!isProfileComplete(profile)) {
+            List<String> missingFields = getMissingRequiredFields(profile);
+            throw new IllegalStateException(
+                    "Profile cannot be marked complete. Missing required fields: "
+                            + String.join(", ", missingFields));
+        }
+
+        profile.setProfileCompletionStatus(TherapistProfile.ProfileCompletionStatus.COMPLETE);
+        return profileRepository.save(profile);
+    }
+
+    /**
+     * Gets the current completion status of a therapist profile.
+     *
+     * @param profileId the therapist profile UUID
+     * @return the completion status
+     * @throws EntityNotFoundException if profile not found
+     */
+    @Transactional(readOnly = true)
+    public TherapistProfile.ProfileCompletionStatus getProfileCompletionStatus(UUID profileId) {
+        TherapistProfile profile = profileRepository.findById(profileId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Therapist profile not found: " + profileId));
+        return profile.getProfileCompletionStatus();
+    }
+
+    /**
+     * Checks if a profile meets all completion requirements.
+     *
+     * @param profile the therapist profile
+     * @return true if profile is complete
+     */
+    private boolean isProfileComplete(TherapistProfile profile) {
+        return profile.getName() != null && !profile.getName().isBlank()
+                && profile.getEmail() != null && !profile.getEmail().isBlank()
+                && profile.getSpecializations() != null && !profile.getSpecializations().isEmpty()
+                && profile.getLanguages() != null && !profile.getLanguages().isEmpty()
+                && profile.getBio() != null && !profile.getBio().isBlank();
+    }
+
+    /**
+     * Returns a list of required fields that are missing or incomplete.
+     *
+     * @param profile the therapist profile
+     * @return list of missing field names
+     */
+    private List<String> getMissingRequiredFields(TherapistProfile profile) {
+        List<String> missing = new ArrayList<>();
+        if (profile.getName() == null || profile.getName().isBlank()) {
+            missing.add("name");
+        }
+        if (profile.getEmail() == null || profile.getEmail().isBlank()) {
+            missing.add("email");
+        }
+        if (profile.getSpecializations() == null || profile.getSpecializations().isEmpty()) {
+            missing.add("specializations (at least 1)");
+        }
+        if (profile.getLanguages() == null || profile.getLanguages().isEmpty()) {
+            missing.add("languages (at least 1)");
+        }
+        if (profile.getBio() == null || profile.getBio().isBlank()) {
+            missing.add("bio");
+        }
+        return missing;
+    }
+
     // ========== Helper Methods ==========
 
     /**

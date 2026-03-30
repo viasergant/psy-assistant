@@ -2,6 +2,7 @@ package com.psyassistant.auth.service;
 
 import com.psyassistant.auth.domain.RefreshToken;
 import com.psyassistant.auth.domain.RefreshTokenRepository;
+import com.psyassistant.auth.dto.FirstLoginPasswordChangeDto;
 import com.psyassistant.auth.dto.LoginRequest;
 import com.psyassistant.auth.dto.LoginResponse;
 import com.psyassistant.common.audit.AuditLog;
@@ -39,6 +40,7 @@ public class AuthService {
     private static final String EVENT_LOGOUT = "LOGOUT";
     private static final String EVENT_TOKEN_REFRESH = "TOKEN_REFRESH";
     private static final String EVENT_REPLAY_ATTACK = "REPLAY_ATTACK";
+    private static final String EVENT_PASSWORD_CHANGED = "PASSWORD_CHANGED";
     private static final String OUTCOME_SUCCESS = "SUCCESS";
     private static final String OUTCOME_FAILURE = "FAILURE";
     private static final String SHA_256 = "SHA-256";
@@ -228,6 +230,78 @@ public class AuthService {
                     .build());
             LOG.info("event=LOGOUT userId={} requestId={}", user.getId(), requestId);
         });
+    }
+
+    /**
+     * Changes a user's password during first login when mustChangePassword is true.
+     *
+     * <p>Validates the current temporary password, sets the new permanent password,
+     * clears the mustChangePassword flag, and issues new authentication tokens.
+     *
+     * @param userId    the user's UUID
+     * @param dto       password change request
+     * @param ipAddress caller's IP address
+     * @return authentication result with new tokens
+     * @throws AuthException if current password is invalid or user not found
+     */
+    @Transactional
+    public AuthResult changePasswordFirstLogin(
+            final UUID userId,
+            final FirstLoginPasswordChangeDto dto,
+            final String ipAddress) {
+        String requestId = MDC.get("requestId");
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(AuthException.ErrorCode.INVALID_CREDENTIALS,
+                        "User not found"));
+
+        // Validate current password
+        if (!passwordEncoder.matches(dto.currentPassword(), user.getPasswordHash())) {
+            recordFailure(EVENT_LOGIN_FAILURE, user.getId().toString(),
+                    user.getEmail(), ipAddress, requestId, "Invalid current password");
+            LOG.warn("event=PASSWORD_CHANGE_FAILURE userId={} requestId={} reason=InvalidCurrentPassword",
+                    user.getId(), requestId);
+            throw new AuthException(AuthException.ErrorCode.INVALID_CREDENTIALS,
+                    "Current password is incorrect");
+        }
+
+        // Check if password change is actually required
+        if (!user.isMustChangePassword()) {
+            LOG.warn("event=PASSWORD_CHANGE_ATTEMPT userId={} requestId={} reason=NotRequired",
+                    user.getId(), requestId);
+        }
+
+        // Update password using the User entity method
+        user.updatePasswordHash(passwordEncoder.encode(dto.newPassword()));
+        userRepository.save(user);
+
+        // Revoke all existing sessions
+        refreshTokenRepository.deleteAllByUserId(user.getId());
+
+        // Issue new authentication tokens
+        String rawToken = tokenService.generateRawRefreshToken();
+        String hash = tokenService.hashRefreshToken(rawToken);
+        Instant expiresAt = Instant.now().plus(tokenService.refreshTtlFor(user.getRole()));
+        RefreshToken refreshToken = new RefreshToken(user, hash, expiresAt);
+        refreshTokenRepository.save(refreshToken);
+
+        String accessToken = tokenService.buildAccessToken(user);
+        Instant accessExpiry = tokenService.accessTokenExpiresAt(user.getRole());
+
+        auditLogService.record(new AuditLog.Builder(EVENT_PASSWORD_CHANGED)
+                .userId(user.getId())
+                .ipAddress(ipAddress)
+                .requestId(requestId)
+                .outcome(OUTCOME_SUCCESS)
+                .detail("firstLogin=true")
+                .build());
+
+        LOG.info("event=PASSWORD_CHANGED userId={} requestId={} firstLogin=true",
+                user.getId(), requestId);
+
+        LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer");
+        return new AuthResult(response, rawToken, user.getRole(),
+                tokenService.refreshTtlFor(user.getRole()));
     }
 
     // ---- private helpers -----------------------------------------------

@@ -46,6 +46,18 @@ export interface UserSummary {
   updatedAt: string;
 }
 
+/**
+ * Response returned after creating a new user account.
+ * Contains the auto-generated temporary password that must be shown to the admin.
+ */
+export interface UserCreationResponse {
+  id: string;
+  email: string;
+  fullName: string | null;
+  role: UserRole;
+  temporaryPassword: string;
+}
+
 /** Paginated list response. */
 export interface UserPage {
   content: UserSummary[];

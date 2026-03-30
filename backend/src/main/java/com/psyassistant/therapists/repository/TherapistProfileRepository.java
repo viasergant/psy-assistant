@@ -3,6 +3,9 @@ package com.psyassistant.therapists.repository;
 import com.psyassistant.therapists.domain.TherapistProfile;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -41,4 +44,14 @@ public interface TherapistProfileRepository extends JpaRepository<TherapistProfi
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
            "FROM TherapistProfile p WHERE LOWER(p.email) = LOWER(:email) AND p.id != :profileId")
     boolean existsByEmailIgnoreCaseExcludingId(@Param("email") String email, @Param("profileId") UUID profileId);
+
+    /**
+     * Finds all therapist profiles with pagination, eagerly fetching specializations and languages
+     * to avoid lazy initialization exceptions when mapping to DTOs.
+     *
+     * @param pageable pagination information
+     * @return a page of therapist profiles with specializations and languages loaded
+     */
+    @EntityGraph(attributePaths = {"specializations", "languages"})
+    Page<TherapistProfile> findAllBy(Pageable pageable);
 }

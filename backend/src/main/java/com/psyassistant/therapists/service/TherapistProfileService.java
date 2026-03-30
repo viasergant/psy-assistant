@@ -169,7 +169,7 @@ public class TherapistProfileService {
     public org.springframework.data.domain.Page<TherapistProfile> getAllProfiles(
         org.springframework.data.domain.Pageable pageable
     ) {
-        return profileRepository.findAll(pageable);
+        return profileRepository.findAllBy(pageable);
     }
 
     /**

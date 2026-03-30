@@ -7,6 +7,10 @@ import com.psyassistant.therapists.dto.UpdateTherapistProfileRequest;
 import com.psyassistant.therapists.service.TherapistProfileService;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -30,6 +35,38 @@ public class TherapistProfileController {
 
     public TherapistProfileController(TherapistProfileService therapistProfileService) {
         this.therapistProfileService = therapistProfileService;
+    }
+
+    /**
+     * GET /api/v1/therapists
+     * Lists all therapist profiles with pagination.
+     *
+     * <p>Required role: ADMIN
+     *
+     * @param page zero-based page number (default: 0)
+     * @param size page size (default: 20)
+     * @return 200 OK with paginated therapist list
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PageResponse<TherapistProfileAdminDto>> listTherapists(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        Page<TherapistProfile> profilePage = therapistProfileService.getAllProfiles(pageable);
+        
+        Page<TherapistProfileAdminDto> dtoPage = profilePage.map(TherapistProfileAdminDto::fromAdmin);
+        
+        PageResponse<TherapistProfileAdminDto> response = new PageResponse<>(
+            dtoPage.getContent(),
+            dtoPage.getNumber(),
+            dtoPage.getSize(),
+            dtoPage.getTotalElements(),
+            dtoPage.getTotalPages()
+        );
+        
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -186,4 +223,15 @@ public class TherapistProfileController {
      * Simple request record for deactivation with optional reason.
      */
     public record DeactivateRequest(String reason) { }
+
+    /**
+     * Paginated response wrapper matching frontend expectations.
+     */
+    public record PageResponse<T>(
+        java.util.List<T> content,
+        int page,
+        int size,
+        long totalElements,
+        int totalPages
+    ) { }
 }

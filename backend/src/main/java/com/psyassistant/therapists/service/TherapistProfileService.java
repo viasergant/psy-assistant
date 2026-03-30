@@ -133,6 +133,19 @@ public class TherapistProfileService {
     }
 
     /**
+     * Retrieves all therapist profiles with pagination.
+     *
+     * @param pageable pagination information
+     * @return a page of therapist profiles
+     */
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<TherapistProfile> getAllProfiles(
+        org.springframework.data.domain.Pageable pageable
+    ) {
+        return profileRepository.findAll(pageable);
+    }
+
+    /**
      * Updates a therapist profile with optimistic locking.
      * Tracks all field changes and emits an audit entry.
      *

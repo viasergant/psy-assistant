@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { UserManagementService } from '../../services/user-management.service';
 import { TherapistManagementService } from '../../../therapists/services/therapist-management.service';
 import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserSummary, UserPage } from '../../models/user.model';
@@ -186,31 +186,93 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
     </app-password-reset-dialog>
   `,
   styles: [`
-    .page { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+    .page {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
     .page-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
     }
-    h1 { margin: 0; font-size: 1.5rem; }
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 600;
+      color: var(--color-text-primary, #0F172A);
+      margin: 0;
+    }
     .btn-primary {
-      padding: .5rem 1.25rem; background: #0EA5A0; color: #fff;
-      border: none; border-radius: 8px; cursor: pointer; font-size: .9375rem; font-weight: 600;
-      transition: background 0.15s ease, box-shadow 0.15s ease;
+      padding: .7rem 1.5rem;
+      background: var(--color-accent, #0EA5A0);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: .9375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
     }
-    .btn-primary:hover { background: #0C9490; box-shadow: 0 4px 12px rgba(14,165,160,.28); }
-    .btn-primary:active { background: #0A8480; box-shadow: none; }
+    .btn-primary:hover {
+      background: var(--color-accent-hover, #0C9490);
+      box-shadow: 0 4px 14px rgba(14,165,160,.3);
+      transform: translateY(-1px);
+    }
     .filters {
-      display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      padding: 1.25rem;
+      background: var(--color-surface, #fff);
+      border-radius: 12px;
+      border: 1.5px solid var(--color-border, #E2E8F0);
     }
     .filter-group {
-      display: flex; flex-direction: column; gap: .35rem;
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
     }
-    .filter-group label { font-size: .8125rem; font-weight: 500; color: #374151; }
-    .state-msg { color: #64748B; padding: 2rem 0; text-align: center; }
+    .filter-group label {
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--color-text-secondary, #64748B);
+    }
+    .filter-group select {
+      padding: .55rem .875rem;
+      border: 1.5px solid var(--color-border, #E2E8F0);
+      border-radius: 8px;
+      font-size: .9375rem;
+      min-width: 180px;
+      font-family: inherit;
+      color: var(--color-text-primary, #0F172A);
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .filter-group select:hover {
+      border-color: #9CA3AF;
+    }
+    .filter-group select:focus {
+      outline: none;
+      border-color: var(--color-accent, #0EA5A0);
+      box-shadow: 0 0 0 3px rgba(14,165,160,.15);
+    }
+    .state-msg {
+      padding: 3rem 2rem;
+      text-align: center;
+      color: var(--color-text-secondary, #64748B);
+      font-size: .9375rem;
+    }
     .alert-error {
-      padding: .75rem 1rem; background: #FEF2F2;
-      border: 1px solid #FECACA; border-radius: 8px;
-      color: #DC2626; margin-bottom: 1rem; font-size: .875rem;
+      padding: .875rem 1.125rem;
+      background: var(--color-error-bg, #FEF2F2);
+      border: 1px solid var(--color-error-border, #FECACA);
+      border-radius: 10px;
+      color: var(--color-error, #DC2626);
+      margin-bottom: 1.5rem;
+      font-size: .875rem;
       position: relative;
       display: flex;
       align-items: center;
@@ -236,66 +298,165 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
     .close-btn:hover {
       opacity: 1;
     }
-    .table-wrapper { overflow-x: auto; }
+    .table-wrapper {
+      background: var(--color-surface, #fff);
+      border-radius: 12px;
+      border: 1.5px solid var(--color-border, #E2E8F0);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
     table {
-      width: 100%; border-collapse: collapse; font-size: .95rem;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead {
+      background: #F8FAFC;
+      border-bottom: 1.5px solid var(--color-border, #E2E8F0);
     }
     th {
-      text-align: left; padding: .75rem 1rem;
-      background: #f7fafc; border-bottom: 2px solid #e2e8f0;
+      text-align: left;
+      padding: .875rem 1rem;
+      font-size: .8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      color: var(--color-text-secondary, #64748B);
+    }
+    td {
+      padding: 1rem;
+      font-size: .9375rem;
+      color: var(--color-text-primary, #0F172A);
+      border-bottom: 1px solid #F1F5F9;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    tbody tr:hover {
+      background: #FAFBFC;
+    }
+    .sort-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: inherit;
+      padding: 0;
+      color: inherit;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .sort-btn:hover {
+      color: var(--color-accent, #0EA5A0);
+    }
+    .badge {
+      display: inline-block;
+      padding: .35rem .75rem;
+      border-radius: 6px;
+      font-size: .8125rem;
+      font-weight: 500;
       white-space: nowrap;
     }
-    td { padding: .75rem 1rem; border-bottom: 1px solid #e2e8f0; }
-    tr:last-child td { border-bottom: none; }
-    .sort-btn {
-      background: none; border: none; cursor: pointer;
-      font-weight: 600; font-size: inherit; padding: 0;
-      color: #0F172A;
+    .badge-admin {
+      background: #EFF6FF;
+      color: #1E40AF;
     }
-    .sort-btn:hover { color: #0EA5A0; }
-    .badge {
-      display: inline-block; padding: .2rem .6rem;
-      border-radius: 999px; font-size: .8rem; font-weight: 500;
-      background: #e2e8f0; color: #2d3748;
+    .badge-active {
+      background: #DCFCE7;
+      color: #166534;
     }
-    .badge-admin { background: #ebf8ff; color: #2b6cb0; }
-    .badge-active { background: #f0fff4; color: #276749; }
-    .badge-inactive { background: #fff5f5; color: #c53030; }
-    .actions-cell { white-space: nowrap; }
+    .badge-inactive {
+      background: #F3F4F6;
+      color: #6B7280;
+    }
+    .actions-cell {
+      display: flex;
+      gap: .5rem;
+      justify-content: flex-end;
+    }
     .btn-action {
-      padding: .3rem .75rem; margin-right: .4rem;
-      border: 1.5px solid #D1D5DB; border-radius: 6px;
-      background: #fff; cursor: pointer; font-size: .8125rem;
-      color: #374151; font-weight: 500;
-      transition: background 0.12s ease, border-color 0.12s ease;
+      padding: .45rem .875rem;
+      border: 1.5px solid var(--color-border, #E2E8F0);
+      background: #fff;
+      border-radius: 6px;
+      font-size: .8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--color-text-primary, #0F172A);
+      transition: all 0.15s;
+      font-family: inherit;
     }
-    .btn-action:hover { background: #F9FAFB; border-color: #9CA3AF; }
-    .btn-danger { border-color: #FECACA; color: #DC2626; }
-    .btn-danger:hover { background: #FEF2F2; border-color: #FCA5A5; }
+    .btn-action:hover {
+      background: #F8FAFC;
+      border-color: #CBD5E1;
+    }
+    .btn-danger {
+      color: var(--color-error, #DC2626);
+      border-color: #FCA5A5;
+    }
+    .btn-danger:hover {
+      background: #FEF2F2;
+      border-color: var(--color-error, #DC2626);
+    }
     .pagination {
-      display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 2rem;
     }
     .pagination button {
-      padding: .4rem .9rem; border: 1.5px solid #D1D5DB;
-      border-radius: 6px; background: #fff; cursor: pointer; font-size: 1.1rem;
-      color: #374151;
+      padding: .5rem .875rem;
+      border: 1.5px solid var(--color-border, #E2E8F0);
+      background: #fff;
+      border-radius: 6px;
+      font-size: .9375rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
     }
-    .pagination button:hover:not(:disabled) { background: #F9FAFB; border-color: #9CA3AF; }
-    .pagination button:disabled { opacity: .35; cursor: not-allowed; }
-    .total-count { color: #64748B; font-size: .875rem; margin-top: .5rem; }
+    .pagination button:hover:not(:disabled) {
+      background: #F8FAFC;
+      border-color: var(--color-accent, #0EA5A0);
+    }
+    .pagination button:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+    .pagination span {
+      font-size: .9375rem;
+      color: var(--color-text-secondary, #64748B);
+    }
+    .total-count {
+      text-align: center;
+      margin-top: .75rem;
+      font-size: .875rem;
+      color: var(--color-text-muted, #94A3B8);
+    }
     .sr-only {
-      position: absolute; width: 1px; height: 1px;
-      padding: 0; margin: -1px; overflow: hidden;
-      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border-width: 0;
     }
     .name-link {
-      background: none; border: none; padding: 0;
-      color: #0EA5A0; cursor: pointer; font-size: inherit;
-      text-decoration: none; font-weight: 500;
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--color-accent, #0EA5A0);
+      cursor: pointer;
+      font-size: inherit;
+      text-decoration: none;
+      font-weight: 500;
       transition: color 0.12s ease;
     }
     .name-link:hover {
-      color: #0C9490; text-decoration: underline;
+      color: var(--color-accent-hover, #0C9490);
+      text-decoration: underline;
     }
     .name-link:active {
       color: #0A8480;
@@ -331,10 +492,21 @@ export class UserListComponent implements OnInit {
   constructor(
     private userService: UserManagementService,
     private therapistService: TherapistManagementService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    // Read initial filter state from query params if present
+    this.route.queryParams.subscribe(params => {
+      if (params['role']) {
+        this.roleFilter = params['role'];
+      }
+      if (params['status']) {
+        this.statusFilter = params['status'];
+      }
+    });
+    
     this.loadPage();
   }
 
@@ -342,7 +514,11 @@ export class UserListComponent implements OnInit {
   applyFilters(): void {
     // If therapist role is selected, navigate to dedicated therapist management page
     if (this.roleFilter === 'THERAPIST') {
-      this.router.navigate(['/admin/therapists']);
+      const queryParams: any = {};
+      if (this.statusFilter !== '') {
+        queryParams.status = this.statusFilter;
+      }
+      this.router.navigate(['/admin/therapists'], { queryParams });
       return;
     }
     

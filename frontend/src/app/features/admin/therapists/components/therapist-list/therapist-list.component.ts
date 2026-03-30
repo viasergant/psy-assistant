@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
   TherapistProfile,
@@ -8,6 +9,7 @@ import {
   EMPLOYMENT_STATUS_LABELS,
   EmploymentStatus
 } from '../../models/therapist.model';
+import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole } from '../../../users/models/user.model';
 import { CreateTherapistDialogComponent } from '../../../therapists/components/create-therapist-dialog/create-therapist-dialog.component';
 import { EditTherapistDialogComponent } from '../../../therapists/components/edit-therapist-dialog/edit-therapist-dialog.component';
 
@@ -39,21 +41,29 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
       <!-- Filters -->
       <div class="filters" role="group" aria-label="Therapist filters">
         <div class="filter-group">
+          <label for="roleFilter">Role</label>
+          <select id="roleFilter" [(ngModel)]="roleFilter" (change)="onRoleFilterChange()">
+            <option value="">All roles</option>
+            <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="statusFilter">Status</label>
+          <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="">All statuses</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
           <label for="employmentFilter">Employment Status</label>
           <select id="employmentFilter" [(ngModel)]="employmentFilter" (change)="applyFilters()">
             <option value="">All statuses</option>
             <option *ngFor="let status of employmentStatuses" [value]="status">
               {{ statusLabels[status] }}
             </option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label for="activeFilter">Active Status</label>
-          <select id="activeFilter" [(ngModel)]="activeFilter" (change)="applyFilters()">
-            <option value="">All</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
           </select>
         </div>
       </div>
@@ -391,6 +401,8 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
 export class TherapistListComponent implements OnInit {
   readonly employmentStatuses = EMPLOYMENT_STATUS_OPTIONS;
   readonly statusLabels = EMPLOYMENT_STATUS_LABELS;
+  readonly assignableRoles = ASSIGNABLE_ROLES;
+  readonly roleLabels = ROLE_LABELS;
 
   therapists: TherapistProfile[] = [];
   loading = false;
@@ -403,25 +415,58 @@ export class TherapistListComponent implements OnInit {
   totalPages = 0;
 
   // Filters
+  roleFilter: UserRole | '' = 'THERAPIST'; // Default to THERAPIST since we're on therapist page
+  statusFilter: '' | 'true' | 'false' = '';
   employmentFilter: EmploymentStatus | '' = '';
-  activeFilter: string = '';
 
   // Dialogs
   showCreate = false;
   showEdit = false;
   editingTherapist: TherapistProfile | null = null;
 
-  constructor(private therapistService: TherapistManagementService) {}
+  constructor(
+    private therapistService: TherapistManagementService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
+    // Read initial filter state from query params if present
+    this.route.queryParams.subscribe(params => {
+      if (params['status']) {
+        this.statusFilter = params['status'];
+      }
+    });
+    
     this.loadTherapists();
+  }
+
+  /**
+   * Handles role filter changes. If a different role is selected or "All roles",
+   * navigate to the main users page with appropriate filters.
+   */
+  onRoleFilterChange(): void {
+    if (this.roleFilter === '' || this.roleFilter !== 'THERAPIST') {
+      // Navigate to /admin/users with the selected role filter and preserve status filter
+      const queryParams: any = {};
+      if (this.roleFilter) {
+        queryParams.role = this.roleFilter;
+      }
+      if (this.statusFilter !== '') {
+        queryParams.status = this.statusFilter;
+      }
+      this.router.navigate(['/admin/users'], { queryParams });
+    } else {
+      // Stay on therapist page and reload
+      this.applyFilters();
+    }
   }
 
   loadTherapists(): void {
     this.loading = true;
     this.loadError = null;
 
-    const active = this.activeFilter === '' ? undefined : this.activeFilter === 'true';
+    const active = this.statusFilter === '' ? undefined : this.statusFilter === 'true';
     const employment = this.employmentFilter === '' ? undefined : this.employmentFilter;
 
     this.therapistService.getTherapists(this.currentPage, this.pageSize, employment, active).subscribe({

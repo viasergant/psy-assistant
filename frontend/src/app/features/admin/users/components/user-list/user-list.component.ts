@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { UserManagementService } from '../../services/user-management.service';
+import { TherapistManagementService } from '../../../therapists/services/therapist-management.service';
 import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserSummary, UserPage } from '../../models/user.model';
 import { CreateUserDialogComponent } from '../create-user-dialog/create-user-dialog.component';
 import { EditUserDialogComponent } from '../edit-user-dialog/edit-user-dialog.component';
@@ -90,7 +92,14 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
           </thead>
           <tbody>
             <tr *ngFor="let u of users">
-              <td>{{ u.fullName ?? '—' }}</td>
+              <td>
+                <button 
+                  class="name-link" 
+                  (click)="navigateToProfile(u)"
+                  [attr.aria-label]="'View profile for ' + (u.fullName ?? u.email)">
+                  {{ u.fullName ?? '—' }}
+                </button>
+              </td>
               <td>{{ u.email }}</td>
               <td>
                 <span class="badge" [class.badge-admin]="u.role === 'SYSTEM_ADMINISTRATOR' || u.role === 'ADMIN'">
@@ -241,6 +250,18 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
       padding: 0; margin: -1px; overflow: hidden;
       clip: rect(0,0,0,0); white-space: nowrap; border: 0;
     }
+    .name-link {
+      background: none; border: none; padding: 0;
+      color: #0EA5A0; cursor: pointer; font-size: inherit;
+      text-decoration: none; font-weight: 500;
+      transition: color 0.12s ease;
+    }
+    .name-link:hover {
+      color: #0C9490; text-decoration: underline;
+    }
+    .name-link:active {
+      color: #0A8480;
+    }
   `]
 })
 export class UserListComponent implements OnInit {
@@ -265,7 +286,11 @@ export class UserListComponent implements OnInit {
   editTarget: UserSummary | null = null;
   resetTarget: UserSummary | null = null;
 
-  constructor(private userService: UserManagementService) {}
+  constructor(
+    private userService: UserManagementService,
+    private therapistService: TherapistManagementService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadPage();
@@ -315,6 +340,35 @@ export class UserListComponent implements OnInit {
   /** Opens the password reset confirmation dialog. */
   openPasswordReset(user: UserSummary): void {
     this.resetTarget = user;
+  }
+
+  /**
+   * Navigates to the appropriate profile page based on user role.
+   * - THERAPIST: Navigate to therapist profile
+   * - Others: Currently no dedicated profile page, could be extended in future
+   */
+  navigateToProfile(user: UserSummary): void {
+    // Normalize role handling for legacy values
+    const role = user.role === 'USER' ? 'THERAPIST' : user.role;
+    
+    if (role === 'THERAPIST') {
+      // Look up therapist profile by email and navigate to their profile
+      this.therapistService.getTherapistByEmail(user.email).subscribe({
+        next: (therapist) => {
+          this.router.navigate(['/admin/therapists', therapist.id]);
+        },
+        error: (err) => {
+          console.error('Failed to find therapist profile for user:', user.email, err);
+          // Could show a toast notification here
+          // For now, gracefully fail - maybe the therapist profile hasn't been created yet
+        }
+      });
+    } else {
+      // For other roles, you could navigate to a general user profile page
+      // or show user details in a dialog. For now, we'll just do nothing.
+      // Future enhancement: navigate to a user detail page
+      console.log('Profile view not yet implemented for role:', role);
+    }
   }
 
   /**

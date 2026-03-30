@@ -70,6 +70,13 @@ export class TherapistManagementService {
   }
 
   /**
+   * Retrieves a single therapist profile by email address.
+   */
+  getTherapistByEmail(email: string): Observable<TherapistProfile> {
+    return this.http.get<TherapistProfile>(`${this.baseUrl}/by-email/${encodeURIComponent(email)}`);
+  }
+
+  /**
    * Creates a new therapist profile.
    */
   createTherapist(request: CreateTherapistRequest): Observable<TherapistProfile> {

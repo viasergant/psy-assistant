@@ -135,6 +135,26 @@ public class TherapistProfileController {
     }
 
     /**
+     * GET /api/v1/therapists/by-email/{email}
+     * Retrieves a therapist profile by email address.
+     *
+     * <p>Required role: ADMIN
+     *
+     * @param email the therapist's email address
+     * @return 200 OK with the profile, or 404 if not found
+     */
+    @GetMapping("/by-email/{email}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<TherapistProfileAdminDto> getTherapistByEmail(@PathVariable String email) {
+        try {
+            TherapistProfile profile = therapistProfileService.getProfileByEmail(email);
+            return ResponseEntity.ok(TherapistProfileAdminDto.fromAdmin(profile));
+        } catch (jakarta.persistence.EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
      * PATCH /api/v1/therapists/{id}
      * Updates a therapist profile (admin only, all fields).
      *

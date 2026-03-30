@@ -146,6 +146,21 @@ public class TherapistProfileService {
     }
 
     /**
+     * Finds a therapist profile by email address (case-insensitive).
+     *
+     * @param email the email to search for
+     * @return the profile if found
+     * @throws EntityNotFoundException if no profile with that email exists
+     */
+    @Transactional(readOnly = true)
+    public TherapistProfile getProfileByEmail(String email) {
+        return profileRepository.findByEmailIgnoreCase(email)
+            .orElseThrow(() -> new EntityNotFoundException(
+                "Therapist profile not found for email: " + email
+            ));
+    }
+
+    /**
      * Updates a therapist profile with optimistic locking.
      * Tracks all field changes and emits an audit entry.
      *

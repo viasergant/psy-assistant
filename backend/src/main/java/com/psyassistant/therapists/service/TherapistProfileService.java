@@ -7,6 +7,10 @@ import com.psyassistant.therapists.domain.TherapistProfile;
 import com.psyassistant.therapists.repository.LanguageRepository;
 import com.psyassistant.therapists.repository.SpecializationRepository;
 import com.psyassistant.therapists.repository.TherapistProfileRepository;
+import com.psyassistant.users.UserManagementService;
+import com.psyassistant.users.UserRepository;
+import com.psyassistant.users.UserRole;
+import com.psyassistant.users.dto.CreateUserRequest;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +30,9 @@ import org.springframework.web.server.ResponseStatusException;
  * <p>Coordinates with {@link TherapistAuditService} to record field-level
  * changes in an immutable audit trail. Uses optimistic locking via the
  * {@code version} column to prevent concurrent conflicting updates.
+ *
+ * <p>When creating a new therapist profile, this service automatically creates
+ * a corresponding user account with THERAPIST role if one doesn't already exist.
  */
 @Service
 public class TherapistProfileService {
@@ -34,20 +41,30 @@ public class TherapistProfileService {
     private final SpecializationRepository specializationRepository;
     private final LanguageRepository languageRepository;
     private final TherapistAuditService auditService;
+    private final UserRepository userRepository;
+    private final UserManagementService userManagementService;
 
     public TherapistProfileService(TherapistProfileRepository profileRepository,
                                    SpecializationRepository specializationRepository,
                                    LanguageRepository languageRepository,
-                                   TherapistAuditService auditService) {
+                                   TherapistAuditService auditService,
+                                   UserRepository userRepository,
+                                   UserManagementService userManagementService) {
         this.profileRepository = profileRepository;
         this.specializationRepository = specializationRepository;
         this.languageRepository = languageRepository;
         this.auditService = auditService;
+        this.userRepository = userRepository;
+        this.userManagementService = userManagementService;
     }
 
     /**
      * Creates a new therapist profile with initial specializations, languages,
      * and employment status.
+     *
+     * <p>If no user account exists with the provided email, this method automatically
+     * creates a user account with THERAPIST role. The user will receive a password reset
+     * token to set up their account.
      *
      * @param email the therapist's email (must be unique)
      * @param name the therapist's name
@@ -64,11 +81,22 @@ public class TherapistProfileService {
                                           String employmentStatus, String bio,
                                           List<UUID> specializationIds,
                                           List<UUID> languageIds) {
-        // Validate email uniqueness
+        // Validate email uniqueness for therapist profiles
         if (profileRepository.existsByEmailIgnoreCase(email)) {
             throw new IllegalArgumentException(
                 "A therapist with this email address already exists"
             );
+        }
+
+        // Create user account if it doesn't exist
+        UUID actorId = getCurrentUserId();
+        if (!userRepository.existsByEmail(email)) {
+            CreateUserRequest userRequest = new CreateUserRequest(
+                email,
+                name,
+                UserRole.THERAPIST
+            );
+            userManagementService.createUser(userRequest, actorId);
         }
 
         TherapistProfile profile = new TherapistProfile(email, name, phone);
@@ -101,7 +129,6 @@ public class TherapistProfileService {
         TherapistProfile saved = profileRepository.save(profile);
 
         // Record creation audit
-        UUID actorId = getCurrentUserId();
         String actorName = getCurrentUsername();
         List<TherapistAuditService.FieldChange> changes = new ArrayList<>();
         changes.add(new TherapistAuditService.FieldChange("email", null, email));

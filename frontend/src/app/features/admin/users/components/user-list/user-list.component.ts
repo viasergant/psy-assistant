@@ -58,6 +58,10 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
       <!-- Loading / empty / error states -->
       <div *ngIf="loading" class="state-msg" aria-live="polite">Loading…</div>
       <div *ngIf="!loading && loadError" class="alert-error" role="alert">{{ loadError }}</div>
+      <div *ngIf="!loading && errorMessage" class="alert-error" role="alert">
+        {{ errorMessage }}
+        <button class="close-btn" (click)="errorMessage = null" aria-label="Close error message">&times;</button>
+      </div>
       <div *ngIf="!loading && !loadError && users.length === 0" class="state-msg">
         No users match the current filters.
       </div>
@@ -197,6 +201,30 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
       padding: .75rem 1rem; background: #FEF2F2;
       border: 1px solid #FECACA; border-radius: 8px;
       color: #DC2626; margin-bottom: 1rem; font-size: .875rem;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: #DC2626;
+      font-size: 1.5rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.6;
+      transition: opacity 0.15s ease;
+    }
+    .close-btn:hover {
+      opacity: 1;
     }
     .table-wrapper { overflow-x: auto; }
     table {
@@ -281,6 +309,7 @@ export class UserListComponent implements OnInit {
 
   loading = false;
   loadError: string | null = null;
+  errorMessage: string | null = null;
 
   showCreate = false;
   editTarget: UserSummary | null = null;
@@ -348,6 +377,9 @@ export class UserListComponent implements OnInit {
    * - Others: Currently no dedicated profile page, could be extended in future
    */
   navigateToProfile(user: UserSummary): void {
+    // Clear any previous error messages
+    this.errorMessage = null;
+    
     // Normalize role handling for legacy values
     const role = user.role === 'USER' ? 'THERAPIST' : user.role;
     
@@ -359,15 +391,14 @@ export class UserListComponent implements OnInit {
         },
         error: (err) => {
           console.error('Failed to find therapist profile for user:', user.email, err);
-          // Could show a toast notification here
-          // For now, gracefully fail - maybe the therapist profile hasn't been created yet
+          this.errorMessage = `No therapist profile found for ${user.fullName ?? user.email}. Please create a therapist profile first.`;
         }
       });
     } else {
       // For other roles, you could navigate to a general user profile page
       // or show user details in a dialog. For now, we'll just do nothing.
       // Future enhancement: navigate to a user detail page
-      console.log('Profile view not yet implemented for role:', role);
+      this.errorMessage = `Profile view is only available for therapists. User ${user.fullName ?? user.email} has role: ${role}.`;
     }
   }
 

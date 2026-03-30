@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserManagementService } from '../../services/user-management.service';
-import { UserRole, UserSummary } from '../../models/user.model';
+import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserSummary } from '../../models/user.model';
 
 /**
  * Modal dialog for creating a new user account.
@@ -59,8 +59,7 @@ import { UserRole, UserSummary } from '../../models/user.model';
               [attr.aria-invalid]="isInvalid('role')"
               aria-required="true">
               <option value="">— select —</option>
-              <option value="ADMIN">Administrator</option>
-              <option value="USER">User</option>
+              <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
             </select>
             <span *ngIf="isInvalid('role')" class="error-msg" role="alert">
               Select a role.
@@ -138,6 +137,9 @@ import { UserRole, UserSummary } from '../../models/user.model';
   `]
 })
 export class CreateUserDialogComponent {
+  readonly assignableRoles = ASSIGNABLE_ROLES;
+  readonly roleLabels = ROLE_LABELS;
+
   @Output() created = new EventEmitter<UserSummary>();
   @Output() cancelled = new EventEmitter<void>();
 

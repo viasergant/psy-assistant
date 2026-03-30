@@ -9,6 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 import {
+  ContactMethodType,
   ConversionErrorBody,
   ConvertLeadResponse,
   LeadDetail,
@@ -257,7 +258,10 @@ export class ConvertLeadDialogComponent implements OnInit {
     const raw = this.form.value;
     const payload = {
       fullName: raw.fullName as string,
-      contactMethods: raw.contactMethods as { type: string; value: string; isPrimary: boolean }[],
+      contactMethods: (raw.contactMethods as { type: string; value: string; isPrimary: boolean }[]).map(cm => ({
+        ...cm,
+        type: cm.type as ContactMethodType,
+      })),
       ...(raw.notes ? { notes: raw.notes as string } : {}),
     };
 

@@ -1,20 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { ClientDetail } from '../models/client.model';
+import {
+  ClientDetail,
+  UpdateClientProfilePayload,
+  UpdateClientTagsPayload,
+} from '../models/client.model';
 import { ClientService } from '../services/client.service';
 
 /**
- * Minimal client detail page displayed after lead-to-client conversion.
- *
- * Shows the client's name, a link back to the originating lead, and notes.
- * A fuller implementation with contact methods and session history is
- * planned for a subsequent iteration.
+ * Client profile page for PA-23 slice-one read and update flow.
  */
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule],
   template: `
     <div class="page">
       <a class="back-link" routerLink="/leads">&larr; Back to leads</a>
@@ -25,27 +26,277 @@ import { ClientService } from '../services/client.service';
 
       <div *ngIf="client && !loading">
         <header class="page-header">
-          <h1>{{ client.fullName }}</h1>
+          <div>
+            <h1>{{ client.fullName }}</h1>
+            <p class="sub">{{ client.clientCode || client.id }}</p>
+          </div>
           <span class="badge-client">Client</span>
         </header>
 
-        <div class="section">
-          <h2 class="section-title">Details</h2>
+        <div class="toolbar">
+          <button *ngIf="client.canEditProfile && !editing"
+                  type="button"
+                  class="btn-primary"
+                  (click)="startEdit()">
+            Edit profile
+          </button>
 
-          <dl class="detail-list">
-            <dt>Client ID</dt>
-            <dd>{{ client.id }}</dd>
+          <div *ngIf="editing" class="edit-actions">
+            <button type="button" class="btn-ghost" (click)="cancelEdit()">Cancel</button>
+            <button type="button" class="btn-primary" [disabled]="saving || profileForm.invalid"
+                    (click)="save()">
+              {{ saving ? 'Saving...' : 'Save changes' }}
+            </button>
+          </div>
+        </div>
 
-            <ng-container *ngIf="client.sourceLeadId">
-              <dt>Converted from lead</dt>
-              <dd>
-                <a [routerLink]="['/leads']" class="link">View lead history</a>
-              </dd>
-            </ng-container>
+        <div *ngIf="saveError" class="alert-error" role="alert">{{ saveError }}</div>
 
-            <dt>Created</dt>
-            <dd>{{ client.createdAt | date:'dd MMM yyyy HH:mm' }}</dd>
-          </dl>
+        <form [formGroup]="profileForm" class="profile-form">
+          <section class="section">
+            <h2 class="section-title">Personal Information</h2>
+
+            <div class="grid two">
+              <label class="field">
+                <span>Full name</span>
+                <input type="text" formControlName="fullName" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Preferred name</span>
+                <input type="text" formControlName="preferredName" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Date of birth</span>
+                <input type="date" formControlName="dateOfBirth" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Pronouns</span>
+                <input type="text" formControlName="pronouns" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Gender</span>
+                <input type="text" formControlName="sexOrGender" [readonly]="!editing" />
+              </label>
+            </div>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">Contact Details</h2>
+
+            <div class="grid two">
+              <label class="field">
+                <span>Email</span>
+                <input type="email" formControlName="email" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Phone</span>
+                <input type="text" formControlName="phone" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Secondary phone</span>
+                <input type="text" formControlName="secondaryPhone" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Address line 1</span>
+                <input type="text" formControlName="addressLine1" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Address line 2</span>
+                <input type="text" formControlName="addressLine2" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>City</span>
+                <input type="text" formControlName="city" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Region</span>
+                <input type="text" formControlName="region" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Postal code</span>
+                <input type="text" formControlName="postalCode" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Country</span>
+                <input type="text" formControlName="country" [readonly]="!editing" />
+              </label>
+            </div>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">Referral Information</h2>
+
+            <div class="grid two">
+              <label class="field">
+                <span>Referral source</span>
+                <input type="text" formControlName="referralSource" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Referral contact</span>
+                <input type="text" formControlName="referralContactName" [readonly]="!editing" />
+              </label>
+            </div>
+
+            <label class="field">
+              <span>Referral notes</span>
+              <textarea rows="3" formControlName="referralNotes" [readonly]="!editing"></textarea>
+            </label>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">Emergency Contact</h2>
+
+            <div class="grid two">
+              <label class="field">
+                <span>Name</span>
+                <input type="text" formControlName="emergencyContactName" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Relationship</span>
+                <input type="text" formControlName="emergencyContactRelationship" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Phone</span>
+                <input type="text" formControlName="emergencyContactPhone" [readonly]="!editing" />
+              </label>
+
+              <label class="field">
+                <span>Email</span>
+                <input type="email" formControlName="emergencyContactEmail" [readonly]="!editing" />
+              </label>
+            </div>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">Communication Preferences</h2>
+
+            <div class="grid two">
+              <label class="field">
+                <span>Preferred method</span>
+                <input type="text" formControlName="preferredCommunicationMethod"
+                       [readonly]="!editing" />
+              </label>
+
+              <label class="toggle">
+                <input type="checkbox" formControlName="allowPhone" [disabled]="!editing" />
+                <span>Allow phone calls</span>
+              </label>
+
+              <label class="toggle">
+                <input type="checkbox" formControlName="allowSms" [disabled]="!editing" />
+                <span>Allow SMS</span>
+              </label>
+
+              <label class="toggle">
+                <input type="checkbox" formControlName="allowEmail" [disabled]="!editing" />
+                <span>Allow email</span>
+              </label>
+
+              <label class="toggle">
+                <input type="checkbox" formControlName="allowVoicemail" [disabled]="!editing" />
+                <span>Allow voicemail</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">Tags and Case Type</h2>
+            <div class="tags-wrap">
+              <span *ngFor="let tag of client.tags" class="tag-pill">
+                {{ tag }}
+                <button *ngIf="client.canEditTags"
+                        type="button"
+                        class="tag-remove"
+                        (click)="removeTag(tag)">
+                  ×
+                </button>
+              </span>
+            </div>
+
+            <div *ngIf="client.canEditTags" class="tag-editor">
+              <input
+                type="text"
+                [value]="tagInput"
+                (input)="tagInput = $any($event.target).value"
+                (keydown.enter)="addTag($event)"
+                placeholder="Add tag and press Enter"
+              />
+              <button type="button" class="btn-primary" [disabled]="tagsSaving" (click)="saveTags()">
+                {{ tagsSaving ? 'Saving tags...' : 'Save tags' }}
+              </button>
+            </div>
+
+            <div *ngIf="client.canEditTags && filteredTagHints.length" class="tag-hints">
+              <span class="hint-label">Suggestions:</span>
+              <button
+                *ngFor="let hint of filteredTagHints"
+                type="button"
+                class="hint-chip"
+                (click)="applyTagHint(hint)">
+                {{ hint }}
+              </button>
+            </div>
+
+            <div *ngIf="tagsError" class="alert-error" role="alert">{{ tagsError }}</div>
+            <p *ngIf="!client.tags.length" class="muted">No tags yet.</p>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">Profile Photo</h2>
+            <div class="photo-block">
+              <img *ngIf="photoSrc"
+                   class="profile-photo"
+                [src]="photoSrc"
+                   [alt]="client.fullName + ' photo'" />
+              <div *ngIf="!client.photoUrl || !photoSrc" class="photo-placeholder">No photo uploaded</div>
+            </div>
+
+            <div *ngIf="client.canUploadPhoto" class="photo-controls">
+              <input
+                #photoInput
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onPhotoSelected($event)"
+              />
+              <button
+                type="button"
+                class="btn-primary"
+                [disabled]="photoUploading"
+                (click)="photoInput.click()">
+                {{ photoUploading ? 'Uploading...' : 'Upload photo' }}
+              </button>
+            </div>
+
+            <div *ngIf="photoError" class="alert-error" role="alert">{{ photoError }}</div>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">Profile Notes</h2>
+            <label class="field">
+              <span>Notes</span>
+              <textarea rows="4" formControlName="notes" [readonly]="!editing"></textarea>
+            </label>
+          </section>
+        </form>
+
+        <div class="section" *ngIf="client.sourceLeadId">
+          <h2 class="section-title">Referral Link</h2>
+          <a [routerLink]="['/leads']" class="link">View source lead history</a>
         </div>
 
         <div class="section" *ngIf="client.notes">
@@ -56,7 +307,8 @@ import { ClientService } from '../services/client.service';
     </div>
   `,
   styles: [`
-    .page { padding: 2rem; max-width: 800px; margin: 0 auto; }
+    .page { padding: 2rem; max-width: 980px; margin: 0 auto; }
+    .sub { margin: .35rem 0 0; color: #64748B; font-size: .85rem; }
     .back-link {
       display: inline-block; margin-bottom: 1.5rem;
       color: #0EA5A0; text-decoration: none; font-size: .9375rem;
@@ -71,17 +323,76 @@ import { ClientService } from '../services/client.service';
       border-radius: 999px; font-size: .8rem; font-weight: 600; color: #166534;
     }
     .section { margin-bottom: 2rem; }
+    .profile-form { display: block; }
+    .grid.two {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: .85rem 1rem;
+    }
+    .field { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .75rem; }
+    .field span { font-size: .85rem; color: #64748B; }
+    .field input, .field textarea {
+      border: 1px solid #CBD5E1; border-radius: 8px; padding: .55rem .7rem;
+      font: inherit; background: #fff;
+    }
+    .field input[readonly], .field textarea[readonly] {
+      background: #F8FAFC;
+    }
+    .toggle { display: inline-flex; align-items: center; gap: .5rem; color: #1E293B; }
     .section-title {
       font-size: 1rem; font-weight: 600; color: #374151;
       border-bottom: 1.5px solid #E2E8F0; padding-bottom: .5rem; margin-bottom: 1rem;
     }
-    .detail-list {
-      display: grid; grid-template-columns: 160px 1fr; row-gap: .6rem;
-      column-gap: 1rem; font-size: .9375rem;
+    .toolbar {
+      display: flex; justify-content: flex-end; margin-bottom: 1rem;
     }
-    dt { font-weight: 500; color: #6B7280; }
-    dd { margin: 0; color: #0F172A; }
+    .edit-actions { display: inline-flex; gap: .5rem; }
+    .btn-primary, .btn-ghost {
+      border-radius: 8px; padding: .5rem .85rem; border: 1px solid transparent;
+      font-weight: 600; cursor: pointer;
+    }
+    .btn-primary { background: #0EA5A0; color: #fff; }
+    .btn-primary:disabled { opacity: .7; cursor: default; }
+    .btn-ghost { background: #fff; border-color: #CBD5E1; color: #334155; }
     .link { color: #0EA5A0; text-decoration: underline; }
+    .muted { color: #64748B; margin: 0; }
+    .tags-wrap { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .75rem; }
+    .tag-pill {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: #ECFEFF; color: #155E75; border: 1px solid #A5F3FC;
+      border-radius: 999px; padding: .22rem .6rem; font-size: .8rem;
+    }
+    .tag-remove {
+      border: 0; background: transparent; color: #155E75; cursor: pointer;
+      font-size: 1rem; line-height: 1;
+    }
+    .tag-editor { display: flex; gap: .5rem; align-items: center; margin-bottom: .75rem; }
+    .tag-editor input {
+      border: 1px solid #CBD5E1; border-radius: 8px; padding: .5rem .65rem;
+      font: inherit; min-width: 280px;
+    }
+    .tag-hints {
+      display: flex; align-items: center; flex-wrap: wrap; gap: .45rem;
+      margin-bottom: .75rem;
+    }
+    .hint-label { color: #64748B; font-size: .8rem; }
+    .hint-chip {
+      border: 1px solid #BFDBFE; background: #EFF6FF; color: #1D4ED8;
+      border-radius: 999px; padding: .2rem .55rem; font-size: .76rem;
+      cursor: pointer;
+    }
+    .hint-chip:hover { background: #DBEAFE; }
+    .photo-block { margin-bottom: .75rem; }
+    .profile-photo {
+      width: 120px; height: 120px; object-fit: cover;
+      border-radius: 16px; border: 1px solid #E2E8F0;
+    }
+    .photo-placeholder {
+      width: 120px; height: 120px; display: grid; place-items: center;
+      border: 1px dashed #CBD5E1; border-radius: 16px; color: #64748B;
+      font-size: .8rem; text-align: center; padding: .4rem;
+    }
+    .photo-controls { display: flex; align-items: center; gap: .6rem; }
+    .photo-controls input[type="file"] { display: none; }
     .notes-block {
       background: #F9FAFB; border: 1px solid #E2E8F0; border-radius: 8px;
       padding: 1rem; font-size: .9375rem; white-space: pre-wrap; color: #374151;
@@ -94,17 +405,78 @@ import { ClientService } from '../services/client.service';
     }
   `]
 })
-export class ClientDetailComponent implements OnInit {
+export class ClientDetailComponent implements OnInit, OnDestroy {
+  private static readonly PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+  private static readonly TAG_HINT_STORAGE_KEY = 'clients.recent-tags';
+  private static readonly DEFAULT_TAG_HINTS = [
+    'priority',
+    'follow-up',
+    'anxiety',
+    'depression',
+    'family',
+    'adolescent',
+    'trauma',
+    'stress',
+  ];
+
   client: ClientDetail | null = null;
   loading = false;
+  saving = false;
+  editing = false;
+  tagInput = '';
+  tagsSaving = false;
+  photoUploading = false;
+  photoSrc: string | null = null;
+  recentTagHints: string[] = [];
+  tagsError: string | null = null;
+  photoError: string | null = null;
   loadError: string | null = null;
+  saveError: string | null = null;
+  private photoObjectUrl: string | null = null;
+
+  profileForm: FormGroup;
 
   constructor(
     private route: ActivatedRoute,
-    private clientService: ClientService
-  ) {}
+    private clientService: ClientService,
+    private fb: FormBuilder
+  ) {
+    this.profileForm = this.fb.group({
+      fullName: ['', [Validators.required]],
+      preferredName: [''],
+      dateOfBirth: [''],
+      sexOrGender: [''],
+      pronouns: [''],
+      ownerId: [''],
+      assignedTherapistId: [''],
+      notes: [''],
+      email: [''],
+      phone: [''],
+      secondaryPhone: [''],
+      addressLine1: [''],
+      addressLine2: [''],
+      city: [''],
+      region: [''],
+      postalCode: [''],
+      country: [''],
+      referralSource: [''],
+      referralContactName: [''],
+      referralNotes: [''],
+      preferredCommunicationMethod: [''],
+      allowPhone: [false],
+      allowSms: [false],
+      allowEmail: [false],
+      allowVoicemail: [false],
+      emergencyContactName: [''],
+      emergencyContactRelationship: [''],
+      emergencyContactPhone: [''],
+      emergencyContactEmail: ['']
+    });
+  }
 
   ngOnInit(): void {
+    this.recentTagHints = this.loadRecentTagHints();
+
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
       this.loadError = 'No client ID provided.';
@@ -116,11 +488,344 @@ export class ClientDetailComponent implements OnInit {
       next: (c) => {
         this.loading = false;
         this.client = c;
+        this.patchForm(c);
+        this.refreshPhotoSource(c);
       },
       error: () => {
         this.loading = false;
         this.loadError = 'Failed to load client. Please try again.';
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.releasePhotoObjectUrl();
+  }
+
+  startEdit(): void {
+    this.editing = true;
+    this.saveError = null;
+  }
+
+  cancelEdit(): void {
+    this.editing = false;
+    this.saveError = null;
+    if (this.client) {
+      this.patchForm(this.client);
+    }
+  }
+
+  save(): void {
+    if (!this.client || this.profileForm.invalid || this.saving) {
+      return;
+    }
+
+    this.saving = true;
+    this.saveError = null;
+    const payload = this.toPayload(this.client.version);
+
+    this.clientService.updateClient(this.client.id, payload).subscribe({
+      next: (updated) => {
+        this.saving = false;
+        this.editing = false;
+        this.client = updated;
+        this.patchForm(updated);
+      },
+      error: (err) => {
+        this.saving = false;
+        if (err?.status === 409) {
+          this.saveError = 'This profile was updated elsewhere. Reload and try again.';
+        } else {
+          this.saveError = 'Failed to save profile changes. Please try again.';
+        }
+      }
+    });
+  }
+
+  addTag(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    if (!this.client || !this.client.canEditTags) {
+      return;
+    }
+
+    const next = this.tagInput.trim();
+    if (!next) {
+      return;
+    }
+
+    if (!this.hasTag(next)) {
+      this.client = { ...this.client, tags: [...this.client.tags, next] };
+    }
+    this.tagInput = '';
+    this.tagsError = null;
+  }
+
+  applyTagHint(hint: string): void {
+    this.tagInput = hint;
+    this.addTag();
+  }
+
+  removeTag(tag: string): void {
+    if (!this.client || !this.client.canEditTags) {
+      return;
+    }
+
+    this.client = { ...this.client, tags: this.client.tags.filter((value) => value !== tag) };
+    this.tagsError = null;
+  }
+
+  saveTags(): void {
+    if (!this.client || this.tagsSaving || !this.client.canEditTags) {
+      return;
+    }
+
+    this.tagsSaving = true;
+    this.tagsError = null;
+    const payload: UpdateClientTagsPayload = {
+      version: this.client.version,
+      tags: this.client.tags,
+    };
+
+    this.clientService.updateTags(this.client.id, payload).subscribe({
+      next: (updated) => {
+        this.tagsSaving = false;
+        this.client = updated;
+        this.persistRecentTagHints(updated.tags);
+      },
+      error: (err) => {
+        this.tagsSaving = false;
+        this.tagsError = err?.status === 409
+          ? 'Tags were updated elsewhere. Refresh and try again.'
+          : 'Failed to save tags. Please try again.';
+      },
+    });
+  }
+
+  get filteredTagHints(): string[] {
+    if (!this.client) {
+      return [];
+    }
+
+    const query = this.tagInput.trim().toLowerCase();
+    const existing = new Set(this.client.tags.map((tag) => tag.toLowerCase()));
+    const pool = [
+      ...ClientDetailComponent.DEFAULT_TAG_HINTS,
+      ...this.recentTagHints,
+      ...this.client.tags,
+    ];
+
+    const unique: string[] = [];
+    const seen = new Set<string>();
+    for (const candidate of pool) {
+      const value = candidate.trim();
+      const key = value.toLowerCase();
+      if (!value || seen.has(key) || existing.has(key)) {
+        continue;
+      }
+      if (query && !key.includes(query)) {
+        continue;
+      }
+      seen.add(key);
+      unique.push(value);
+      if (unique.length >= 8) {
+        break;
+      }
+    }
+    return unique;
+  }
+
+  onPhotoSelected(event: Event): void {
+    if (!this.client || this.photoUploading || !this.client.canUploadPhoto) {
+      return;
+    }
+
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (file.size > ClientDetailComponent.PHOTO_MAX_BYTES) {
+      this.photoError = 'Photo must be 5 MB or smaller.';
+      target.value = '';
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      this.photoError = 'Only JPEG, PNG, or WEBP images are allowed.';
+      target.value = '';
+      return;
+    }
+
+    this.photoUploading = true;
+    this.photoError = null;
+
+    this.clientService.uploadPhoto(this.client.id, this.client.version, file).subscribe({
+      next: (updated) => {
+        this.photoUploading = false;
+        this.client = updated;
+        this.refreshPhotoSource(updated);
+        target.value = '';
+      },
+      error: () => {
+        this.photoUploading = false;
+        this.photoError = 'Failed to upload photo. Please try again.';
+        target.value = '';
+      },
+    });
+  }
+
+  private patchForm(c: ClientDetail): void {
+    this.profileForm.patchValue({
+      fullName: c.fullName || '',
+      preferredName: c.preferredName || '',
+      dateOfBirth: c.dateOfBirth || '',
+      sexOrGender: c.sexOrGender || '',
+      pronouns: c.pronouns || '',
+      ownerId: c.ownerId || '',
+      assignedTherapistId: c.assignedTherapistId || '',
+      notes: c.notes || '',
+      email: c.email || '',
+      phone: c.phone || '',
+      secondaryPhone: c.secondaryPhone || '',
+      addressLine1: c.addressLine1 || '',
+      addressLine2: c.addressLine2 || '',
+      city: c.city || '',
+      region: c.region || '',
+      postalCode: c.postalCode || '',
+      country: c.country || '',
+      referralSource: c.referralSource || '',
+      referralContactName: c.referralContactName || '',
+      referralNotes: c.referralNotes || '',
+      preferredCommunicationMethod: c.preferredCommunicationMethod || '',
+      allowPhone: c.allowPhone ?? false,
+      allowSms: c.allowSms ?? false,
+      allowEmail: c.allowEmail ?? false,
+      allowVoicemail: c.allowVoicemail ?? false,
+      emergencyContactName: c.emergencyContactName || '',
+      emergencyContactRelationship: c.emergencyContactRelationship || '',
+      emergencyContactPhone: c.emergencyContactPhone || '',
+      emergencyContactEmail: c.emergencyContactEmail || ''
+    }, { emitEvent: false });
+  }
+
+  private refreshPhotoSource(client: ClientDetail): void {
+    this.releasePhotoObjectUrl();
+    this.photoError = null;
+
+    if (!client.photoUrl) {
+      this.photoSrc = null;
+      return;
+    }
+
+    this.clientService.getPhoto(client.id).subscribe({
+      next: (blob) => {
+        this.photoObjectUrl = URL.createObjectURL(blob);
+        this.photoSrc = this.photoObjectUrl;
+      },
+      error: () => {
+        this.photoSrc = null;
+        this.photoError = 'Failed to load photo. Please refresh and try again.';
+      },
+    });
+  }
+
+  private releasePhotoObjectUrl(): void {
+    if (this.photoObjectUrl) {
+      URL.revokeObjectURL(this.photoObjectUrl);
+      this.photoObjectUrl = null;
+    }
+  }
+
+  private toPayload(version: number): UpdateClientProfilePayload {
+    const raw = this.profileForm.getRawValue();
+    const nil = (v: string | null | undefined): string | null => {
+      const trimmed = (v ?? '').trim();
+      return trimmed.length ? trimmed : null;
+    };
+
+    return {
+      version,
+      fullName: (raw.fullName || '').trim(),
+      preferredName: nil(raw.preferredName),
+      dateOfBirth: nil(raw.dateOfBirth),
+      sexOrGender: nil(raw.sexOrGender),
+      pronouns: nil(raw.pronouns),
+      ownerId: nil(raw.ownerId),
+      assignedTherapistId: nil(raw.assignedTherapistId),
+      notes: nil(raw.notes),
+      email: nil(raw.email),
+      phone: nil(raw.phone),
+      secondaryPhone: nil(raw.secondaryPhone),
+      addressLine1: nil(raw.addressLine1),
+      addressLine2: nil(raw.addressLine2),
+      city: nil(raw.city),
+      region: nil(raw.region),
+      postalCode: nil(raw.postalCode),
+      country: nil(raw.country),
+      referralSource: nil(raw.referralSource),
+      referralContactName: nil(raw.referralContactName),
+      referralNotes: nil(raw.referralNotes),
+      preferredCommunicationMethod: nil(raw.preferredCommunicationMethod),
+      allowPhone: !!raw.allowPhone,
+      allowSms: !!raw.allowSms,
+      allowEmail: !!raw.allowEmail,
+      allowVoicemail: !!raw.allowVoicemail,
+      emergencyContactName: nil(raw.emergencyContactName),
+      emergencyContactRelationship: nil(raw.emergencyContactRelationship),
+      emergencyContactPhone: nil(raw.emergencyContactPhone),
+      emergencyContactEmail: nil(raw.emergencyContactEmail)
+    };
+  }
+
+  private hasTag(candidate: string): boolean {
+    if (!this.client) {
+      return false;
+    }
+    const normalized = candidate.trim().toLowerCase();
+    return this.client.tags.some((tag) => tag.trim().toLowerCase() === normalized);
+  }
+
+  private loadRecentTagHints(): string[] {
+    try {
+      const raw = localStorage.getItem(ClientDetailComponent.TAG_HINT_STORAGE_KEY);
+      if (!raw) {
+        return [];
+      }
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed.filter((value): value is string => typeof value === 'string').slice(0, 50);
+    } catch {
+      return [];
+    }
+  }
+
+  private persistRecentTagHints(tags: string[]): void {
+    const merged = [...tags, ...this.recentTagHints];
+    const unique: string[] = [];
+    const seen = new Set<string>();
+
+    for (const tag of merged) {
+      const value = tag.trim();
+      const key = value.toLowerCase();
+      if (!value || seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      unique.push(value);
+      if (unique.length >= 50) {
+        break;
+      }
+    }
+
+    this.recentTagHints = unique;
+    try {
+      localStorage.setItem(ClientDetailComponent.TAG_HINT_STORAGE_KEY, JSON.stringify(unique));
+    } catch {
+      // Ignore storage failures and keep in-memory hints only.
+    }
   }
 }

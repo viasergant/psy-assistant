@@ -21,6 +21,8 @@ import java.util.Set;
  * Permission               | RAS | THE | SUP | FIN | SYS
  * -------------------------|-----|-----|-----|-----|-----
  * MANAGE_CLIENTS           |  Y  |     |     |     |  Y
+ * READ_CLIENTS_ALL         |     |     |  Y  |     |  Y
+ * READ_ASSIGNED_CLIENTS    |     |  Y  |     |     |
  * MANAGE_APPOINTMENTS      |  Y  |     |     |     |  Y
  * MANAGE_LEADS             |  Y  |     |     |     |  Y
  * READ_OWN_SESSIONS        |     |  Y  |     |     |
@@ -60,6 +62,7 @@ public final class RolePermissions {
         )));
 
         map.put(UserRole.THERAPIST, Collections.unmodifiableSet(EnumSet.of(
+                Permission.READ_ASSIGNED_CLIENTS,
                 Permission.READ_OWN_SESSIONS,
                 Permission.WRITE_SESSION_NOTE,
                 Permission.READ_OWN_SESSION_NOTES,
@@ -67,6 +70,7 @@ public final class RolePermissions {
         )));
 
         map.put(UserRole.SUPERVISOR, Collections.unmodifiableSet(EnumSet.of(
+                Permission.READ_CLIENTS_ALL,
                 Permission.READ_ALL_SESSIONS,
                 Permission.READ_ALL_SESSION_NOTES,
                 Permission.READ_CARE_PLANS,
@@ -83,6 +87,7 @@ public final class RolePermissions {
 
         map.put(UserRole.SYSTEM_ADMINISTRATOR, Collections.unmodifiableSet(EnumSet.of(
                 Permission.MANAGE_CLIENTS,
+                Permission.READ_CLIENTS_ALL,
                 Permission.MANAGE_APPOINTMENTS,
                 Permission.MANAGE_LEADS,
                 Permission.READ_ALL_SESSIONS,

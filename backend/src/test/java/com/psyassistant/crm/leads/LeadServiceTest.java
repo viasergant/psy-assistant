@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.psyassistant.common.audit.AuditLogService;
@@ -291,7 +292,7 @@ class LeadServiceTest {
         assertThat(response.leadId()).isEqualTo(leadId);
         assertThat(lead.getStatus()).isEqualTo(LeadStatus.CONVERTED);
         assertThat(lead.getConvertedClientId()).isEqualTo(clientId);
-        verify(clientRepository).save(any(Client.class));
+        verify(clientRepository, times(2)).save(any(Client.class));
         verify(leadRepository).save(any(Lead.class));
         verify(auditLogService).record(any());
     }
@@ -317,7 +318,7 @@ class LeadServiceTest {
         service.convertLead(leadId, req, actorId);
 
         // The saved client should have the lead's owner
-        verify(clientRepository).save(any(Client.class));
+        verify(clientRepository, times(2)).save(any(Client.class));
     }
 
     @Test
@@ -341,7 +342,7 @@ class LeadServiceTest {
 
         service.convertLead(leadId, req, actorId);
 
-        verify(clientRepository).save(any(Client.class));
+        verify(clientRepository, times(2)).save(any(Client.class));
     }
 
     @Test

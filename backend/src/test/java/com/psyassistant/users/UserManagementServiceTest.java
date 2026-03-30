@@ -98,6 +98,24 @@ class UserManagementServiceTest {
         verify(userRepository, never()).save(any());
     }
 
+    @Test
+    void createUserNormalizesLegacyAdminRoleBeforePersist() {
+        when(userRepository.existsByEmail("legacy-admin@example.com")).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed");
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        when(userRepository.save(userCaptor.capture())).thenAnswer(inv -> inv.getArgument(0));
+        when(resetTokenRepository.save(any(PasswordResetToken.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        UserSummaryDto dto = service.createUser(
+                new CreateUserRequest("legacy-admin@example.com", "Legacy Admin", UserRole.ADMIN),
+                adminId);
+
+        assertThat(dto.role()).isEqualTo(UserRole.SYSTEM_ADMINISTRATOR);
+        assertThat(userCaptor.getValue().getRole()).isEqualTo(UserRole.SYSTEM_ADMINISTRATOR);
+    }
+
     // ---- updateUser — role -----------------------------------------------
 
     @Test
@@ -121,6 +139,19 @@ class UserManagementServiceTest {
         service.updateUser(targetId, new PatchUserRequest(null, UserRole.THERAPIST, null), adminId);
 
         verify(auditLogService, never()).record(any());
+    }
+
+    @Test
+    void updateUserNormalizesLegacyAdminRoleBeforePersist() {
+        when(userRepository.findById(targetId)).thenReturn(Optional.of(activeUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserSummaryDto dto = service.updateUser(
+                targetId, new PatchUserRequest(null, UserRole.ADMIN, null), adminId);
+
+        assertThat(dto.role()).isEqualTo(UserRole.SYSTEM_ADMINISTRATOR);
+        assertThat(activeUser.getRole()).isEqualTo(UserRole.SYSTEM_ADMINISTRATOR);
+        verify(auditLogService).record(any());
     }
 
     // ---- updateUser — deactivate / reactivate ----------------------------

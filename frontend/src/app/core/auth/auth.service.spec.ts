@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { AuthService } from './auth.service';
 
@@ -7,17 +8,12 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideRouter([])]
+      providers: [provideHttpClient(), provideRouter([])]
     });
     service = TestBed.inject(AuthService);
-    localStorage.removeItem('access_token');
   });
 
-  afterEach(() => {
-    localStorage.removeItem('access_token');
-  });
-
-  it('returns null when no token is stored', () => {
+  it('returns null when no token is set', () => {
     expect(service.token).toBeNull();
   });
 
@@ -25,19 +21,26 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBeFalse();
   });
 
-  it('isAuthenticated returns true when token is stored', () => {
+  it('isAuthenticated returns true when token is set', () => {
     service.setToken('my-jwt');
     expect(service.isAuthenticated()).toBeTrue();
   });
 
-  it('setToken stores the token in localStorage', () => {
+  it('setToken updates in-memory token', () => {
     service.setToken('test-token');
-    expect(localStorage.getItem('access_token')).toBe('test-token');
+    expect(service.token).toBe('test-token');
   });
 
-  it('clearToken removes the token from localStorage', () => {
-    service.setToken('test-token');
-    service.clearToken();
-    expect(localStorage.getItem('access_token')).toBeNull();
+  it('token$ emits updated token value', () => {
+    let latestToken: string | null = null;
+    const sub = service.token$.subscribe((token) => {
+      latestToken = token;
+    });
+
+    service.setToken('new-token');
+
+    expect(latestToken).not.toBeNull();
+    expect(service.token).toBe('new-token');
+    sub.unsubscribe();
   });
 });

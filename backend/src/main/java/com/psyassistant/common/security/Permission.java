@@ -16,6 +16,12 @@ public enum Permission {
     /** Create, update, and archive client and lead records. */
     MANAGE_CLIENTS,
 
+    /** Read any client profile regardless of therapist assignment. */
+    READ_CLIENTS_ALL,
+
+    /** Read client profiles assigned to the requesting therapist. */
+    READ_ASSIGNED_CLIENTS,
+
     /** Create, update, and cancel appointments. */
     MANAGE_APPOINTMENTS,
 

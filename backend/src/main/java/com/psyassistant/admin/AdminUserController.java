@@ -81,26 +81,33 @@ public class AdminUserController {
     }
 
     /**
-     * Creates a new user account (no initial password; a reset link is issued automatically).
+     * Creates a new user account with a secure temporary password.
+     *
+     * <p>The generated password is returned in the response so the admin can
+     * communicate it to the user securely. The user will be required to change
+     * the password on first login.</p>
      *
      * @param request validated creation payload
-     * @return 201 with the created {@link UserSummaryDto}
+     * @return 201 with {@link UserCreationResponseDto} including temporary password
      */
     @Operation(summary = "Create user",
-            description = "Creates an account in Active state and issues a 24h password setup link")
+            description = "Creates an account with a temporary password that admin can share with the user")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "User created",
-            content = @Content(schema = @Schema(implementation = UserSummaryDto.class))),
+        @ApiResponse(responseCode = "201", description = "User created with temporary password",
+            content = @Content(schema = @Schema(implementation = UserCreationResponseDto.class))),
         @ApiResponse(responseCode = "400", description = "Validation error",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
         @ApiResponse(responseCode = "409", description = "Email already registered",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<UserSummaryDto> createUser(
+    public ResponseEntity<UserCreationResponseDto> createUser(
             @Valid @RequestBody final CreateUserRequest request) {
         UUID actorId = UserManagementService.currentPrincipalId();
-        UserSummaryDto created = userManagementService.createUser(request, actorId);
+        UserCreationResponseDto created = userManagementService.createUserWithTemporaryPassword(
+            request,
+            actorId
+        );
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 

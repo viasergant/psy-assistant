@@ -6,5 +6,6 @@
   "nav.sessions": "Sessions",
   "nav.billing": "Billing",
   "nav.reports": "Reports",
-  "nav.admin": "Admin"
+  "nav.admin": "Admin",
+  "nav.logout": "Logout"
 }

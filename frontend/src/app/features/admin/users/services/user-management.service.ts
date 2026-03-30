@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   CreateUserPayload,
   PatchUserPayload,
+  UserCreationResponse,
   UserListParams,
   UserPage,
   UserSummary,
@@ -43,13 +44,13 @@ export class UserManagementService {
   }
 
   /**
-   * Creates a new user account.  No initial password is set; a reset link is
-   * issued server-side automatically.
+   * Creates a new user account with a temporary password.
+   * The password is returned in the response for the admin to share with the user.
    *
    * @param payload email, fullName, role
    */
-  createUser(payload: CreateUserPayload): Observable<UserSummary> {
-    return this.http.post<UserSummary>(this.base, payload);
+  createUser(payload: CreateUserPayload): Observable<UserCreationResponse> {
+    return this.http.post<UserCreationResponse>(this.base, payload);
   }
 
   /**

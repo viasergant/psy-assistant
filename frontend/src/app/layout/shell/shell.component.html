@@ -2,6 +2,11 @@
   <ng-template #start>
     <span class="app-title">{{ 'app.title' | transloco }}</span>
   </ng-template>
+  <ng-template #end>
+    <button class="logout-btn" (click)="onLogout()" type="button">
+      {{ 'nav.logout' | transloco }}
+    </button>
+  </ng-template>
 </p-toolbar>
 
 <div class="layout">

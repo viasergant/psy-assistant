@@ -340,6 +340,12 @@ export class UserListComponent implements OnInit {
 
   /** Reload page when a filter changes. */
   applyFilters(): void {
+    // If therapist role is selected, navigate to dedicated therapist management page
+    if (this.roleFilter === 'THERAPIST') {
+      this.router.navigate(['/admin/therapists']);
+      return;
+    }
+    
     this.currentPage = 0;
     this.loadPage();
   }

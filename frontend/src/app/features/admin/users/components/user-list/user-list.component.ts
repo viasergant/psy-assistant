@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UserManagementService } from '../../services/user-management.service';
-import { UserRole, UserSummary, UserPage } from '../../models/user.model';
+import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserSummary, UserPage } from '../../models/user.model';
 import { CreateUserDialogComponent } from '../create-user-dialog/create-user-dialog.component';
 import { EditUserDialogComponent } from '../edit-user-dialog/edit-user-dialog.component';
 import { PasswordResetDialogComponent } from '../password-reset-dialog/password-reset-dialog.component';
@@ -39,8 +39,7 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
           <label for="roleFilter">Role</label>
           <select id="roleFilter" [(ngModel)]="roleFilter" (change)="applyFilters()">
             <option value="">All roles</option>
-            <option value="ADMIN">Administrator</option>
-            <option value="USER">User</option>
+            <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
           </select>
         </div>
 
@@ -94,8 +93,8 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
               <td>{{ u.fullName ?? '—' }}</td>
               <td>{{ u.email }}</td>
               <td>
-                <span class="badge" [class.badge-admin]="u.role === 'ADMIN'">
-                  {{ u.role === 'ADMIN' ? 'Administrator' : 'User' }}
+                <span class="badge" [class.badge-admin]="u.role === 'SYSTEM_ADMINISTRATOR' || u.role === 'ADMIN'">
+                  {{ roleLabels[u.role] || u.role }}
                 </span>
               </td>
               <td>
@@ -245,6 +244,9 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
   `]
 })
 export class UserListComponent implements OnInit {
+  readonly assignableRoles = ASSIGNABLE_ROLES;
+  readonly roleLabels = ROLE_LABELS;
+
   users: UserSummary[] = [];
   totalElements = 0;
   totalPages = 0;

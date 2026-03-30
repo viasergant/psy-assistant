@@ -1,5 +1,39 @@
-/** User roles supported by the system. */
-export type UserRole = 'ADMIN' | 'USER';
+/** User roles supported by the system (current scoped values + legacy aliases). */
+export type UserRole =
+  | 'RECEPTION_ADMIN_STAFF'
+  | 'THERAPIST'
+  | 'SUPERVISOR'
+  | 'FINANCE'
+  | 'SYSTEM_ADMINISTRATOR'
+  | 'ADMIN'   // legacy — kept for backward-compat parsing
+  | 'USER';   // legacy — kept for backward-compat parsing
+
+/** Human-readable labels for every role value the backend may return. */
+export const ROLE_LABELS: Record<string, string> = {
+  RECEPTION_ADMIN_STAFF: 'Reception / Admin Staff',
+  THERAPIST: 'Therapist',
+  SUPERVISOR: 'Supervisor',
+  FINANCE: 'Finance',
+  SYSTEM_ADMINISTRATOR: 'System Administrator',
+  ADMIN: 'System Administrator',  // legacy alias
+  USER: 'Therapist',              // legacy alias
+};
+
+/** Canonical roles available for selection (create / edit / filter). */
+export const ASSIGNABLE_ROLES: UserRole[] = [
+  'RECEPTION_ADMIN_STAFF',
+  'THERAPIST',
+  'SUPERVISOR',
+  'FINANCE',
+  'SYSTEM_ADMINISTRATOR',
+];
+
+/** Normalise legacy role values that may come from old tokens or un-migrated data. */
+export function normalizeRole(role: string): UserRole {
+  if (role === 'ADMIN') { return 'SYSTEM_ADMINISTRATOR'; }
+  if (role === 'USER')  { return 'THERAPIST'; }
+  return role as UserRole;
+}
 
 /** Read-only summary of a user account. */
 export interface UserSummary {

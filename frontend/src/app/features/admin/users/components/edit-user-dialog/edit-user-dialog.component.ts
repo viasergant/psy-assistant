@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { UserManagementService } from '../../services/user-management.service';
-import { UserRole, UserSummary } from '../../models/user.model';
+import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserRole, UserSummary } from '../../models/user.model';
 
 /**
  * Modal dialog for editing an existing user's full name, role, or active status.
@@ -35,8 +35,7 @@ import { UserRole, UserSummary } from '../../models/user.model';
           <div class="field">
             <label for="role">Role</label>
             <select id="role" formControlName="role">
-              <option value="ADMIN">Administrator</option>
-              <option value="USER">User</option>
+              <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
             </select>
           </div>
 
@@ -133,10 +132,13 @@ export class EditUserDialogComponent implements OnInit {
     private userService: UserManagementService
   ) {}
 
+  readonly assignableRoles = ASSIGNABLE_ROLES;
+  readonly roleLabels = ROLE_LABELS;
+
   ngOnInit(): void {
     this.form = this.fb.group({
       fullName: [this.user.fullName ?? ''],
-      role: [this.user.role as UserRole],
+      role: [normalizeRole(this.user.role)],
       active: [this.user.active]
     });
   }

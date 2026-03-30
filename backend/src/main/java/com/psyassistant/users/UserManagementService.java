@@ -91,8 +91,9 @@ public class UserManagementService {
     @Transactional(readOnly = true)
     public UserPageResponse listUsers(
             final UserRole role, final Boolean active, final Pageable pageable) {
+        UserRole normalizedRole = role == null ? null : role.canonical();
         Page<User> page = userRepository.findAll(
-                UserSpecification.withFilters(role, active), pageable);
+                UserSpecification.withFilters(normalizedRole, active), pageable);
         List<UserSummaryDto> content = page.getContent().stream()
                 .map(UserSummaryDto::from)
                 .toList();
@@ -120,11 +121,13 @@ public class UserManagementService {
             throw new DuplicateEmailException(request.email());
         }
 
+        UserRole normalizedRole = request.role().canonical();
+
         // Store a BCrypt hash of a random string — the user cannot log in until
         // they complete the password reset flow.
         String unusableHash = passwordEncoder.encode(UUID.randomUUID().toString() + UNUSABLE_PASSWORD);
         User user = new User(request.email(), unusableHash, request.fullName(),
-                request.role(), true);
+                normalizedRole, true);
         userRepository.save(user);
 
         // Issue a 24h password reset token so the new user can set their password
@@ -135,11 +138,12 @@ public class UserManagementService {
                 .userId(actorId)
                 .emailAttempted(request.email())
                 .outcome(OUTCOME_SUCCESS)
-                .detail("targetUserId=" + user.getId() + " role=" + request.role())
+                .detail("targetUserId=" + user.getId() + " requestedRole=" + request.role()
+                        + " persistedRole=" + normalizedRole)
                 .build());
 
-        LOG.info("event=USER_CREATED actorId={} targetUserId={} role={}",
-                actorId, user.getId(), request.role());
+        LOG.info("event=USER_CREATED actorId={} targetUserId={} requestedRole={} persistedRole={}",
+                actorId, user.getId(), request.role(), normalizedRole);
 
         return UserSummaryDto.from(user);
     }
@@ -168,17 +172,19 @@ public class UserManagementService {
             user.setFullName(request.fullName());
         }
 
-        if (request.role() != null && !request.role().equals(user.getRole())) {
+        if (request.role() != null && !request.role().canonical().equals(user.getRole())) {
             UserRole oldRole = user.getRole();
-            user.setRole(request.role());
+            UserRole normalizedRole = request.role().canonical();
+            user.setRole(normalizedRole);
             auditLogService.record(new AuditLog.Builder(EVENT_USER_ROLE_CHANGED)
                     .userId(actorId)
                     .outcome(OUTCOME_SUCCESS)
                     .detail("targetUserId=" + userId + " oldRole=" + oldRole
-                            + " newRole=" + request.role())
+                            + " requestedRole=" + request.role()
+                            + " newRole=" + normalizedRole)
                     .build());
-            LOG.info("event=USER_ROLE_CHANGED actorId={} targetUserId={} {} -> {}",
-                    actorId, userId, oldRole, request.role());
+            LOG.info("event=USER_ROLE_CHANGED actorId={} targetUserId={} {} -> {} (requested={})",
+                    actorId, userId, oldRole, normalizedRole, request.role());
         }
 
         if (request.active() != null && request.active() != user.isActive()) {

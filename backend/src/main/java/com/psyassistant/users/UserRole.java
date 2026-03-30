@@ -41,5 +41,28 @@ public enum UserRole {
      * @deprecated Replaced by {@link #THERAPIST}. Migrated via {@code V5__rbac_roles.sql}.
      */
     @Deprecated
-    USER
+    USER;
+
+    /**
+     * Returns the persisted scoped role for this value.
+     *
+     * <p>Legacy aliases are mapped to their RBAC replacements so writes remain
+     * compatible with the DB {@code chk_user_role} constraint.
+     *
+     * @return canonical persisted role
+     */
+    public UserRole canonical() {
+        return switch (this) {
+            case ADMIN -> SYSTEM_ADMINISTRATOR;
+            case USER -> THERAPIST;
+            default -> this;
+        };
+    }
+
+    /**
+     * @return true if this is a deprecated alias role
+     */
+    public boolean isLegacyAlias() {
+        return this == ADMIN || this == USER;
+    }
 }

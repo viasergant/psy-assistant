@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
@@ -312,6 +312,9 @@ export class CreateTherapistDialogComponent implements OnInit {
   readonly employmentStatuses = EMPLOYMENT_STATUS_OPTIONS;
   readonly statusLabels = EMPLOYMENT_STATUS_LABELS;
 
+  /** Optional prefilled data from user creation wizard redirect */
+  @Input() prefilledData?: { fullName: string; email: string };
+
   @Output() created = new EventEmitter<UserCreationResponse>();
   @Output() cancelled = new EventEmitter<void>();
 
@@ -339,6 +342,13 @@ export class CreateTherapistDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Apply prefilled data if provided
+    if (this.prefilledData) {
+      this.form.patchValue({
+        fullName: this.prefilledData.fullName,
+        email: this.prefilledData.email
+      });
+    }
     this.loadSpecializations();
   }
 
@@ -359,7 +369,7 @@ export class CreateTherapistDialogComponent implements OnInit {
     return !!ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched);
   }
 
-  /** Submits the form to create therapist with temporary password. */
+  /** Submits the form to create therapist with temporary password and profile. */
   submit(): void {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
@@ -368,15 +378,21 @@ export class CreateTherapistDialogComponent implements OnInit {
     this.serverError = null;
 
     const payload = {
-      ...this.form.value,
-      role: 'THERAPIST' // Required by backend
+      email: this.form.value.email,
+      fullName: this.form.value.fullName,
+      phone: this.form.value.phone || null,
+      employmentStatus: this.form.value.employmentStatus,
+      primarySpecializationId: this.form.value.primarySpecializationId
     };
 
-    // Call the new admin endpoint that creates therapist with temporary password
-    this.http.post<UserCreationResponse>('/api/v1/admin/users/therapists', payload).subscribe({
+    // Call the new endpoint that creates user AND profile atomically
+    this.http.post<{ userDetails: UserCreationResponse; therapistProfile: any }>(
+      '/api/v1/therapists/with-account', 
+      payload
+    ).subscribe({
       next: (response) => {
         this.saving = false;
-        this.createdUser = response;
+        this.createdUser = response.userDetails;
         this.showCredentialsModal = true;
         // Don't emit created yet - wait for credentials modal close
       },

@@ -142,6 +142,7 @@ export class CreateUserDialogComponent {
 
   @Output() created = new EventEmitter<UserSummary>();
   @Output() cancelled = new EventEmitter<void>();
+  @Output() redirectToTherapistWizard = new EventEmitter<{ fullName: string; email: string }>();
 
   form: FormGroup;
   saving = false;
@@ -169,10 +170,22 @@ export class CreateUserDialogComponent {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
 
+    const formValue = this.form.value;
+
+    // If THERAPIST role selected, redirect to therapist creation wizard
+    if (formValue.role === 'THERAPIST') {
+      this.redirectToTherapistWizard.emit({
+        fullName: formValue.fullName,
+        email: formValue.email
+      });
+      return;
+    }
+
+    // For non-therapist roles, proceed with standard user creation
     this.saving = true;
     this.serverError = null;
 
-    this.userService.createUser(this.form.value).subscribe({
+    this.userService.createUser(formValue).subscribe({
       next: (user) => {
         this.saving = false;
         this.created.emit(user);

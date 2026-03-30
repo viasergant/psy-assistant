@@ -8,6 +8,7 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserSummary, UserPage } from '
 import { CreateUserDialogComponent } from '../create-user-dialog/create-user-dialog.component';
 import { EditUserDialogComponent } from '../edit-user-dialog/edit-user-dialog.component';
 import { PasswordResetDialogComponent } from '../password-reset-dialog/password-reset-dialog.component';
+import { CreateTherapistDialogComponent } from '../../../therapists/components/create-therapist-dialog/create-therapist-dialog.component';
 
 /**
  * Admin user list page.
@@ -27,6 +28,7 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
     CreateUserDialogComponent,
     EditUserDialogComponent,
     PasswordResetDialogComponent,
+    CreateTherapistDialogComponent,
   ],
   template: `
     <div class="page">
@@ -158,8 +160,16 @@ import { PasswordResetDialogComponent } from '../password-reset-dialog/password-
     <app-create-user-dialog
       *ngIf="showCreate"
       (created)="onCreated()"
-      (cancelled)="showCreate = false">
+      (cancelled)="showCreate = false"
+      (redirectToTherapistWizard)="onRedirectToTherapistWizard($event)">
     </app-create-user-dialog>
+
+    <app-create-therapist-dialog
+      *ngIf="showTherapistWizard"
+      [prefilledData]="therapistPrefilledData"
+      (created)="onTherapistCreated()"
+      (cancelled)="showTherapistWizard = false">
+    </app-create-therapist-dialog>
 
     <app-edit-user-dialog
       *ngIf="editTarget"
@@ -315,6 +325,9 @@ export class UserListComponent implements OnInit {
   editTarget: UserSummary | null = null;
   resetTarget: UserSummary | null = null;
 
+  showTherapistWizard = false;
+  therapistPrefilledData: { fullName: string; email: string } | undefined;
+
   constructor(
     private userService: UserManagementService,
     private therapistService: TherapistManagementService,
@@ -428,6 +441,26 @@ export class UserListComponent implements OnInit {
   /** Called after a new user is successfully created. */
   onCreated(): void {
     this.showCreate = false;
+    this.loadPage(); // refresh list to include new entry
+  }
+
+  /** 
+   * Redirects from user creation to therapist wizard when THERAPIST role is selected.
+   * Closes the user dialog and opens the therapist wizard with prefilled data.
+   */
+  onRedirectToTherapistWizard(data: { fullName: string; email: string }): void {
+    this.showCreate = false;
+    this.therapistPrefilledData = data;
+    this.showTherapistWizard = true;
+  }
+
+  /**
+   * Called after a therapist is successfully created via the wizard.
+   * Refreshes the user list to show the newly created therapist user.
+   */
+  onTherapistCreated(): void {
+    this.showTherapistWizard = false;
+    this.therapistPrefilledData = undefined;
     this.loadPage(); // refresh list to include new entry
   }
 

@@ -14,7 +14,7 @@ CREATE INDEX IF NOT EXISTS idx_users_must_change_password
 ALTER TABLE therapist_profile ADD COLUMN IF NOT EXISTS profile_completion_status VARCHAR(20) NOT NULL DEFAULT 'INCOMPLETE';
 
 -- Add check constraint to ensure valid status values
-ALTER TABLE therapist_profile ADD CONSTRAINT IF NOT EXISTS chk_profile_completion_status 
+ALTER TABLE therapist_profile ADD CONSTRAINT chk_profile_completion_status
     CHECK (profile_completion_status IN ('INCOMPLETE', 'COMPLETE'));
 
 -- Add index for filtering incomplete profiles

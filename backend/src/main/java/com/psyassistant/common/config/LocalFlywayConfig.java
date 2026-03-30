@@ -1,5 +1,8 @@
 package com.psyassistant.common.config;
 
+import java.sql.Connection;
+import java.sql.Statement;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
@@ -24,18 +27,29 @@ public class LocalFlywayConfig {
     private static final Logger LOG = LoggerFactory.getLogger(LocalFlywayConfig.class);
 
     /**
-     * Migration strategy for local development: clean then migrate.
+     * Migration strategy for local development: drop + recreate the public schema, then migrate.
      *
-     * <p>Guarantees a fresh schema on every startup, eliminating state drift
-     * caused by previous failed migrations or manual DB changes.
+     * <p>Using {@code DROP SCHEMA … CASCADE} instead of {@code flyway.clean()} avoids a known
+     * Flyway/PostgreSQL issue where the clean step queries the catalog for table names but then
+     * fails with "table does not exist" when the catalog contains stale entries from a previously
+     * interrupted migration.
      *
-     * @return a {@link FlywayMigrationStrategy} that calls {@code clean()} before {@code migrate()}
+     * @param dataSource the application datasource, used to execute the schema reset directly
+     * @return a {@link FlywayMigrationStrategy} that resets the schema before migrating
      */
     @Bean
-    public FlywayMigrationStrategy flywayMigrationStrategy() {
+    public FlywayMigrationStrategy flywayMigrationStrategy(DataSource dataSource) {
         return flyway -> {
-            LOG.warn("Local profile: wiping Flyway-managed schema before migration (dev only)");
-            flyway.clean();
+            LOG.warn("Local profile: resetting public schema before migration (dev only)");
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("DROP SCHEMA public CASCADE");
+                stmt.execute("CREATE SCHEMA public");
+                stmt.execute("GRANT ALL ON SCHEMA public TO PUBLIC");
+                LOG.info("Public schema dropped and recreated successfully");
+            } catch (Exception ex) {
+                throw new IllegalStateException("Failed to reset public schema for local dev", ex);
+            }
             flyway.migrate();
         };
     }

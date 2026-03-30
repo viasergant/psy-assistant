@@ -4,6 +4,8 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import com.psyassistant.therapists.domain.Language;
 import com.psyassistant.therapists.domain.Specialization;
 import com.psyassistant.therapists.domain.TherapistProfile;
+import com.psyassistant.therapists.dto.TherapistProfileAdminDto;
+import com.psyassistant.therapists.dto.TherapistWithAccountResponseDto;
 import com.psyassistant.therapists.repository.LanguageRepository;
 import com.psyassistant.therapists.repository.SpecializationRepository;
 import com.psyassistant.therapists.repository.TherapistProfileRepository;
@@ -11,6 +13,7 @@ import com.psyassistant.users.UserManagementService;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
 import com.psyassistant.users.dto.CreateUserRequest;
+import com.psyassistant.users.dto.UserCreationResponseDto;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -142,6 +145,90 @@ public class TherapistProfileService {
         auditService.recordAuditEntry(saved.getId(), actorId, actorName, "CREATE", changes, null);
 
         return saved;
+    }
+
+    /**
+     * Creates a therapist user account with temporary password AND therapist profile atomically.
+     * This is the preferred method for the streamlined therapist onboarding workflow.
+     *
+     * <p>The user is created with {@code mustChangePassword=true} and a secure temporary password.
+     * The therapist profile is created with the provided basic information and primary specialization.
+     *
+     * @param email the therapist's email (must be unique)
+     * @param fullName the therapist's full name
+     * @param phone optional phone number
+     * @param employmentStatus employment status (e.g., "FULL_TIME", "PART_TIME")
+     * @param primarySpecializationId UUID of the primary specialization
+     * @return response containing user details with temp password and therapist profile
+     * @throws IllegalArgumentException if email already exists or specialization not found
+     */
+    @Transactional
+    public TherapistWithAccountResponseDto createTherapistWithAccount(
+            String email, String fullName, String phone,
+            String employmentStatus, UUID primarySpecializationId) {
+
+        // Validate email uniqueness
+        if (profileRepository.existsByEmailIgnoreCase(email)) {
+            throw new IllegalArgumentException(
+                "A therapist with this email address already exists"
+            );
+        }
+
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException(
+                "A user with this email address already exists"
+            );
+        }
+
+        // Validate specialization exists
+        Specialization primarySpec = specializationRepository.findById(primarySpecializationId)
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Specialization not found: " + primarySpecializationId
+            ));
+
+        // Create user account with temporary password
+        UUID actorId = getCurrentUserId();
+        CreateUserRequest userRequest = new CreateUserRequest(
+            email,
+            fullName,
+            UserRole.THERAPIST
+        );
+        UserCreationResponseDto userResponse = userManagementService
+            .createUserWithTemporaryPassword(userRequest, actorId);
+
+        // Create therapist profile
+        TherapistProfile profile = new TherapistProfile(email, fullName, phone);
+        profile.setEmploymentStatus(employmentStatus);
+        profile.setActive(true);
+        profile.getSpecializations().add(primarySpec);
+
+        TherapistProfile savedProfile = profileRepository.save(profile);
+
+        // Record creation audit
+        String actorName = getCurrentUsername();
+        List<TherapistAuditService.FieldChange> changes = new ArrayList<>();
+        changes.add(new TherapistAuditService.FieldChange("email", null, email));
+        changes.add(new TherapistAuditService.FieldChange("name", null, fullName));
+        if (phone != null) {
+            changes.add(new TherapistAuditService.FieldChange("phone", null, phone));
+        }
+        changes.add(new TherapistAuditService.FieldChange("employmentStatus", null, employmentStatus));
+        changes.add(new TherapistAuditService.FieldChange("primarySpecialization", null,
+            primarySpec.getName()));
+
+        auditService.recordAuditEntry(
+            savedProfile.getId(),
+            actorId,
+            actorName,
+            "CREATE",
+            changes,
+            null
+        );
+
+        return new TherapistWithAccountResponseDto(
+            userResponse,
+            TherapistProfileAdminDto.fromAdmin(savedProfile)
+        );
     }
 
     /**

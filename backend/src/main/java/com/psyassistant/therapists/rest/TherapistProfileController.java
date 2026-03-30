@@ -2,7 +2,9 @@ package com.psyassistant.therapists.rest;
 
 import com.psyassistant.therapists.domain.TherapistProfile;
 import com.psyassistant.therapists.dto.CreateTherapistProfileRequest;
+import com.psyassistant.therapists.dto.CreateTherapistWithAccountRequest;
 import com.psyassistant.therapists.dto.TherapistProfileAdminDto;
+import com.psyassistant.therapists.dto.TherapistWithAccountResponseDto;
 import com.psyassistant.therapists.dto.UpdateTherapistProfileRequest;
 import com.psyassistant.therapists.service.TherapistProfileService;
 import jakarta.validation.Valid;
@@ -114,6 +116,40 @@ public class TherapistProfileController {
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(TherapistProfileAdminDto.fromAdmin(profile));
         } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * POST /api/v1/therapists/with-account
+     * Creates a therapist user account with temporary password AND profile atomically.
+     *
+     * <p>This is the preferred endpoint for the streamlined therapist onboarding workflow.
+     * It creates both the user account (with temporary password) and the therapist profile
+     * in a single transaction.
+     *
+     * <p>Required role: SYSTEM_ADMINISTRATOR or ADMIN
+     *
+     * @param request the creation request with user and profile information
+     * @return 201 Created with user details (including temp password) and therapist profile
+     */
+    @PostMapping("/with-account")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
+    public ResponseEntity<TherapistWithAccountResponseDto> createTherapistWithAccount(
+        @Valid @RequestBody CreateTherapistWithAccountRequest request
+    ) {
+        try {
+            TherapistWithAccountResponseDto response = therapistProfileService
+                .createTherapistWithAccount(
+                    request.email(),
+                    request.fullName(),
+                    request.phone(),
+                    request.employmentStatus(),
+                    request.primarySpecializationId()
+                );
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            LOG.warn("Failed to create therapist with account: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

@@ -27,7 +27,7 @@
   --color-input-readonly-bg: #F8FAFC;
   --color-input-text:        #0F172A;
   --color-input-readonly-text: #334155;
-  --color-input-placeholder: #94A3B8;
+  --color-input-placeholder: #C1CCDA;
 
   // Radius
   --radius-sm:  4px;
@@ -78,6 +78,7 @@ select {
 input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color'])::placeholder,
 textarea::placeholder {
   color: var(--color-input-placeholder);
+  -webkit-text-fill-color: var(--color-input-placeholder);
 }
 
 input[readonly],

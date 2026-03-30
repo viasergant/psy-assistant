@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import {
@@ -259,11 +259,11 @@ import { ClientService } from '../services/client.service';
           <section class="section">
             <h2 class="section-title">Profile Photo</h2>
             <div class="photo-block">
-              <img *ngIf="client.photoUrl"
+              <img *ngIf="photoSrc"
                    class="profile-photo"
-                   [src]="client.photoUrl"
+                [src]="photoSrc"
                    [alt]="client.fullName + ' photo'" />
-              <div *ngIf="!client.photoUrl" class="photo-placeholder">No photo uploaded</div>
+              <div *ngIf="!client.photoUrl || !photoSrc" class="photo-placeholder">No photo uploaded</div>
             </div>
 
             <div *ngIf="client.canUploadPhoto" class="photo-controls">
@@ -405,7 +405,7 @@ import { ClientService } from '../services/client.service';
     }
   `]
 })
-export class ClientDetailComponent implements OnInit {
+export class ClientDetailComponent implements OnInit, OnDestroy {
   private static readonly PHOTO_MAX_BYTES = 5 * 1024 * 1024;
   private static readonly TAG_HINT_STORAGE_KEY = 'clients.recent-tags';
   private static readonly DEFAULT_TAG_HINTS = [
@@ -426,11 +426,13 @@ export class ClientDetailComponent implements OnInit {
   tagInput = '';
   tagsSaving = false;
   photoUploading = false;
+  photoSrc: string | null = null;
   recentTagHints: string[] = [];
   tagsError: string | null = null;
   photoError: string | null = null;
   loadError: string | null = null;
   saveError: string | null = null;
+  private photoObjectUrl: string | null = null;
 
   profileForm: FormGroup;
 
@@ -487,12 +489,17 @@ export class ClientDetailComponent implements OnInit {
         this.loading = false;
         this.client = c;
         this.patchForm(c);
+        this.refreshPhotoSource(c);
       },
       error: () => {
         this.loading = false;
         this.loadError = 'Failed to load client. Please try again.';
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.releasePhotoObjectUrl();
   }
 
   startEdit(): void {
@@ -658,6 +665,7 @@ export class ClientDetailComponent implements OnInit {
       next: (updated) => {
         this.photoUploading = false;
         this.client = updated;
+        this.refreshPhotoSource(updated);
         target.value = '';
       },
       error: () => {
@@ -700,6 +708,34 @@ export class ClientDetailComponent implements OnInit {
       emergencyContactPhone: c.emergencyContactPhone || '',
       emergencyContactEmail: c.emergencyContactEmail || ''
     }, { emitEvent: false });
+  }
+
+  private refreshPhotoSource(client: ClientDetail): void {
+    this.releasePhotoObjectUrl();
+    this.photoError = null;
+
+    if (!client.photoUrl) {
+      this.photoSrc = null;
+      return;
+    }
+
+    this.clientService.getPhoto(client.id).subscribe({
+      next: (blob) => {
+        this.photoObjectUrl = URL.createObjectURL(blob);
+        this.photoSrc = this.photoObjectUrl;
+      },
+      error: () => {
+        this.photoSrc = null;
+        this.photoError = 'Failed to load photo. Please refresh and try again.';
+      },
+    });
+  }
+
+  private releasePhotoObjectUrl(): void {
+    if (this.photoObjectUrl) {
+      URL.revokeObjectURL(this.photoObjectUrl);
+      this.photoObjectUrl = null;
+    }
   }
 
   private toPayload(version: number): UpdateClientProfilePayload {

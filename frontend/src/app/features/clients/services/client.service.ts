@@ -40,4 +40,9 @@ export class ClientService {
     formData.append('version', String(version));
     return this.http.post<ClientDetail>(`${this.base}/${id}/photo`, formData);
   }
+
+  /** Downloads a client profile photo as Blob through authenticated HttpClient flow. */
+  getPhoto(id: string): Observable<Blob> {
+    return this.http.get(`${this.base}/${id}/photo`, { responseType: 'blob' });
+  }
 }

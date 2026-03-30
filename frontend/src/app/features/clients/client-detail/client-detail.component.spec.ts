@@ -9,6 +9,8 @@ describe('ClientDetailComponent', () => {
   let fixture: ComponentFixture<ClientDetailComponent>;
   let component: ClientDetailComponent;
   let clientServiceSpy: jasmine.SpyObj<ClientService>;
+  let createObjectUrlSpy: jasmine.Spy;
+  let revokeObjectUrlSpy: jasmine.Spy;
 
   const baseClient: ClientDetail = {
     id: '11111111-1111-1111-1111-111111111111',
@@ -61,7 +63,8 @@ describe('ClientDetailComponent', () => {
       'getClient',
       'updateClient',
       'updateTags',
-      'uploadPhoto'
+      'uploadPhoto',
+      'getPhoto'
     ]);
     clientServiceSpy.getClient.and.returnValue(of(baseClient));
     clientServiceSpy.updateClient.and.callFake((_id, payload) =>
@@ -73,6 +76,10 @@ describe('ClientDetailComponent', () => {
     clientServiceSpy.uploadPhoto.and.returnValue(
       of({ ...baseClient, photoUrl: '/api/v1/clients/111/photo', version: 4 })
     );
+    clientServiceSpy.getPhoto.and.returnValue(of(new Blob(['photo'], { type: 'image/png' })));
+
+    createObjectUrlSpy = spyOn(URL, 'createObjectURL').and.returnValue('blob:test-photo');
+    revokeObjectUrlSpy = spyOn(URL, 'revokeObjectURL').and.stub();
 
     await TestBed.configureTestingModule({
       imports: [ClientDetailComponent],
@@ -158,6 +165,17 @@ describe('ClientDetailComponent', () => {
     component.onPhotoSelected({ target: input } as unknown as Event);
 
     expect(clientServiceSpy.uploadPhoto).toHaveBeenCalled();
+    expect(clientServiceSpy.getPhoto).toHaveBeenCalledWith(baseClient.id);
+    expect(component.photoSrc).toBe('blob:test-photo');
     expect(component.client?.photoUrl).toBe('/api/v1/clients/111/photo');
+  });
+
+  it('revokes object url on destroy', () => {
+    component['photoSrc'] = 'blob:test-photo';
+    component['photoObjectUrl'] = 'blob:test-photo';
+
+    component.ngOnDestroy();
+
+    expect(revokeObjectUrlSpy).toHaveBeenCalledWith('blob:test-photo');
   });
 });

@@ -13,8 +13,6 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
  * - Biography
  * - Specializations
  * - Languages
- * - License information
- * - Pricing rules
  */
 @Component({
   selector: 'app-therapist-detail',
@@ -51,10 +49,6 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
             <div class="info-item">
               <label>Phone</label>
               <p>{{ therapist.phone || '—' }}</p>
-            </div>
-            <div class="info-item">
-              <label>Contact Phone</label>
-              <p>{{ therapist.contactPhone || '—' }}</p>
             </div>
             <div class="info-item">
               <label>Employment Status</label>
@@ -95,66 +89,6 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
           <p *ngIf="therapist.languages.length === 0" class="text-muted">No languages listed</p>
         </section>
 
-        <!-- Licenses -->
-        <section class="profile-section" *ngIf="therapist.licenses && therapist.licenses.length > 0">
-          <h2>Licenses & Credentials</h2>
-          <div class="table-wrapper">
-            <table aria-label="License information">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Number</th>
-                  <th>Issuing Body</th>
-                  <th>Issue Date</th>
-                  <th>Expiry Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let license of therapist.licenses">
-                  <td>{{ license.licenseType }}</td>
-                  <td>{{ license.licenseNumber }}</td>
-                  <td>{{ license.issuingBody }}</td>
-                  <td>{{ license.issueDate | date:'dd MMM yyyy' }}</td>
-                  <td>{{ license.expiryDate ? (license.expiryDate | date:'dd MMM yyyy') : '—' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Pricing Rules -->
-        <section class="profile-section" *ngIf="therapist.pricingRules && therapist.pricingRules.length > 0">
-          <h2>Pricing Rules</h2>
-          <div class="table-wrapper">
-            <table aria-label="Pricing information">
-              <thead>
-                <tr>
-                  <th>Session Type</th>
-                  <th>Base Rate</th>
-                  <th>Currency</th>
-                  <th>Effective From</th>
-                  <th>Effective To</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let rule of therapist.pricingRules">
-                  <td>{{ rule.sessionType }}</td>
-                  <td>{{ rule.baseRate }}</td>
-                  <td>{{ rule.currency }}</td>
-                  <td>{{ rule.effectiveFrom | date:'dd MMM yyyy' }}</td>
-                  <td>{{ rule.effectiveTo ? (rule.effectiveTo | date:'dd MMM yyyy') : 'Ongoing' }}</td>
-                  <td>
-                    <span class="badge" [class.badge-active]="rule.active" [class.badge-inactive]="!rule.active">
-                      {{ rule.active ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
         <!-- Metadata -->
         <section class="profile-section metadata">
           <h2>Metadata</h2>
@@ -164,8 +98,16 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
               <p>{{ therapist.createdAt | date:'dd MMM yyyy, HH:mm' }}</p>
             </div>
             <div class="info-item">
+              <label>Created By</label>
+              <p>{{ therapist.createdBy || '—' }}</p>
+            </div>
+            <div class="info-item" *ngIf="therapist.lastModifiedAt">
               <label>Last Updated</label>
-              <p>{{ therapist.updatedAt | date:'dd MMM yyyy, HH:mm' }}</p>
+              <p>{{ therapist.lastModifiedAt | date:'dd MMM yyyy, HH:mm' }}</p>
+            </div>
+            <div class="info-item" *ngIf="therapist.lastModifiedBy">
+              <label>Last Modified By</label>
+              <p>{{ therapist.lastModifiedBy }}</p>
             </div>
             <div class="info-item">
               <label>Version</label>
@@ -253,20 +195,6 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
     .badge-inactive { background: #FEE2E2; color: #991B1B; }
     
     .text-muted { color: #94A3B8; margin: 0; }
-    
-    .table-wrapper { overflow-x: auto; }
-    table {
-      width: 100%; border-collapse: collapse; font-size: .9rem;
-    }
-    th {
-      text-align: left; padding: .75rem; background: #F7FAFC;
-      border-bottom: 2px solid #E2E8F0; font-weight: 600;
-      color: #475569;
-    }
-    td {
-      padding: .75rem; border-bottom: 1px solid #E2E8F0;
-    }
-    tr:last-child td { border-bottom: none; }
     
     .metadata { background: #FAFBFC; }
   `]

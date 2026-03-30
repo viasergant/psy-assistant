@@ -31,12 +31,12 @@ public class ReferenceDataController {
      * GET /api/v1/specializations
      * Returns all available specializations for dropdown lists.
      *
-     * <p>Required role: ADMIN (for creating therapist profiles)
+     * <p>Required role: SYSTEM_ADMINISTRATOR (for creating therapist profiles)
      *
      * @return 200 OK with list of specializations
      */
     @GetMapping("/specializations")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<List<IdNameDto>> getSpecializations() {
         List<IdNameDto> specializations = specializationRepository.findAll().stream()
             .map(spec -> IdNameDto.from(spec.getId(), spec.getName()))
@@ -49,12 +49,12 @@ public class ReferenceDataController {
      * GET /api/v1/languages
      * Returns all available languages for dropdown lists.
      *
-     * <p>Required role: ADMIN (for creating therapist profiles)
+     * <p>Required role: SYSTEM_ADMINISTRATOR (for creating therapist profiles)
      *
      * @return 200 OK with list of languages
      */
     @GetMapping("/languages")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<List<IdNameDto>> getLanguages() {
         List<IdNameDto> languages = languageRepository.findAll().stream()
             .map(lang -> IdNameDto.from(lang.getId(), lang.getName()))

@@ -41,14 +41,14 @@ public class TherapistProfileController {
      * GET /api/v1/therapists
      * Lists all therapist profiles with pagination.
      *
-     * <p>Required role: ADMIN
+     * <p>Required role: SYSTEM_ADMINISTRATOR
      *
      * @param page zero-based page number (default: 0)
      * @param size page size (default: 20)
      * @return 200 OK with paginated therapist list
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<PageResponse<TherapistProfileAdminDto>> listTherapists(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size
@@ -73,13 +73,13 @@ public class TherapistProfileController {
      * POST /api/v1/therapists
      * Creates a new therapist profile.
      *
-     * <p>Required role: ADMIN
+     * <p>Required role: SYSTEM_ADMINISTRATOR
      *
      * @param request the creation request
      * @return 201 Created with the new profile
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<TherapistProfileAdminDto> createTherapist(
         @Valid @RequestBody CreateTherapistProfileRequest request
     ) {
@@ -118,13 +118,13 @@ public class TherapistProfileController {
      * GET /api/v1/therapists/{id}
      * Retrieves a therapist profile by ID.
      *
-     * <p>Required role: ADMIN or owned by therapist (self-view)
+     * <p>Required role: SYSTEM_ADMINISTRATOR or owned by therapist (self-view)
      *
      * @param id the therapist profile ID
      * @return 200 OK with the profile, or 404 if not found
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('THERAPIST')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN') or hasRole('THERAPIST')")
     public ResponseEntity<TherapistProfileAdminDto> getTherapist(@PathVariable UUID id) {
         try {
             TherapistProfile profile = therapistProfileService.getProfile(id);
@@ -138,13 +138,13 @@ public class TherapistProfileController {
      * GET /api/v1/therapists/by-email/{email}
      * Retrieves a therapist profile by email address.
      *
-     * <p>Required role: ADMIN
+     * <p>Required role: SYSTEM_ADMINISTRATOR
      *
      * @param email the therapist's email address
      * @return 200 OK with the profile, or 404 if not found
      */
     @GetMapping("/by-email/{email}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<TherapistProfileAdminDto> getTherapistByEmail(@PathVariable String email) {
         try {
             TherapistProfile profile = therapistProfileService.getProfileByEmail(email);
@@ -161,14 +161,14 @@ public class TherapistProfileController {
      * <p>Supports optimistic locking via version field.
      * Returns 409 Conflict if version mismatch.
      *
-     * <p>Required role: ADMIN
+     * <p>Required role: SYSTEM_ADMINISTRATOR
      *
      * @param id the therapist profile ID
      * @param request the update request with version
      * @return 200 OK with updated profile, or 409 if version conflict
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<TherapistProfileAdminDto> updateTherapist(
         @PathVariable UUID id,
         @Valid @RequestBody UpdateTherapistProfileRequest request
@@ -216,14 +216,14 @@ public class TherapistProfileController {
      * POST /api/v1/therapists/{id}/deactivate
      * Deactivates a therapist profile (soft delete).
      *
-     * <p>Required role: ADMIN
+     * <p>Required role: SYSTEM_ADMINISTRATOR
      *
      * @param id the therapist profile ID
      * @param request request with optional reason
      * @return 200 OK with updated profile
      */
     @PostMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<TherapistProfileAdminDto> deactivateTherapist(
         @PathVariable UUID id,
         @RequestBody(required = false) DeactivateRequest request

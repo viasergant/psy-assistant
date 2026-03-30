@@ -106,8 +106,7 @@ public class TherapistProfile extends BaseEntity {
     private Set<TherapistPricingRule> pricingRules = new HashSet<>();
 
     /** Professional photo stored separately. */
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "therapist_profile_id", referencedColumnName = "therapist_profile_id")
+    @OneToOne(mappedBy = "therapistProfile", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private TherapistPhoto photo;
 
     // Constructors

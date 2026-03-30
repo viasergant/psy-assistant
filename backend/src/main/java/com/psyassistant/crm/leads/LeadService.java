@@ -368,6 +368,10 @@ public class LeadService {
             throw ex;
         }
 
+                // 7b. Set immutable client code after UUID is assigned.
+                client.setClientCode(buildClientCode(client.getId()));
+                clientRepository.save(client);
+
         // 8. Update lead status and back-link
         lead.setStatus(LeadStatus.CONVERTED);
         lead.setConvertedClientId(client.getId());
@@ -425,6 +429,11 @@ public class LeadService {
                         u -> u.getFullName() != null ? u.getFullName() : u.getEmail()
                 ));
     }
+
+        private String buildClientCode(final UUID clientId) {
+                String raw = clientId.toString().replace("-", "").toUpperCase();
+                return "CL-" + raw.substring(0, 8);
+        }
 
     /**
      * Builds a compact JSON map of changed scalar fields for the audit log.

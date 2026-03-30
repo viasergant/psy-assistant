@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -240,6 +241,24 @@ public class GlobalExceptionHandler {
                 )
         );
     }
+
+        /**
+         * Handles optimistic locking conflicts on stale updates (409).
+         */
+        @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+        public ResponseEntity<ErrorResponse> handleOptimisticLock(
+                        final ObjectOptimisticLockingFailureException ex,
+                        final HttpServletRequest request) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                                new ErrorResponse(
+                                                Instant.now(),
+                                                HttpStatus.CONFLICT.value(),
+                                                "Resource was updated by another request. Refresh and retry.",
+                                                "STALE_UPDATE",
+                                                request.getRequestURI()
+                                )
+                );
+        }
 
     /**
      * Handles every {@link Exception} not caught by a more specific handler.

@@ -1,6 +1,6 @@
 package com.psyassistant.therapists.domain;
 
-import com.psyassistant.common.audit.BaseEntity;
+import com.psyassistant.common.audit.SimpleBaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "specialization")
-public class Specialization extends BaseEntity {
+public class Specialization extends SimpleBaseEntity {
 
     /** Name of the specialization (e.g., "Cognitive Behavioral Therapy"). */
     @Column(name = "name", nullable = false, unique = true, length = 128)

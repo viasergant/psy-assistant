@@ -1,6 +1,12 @@
 {
     "chat.tools.terminal.autoApprove": {
         "npm run lint": true,
-        "npm test": true
+        "npm test": true,
+        "pkill": true,
+        "/^cd /Users/Serhiy_Piddubchak/Documents/prj/psy-assistant/backend && bash -c '\\./mvnw clean compile -DskipTests && \\./mvnw spring-boot:run -Dspring-boot\\.run\\.profiles=local'$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "lsof": true
     }
 }

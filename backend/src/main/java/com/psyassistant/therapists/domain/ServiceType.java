@@ -22,7 +22,7 @@ public class ServiceType extends BaseEntity {
     private String description;
 
     // Constructors
-    public ServiceType() {}
+    public ServiceType() { }
 
     public ServiceType(String name, String description) {
         this.name = name;

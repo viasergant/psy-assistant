@@ -21,7 +21,7 @@ public class Language extends BaseEntity {
     private String languageCode;
 
     // Constructors
-    public Language() {}
+    public Language() { }
 
     public Language(String name, String languageCode) {
         this.name = name;

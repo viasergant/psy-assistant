@@ -4,7 +4,6 @@ import com.psyassistant.common.audit.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import java.time.Instant;
 
 /**
  * Reference entity for therapist specializations (e.g., "Depression", "Anxiety", etc.).
@@ -22,7 +21,7 @@ public class Specialization extends BaseEntity {
     private String description;
 
     // Constructors
-    public Specialization() {}
+    public Specialization() { }
 
     public Specialization(String name, String description) {
         this.name = name;

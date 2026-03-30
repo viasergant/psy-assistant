@@ -39,16 +39,12 @@ public class TherapistPricingRule extends BaseEntity {
     @Column(name = "effective_from", nullable = false)
     private LocalDate effectiveFrom;
 
-    /** Optional user ID that created this rule (for audit). */
-    @Column(name = "created_by", length = 255, updatable = false)
-    private String createdByUser;
-
     /** Optional user ID that last updated this rule (for audit). */
     @Column(name = "updated_by", length = 255)
     private String updatedByUser;
 
     // Constructors
-    public TherapistPricingRule() {}
+    public TherapistPricingRule() { }
 
     public TherapistPricingRule(TherapistProfile therapistProfile, ServiceType serviceType,
                                BigDecimal rate, String currency, LocalDate effectiveFrom) {
@@ -98,14 +94,6 @@ public class TherapistPricingRule extends BaseEntity {
 
     public void setEffectiveFrom(LocalDate effectiveFrom) {
         this.effectiveFrom = effectiveFrom;
-    }
-
-    public String getCreatedByUser() {
-        return createdByUser;
-    }
-
-    public void setCreatedByUser(String createdByUser) {
-        this.createdByUser = createdByUser;
     }
 
     public String getUpdatedByUser() {

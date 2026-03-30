@@ -1,5 +1,6 @@
 package com.psyassistant.therapists.service;
 
+import static org.springframework.http.HttpStatus.CONFLICT;
 import com.psyassistant.therapists.domain.Language;
 import com.psyassistant.therapists.domain.Specialization;
 import com.psyassistant.therapists.domain.TherapistProfile;
@@ -12,13 +13,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import static org.springframework.http.HttpStatus.CONFLICT;
 
 /**
  * Service layer for therapist profile CRUD operations, lifecycle management,

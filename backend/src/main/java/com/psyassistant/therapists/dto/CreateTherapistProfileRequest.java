@@ -28,4 +28,4 @@ public record CreateTherapistProfileRequest(
 
     @JsonProperty("languageIds")
     List<UUID> languageIds
-) {}
+) { }

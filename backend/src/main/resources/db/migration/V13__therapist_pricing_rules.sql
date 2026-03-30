@@ -19,7 +19,8 @@ CREATE INDEX IF NOT EXISTS idx_therapist_pricing_rule_profile_id ON therapist_pr
 CREATE INDEX IF NOT EXISTS idx_therapist_pricing_rule_service_type_id ON therapist_pricing_rule(service_type_id);
 CREATE INDEX IF NOT EXISTS idx_therapist_pricing_rule_effective_from ON therapist_pricing_rule(effective_from DESC);
 
--- Unique constraint: only one active rule per service type per therapist
-CREATE UNIQUE INDEX IF NOT EXISTS uq_therapist_pricing_rule_active
-    ON therapist_pricing_rule(therapist_profile_id, service_type_id)
-    WHERE effective_from <= CURRENT_DATE;
+-- Valid immutable uniqueness rule: only one pricing rule per therapist, service type,
+-- and effective date. Current-date based uniqueness cannot be expressed in a
+-- PostgreSQL index predicate because CURRENT_DATE is not immutable.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_therapist_pricing_rule_effective_date
+    ON therapist_pricing_rule(therapist_profile_id, service_type_id, effective_from);

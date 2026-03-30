@@ -6,8 +6,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -62,7 +60,7 @@ public class TherapistProfileAuditEntry {
     private List<TherapistProfileAuditChange> changes = new ArrayList<>();
 
     // Constructors
-    public TherapistProfileAuditEntry() {}
+    public TherapistProfileAuditEntry() { }
 
     public TherapistProfileAuditEntry(UUID therapistProfileId, UUID actorUserId,
                                       String actorName, String eventType, String requestId) {

@@ -55,5 +55,5 @@ public class TherapistAuditService {
      * @param oldValue the previous value (null if new)
      * @param newValue the new value (null if deleted)
      */
-    public record FieldChange(String fieldName, String oldValue, String newValue) {}
+    public record FieldChange(String fieldName, String oldValue, String newValue) { }
 }

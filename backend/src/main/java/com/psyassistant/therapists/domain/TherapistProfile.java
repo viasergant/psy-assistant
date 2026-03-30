@@ -111,7 +111,7 @@ public class TherapistProfile extends BaseEntity {
     private TherapistPhoto photo;
 
     // Constructors
-    public TherapistProfile() {}
+    public TherapistProfile() { }
 
     public TherapistProfile(String email, String name, String phone) {
         this.email = email;

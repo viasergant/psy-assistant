@@ -185,5 +185,5 @@ public class TherapistProfileController {
     /**
      * Simple request record for deactivation with optional reason.
      */
-    public record DeactivateRequest(String reason) {}
+    public record DeactivateRequest(String reason) { }
 }

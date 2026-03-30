@@ -32,4 +32,4 @@ public record UpdateTherapistProfileRequest(
 
     @JsonProperty("languageIds")
     List<UUID> languageIds
-) {}
+) { }

@@ -42,7 +42,7 @@ public class TherapistProfileAuditChange {
     private String newValue;
 
     // Constructors
-    public TherapistProfileAuditChange() {}
+    public TherapistProfileAuditChange() { }
 
     public TherapistProfileAuditChange(TherapistProfileAuditEntry auditEntry,
                                        String fieldName, String oldValue, String newValue) {

@@ -96,4 +96,4 @@ record IdNamePair(
 
     @JsonProperty("name")
     String name
-) {}
+) { }

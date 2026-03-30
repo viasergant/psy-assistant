@@ -38,16 +38,12 @@ public class TherapistCredential extends BaseEntity {
     @Column(name = "expiry_date")
     private LocalDate expiryDate;
 
-    /** Optional user ID that created this credential (for audit). */
-    @Column(name = "created_by", length = 255, updatable = false)
-    private String createdByUser;
-
     /** Optional user ID that last updated this credential (for audit). */
     @Column(name = "updated_by", length = 255)
     private String updatedByUser;
 
     // Constructors
-    public TherapistCredential() {}
+    public TherapistCredential() { }
 
     public TherapistCredential(TherapistProfile therapistProfile, String credentialType,
                               String issuer, LocalDate issueDate, LocalDate expiryDate) {
@@ -97,14 +93,6 @@ public class TherapistCredential extends BaseEntity {
 
     public void setExpiryDate(LocalDate expiryDate) {
         this.expiryDate = expiryDate;
-    }
-
-    public String getCreatedByUser() {
-        return createdByUser;
-    }
-
-    public void setCreatedByUser(String createdByUser) {
-        this.createdByUser = createdByUser;
     }
 
     public String getUpdatedByUser() {

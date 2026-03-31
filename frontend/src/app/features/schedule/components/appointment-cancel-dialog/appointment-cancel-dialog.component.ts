@@ -21,7 +21,7 @@ import { AppointmentApiService } from '../../services/appointment-api.service';
   imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" [attr.aria-labelledby]="'cancel-title'">
-      <div class="dialog" @fadeInUp>
+      <div class="dialog">
         <div class="dialog-header warning">
           <div class="header-content">
             <div class="warning-icon">

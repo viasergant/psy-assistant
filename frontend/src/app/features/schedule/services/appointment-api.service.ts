@@ -50,17 +50,7 @@ export class AppointmentApiService {
    * @returns list of session types (filtered to active only)
    */
   getSessionTypes(): Observable<SessionType[]> {
-    // TODO: Implement session type endpoint on backend (PA-32)
-    // For now, return hardcoded session types from seed data
-    return new Observable(observer => {
-      observer.next([
-        { id: 'placeholder-id-1', code: 'IN_PERSON', name: 'In-Person Session', description: 'Face-to-face session at therapist\'s office' },
-        { id: 'placeholder-id-2', code: 'ONLINE', name: 'Online Session', description: 'Remote session via video call' },
-        { id: 'placeholder-id-3', code: 'INTAKE', name: 'Initial Intake Session', description: 'First diagnostic session with new client' },
-        { id: 'placeholder-id-4', code: 'FOLLOW_UP', name: 'Follow-Up Session', description: 'Regular therapeutic session' }
-      ]);
-      observer.complete();
-    });
+    return this.http.get<SessionType[]>(`${this.apiBase}/session-types`);
   }
 
   /**

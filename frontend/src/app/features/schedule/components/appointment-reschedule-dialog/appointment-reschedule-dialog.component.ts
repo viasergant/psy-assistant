@@ -22,7 +22,7 @@ import { AppointmentApiService } from '../../services/appointment-api.service';
   imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, DatePicker],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" [attr.aria-labelledby]="'reschedule-title'">
-      <div class="dialog" @fadeInUp>
+      <div class="dialog">
         <div class="dialog-header">
           <h2 id="reschedule-title">{{ 'schedule.appointment.reschedule.title' | transloco }}</h2>
           <button

@@ -29,7 +29,7 @@ interface ClientOption {
   imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, DatePicker, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" [attr.aria-labelledby]="'booking-title'">
-      <div class="dialog" @fadeInUp>
+      <div class="dialog">
         <div class="dialog-header">
           <h2 id="booking-title">{{ 'schedule.appointment.booking.title' | transloco }}</h2>
           <button
@@ -63,6 +63,7 @@ interface ClientOption {
                 [attr.aria-invalid]="isInvalid('clientId')"
                 aria-required="true"
                 styleClass="w-full"
+                appendTo="body"
               />
               <span *ngIf="isInvalid('clientId')" class="error-msg" role="alert">
                 {{ 'schedule.appointment.validation.clientRequired' | transloco }}
@@ -86,6 +87,7 @@ interface ClientOption {
                 [attr.aria-invalid]="isInvalid('sessionTypeId')"
                 aria-required="true"
                 styleClass="w-full"
+                appendTo="body"
               />
               <span *ngIf="isInvalid('sessionTypeId')" class="error-msg" role="alert">
                 {{ 'schedule.appointment.validation.sessionTypeRequired' | transloco }}
@@ -111,6 +113,7 @@ interface ClientOption {
                 [attr.aria-invalid]="isInvalid('startTime')"
                 aria-required="true"
                 styleClass="w-full"
+                appendTo="body"
               />
               <span *ngIf="isInvalid('startTime')" class="error-msg" role="alert">
                 <ng-container *ngIf="form.get('startTime')?.hasError('required')">

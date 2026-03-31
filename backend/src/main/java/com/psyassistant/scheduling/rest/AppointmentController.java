@@ -8,6 +8,8 @@ import com.psyassistant.scheduling.dto.CheckConflictsRequest;
 import com.psyassistant.scheduling.dto.ConflictCheckResponse;
 import com.psyassistant.scheduling.dto.CreateAppointmentRequest;
 import com.psyassistant.scheduling.dto.RescheduleAppointmentRequest;
+import com.psyassistant.scheduling.dto.SessionTypeResponse;
+import com.psyassistant.scheduling.repository.SessionTypeRepository;
 import com.psyassistant.scheduling.service.AppointmentService;
 import com.psyassistant.scheduling.service.ConflictDetectionService;
 import jakarta.persistence.EntityNotFoundException;
@@ -51,13 +53,43 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
     private final ConflictDetectionService conflictDetectionService;
     private final AppointmentMapper appointmentMapper;
+    private final SessionTypeRepository sessionTypeRepository;
 
     public AppointmentController(final AppointmentService appointmentService,
                                   final ConflictDetectionService conflictDetectionService,
-                                  final AppointmentMapper appointmentMapper) {
+                                  final AppointmentMapper appointmentMapper,
+                                  final SessionTypeRepository sessionTypeRepository) {
         this.appointmentService = appointmentService;
         this.conflictDetectionService = conflictDetectionService;
         this.appointmentMapper = appointmentMapper;
+        this.sessionTypeRepository = sessionTypeRepository;
+    }
+
+    /**
+     * Retrieves all active session types for dropdown population.
+     *
+     * <p>Returns only active session types ordered alphabetically by name.
+     * Used for populating session type dropdown in appointment booking UI.
+     *
+     * @return list of active session types (200 OK)
+     */
+    @GetMapping("/session-types")
+    @PreAuthorize("hasAnyRole('STAFF', 'THERAPIST', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<List<SessionTypeResponse>> getSessionTypes() {
+        LOG.debug("Fetching active session types");
+
+        final List<SessionTypeResponse> sessionTypes = sessionTypeRepository.findByIsActiveTrueOrderByName()
+                .stream()
+                .map(st -> new SessionTypeResponse(
+                        st.getId(),
+                        st.getCode(),
+                        st.getName(),
+                        st.getDescription()
+                ))
+                .toList();
+
+        LOG.debug("Found {} active session types", sessionTypes.size());
+        return ResponseEntity.ok(sessionTypes);
     }
 
     /**

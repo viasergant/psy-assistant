@@ -89,8 +89,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
             a.start_time,
             a.start_time + (a.duration_minutes || ' minutes')::INTERVAL
         ) && tstzrange(
-            :startTime,
-            :startTime + (:durationMinutes || ' minutes')::INTERVAL
+            CAST(:startTime AS timestamptz),
+            CAST(:startTime AS timestamptz) + (:durationMinutes || ' minutes')::INTERVAL
         )
         ORDER BY a.start_time
         """, nativeQuery = true)
@@ -120,8 +120,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
             a.start_time,
             a.start_time + (a.duration_minutes || ' minutes')::INTERVAL
         ) && tstzrange(
-            :startTime,
-            :startTime + (:durationMinutes || ' minutes')::INTERVAL
+            CAST(:startTime AS timestamptz),
+            CAST(:startTime AS timestamptz) + (:durationMinutes || ' minutes')::INTERVAL
         )
         ORDER BY a.start_time
         """, nativeQuery = true)

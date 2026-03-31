@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from './i18n.service';
-import { DropdownModule } from 'primeng/dropdown';
+import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 
 interface LanguageOption {
@@ -20,7 +20,7 @@ interface LanguageOption {
 @Component({
   selector: 'app-language-switcher',
   standalone: true,
-  imports: [CommonModule, DropdownModule, FormsModule],
+  imports: [CommonModule, Select, FormsModule],
   templateUrl: './language-switcher.component.html',
   styleUrls: ['./language-switcher.component.scss']
 })

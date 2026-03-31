@@ -82,15 +82,32 @@ export class AuthService {
             console.error('[AuthService] Failed to sync locale after refresh:', err)
           );
         })
-      ls: true })
-      .pipe(tap(response => this.tokenSubject.next(response.accessToken)));
+      );
   }
 
   /**
    * Sets the in-memory access token directly (used by APP_INITIALIZER after
    * a successful silent refresh).
    */
-  se Syncs locale preference with backend after successful change.
+  setToken(token: string): void {
+    this.tokenSubject.next(token);
+  }
+
+  /**
+   * Logs out the user: clears the token and redirects to login page.
+   */
+  logout(): void {
+    this.http
+      .post(`${this.apiBase}/logout`, {}, { withCredentials: true })
+      .subscribe({ error: () => {} }); // fire-and-forget
+    this.tokenSubject.next(null);
+    this.router.navigate(['/auth/login']);
+  }
+
+  /**
+   * Changes password on first login when user has mustChangePassword flag.
+   * Returns new auth tokens after successful password change.
+   * Syncs locale preference with backend after successful change.
    */
   changePasswordFirstLogin(request: FirstLoginPasswordChangeRequest): Observable<LoginResponse> {
     return this.http
@@ -103,22 +120,6 @@ export class AuthService {
             console.error('[AuthService] Failed to sync locale after password change:', err)
           );
         })
-      
-  logout(): void {
-    this.http
-      .post(`${this.apiBase}/logout`, {}, { withCredentials: true })
-      .subscribe({ error: () => {} }); // fire-and-forget
-    this.tokenSubject.next(null);
-    this.router.navigate(['/auth/login']);
-  }
-
-  /**
-   * Changes password on first login when user has mustChangePassword flag.
-   * Returns new auth tokens after successful password change.
-   */
-  changePasswordFirstLogin(request: FirstLoginPasswordChangeRequest): Observable<LoginResponse> {
-    return this.http
-      .post<LoginResponse>(`${this.apiBase}/first-login-password-change`, request)
-      .pipe(tap(response => this.tokenSubject.next(response.accessToken)));
+      );
   }
 }

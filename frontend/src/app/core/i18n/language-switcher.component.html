@@ -1,8 +1,8 @@
 <div class="language-switcher">
-  <p-dropdown
+  <p-select
     [options]="languages"
     [(ngModel)]="selectedLanguage"
-    (onChange)="onLanguageChange($event.value)"
+    (ngModelChange)="onLanguageChange($event)"
     optionLabel="label"
     optionValue="code"
     [style]="{ minWidth: '150px' }"

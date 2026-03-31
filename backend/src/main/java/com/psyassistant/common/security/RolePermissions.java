@@ -105,8 +105,12 @@ public final class RolePermissions {
 
         // Deprecated legacy roles — no permissions; treated as THERAPIST/SYSTEM_ADMINISTRATOR
         // after migration. Kept here to prevent NPE on un-migrated tokens.
-        map.put(UserRole.ADMIN, Collections.emptySet());
-        map.put(UserRole.USER, Collections.emptySet());
+        @SuppressWarnings("deprecation")
+        var deprecatedAdmin = UserRole.ADMIN;
+        @SuppressWarnings("deprecation")
+        var deprecatedUser = UserRole.USER;
+        map.put(deprecatedAdmin, Collections.emptySet());
+        map.put(deprecatedUser, Collections.emptySet());
 
         PERMISSIONS = Collections.unmodifiableMap(map);
     }

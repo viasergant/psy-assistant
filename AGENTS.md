@@ -35,6 +35,7 @@
 - Database schema changes must be done through Flyway migration files in src/main/resources/db/migration using V<N>__description.sql naming.
 - Keep API contracts explicit with request/response DTOs and consistent error handling through common exception patterns.
 - Frontend uses standalone Angular patterns (no NgModules); route and provider changes should align with src/app/app.routes.ts and src/app/app.config.ts.
+- **Always use i18n for UI text**: Never hardcode user-facing strings in templates or components. All labels, messages, buttons, headings, placeholders, and error text must use Transloco (e.g., `{{ 't.someKey' | transloco }}`). Add new keys to frontend/src/assets/i18n/*.json following the structure in docs/i18n-key-structure.md. Use frontend/scripts/validate-i18n-*.js to validate i18n compliance before committing.
 - Frontend i18n strings belong in frontend/src/assets/i18n/*.json and are loaded via Transloco.
 - Do not log personal or sensitive client information. Log opaque identifiers only.
 

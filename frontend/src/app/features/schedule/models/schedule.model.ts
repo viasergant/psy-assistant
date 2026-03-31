@@ -201,6 +201,127 @@ export function getLeaveStatusLabel(status: LeaveStatus): string {
   return labels[status];
 }
 
+// ========== Appointment Booking Models ==========
+
+/**
+ * Session type for appointments
+ */
+export interface SessionType {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+}
+
+/**
+ * Appointment status enum
+ */
+export enum AppointmentStatus {
+  SCHEDULED = 'SCHEDULED',
+  CONFIRMED = 'CONFIRMED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  NO_SHOW = 'NO_SHOW'
+}
+
+/**
+ * Cancellation type enum
+ */
+export enum CancellationType {
+  CLIENT_INITIATED = 'CLIENT_INITIATED',
+  THERAPIST_INITIATED = 'THERAPIST_INITIATED',
+  LATE_CANCELLATION = 'LATE_CANCELLATION'
+}
+
+/**
+ * Appointment entity
+ */
+export interface Appointment {
+  id: string;
+  therapistProfileId: string;
+  clientId: string;
+  sessionType: SessionType;
+  startTime: string; // ISO 8601 with timezone
+  endTime: string;   // Calculated field
+  durationMinutes: number;
+  timezone: string;
+  status: AppointmentStatus;
+  isConflictOverride: boolean;
+  cancellationType?: CancellationType;
+  cancellationReason?: string;
+  cancelledAt?: string;
+  cancelledBy?: string;
+  rescheduleReason?: string;
+  originalStartTime?: string;
+  rescheduledAt?: string;
+  rescheduledBy?: string;
+  notes?: string;
+  version: number; // Optimistic locking version
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+}
+
+/**
+ * Request to create new appointment
+ */
+export interface CreateAppointmentRequest {
+  therapistProfileId: string;
+  clientId: string;
+  sessionTypeId: string;
+  startTime: string; // ISO 8601 with timezone
+  durationMinutes: number;
+  timezone: string;
+  notes?: string;
+  allowConflictOverride?: boolean;
+}
+
+/**
+ * Request to check for appointment conflicts
+ */
+export interface CheckConflictsRequest {
+  therapistProfileId: string;
+  startTime: string; // ISO 8601 with timezone
+  durationMinutes: number;
+}
+
+/**
+ * Conflicting appointment details (minimal)
+ */
+export interface ConflictingAppointment {
+  id: string;
+  clientId: string;
+  clientName?: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+}
+
+/**
+ * Conflict check response
+ */
+export interface ConflictCheckResponse {
+  hasConflicts: boolean;
+  conflicts: ConflictingAppointment[];
+}
+
+/**
+ * Request to reschedule an appointment
+ */
+export interface RescheduleAppointmentRequest {
+  newStartTime: string; // ISO 8601 with timezone
+  reason: string; // 10-1000 characters
+  allowConflictOverride?: boolean;
+}
+
+/**
+ * Request to cancel an appointment
+ */
+export interface CancelAppointmentRequest {
+  cancellationType: CancellationType;
+  reason: string; // 10-1000 characters
+}
+
 /**
  * Helper to get day of week from JS Date
  */

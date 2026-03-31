@@ -350,6 +350,93 @@
       "rejected": "Rejected",
       "cancelled": "Cancelled"
     },
+    "appointment": {
+      "booking": {
+        "title": "Book Appointment",
+        "clientLabel": "Client",
+        "clientPlaceholder": "Select client",
+        "sessionTypeLabel": "Session Type",
+        "sessionTypePlaceholder": "Select session type",
+        "dateLabel": "Date",
+        "datePlaceholder": "Select date",
+        "timeLabel": "Time",
+        "timePlaceholder": "Select time",
+        "durationLabel": "Duration (minutes)",
+        "durationPlaceholder": "Enter duration",
+        "notesLabel": "Notes",
+        "notesPlaceholder": "Optional appointment notes",
+        "conflictsDetected": "Scheduling Conflicts Detected",
+        "conflictWarning": "There are conflicting appointments at this time:",
+        "overrideLabel": "I confirm this appointment is urgent and should override the conflict",
+        "checkingConflicts": "Checking for conflicts...",
+        "bookButton": "Book Appointment",
+        "bookingInProgress": "Booking..."
+      },
+      "reschedule": {
+        "title": "Reschedule Appointment",
+        "currentTimeLabel": "Current Time",
+        "newTimeLabel": "New Time",
+        "newDateLabel": "New Date",
+        "newTimePlaceholder": "Select new time",
+        "reasonLabel": "Reason for Rescheduling",
+        "reasonPlaceholder": "Provide a reason for rescheduling (10-1000 characters)",
+        "conflictsDetected": "Scheduling Conflicts Detected",
+        "conflictWarning": "The new time conflicts with existing appointments:",
+        "overrideLabel": "I confirm this reschedule is urgent and should override the conflict",
+        "rescheduleButton": "Reschedule Appointment",
+        "reschedulingInProgress": "Rescheduling..."
+      },
+      "cancel": {
+        "title": "Cancel Appointment",
+        "appointmentTimeLabel": "Appointment Time",
+        "clientLabel": "Client",
+        "cancellationTypeLabel": "Cancellation Type",
+        "cancellationTypePlaceholder": "Select cancellation type",
+        "reasonLabel": "Reason for Cancellation",
+        "reasonPlaceholder": "Provide a reason for cancellation (10-1000 characters)",
+        "confirmationMessage": "Are you sure you want to cancel this appointment? This action cannot be undone.",
+        "cancelButton": "Cancel Appointment",
+        "cancellingInProgress": "Cancelling..."
+      },
+      "cancellationType": {
+        "clientInitiated": "Client Initiated",
+        "therapistInitiated": "Therapist Initiated",
+        "lateCancellation": "Late Cancellation"
+      },
+      "status": {
+        "scheduled": "Scheduled",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "noShow": "No Show"
+      },
+      "validation": {
+        "clientRequired": "Please select a client",
+        "sessionTypeRequired": "Please select a session type",
+        "dateRequired": "Please select a date",
+        "timeRequired": "Please select a time",
+        "durationRequired": "Please enter duration",
+        "durationMin": "Duration must be at least 15 minutes",
+        "durationMax": "Duration must not exceed 480 minutes",
+        "reasonRequired": "Please provide a reason",
+        "reasonMinLength": "Reason must be at least 10 characters",
+        "reasonMaxLength": "Reason must not exceed 1000 characters",
+        "cancellationTypeRequired": "Please select a cancellation type",
+        "pastDateError": "Cannot book appointments in the past"
+      },
+      "success": {
+        "booked": "Appointment successfully booked",
+        "rescheduled": "Appointment successfully rescheduled",
+        "cancelled": "Appointment successfully cancelled"
+      },
+      "error": {
+        "bookingFailed": "Failed to book appointment. Please try again.",
+        "rescheduleFailed": "Failed to reschedule appointment. Please try again.",
+        "cancelFailed": "Failed to cancel appointment. Please try again.",
+        "conflictDetectionFailed": "Failed to check for conflicts. Please try again.",
+        "alreadyCancelled": "This appointment has already been cancelled"
+      }
+    },
     "validation": {
       "startBeforeEnd": "Start time must be before end time",
       "endDateAfterStart": "End date must be after start date",

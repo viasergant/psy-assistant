@@ -7,6 +7,11 @@ import {
   UpdateClientTagsPayload,
 } from '../models/client.model';
 
+interface ClientSummary {
+  id: string;
+  name: string;
+}
+
 /**
  * HTTP client for the clients CRM endpoints.
  *
@@ -17,6 +22,11 @@ export class ClientService {
   private readonly base = '/api/v1/clients';
 
   constructor(private http: HttpClient) {}
+
+  /** Returns a list of all clients as lightweight summaries for dropdowns. */
+  getAllClients(): Observable<ClientSummary[]> {
+    return this.http.get<ClientSummary[]>(this.base);
+  }
 
   /** Returns the full detail for a single client. */
   getClient(id: string): Observable<ClientDetail> {

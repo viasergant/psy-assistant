@@ -2,16 +2,19 @@ package com.psyassistant.crm.clients;
 
 import com.psyassistant.common.exception.ErrorResponse;
 import com.psyassistant.crm.clients.dto.ClientDetailDto;
+import com.psyassistant.crm.clients.dto.ClientSummaryDto;
 import com.psyassistant.crm.clients.dto.UpdateClientProfileRequest;
 import com.psyassistant.crm.clients.dto.UpdateClientTagsRequest;
 import com.psyassistant.users.UserManagementService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -52,6 +55,28 @@ public class ClientController {
      */
     public ClientController(final ClientProfileService clientProfileService) {
         this.clientProfileService = clientProfileService;
+    }
+
+    /**
+     * Returns a list of all clients as lightweight summaries for dropdown/selection UIs.
+     * Sorted alphabetically by display name.
+     *
+     * @return 200 with list of client summaries
+     */
+    @Operation(summary = "List all clients",
+            description = "Returns lightweight client summaries for dropdown/selection UIs")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "List of clients",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ClientSummaryDto.class)))),
+        @ApiResponse(responseCode = "403", description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping
+    @PreAuthorize("hasAuthority('MANAGE_CLIENTS') "
+            + "or hasAuthority('READ_CLIENTS_ALL') "
+            + "or hasAuthority('READ_ASSIGNED_CLIENTS')")
+    public ResponseEntity<List<ClientSummaryDto>> getAllClients() {
+        return ResponseEntity.ok(clientProfileService.getAllClients());
     }
 
     /**

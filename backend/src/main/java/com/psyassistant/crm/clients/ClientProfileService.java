@@ -2,6 +2,7 @@ package com.psyassistant.crm.clients;
 
 import com.psyassistant.crm.clients.audit.ClientProfileAuditRecorder;
 import com.psyassistant.crm.clients.dto.ClientDetailDto;
+import com.psyassistant.crm.clients.dto.ClientSummaryDto;
 import com.psyassistant.crm.clients.dto.UpdateClientProfileRequest;
 import com.psyassistant.crm.clients.dto.UpdateClientTagsRequest;
 import jakarta.persistence.EntityNotFoundException;
@@ -85,6 +86,26 @@ public class ClientProfileService {
                 canManageClients,
                 canManageClients
         );
+    }
+
+    /**
+     * Returns a list of all clients as lightweight summary DTOs for dropdown/selection UIs.
+     * Sorted alphabetically by display name.
+     */
+    @Transactional(readOnly = true)
+    public List<ClientSummaryDto> getAllClients() {
+        boolean canManageClients = hasAuthority("MANAGE_CLIENTS");
+        boolean canReadAll = hasAuthority("READ_CLIENTS_ALL");
+        boolean canReadAssigned = hasAuthority("READ_ASSIGNED_CLIENTS");
+
+        if (!canManageClients && !canReadAll && !canReadAssigned) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        return clientRepository.findAll().stream()
+                .map(ClientSummaryDto::from)
+                .sorted((a, b) -> a.name().compareToIgnoreCase(b.name()))
+                .toList();
     }
 
     /**

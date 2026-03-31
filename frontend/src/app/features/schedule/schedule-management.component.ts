@@ -7,6 +7,7 @@ import { LeaveRequestDialogComponent } from './components/leave-request-dialog/l
 import { ScheduleApiService } from './services/schedule-api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { TherapistManagementService } from '../admin/therapists/services/therapist-management.service';
+import { ClientService } from '../clients/services/client.service';
 import {
   getCurrentUserRole,
   getCurrentTherapistProfileId,
@@ -15,6 +16,11 @@ import {
 } from './guards/schedule.guard';
 import { ScheduleSummary, Leave } from './models/schedule.model';
 import { TherapistProfile } from '../admin/therapists/models/therapist.model';
+
+interface ClientOption {
+  id: string;
+  name: string;
+}
 
 @Component({
   selector: 'app-schedule-management',
@@ -71,6 +77,7 @@ import { TherapistProfile } from '../admin/therapists/models/therapist.model';
           [therapistProfileId]="therapistProfileId"
           [schedule]="schedule"
           [editable]="canEdit"
+          [clients]="clients"
         ></app-schedule-calendar>
 
         <div *ngIf="loading" class="loading-state">
@@ -233,6 +240,7 @@ export class ScheduleManagementComponent implements OnInit {
   schedule: ScheduleSummary | null = null;
   therapistName = '';
   therapists: TherapistProfile[] = [];
+  clients: ClientOption[] = [];
   isAdmin = false;
   canEdit = false;
   loading = false;
@@ -243,11 +251,13 @@ export class ScheduleManagementComponent implements OnInit {
   constructor(
     private scheduleApiService: ScheduleApiService,
     private therapistManagementService: TherapistManagementService,
+    private clientService: ClientService,
     private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.initializeComponent();
+    this.loadClients();
   }
 
   private initializeComponent(): void {
@@ -271,6 +281,18 @@ export class ScheduleManagementComponent implements OnInit {
         this.error = 'Unable to determine therapist profile';
       }
     }
+  }
+
+  private loadClients(): void {
+    this.clientService.getAllClients().subscribe({
+      next: clients => {
+        this.clients = clients;
+      },
+      error: err => {
+        console.error('Error loading clients:', err);
+        // Non-fatal error - schedule can still be used without booking
+      }
+    });
   }
 
   private loadTherapists(): void {

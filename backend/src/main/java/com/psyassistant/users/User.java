@@ -224,6 +224,7 @@ public class User {
         this.passwordHash = newPasswordHash;
         this.mustChangePassword = false;
         this.updatedAt = Instant.now();
+    }
 
     /**
      * Returns the user's preferred language (locale).
@@ -242,6 +243,5 @@ public class User {
     public void setLanguage(final String language) {
         this.language = language;
         this.updatedAt = Instant.now();
-    }
     }
 }

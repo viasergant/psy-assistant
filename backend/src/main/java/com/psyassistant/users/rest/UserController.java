@@ -60,7 +60,7 @@ public class UserController {
     @PatchMapping("/language")
     public ResponseEntity<Void> updateLanguage(
             @Valid @RequestBody final UpdateLanguageRequest request,
-            @AuthenticationPrincipal final String principalName) {
+            @AuthenticationPrincipal(expression = "username") final String principalName) {
 
         UUID userId = UUID.fromString(principalName);
         User user = userRepository.findById(userId)

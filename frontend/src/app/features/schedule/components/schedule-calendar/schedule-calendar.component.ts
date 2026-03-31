@@ -7,10 +7,14 @@ import {
   getDayLabel,
   AvailabilitySlot,
   getDayOfWeek,
-  LeaveStatus
+  LeaveStatus,
+  Appointment
 } from '../../models/schedule.model';
 import { AvailabilityService } from '../../services/availability.service';
 import { startOfWeek, addDays, format, isSameDay, parseISO } from 'date-fns';
+import { AppointmentBookingDialogComponent } from '../appointment-booking-dialog/appointment-booking-dialog.component';
+import { AppointmentRescheduleDialogComponent } from '../appointment-reschedule-dialog/appointment-reschedule-dialog.component';
+import { AppointmentCancelDialogComponent } from '../appointment-cancel-dialog/appointment-cancel-dialog.component';
 
 interface WeekDay {
   date: Date;
@@ -39,7 +43,13 @@ interface CalendarCell {
 @Component({
   selector: 'app-schedule-calendar',
   standalone: true,
-  imports: [CommonModule, TranslocoPipe],
+  imports: [
+    CommonModule,
+    TranslocoPipe,
+    AppointmentBookingDialogComponent,
+    AppointmentRescheduleDialogComponent,
+    AppointmentCancelDialogComponent
+  ],
   templateUrl: './schedule-calendar.component.html',
   styleUrls: ['./schedule-calendar.component.scss']
 })
@@ -47,12 +57,20 @@ export class ScheduleCalendarComponent implements OnInit {
   @Input() therapistProfileId!: string;
   @Input() schedule?: ScheduleSummary;
   @Input() editable = false;
+  @Input() clients: Array<{id: string; name: string}> = []; // For booking dialog
 
   currentWeekStart: Date = startOfWeek(new Date(), { weekStartsOn: 1 });
   weekDays: WeekDay[] = [];
   timeSlots: TimeSlot[] = [];
   calendarCells: CalendarCell[][] = [];
   loading = false;
+
+  // Dialog state
+  showBookingDialog = false;
+  showRescheduleDialog = false;
+  showCancelDialog = false;
+  selectedAppointment: Appointment | null = null;
+  selectedDateTime: Date | null = null;
 
   constructor(private availabilityService: AvailabilityService) {}
 
@@ -276,7 +294,112 @@ export class ScheduleCalendarComponent implements OnInit {
    */
   onCellClick(cell: CalendarCell): void {
     if (!this.editable) return;
-    // TODO: Open edit dialog
-    console.log('Cell clicked:', cell);
+    if (cell.isBooked) {
+      // TODO: Show appointment details menu (reschedule/cancel)
+      console.log('Appointment clicked:', cell);
+    } else if (cell.available) {
+      // Open booking dialog for this time slot
+      this.selectedDateTime = this.createDateTimeFromCell(cell);
+      this.openBookingDialog();
+    }
+  }
+
+  /**
+   * Create Date object from calendar cell
+   */
+  private createDateTimeFromCell(cell: CalendarCell): Date {
+    const date = new Date(cell.day.date);
+    date.setHours(cell.timeSlot.hour, cell.timeSlot.minute, 0, 0);
+    return date;
+  }
+
+  // ========== Appointment Booking Dialog ==========
+
+  /**
+   * Open booking dialog
+   */
+  openBookingDialog(dateTime?: Date): void {
+    this.selectedDateTime = dateTime || null;
+    this.showBookingDialog = true;
+  }
+
+  /**
+   * Handle booking submission
+   */
+  onBookingSubmitted(appointment: Appointment): void {
+    this.showBookingDialog = false;
+    this.selectedDateTime = null;
+    console.log('Appointment booked:', appointment);
+    // Reload calendar to show new appointment
+    this.loadAvailability();
+    // TODO: Emit event to parent component
+  }
+
+  /**
+   * Handle booking cancellation
+   */
+  onBookingCancelled(): void {
+    this.showBookingDialog = false;
+    this.selectedDateTime = null;
+  }
+
+  // ========== Appointment Reschedule Dialog ==========
+
+  /**
+   * Open reschedule dialog for an appointment
+   */
+  openRescheduleDialog(appointment: Appointment): void {
+    this.selectedAppointment = appointment;
+    this.showRescheduleDialog = true;
+  }
+
+  /**
+   * Handle reschedule submission
+   */
+  onRescheduleSubmitted(appointment: Appointment): void {
+    this.showRescheduleDialog = false;
+    this.selectedAppointment = null;
+    console.log('Appointment rescheduled:', appointment);
+    // Reload calendar to show updated appointment
+    this.loadAvailability();
+    // TODO: Emit event to parent component
+  }
+
+  /**
+   * Handle reschedule cancellation
+   */
+  onRescheduleCancelled(): void {
+    this.showRescheduleDialog = false;
+    this.selectedAppointment = null;
+  }
+
+  // ========== Appointment Cancel Dialog ==========
+
+  /**
+   * Open cancel dialog for an appointment
+   */
+  openCancelDialog(appointment: Appointment): void {
+    this.selectedAppointment = appointment;
+    this.showCancelDialog = true;
+  }
+
+  /**
+   * Handle cancellation submission
+   */
+  onCancelSubmitted(appointment: Appointment): void {
+    this.showCancelDialog = false;
+    this.selectedAppointment = null;
+    console.log('Appointment cancelled:', appointment);
+    // Reload calendar to show updated appointment as cancelled
+    this.loadAvailability();
+    // TODO: Emit event to parent component
+  }
+
+  /**
+   * Handle cancellation dialog close
+   */
+  onCancelDialogCancelled(): void {
+    this.showCancelDialog = false;
+    this.selectedAppointment = null;
   }
 }

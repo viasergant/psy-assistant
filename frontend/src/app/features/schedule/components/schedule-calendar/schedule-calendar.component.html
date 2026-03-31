@@ -2,15 +2,23 @@
   <!-- Calendar Header -->
   <header class="calendar-header">
     <div class="week-navigation">
-      <button type="button" class="btn-icon" (click)="previousWeek()" title="Previous week">
+      <button type="button" class="btn-icon" (click)="previousWeek()" [attr.aria-label]="'schedule.calendar.previousWeek' | transloco">
         <span class="icon">←</span>
       </button>
       <button type="button" class="btn-today" (click)="goToToday()">{{ 'schedule.calendar.today' | transloco }}</button>
-      <button type="button" class="btn-icon" (click)="nextWeek()" title="Next week">
+      <button type="button" class="btn-icon" (click)="nextWeek()" [attr.aria-label]="'schedule.calendar.nextWeek' | transloco">
         <span class="icon">→</span>
       </button>
     </div>
     <h2 class="week-range">{{ getWeekRangeDisplay() }}</h2>
+    <div class="actions" *ngIf="editable">
+      <button type="button" class="btn-primary" (click)="openBookingDialog()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 4v8M4 8h8" stroke-linecap="round" />
+        </svg>
+        {{ 'schedule.appointment.booking.title' | transloco }}
+      </button>
+    </div>
   </header>
 
   <!-- Loading State -->
@@ -87,4 +95,27 @@
       <span class="legend-label">{{ 'schedule.legend.booked' | transloco }}</span>
     </div>
   </footer>
+
+  <!-- Appointment Dialogs -->
+  <app-appointment-booking-dialog
+    *ngIf="showBookingDialog"
+    [therapistProfileId]="therapistProfileId"
+    [clients]="clients"
+    (submitted)="onBookingSubmitted($event)"
+    (cancelled)="onBookingCancelled()"
+  ></app-appointment-booking-dialog>
+
+  <app-appointment-reschedule-dialog
+    *ngIf="showRescheduleDialog && selectedAppointment"
+    [appointment]="selectedAppointment"
+    (submitted)="onRescheduleSubmitted($event)"
+    (cancelled)="onRescheduleCancelled()"
+  ></app-appointment-reschedule-dialog>
+
+  <app-appointment-cancel-dialog
+    *ngIf="showCancelDialog && selectedAppointment"
+    [appointment]="selectedAppointment"
+    (submitted)="onCancelSubmitted($event)"
+    (cancelled)="onCancelDialogCancelled()"
+  ></app-appointment-cancel-dialog>
 </div>

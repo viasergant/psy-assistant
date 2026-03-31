@@ -349,6 +349,93 @@
       "rejected": "Відхилено",
       "cancelled": "Скасовано"
     },
+    "appointment": {
+      "booking": {
+        "title": "Записати на прийом",
+        "clientLabel": "Клієнт",
+        "clientPlaceholder": "Оберіть клієнта",
+        "sessionTypeLabel": "Тип сесії",
+        "sessionTypePlaceholder": "Оберіть тип сесії",
+        "dateLabel": "Дата",
+        "datePlaceholder": "Оберіть дату",
+        "timeLabel": "Час",
+        "timePlaceholder": "Оберіть час",
+        "durationLabel": "Тривалість (хвилини)",
+        "durationPlaceholder": "Введіть тривалість",
+        "notesLabel": "Нотатки",
+        "notesPlaceholder": "Додаткові нотатки до прийому",
+        "conflictsDetected": "Виявлено конфлікти розкладу",
+        "conflictWarning": "На цей час вже є інші прийоми:",
+        "overrideLabel": "Я підтверджую, що цей прийом терміновий і має перекрити конфлікт",
+        "checkingConflicts": "Перевірка конфліктів...",
+        "bookButton": "Записати на прийом",
+        "bookingInProgress": "Запис..."
+      },
+      "reschedule": {
+        "title": "Перенести прийом",
+        "currentTimeLabel": "Поточний час",
+        "newTimeLabel": "Новий час",
+        "newDateLabel": "Нова дата",
+        "newTimePlaceholder": "Оберіть новий час",
+        "reasonLabel": "Причина перенесення",
+        "reasonPlaceholder": "Вкажіть причину перенесення (10-1000 символів)",
+        "conflictsDetected": "Виявлено конфлікти розкладу",
+        "conflictWarning": "Новий час конфліктує з існуючими прийомами:",
+        "overrideLabel": "Я підтверджую, що це перенесення термінове і має перекрити конфлікт",
+        "rescheduleButton": "Перенести прийом",
+        "reschedulingInProgress": "Перенесення..."
+      },
+      "cancel": {
+        "title": "Скасувати прийом",
+        "appointmentTimeLabel": "Час прийому",
+        "clientLabel": "Клієнт",
+        "cancellationTypeLabel": "Тип скасування",
+        "cancellationTypePlaceholder": "Оберіть тип скасування",
+        "reasonLabel": "Причина скасування",
+        "reasonPlaceholder": "Вкажіть причину скасування (10-1000 символів)",
+        "confirmationMessage": "Ви впевнені, що хочете скасувати цей прийом? Цю дію неможливо скасувати.",
+        "cancelButton": "Скасувати прийом",
+        "cancellingInProgress": "Скасування..."
+      },
+      "cancellationType": {
+        "clientInitiated": "Ініційовано клієнтом",
+        "therapistInitiated": "Ініційовано терапевтом",
+        "lateCancellation": "Пізнє скасування"
+      },
+      "status": {
+        "scheduled": "Заплановано",
+        "confirmed": "Підтверджено",
+        "completed": "Завершено",
+        "cancelled": "Скасовано",
+        "noShow": "Не з'явився"
+      },
+      "validation": {
+        "clientRequired": "Будь ласка, оберіть клієнта",
+        "sessionTypeRequired": "Будь ласка, оберіть тип сесії",
+        "dateRequired": "Будь ласка, оберіть дату",
+        "timeRequired": "Будь ласка, оберіть час",
+        "durationRequired": "Будь ласка, введіть тривалість",
+        "durationMin": "Тривалість має бути не менше 15 хвилин",
+        "durationMax": "Тривалість не може перевищувати 480 хвилин",
+        "reasonRequired": "Будь ласка, вкажіть причину",
+        "reasonMinLength": "Причина має бути не менше 10 символів",
+        "reasonMaxLength": "Причина не може перевищувати 1000 символів",
+        "cancellationTypeRequired": "Будь ласка, оберіть тип скасування",
+        "pastDateError": "Неможливо записати на прийом у минулому"
+      },
+      "success": {
+        "booked": "Прийом успішно записано",
+        "rescheduled": "Прийом успішно перенесено",
+        "cancelled": "Прийом успішно скасовано"
+      },
+      "error": {
+        "bookingFailed": "Не вдалося записати на прийом. Будь ласка, спробуйте ще раз.",
+        "rescheduleFailed": "Не вдалося перенести прийом. Будь ласка, спробуйте ще раз.",
+        "cancelFailed": "Не вдалося скасувати прийом. Будь ласка, спробуйте ще раз.",
+        "conflictDetectionFailed": "Не вдалося перевірити конфлікти. Будь ласка, спробуйте ще раз.",
+        "alreadyCancelled": "Цей прийом вже скасовано"
+      }
+    },
     "validation": {
       "startBeforeEnd": "Час початку повинен бути раніше часу завершення",
       "endDateAfterStart": "Дата завершення повинна бути після дати початку",

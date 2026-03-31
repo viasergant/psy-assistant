@@ -6,7 +6,9 @@ import {
   CreateAppointmentRequest,
   CheckConflictsRequest,
   ConflictCheckResponse,
-  SessionType
+  SessionType,
+  RescheduleAppointmentRequest,
+  CancelAppointmentRequest
 } from '../models/schedule.model';
 
 /**
@@ -79,5 +81,44 @@ export class AppointmentApiService {
    */
   getClientAppointments(clientId: string): Observable<Appointment[]> {
     return this.http.get<Appointment[]>(`${this.apiBase}/client/${clientId}`);
+  }
+
+  /**
+   * Reschedule an existing appointment
+   *
+   * @param appointmentId appointment UUID
+   * @param request reschedule request with new time and reason
+   * @returns updated appointment
+   * @throws EntityNotFound (404) if appointment doesn't exist
+   * @throws IllegalState (400) if appointment is already cancelled
+   * @throws ConflictError (409) if conflicts exist and override not allowed
+   */
+  rescheduleAppointment(
+    appointmentId: string,
+    request: RescheduleAppointmentRequest
+  ): Observable<Appointment> {
+    return this.http.put<Appointment>(
+      `${this.apiBase}/${appointmentId}/reschedule`,
+      request
+    );
+  }
+
+  /**
+   * Cancel an existing appointment
+   *
+   * @param appointmentId appointment UUID
+   * @param request cancellation request with type and reason
+   * @returns updated appointment
+   * @throws EntityNotFound (404) if appointment doesn't exist
+   * @throws IllegalState (400) if appointment is already cancelled
+   */
+  cancelAppointment(
+    appointmentId: string,
+    request: CancelAppointmentRequest
+  ): Observable<Appointment> {
+    return this.http.put<Appointment>(
+      `${this.apiBase}/${appointmentId}/cancel`,
+      request
+    );
   }
 }

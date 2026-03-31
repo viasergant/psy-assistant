@@ -306,6 +306,23 @@ export interface ConflictCheckResponse {
 }
 
 /**
+ * Request to reschedule an appointment
+ */
+export interface RescheduleAppointmentRequest {
+  newStartTime: string; // ISO 8601 with timezone
+  reason: string; // 10-1000 characters
+  allowConflictOverride?: boolean;
+}
+
+/**
+ * Request to cancel an appointment
+ */
+export interface CancelAppointmentRequest {
+  cancellationType: CancellationType;
+  reason: string; // 10-1000 characters
+}
+
+/**
  * Helper to get day of week from JS Date
  */
 export function getDayOfWeek(date: Date): DayOfWeek {

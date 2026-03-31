@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { UserManagementService } from '../../services/user-management.service';
 import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserRole, UserSummary } from '../../models/user.model';
 
@@ -14,7 +15,7 @@ import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserRole, UserSummary } f
 @Component({
   selector: 'app-edit-user-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
       <div class="dialog">

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ALL_STATUSES,
   LeadDetail,
@@ -28,6 +29,7 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
   imports: [
     CommonModule,
     FormsModule,
+    TranslocoPipe,
     CreateLeadDialogComponent,
     EditLeadDialogComponent,
   ],

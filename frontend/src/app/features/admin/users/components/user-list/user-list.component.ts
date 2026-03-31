@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { UserManagementService } from '../../services/user-management.service';
 import { TherapistManagementService } from '../../../therapists/services/therapist-management.service';
 import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserSummary, UserPage } from '../../models/user.model';
@@ -25,6 +26,7 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
   imports: [
     CommonModule,
     FormsModule,
+    TranslocoPipe,
     CreateUserDialogComponent,
     EditUserDialogComponent,
     PasswordResetDialogComponent,

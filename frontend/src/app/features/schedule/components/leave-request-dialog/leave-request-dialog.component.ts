@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Leave, LeaveRequest, LeaveType, getLeaveTypeLabel } from '../../models/schedule.model';
 import { LeaveRequestService } from '../../services/leave-request.service';
 
@@ -14,7 +15,7 @@ import { LeaveRequestService } from '../../services/leave-request.service';
 @Component({
   selector: 'app-leave-request-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="leave-request-title">
       <div class="dialog">

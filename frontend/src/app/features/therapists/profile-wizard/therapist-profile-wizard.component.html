@@ -8,270 +8,277 @@
     </div>
 
     <p-stepper [(value)]="currentStep">
-      <!-- Step 1: Personal Information -->
-      <p-step-panel [header]="'therapists.wizard.personalInfo.title' | transloco">
-        <ng-template pTemplate="content">
-          <form [formGroup]="personalInfoForm" class="step-content">
-            <h3>{{ 'therapists.wizard.personalInfo.title' | transloco }}</h3>
-            <p class="step-description">{{ 'therapists.wizard.personalInfo.subtitle' | transloco }}</p>
+      <p-step-list>
+        <p-step [value]="1">{{ 'therapists.wizard.personalInfo.title' | transloco }}</p-step>
+        <p-step [value]="2">{{ 'therapists.wizard.credentials.title' | transloco }}</p-step>
+        <p-step [value]="3">{{ 'therapists.wizard.specializations.title' | transloco }}</p-step>
+        <p-step [value]="4">{{ 'therapists.wizard.preferences.title' | transloco }}</p-step>
+      </p-step-list>
+      
+      <p-step-panels>
+        <!-- Step 1: Personal Information -->
+        <p-step-panel [value]="1">
+          <ng-template #content let-activateCallback="activateCallback">
+            <form [formGroup]="personalInfoForm" class="step-content">
+              <h3>{{ 'therapists.wizard.personalInfo.title' | transloco }}</h3>
+              <p class="step-description">{{ 'therapists.wizard.personalInfo.subtitle' | transloco }}</p>
 
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="fullName">{{ 'therapists.wizard.personalInfo.fullNameLabel' | transloco }} <span class="required">{{ 'therapists.wizard.personalInfo.required' | transloco }}</span></label>
-                <input 
-                  pInputText 
-                  id="fullName" 
-                  formControlName="fullName"
-                  [placeholder]="'therapists.wizard.personalInfo.fullNamePlaceholder' | transloco"
-                  [class.p-invalid]="hasError(personalInfoForm, 'fullName')"
-                />
-                <small class="p-error" *ngIf="hasError(personalInfoForm, 'fullName')">
-                  {{ getErrorMessage(personalInfoForm, 'fullName') }}
-                </small>
-              </div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="fullName">{{ 'therapists.wizard.personalInfo.fullNameLabel' | transloco }} <span class="required">{{ 'therapists.wizard.personalInfo.required' | transloco }}</span></label>
+                  <input 
+                    pInputText 
+                    id="fullName" 
+                    formControlName="fullName"
+                    [placeholder]="'therapists.wizard.personalInfo.fullNamePlaceholder' | transloco"
+                    [class.p-invalid]="hasError(personalInfoForm, 'fullName')"
+                  />
+                  <small class="p-error" *ngIf="hasError(personalInfoForm, 'fullName')">
+                    {{ getErrorMessage(personalInfoForm, 'fullName') }}
+                  </small>
+                </div>
 
-              <div class="form-field">
-                <label for="phone">{{ 'therapists.wizard.personalInfo.phoneLabel' | transloco }}</label>
-                <input 
-                  pInputText 
-                  id="phone" 
-                  formControlName="phone"
-                  [placeholder]="'therapists.wizard.personalInfo.phonePlaceholder' | transloco"
-                  [class.p-invalid]="hasError(personalInfoForm, 'phone')"
-                />
-                <small class="p-error" *ngIf="hasError(personalInfoForm, 'phone')">
-                  {{ getErrorMessage(personalInfoForm, 'phone') }}
-                </small>
-              </div>
+                <div class="form-field">
+                  <label for="phone">{{ 'therapists.wizard.personalInfo.phoneLabel' | transloco }}</label>
+                  <input 
+                    pInputText 
+                    id="phone" 
+                    formControlName="phone"
+                    [placeholder]="'therapists.wizard.personalInfo.phonePlaceholder' | transloco"
+                    [class.p-invalid]="hasError(personalInfoForm, 'phone')"
+                  />
+                  <small class="p-error" *ngIf="hasError(personalInfoForm, 'phone')">
+                    {{ getErrorMessage(personalInfoForm, 'phone') }}
+                  </small>
+                </div>
 
-              <div class="form-field">
-                <label for="contactPhone">{{ 'therapists.wizard.personalInfo.contactPhoneLabel' | transloco }}</label>
-                <input 
-                  pInputText 
-                  id="contactPhone" 
-                  formControlName="contactPhone"
-                  [placeholder]="'therapists.wizard.personalInfo.phonePlaceholder' | transloco"
-                  [class.p-invalid]="hasError(personalInfoForm, 'contactPhone')"
-                />
-              </div>
+                <div class="form-field">
+                  <label for="contactPhone">{{ 'therapists.wizard.personalInfo.contactPhoneLabel' | transloco }}</label>
+                  <input 
+                    pInputText 
+                    id="contactPhone" 
+                    formControlName="contactPhone"
+                    [placeholder]="'therapists.wizard.personalInfo.phonePlaceholder' | transloco"
+                    [class.p-invalid]="hasError(personalInfoForm, 'contactPhone')"
+                  />
+                </div>
 
-              <div class="form-field full-width">
-                <label for="bio">{{ 'therapists.wizard.personalInfo.bioLabel' | transloco }} <span class="required">{{ 'therapists.wizard.personalInfo.required' | transloco }}</span></label>
-                <textarea 
-                  pTextarea 
-                  id="bio" 
-                  formControlName="bio"
-                  rows="5"
-                  maxlength="500"
-                  [placeholder]="'therapists.wizard.personalInfo.bioPlaceholder' | transloco"
-                  [class.p-invalid]="hasError(personalInfoForm, 'bio')"
-                ></textarea>
-                <small class="char-count">{{ 'therapists.wizard.personalInfo.bioCharCount' | transloco: {count: personalInfoForm.get('bio')?.value?.length || 0} }}</small>
-                <small class="p-error" *ngIf="hasError(personalInfoForm, 'bio')">
-                  {{ getErrorMessage(personalInfoForm, 'bio') }}
-                </small>
-              </div>
-            </div>
-
-            <div class="step-actions">
-              <p-button [label]="'therapists.wizard.actions.saveAndContinue' | transloco" icon="pi pi-arrow-right" (onClick)="nextStep()"></p-button>
-              <p-button [label]="'therapists.wizard.actions.completeLater' | transloco" styleClass="p-button-text" (onClick)="completeLater()"></p-button>
-            </div>
-          </form>
-        </ng-template>
-      </p-step-panel>
-
-      <!-- Step 2: Credentials -->
-      <p-step-panel [header]="'therapists.wizard.credentials.title' | transloco">
-        <ng-template pTemplate="content">
-          <form [formGroup]="credentialsForm" class="step-content">
-            <h3>{{ 'therapists.wizard.credentials.title' | transloco }}</h3>
-            <p class="step-description">{{ 'therapists.wizard.credentials.subtitle' | transloco }}</p>
-
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="professionalTitle">{{ 'therapists.wizard.credentials.titleLabel' | transloco }} <span class="required">{{ 'therapists.wizard.personalInfo.required' | transloco }}</span></label>
-                <p-select 
-                  id="professionalTitle"
-                  formControlName="professionalTitle"
-                  [options]="professionalTitleOptions"
-                  [placeholder]="'therapists.wizard.credentials.titlePlaceholder' | transloco"
-                  optionLabel="label"
-                  optionValue="value"
-                  [class.p-invalid]="hasError(credentialsForm, 'professionalTitle')"
-                ></p-select>
-                <small class="p-error" *ngIf="hasError(credentialsForm, 'professionalTitle')">
-                  {{ getErrorMessage(credentialsForm, 'professionalTitle') }}
-                </small>
-              </div>
-
-              <div class="form-field">
-                <label for="yearsOfExperience">{{ 'therapists.wizard.credentials.yearsExperienceLabel' | transloco }}</label>
-                <p-inputNumber 
-                  id="yearsOfExperience"
-                  formControlName="yearsOfExperience"
-                  [min]="0"
-                  [max]="70"
-                  [placeholder]="'therapists.wizard.credentials.yearsExperiencePlaceholder' | transloco"
-                ></p-inputNumber>
-              </div>
-
-              <div class="form-field full-width">
-                <label for="licenseNumbers">{{ 'therapists.wizard.credentials.licenseNumbersLabel' | transloco }}</label>
-                <textarea 
-                  pTextarea 
-                  id="licenseNumbers" 
-                  formControlName="licenseNumbers"
-                  rows="2"
-                  [placeholder]="'therapists.wizard.credentials.licenseNumbersPlaceholder' | transloco"
-                ></textarea>
-                <small class="help-text">Enter each license number on a separate line</small>
-              </div>
-
-              <div class="form-field full-width">
-                <label for="credentials">{{ 'therapists.wizard.credentials.certificationsLabel' | transloco }}</label>
-                <textarea 
-                  pTextarea 
-                  id="credentials" 
-                  formControlName="credentials"
-                  rows="3"
-                  [placeholder]="'therapists.wizard.credentials.certificationsPlaceholder' | transloco"
-                ></textarea>
-              </div>
-
-              <div class="form-field full-width">
-                <label for="education">{{ 'therapists.wizard.credentials.educationLabel' | transloco }}</label>
-                <textarea 
-                  pTextarea 
-                  id="education" 
-                  formControlName="education"
-                  rows="3"
-                  [placeholder]="'therapists.wizard.credentials.educationPlaceholder' | transloco"
-                ></textarea>
-              </div>
-            </div>
-
-            <div class="step-actions">
-              <p-button [label]="'therapists.wizard.actions.back' | transloco" icon="pi pi-arrow-left" (onClick)="previousStep()" styleClass="p-button-outlined"></p-button>
-              <p-button [label]="'therapists.wizard.actions.saveAndContinue' | transloco" icon="pi pi-arrow-right" (onClick)="nextStep()"></p-button>
-            </div>
-          </form>
-        </ng-template>
-      </p-step-panel>
-
-      <!-- Step 3: Specializations -->
-      <p-step-panel [header]="'therapists.wizard.specializations.title' | transloco">
-        <ng-template pTemplate="content">
-          <form [formGroup]="specializationsForm" class="step-content">
-            <h3>{{ 'therapists.wizard.specializations.title' | transloco }}</h3>
-            <p class="step-description">{{ 'therapists.wizard.specializations.subtitle' | transloco }}</p>
-
-            <div class="form-grid">
-              <div class="form-field full-width">
-                <label for="specializationIds">{{ 'therapists.wizard.specializations.specializationsLabel' | transloco }} <span class="required">{{ 'therapists.wizard.personalInfo.required' | transloco }}</span></label>
-                <p-multiSelect 
-                  id="specializationIds"
-                  formControlName="specializationIds"
-                  [options]="specializations"
-                  optionLabel="name"
-                  optionValue="id"
-                  [placeholder]="'therapists.wizard.specializations.specializationsPlaceholder' | transloco"
-                  [filter]="true"
-                  [filterPlaceholder]="'therapists.wizard.specializations.specializationsFilterPlaceholder' | transloco"
-                  [class.p-invalid]="hasError(specializationsForm, 'specializationIds')"
-                  display="chip"
-                ></p-multiSelect>
-                <small class="p-error" *ngIf="hasError(specializationsForm, 'specializationIds')">
-                  {{ getErrorMessage(specializationsForm, 'specializationIds') }}
-                </small>
-                <small class="help-text">Select at least one specialization</small>
-              </div>
-
-              <div class="form-field full-width">
-                <label for="languageIds">{{ 'therapists.wizard.specializations.languagesLabel' | transloco }} <span class="required">{{ 'therapists.wizard.personalInfo.required' | transloco }}</span></label>
-                <p-multiSelect 
-                  id="languageIds"
-                  formControlName="languageIds"
-                  [options]="languages"
-                  optionLabel="name"
-                  optionValue="id"
-                  [placeholder]="'therapists.wizard.specializations.languagesPlaceholder' | transloco"
-                  [filter]="true"
-                  [filterPlaceholder]="'therapists.wizard.specializations.languagesFilterPlaceholder' | transloco"
-                  [class.p-invalid]="hasError(specializationsForm, 'languageIds')"
-                  display="chip"
-                ></p-multiSelect>
-                <small class="p-error" *ngIf="hasError(specializationsForm, 'languageIds')">
-                  {{ getErrorMessage(specializationsForm, 'languageIds') }}
-                </small>
-                <small class="help-text">Select at least one language</small>
-              </div>
-            </div>
-
-            <div class="step-actions">
-              <p-button [label]="'therapists.wizard.actions.back' | transloco" icon="pi pi-arrow-left" (onClick)="previousStep()" styleClass="p-button-outlined"></p-button>
-              <p-button [label]="'therapists.wizard.actions.saveAndContinue' | transloco" icon="pi pi-arrow-right" (onClick)="nextStep()"></p-button>
-            </div>
-          </form>
-        </ng-template>
-      </p-step-panel>
-
-      <!-- Step 4: Pricing (Optional) -->
-      <p-step-panel [header]="'therapists.wizard.preferences.title' | transloco">
-        <ng-template pTemplate="content">
-          <form [formGroup]="pricingForm" class="step-content">
-            <h3>{{ 'therapists.wizard.preferences.title' | transloco }}</h3>
-            <p class="step-description">{{ 'therapists.wizard.preferences.subtitle' | transloco }}</p>
-
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="sessionDuration">{{ 'therapists.wizard.preferences.sessionDurationLabel' | transloco }}</label>
-                <p-select 
-                  id="sessionDuration"
-                  formControlName="sessionDuration"
-                  [options]="sessionDurationOptions"
-                  [placeholder]="'therapists.wizard.preferences.sessionDurationPlaceholder' | transloco"
-                  optionLabel="label"
-                  optionValue="value"
-                ></p-select>
-              </div>
-
-              <div class="form-field">
-                <label for="baseRate">{{ 'therapists.wizard.preferences.hourlyRateLabel' | transloco }}</label>
-                <p-inputNumber 
-                  id="baseRate"
-                  formControlName="baseRate"
-                  mode="currency"
-                  currency="USD"
-                  [min]="0"
-                  [placeholder]="'therapists.wizard.preferences.hourlyRatePlaceholder' | transloco"
-                ></p-inputNumber>
-              </div>
-
-              <div class="form-field full-width">
-                <div class="checkbox-field">
-                  <p-checkbox 
-                    id="acceptsInsurance"
-                    formControlName="acceptsInsurance"
-                    [binary]="true"
-                  ></p-checkbox>
-                  <label for="acceptsInsurance">I accept insurance</label>
+                <div class="form-field full-width">
+                  <label for="bio">{{ 'therapists.wizard.personalInfo.bioLabel' | transloco }} <span class="required">{{ 'therapists.wizard.personalInfo.required' | transloco }}</span></label>
+                  <textarea 
+                    pTextarea 
+                    id="bio" 
+                    formControlName="bio"
+                    rows="5"
+                    maxlength="500"
+                    [placeholder]="'therapists.wizard.personalInfo.bioPlaceholder' | transloco"
+                    [class.p-invalid]="hasError(personalInfoForm, 'bio')"
+                  ></textarea>
+                  <small class="char-count">{{ 'therapists.wizard.personalInfo.bioCharCount' | transloco: {count: personalInfoForm.get('bio')?.value?.length || 0} }}</small>
+                  <small class="p-error" *ngIf="hasError(personalInfoForm, 'bio')">
+                    {{ getErrorMessage(personalInfoForm, 'bio') }}
+                  </small>
                 </div>
               </div>
 
-              <div class="info-message">
-                <i class="pi pi-info-circle"></i>
-                <p>You can configure detailed pricing rules, availability schedules, and insurance details later in your profile settings.</p>
+              <div class="step-actions">
+                <p-button [label]="'therapists.wizard.actions.saveAndContinue' | transloco" icon="pi pi-arrow-right" (onClick)="nextStep()"></p-button>
+                <p-button [label]="'therapists.wizard.actions.completeLater' | transloco" styleClass="p-button-text" (onClick)="completeLater()"></p-button>
               </div>
-            </div>
+            </form>
+          </ng-template>
+        </p-step-panel>
 
-            <div class="step-actions">
-              <p-button [label]="'therapists.wizard.actions.back' | transloco" icon="pi pi-arrow-left" (onClick)="previousStep()" styleClass="p-button-outlined"></p-button>
-              <p-button [label]="'therapists.wizard.actions.completeProfile' | transloco" icon="pi pi-check" (onClick)="submitProfile()" [loading]="loading"></p-button>
-            </div>
-          </form>
-        </ng-template>
-      </p-step-panel>
+        <!-- Step 2: Credentials -->
+        <p-step-panel [value]="2">
+          <ng-template #content let-activateCallback="activateCallback">
+            <form [formGroup]="credentialsForm" class="step-content">
+              <h3>{{ 'therapists.wizard.credentials.title' | transloco }}</h3>
+              <p class="step-description">{{ 'therapists.wizard.credentials.subtitle' | transloco }}</p>
+
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="professionalTitle">{{ 'therapists.wizard.credentials.titleLabel' | transloco }} <span class="required">{{ 'therapists.wizard.personalInfo.required' | transloco }}</span></label>
+                  <p-select 
+                    id="professionalTitle"
+                    formControlName="professionalTitle"
+                    [options]="professionalTitleOptions"
+                    [placeholder]="'therapists.wizard.credentials.titlePlaceholder' | transloco"
+                    optionLabel="label"
+                    optionValue="value"
+                    [class.p-invalid]="hasError(credentialsForm, 'professionalTitle')"
+                  ></p-select>
+                  <small class="p-error" *ngIf="hasError(credentialsForm, 'professionalTitle')">
+                    {{ getErrorMessage(credentialsForm, 'professionalTitle') }}
+                  </small>
+                </div>
+
+                <div class="form-field">
+                  <label for="yearsOfExperience">{{ 'therapists.wizard.credentials.yearsExperienceLabel' | transloco }}</label>
+                  <p-inputNumber 
+                    id="yearsOfExperience"
+                    formControlName="yearsOfExperience"
+                    [min]="0"
+                    [max]="70"
+                    [placeholder]="'therapists.wizard.credentials.yearsExperiencePlaceholder' | transloco"
+                  ></p-inputNumber>
+                </div>
+
+                <div class="form-field full-width">
+                  <label for="licenseNumbers">{{ 'therapists.wizard.credentials.licenseNumbersLabel' | transloco }}</label>
+                  <textarea 
+                    pTextarea 
+                    id="licenseNumbers" 
+                    formControlName="licenseNumbers"
+                    rows="2"
+                    [placeholder]="'therapists.wizard.credentials.licenseNumbersPlaceholder' | transloco"
+                  ></textarea>
+                  <small class="help-text">Enter each license number on a separate line</small>
+                </div>
+
+                <div class="form-field full-width">
+                  <label for="credentials">{{ 'therapists.wizard.credentials.certificationsLabel' | transloco }}</label>
+                  <textarea 
+                    pTextarea 
+                    id="credentials" 
+                    formControlName="credentials"
+                    rows="3"
+                    [placeholder]="'therapists.wizard.credentials.certificationsPlaceholder' | transloco"
+                  ></textarea>
+                </div>
+
+                <div class="form-field full-width">
+                  <label for="education">{{ 'therapists.wizard.credentials.educationLabel' | transloco }}</label>
+                  <textarea 
+                    pTextarea 
+                    id="education" 
+                    formControlName="education"
+                    rows="3"
+                    [placeholder]="'therapists.wizard.credentials.educationPlaceholder' | transloco"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <p-button [label]="'therapists.wizard.actions.back' | transloco" icon="pi pi-arrow-left" (onClick)="previousStep()" styleClass="p-button-outlined"></p-button>
+                <p-button [label]="'therapists.wizard.actions.saveAndContinue' | transloco" icon="pi pi-arrow-right" (onClick)="nextStep()"></p-button>
+              </div>
+            </form>
+          </ng-template>
+        </p-step-panel>
+
+        <!-- Step 3: Specializations -->
+        <p-step-panel [value]="3">
+          <ng-template #content let-activateCallback="activateCallback">
+            <form [formGroup]="specializationsForm" class="step-content">
+              <h3>{{ 'therapists.wizard.specializations.title' | transloco }}</h3>
+              <p class="step-description">{{ 'therapists.wizard.specializations.subtitle' | transloco }}</p>
+
+              <div class="form-grid">
+                <div class="form-field full-width">
+                  <label for="specializationIds">{{ 'therapists.wizard.specializations.specializationsLabel' | transloco }} <span class="required">{{ 'therapists.wizard.personalInfo.required' | transloco }}</span></label>
+                  <p-multiselect 
+                    id="specializationIds"
+                    formControlName="specializationIds"
+                    [options]="specializations"
+                    optionLabel="name"
+                    optionValue="id"
+                    [placeholder]="'therapists.wizard.specializations.specializationsPlaceholder' | transloco"
+                    [filter]="true"
+                    [class.p-invalid]="hasError(specializationsForm, 'specializationIds')"
+                    display="chip"
+                  ></p-multiselect>
+                  <small class="p-error" *ngIf="hasError(specializationsForm, 'specializationIds')">
+                    {{ getErrorMessage(specializationsForm, 'specializationIds') }}
+                  </small>
+                  <small class="help-text">Select at least one specialization</small>
+                </div>
+
+                <div class="form-field full-width">
+                  <label for="languageIds">{{ 'therapists.wizard.specializations.languagesLabel' | transloco }} <span class="required">{{ 'therapists.wizard.personalInfo.required' | transloco }}</span></label>
+                  <p-multiselect 
+                    id="languageIds"
+                    formControlName="languageIds"
+                    [options]="languages"
+                    optionLabel="name"
+                    optionValue="id"
+                    [placeholder]="'therapists.wizard.specializations.languagesPlaceholder' | transloco"
+                    [filter]="true"
+                    [class.p-invalid]="hasError(specializationsForm, 'languageIds')"
+                    display="chip"
+                  ></p-multiselect>
+                  <small class="p-error" *ngIf="hasError(specializationsForm, 'languageIds')">
+                    {{ getErrorMessage(specializationsForm, 'languageIds') }}
+                  </small>
+                  <small class="help-text">Select at least one language</small>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <p-button [label]="'therapists.wizard.actions.back' | transloco" icon="pi pi-arrow-left" (onClick)="previousStep()" styleClass="p-button-outlined"></p-button>
+                <p-button [label]="'therapists.wizard.actions.saveAndContinue' | transloco" icon="pi pi-arrow-right" (onClick)="nextStep()"></p-button>
+              </div>
+            </form>
+          </ng-template>
+        </p-step-panel>
+
+        <!-- Step 4: Pricing (Optional) -->
+        <p-step-panel [value]="4">
+          <ng-template #content let-activateCallback="activateCallback">
+            <form [formGroup]="pricingForm" class="step-content">
+              <h3>{{ 'therapists.wizard.preferences.title' | transloco }}</h3>
+              <p class="step-description">{{ 'therapists.wizard.preferences.subtitle' | transloco }}</p>
+
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="sessionDuration">{{ 'therapists.wizard.preferences.sessionDurationLabel' | transloco }}</label>
+                  <p-select 
+                    id="sessionDuration"
+                    formControlName="sessionDuration"
+                    [options]="sessionDurationOptions"
+                    [placeholder]="'therapists.wizard.preferences.sessionDurationPlaceholder' | transloco"
+                    optionLabel="label"
+                    optionValue="value"
+                  ></p-select>
+                </div>
+
+                <div class="form-field">
+                  <label for="baseRate">{{ 'therapists.wizard.preferences.hourlyRateLabel' | transloco }}</label>
+                  <p-inputNumber 
+                    id="baseRate"
+                    formControlName="baseRate"
+                    mode="currency"
+                    currency="USD"
+                    [min]="0"
+                    [placeholder]="'therapists.wizard.preferences.hourlyRatePlaceholder' | transloco"
+                  ></p-inputNumber>
+                </div>
+
+                <div class="form-field full-width">
+                  <div class="checkbox-field">
+                    <p-checkbox 
+                      id="acceptsInsurance"
+                      formControlName="acceptsInsurance"
+                      [binary]="true"
+                    ></p-checkbox>
+                    <label for="acceptsInsurance">I accept insurance</label>
+                  </div>
+                </div>
+
+                <div class="info-message">
+                  <i class="pi pi-info-circle"></i>
+                  <p>You can configure detailed pricing rules, availability schedules, and insurance details later in your profile settings.</p>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <p-button [label]="'therapists.wizard.actions.back' | transloco" icon="pi pi-arrow-left" (onClick)="previousStep()" styleClass="p-button-outlined"></p-button>
+                <p-button [label]="'therapists.wizard.actions.completeProfile' | transloco" icon="pi pi-check" (onClick)="submitProfile()" [loading]="loading"></p-button>
+              </div>
+            </form>
+          </ng-template>
+        </p-step-panel>
+      </p-step-panels>
     </p-stepper>
   </div>
 </div>

@@ -8,6 +8,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ContactMethodType,
   ConversionErrorBody,
@@ -31,7 +32,7 @@ import { LeadService } from '../../services/lead.service';
 @Component({
   selector: 'app-convert-lead-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true"
          aria-labelledby="convert-lead-title">

@@ -15,6 +15,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { IdNamePair } from '../../admin/therapists/models/therapist.model';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Multi-step wizard for therapists to complete their profile after first login.
@@ -40,14 +41,15 @@ import { IdNamePair } from '../../admin/therapists/models/therapist.model';
     Select,
     InputNumberModule,
     CheckboxModule,
-    ToastModule
+    ToastModule,
+    TranslocoPipe
   ],
   providers: [MessageService],
   templateUrl: './therapist-profile-wizard.component.html',
   styleUrl: './therapist-profile-wizard.component.scss'
 })
 export class TherapistProfileWizardComponent implements OnInit {
-  currentStep = 0;
+  currentStep = 1;  // PrimeNG v20 Stepper uses 1-based indexing
   loading = false;
 
   // Forms for each step

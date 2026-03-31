@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapist.model';
 
@@ -17,7 +18,7 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
 @Component({
   selector: 'app-therapist-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslocoPipe],
   template: `
     <div class="page">
       <div *ngIf="loading" class="state-msg" aria-live="polite">Loading profile…</div>

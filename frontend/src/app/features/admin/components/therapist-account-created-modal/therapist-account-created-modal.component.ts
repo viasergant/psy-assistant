@@ -6,6 +6,7 @@ import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { UserCreationResponse } from '../../users/models/user.model';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Modal dialog displayed after successfully creating a therapist account.
@@ -19,7 +20,8 @@ import { UserCreationResponse } from '../../users/models/user.model';
     DialogModule,
     ButtonModule,
     MessageModule,
-    ToastModule
+    ToastModule,
+    TranslocoPipe
   ],
   providers: [MessageService],
   templateUrl: './therapist-account-created-modal.component.html',

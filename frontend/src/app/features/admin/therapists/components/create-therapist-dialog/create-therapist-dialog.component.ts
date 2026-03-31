@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
   EMPLOYMENT_STATUS_OPTIONS,
@@ -31,7 +32,7 @@ interface TherapistWithAccountResponseDto {
 @Component({
   selector: 'app-create-therapist-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TherapistAccountCreatedModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, TherapistAccountCreatedModalComponent],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="create-therapist-title">
       <div class="dialog">

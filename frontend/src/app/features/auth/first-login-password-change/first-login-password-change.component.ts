@@ -8,6 +8,7 @@ import { PasswordModule } from 'primeng/password';
 import { MessageModule } from 'primeng/message';
 import { AuthService } from '../../../core/auth/auth.service';
 import { finalize } from 'rxjs';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Password change component shown to users on first login when mustChangePassword=true.
@@ -22,7 +23,8 @@ import { finalize } from 'rxjs';
     ButtonModule,
     InputTextModule,
     PasswordModule,
-    MessageModule
+    MessageModule,
+    TranslocoPipe
   ],
   templateUrl: './first-login-password-change.component.html',
   styleUrl: './first-login-password-change.component.scss'

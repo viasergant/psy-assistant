@@ -9,6 +9,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { LeadDetail } from '../../models/lead.model';
 import { LeadService } from '../../services/lead.service';
 
@@ -21,7 +22,7 @@ import { LeadService } from '../../services/lead.service';
 @Component({
   selector: 'app-create-lead-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="create-lead-title">
       <div class="dialog">

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
   TherapistProfile,
@@ -18,7 +19,7 @@ import {
 @Component({
   selector: 'app-edit-therapist-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-therapist-title">
       <div class="dialog">

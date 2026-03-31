@@ -9,6 +9,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ACTIVE_STATUSES,
   ContactMethod,
@@ -32,7 +33,7 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
 @Component({
   selector: 'app-edit-lead-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ConvertLeadDialogComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslocoPipe, ConvertLeadDialogComponent],
   template: `
     <!-- Nested convert dialog (shown when user clicks Convert to Client) -->
     <app-convert-lead-dialog

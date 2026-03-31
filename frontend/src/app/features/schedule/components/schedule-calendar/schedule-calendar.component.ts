@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ScheduleSummary,
   DayOfWeek,
@@ -38,7 +39,7 @@ interface CalendarCell {
 @Component({
   selector: 'app-schedule-calendar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslocoPipe],
   templateUrl: './schedule-calendar.component.html',
   styleUrls: ['./schedule-calendar.component.scss']
 })

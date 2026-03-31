@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
   TherapistProfile,
@@ -28,6 +29,7 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
   imports: [
     CommonModule,
     FormsModule,
+    TranslocoPipe,
     CreateTherapistDialogComponent,
     EditTherapistDialogComponent
   ],

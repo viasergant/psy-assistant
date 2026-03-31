@@ -21,7 +21,7 @@ import { LeadService } from '../../services/lead.service';
 @Component({
   selector: 'app-create-lead-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="create-lead-title">
       <div class="dialog">
@@ -53,9 +53,9 @@ import { LeadService } from '../../services/lead.service';
 
             <div *ngFor="let cm of contactMethods.controls; let i = index"
                  [formGroupName]="i" class="contact-row">
-              <select formControlName="type" aria-label="Contact type">
-                <option value="EMAIL">Email</option>
-                <option value="PHONE">Phone</option>
+              <select formControlName="type" [attr.aria-label]="'leads.create.contactTypeAriaLabel' | transloco">
+                <option value="EMAIL">{{ 'leads.create.contactTypeEmail' | transloco }}</option>
+                <option value="PHONE">{{ 'leads.create.contactTypePhone' | transloco }}</option>
               </select>
               <input
                 type="text"
@@ -78,19 +78,19 @@ import { LeadService } from '../../services/lead.service';
           </fieldset>
 
           <div class="field">
-            <label for="source">Source</label>
-            <input id="source" type="text" formControlName="source" placeholder="e.g. referral, website" />
+            <label for="source">{{ 'leads.create.sourceLabel' | transloco }}</label>
+            <input id="source" type="text" formControlName="source" [placeholder]="'leads.create.sourcePlaceholder' | transloco" />
           </div>
 
           <div class="field">
-            <label for="notes">Notes</label>
-            <textarea id="notes" formControlName="notes" rows="3" placeholder="Optional notes"></textarea>
+            <label for="notes">{{ 'leads.create.notesLabel' | transloco }}</label>
+            <textarea id="notes" formControlName="notes" rows="3" [placeholder]="'leads.create.notesPlaceholder' | transloco"></textarea>
           </div>
 
           <div *ngIf="serverError" class="alert-error" role="alert">{{ serverError }}</div>
 
           <div class="actions">
-            <button type="button" (click)="cancel()" [disabled]="saving">Cancel</button>
+            <button type="button" (click)="cancel()" [disabled]="saving">{{ 'common.actions.cancel' | transloco }}</button>
             <button type="submit" [disabled]="saving">
               {{ saving ? 'Creating…' : 'Create lead' }}
             </button>

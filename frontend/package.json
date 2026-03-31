@@ -7,7 +7,12 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "validate:i18n:json": "node scripts/validate-i18n-json.js",
+    "validate:i18n:parity": "node scripts/validate-i18n-parity.js",
+    "validate:i18n:hardcoded": "node scripts/validate-i18n-hardcoded.js",
+    "validate:i18n:length": "node scripts/validate-i18n-length.js",
+    "validate:i18n": "npm run validate:i18n:json && npm run validate:i18n:parity && npm run validate:i18n:hardcoded && npm run validate:i18n:length"
   },
   "prettier": {
     "printWidth": 100,

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { TranslocoModule } from '@jsverse/transloco';
 import {
   ClientDetail,
   UpdateClientProfilePayload,
@@ -15,7 +16,7 @@ import { ClientService } from '../services/client.service';
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, TranslocoModule],
   template: `
     <div class="page">
       <a class="back-link" routerLink="/leads">&larr; Back to leads</a>
@@ -30,7 +31,7 @@ import { ClientService } from '../services/client.service';
             <h1>{{ client.fullName }}</h1>
             <p class="sub">{{ client.clientCode || client.id }}</p>
           </div>
-          <span class="badge-client">Client</span>
+          <span class="badge-client">{{ 'clients.detail.badge' | transloco }}</span>
         </header>
 
         <div class="toolbar">
@@ -38,14 +39,14 @@ import { ClientService } from '../services/client.service';
                   type="button"
                   class="btn-primary"
                   (click)="startEdit()">
-            Edit profile
+            {{ 'clients.detail.editProfile' | transloco }}
           </button>
 
           <div *ngIf="editing" class="edit-actions">
-            <button type="button" class="btn-ghost" (click)="cancelEdit()">Cancel</button>
+            <button type="button" class="btn-ghost" (click)="cancelEdit()">{{ 'clients.detail.cancel' | transloco }}</button>
             <button type="button" class="btn-primary" [disabled]="saving || profileForm.invalid"
                     (click)="save()">
-              {{ saving ? 'Saving...' : 'Save changes' }}
+              {{ saving ? ('clients.detail.saving' | transloco) : ('clients.detail.saveChanges' | transloco) }}
             </button>
           </div>
         </div>
@@ -54,7 +55,7 @@ import { ClientService } from '../services/client.service';
 
         <form [formGroup]="profileForm" class="profile-form">
           <section class="section">
-            <h2 class="section-title">Personal Information</h2>
+            <h2 class="section-title">{{ 'clients.detail.sections.basicInfo' | transloco }}</h2>
 
             <div class="grid two">
               <label class="field">
@@ -63,159 +64,159 @@ import { ClientService } from '../services/client.service';
               </label>
 
               <label class="field">
-                <span>Preferred name</span>
+                <span>{{ 'clients.detail.fields.preferredName' | transloco }}</span>
                 <input type="text" formControlName="preferredName" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Date of birth</span>
+                <span>{{ 'clients.detail.fields.dateOfBirth' | transloco }}</span>
                 <input type="date" formControlName="dateOfBirth" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Pronouns</span>
+                <span>{{ 'clients.detail.fields.pronouns' | transloco }}</span>
                 <input type="text" formControlName="pronouns" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Gender</span>
+                <span>{{ 'clients.detail.fields.gender' | transloco }}</span>
                 <input type="text" formControlName="sexOrGender" [readonly]="!editing" />
               </label>
             </div>
           </section>
 
           <section class="section">
-            <h2 class="section-title">Contact Details</h2>
+            <h2 class="section-title">{{ 'clients.detail.sections.contactDetails' | transloco }}</h2>
 
             <div class="grid two">
               <label class="field">
-                <span>Email</span>
+                <span>{{ 'clients.detail.fields.email' | transloco }}</span>
                 <input type="email" formControlName="email" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Phone</span>
+                <span>{{ 'clients.detail.fields.phone' | transloco }}</span>
                 <input type="text" formControlName="phone" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Secondary phone</span>
+                <span>{{ 'clients.detail.fields.secondaryPhone' | transloco }}</span>
                 <input type="text" formControlName="secondaryPhone" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Address line 1</span>
+                <span>{{ 'clients.detail.fields.addressLine1' | transloco }}</span>
                 <input type="text" formControlName="addressLine1" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Address line 2</span>
+                <span>{{ 'clients.detail.fields.addressLine2' | transloco }}</span>
                 <input type="text" formControlName="addressLine2" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>City</span>
+                <span>{{ 'clients.detail.fields.city' | transloco }}</span>
                 <input type="text" formControlName="city" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Region</span>
+                <span>{{ 'clients.detail.fields.region' | transloco }}</span>
                 <input type="text" formControlName="region" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Postal code</span>
+                <span>{{ 'clients.detail.fields.postalCode' | transloco }}</span>
                 <input type="text" formControlName="postalCode" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Country</span>
+                <span>{{ 'clients.detail.fields.country' | transloco }}</span>
                 <input type="text" formControlName="country" [readonly]="!editing" />
               </label>
             </div>
           </section>
 
           <section class="section">
-            <h2 class="section-title">Referral Information</h2>
+            <h2 class="section-title">{{ 'clients.detail.sections.referral' | transloco }}</h2>
 
             <div class="grid two">
               <label class="field">
-                <span>Referral source</span>
+                <span>{{ 'clients.detail.fields.referralSource' | transloco }}</span>
                 <input type="text" formControlName="referralSource" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Referral contact</span>
+                <span>{{ 'clients.detail.fields.referralContact' | transloco }}</span>
                 <input type="text" formControlName="referralContactName" [readonly]="!editing" />
               </label>
             </div>
 
             <label class="field">
-              <span>Referral notes</span>
+              <span>{{ 'clients.detail.fields.referralNotes' | transloco }}</span>
               <textarea rows="3" formControlName="referralNotes" [readonly]="!editing"></textarea>
             </label>
           </section>
 
           <section class="section">
-            <h2 class="section-title">Emergency Contact</h2>
+            <h2 class="section-title">{{ 'clients.detail.sections.emergencyContact' | transloco }}</h2>
 
             <div class="grid two">
               <label class="field">
-                <span>Name</span>
+                <span>{{ 'clients.detail.fields.emergencyName' | transloco }}</span>
                 <input type="text" formControlName="emergencyContactName" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Relationship</span>
+                <span>{{ 'clients.detail.fields.emergencyRelationship' | transloco }}</span>
                 <input type="text" formControlName="emergencyContactRelationship" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Phone</span>
+                <span>{{ 'clients.detail.fields.emergencyPhone' | transloco }}</span>
                 <input type="text" formControlName="emergencyContactPhone" [readonly]="!editing" />
               </label>
 
               <label class="field">
-                <span>Email</span>
+                <span>{{ 'clients.detail.fields.emergencyEmail' | transloco }}</span>
                 <input type="email" formControlName="emergencyContactEmail" [readonly]="!editing" />
               </label>
             </div>
           </section>
 
           <section class="section">
-            <h2 class="section-title">Communication Preferences</h2>
+            <h2 class="section-title">{{ 'clients.detail.sections.commPrefs' | transloco }}</h2>
 
             <div class="grid two">
               <label class="field">
-                <span>Preferred method</span>
+                <span>{{ 'clients.detail.fields.preferredMethod' | transloco }}</span>
                 <input type="text" formControlName="preferredCommunicationMethod"
                        [readonly]="!editing" />
               </label>
 
               <label class="toggle">
                 <input type="checkbox" formControlName="allowPhone" [disabled]="!editing" />
-                <span>Allow phone calls</span>
+                <span>{{ 'clients.detail.fields.allowPhone' | transloco }}</span>
               </label>
 
               <label class="toggle">
                 <input type="checkbox" formControlName="allowSms" [disabled]="!editing" />
-                <span>Allow SMS</span>
+                <span>{{ 'clients.detail.fields.allowSms' | transloco }}</span>
               </label>
 
               <label class="toggle">
                 <input type="checkbox" formControlName="allowEmail" [disabled]="!editing" />
-                <span>Allow email</span>
+                <span>{{ 'clients.detail.fields.allowEmail' | transloco }}</span>
               </label>
 
               <label class="toggle">
                 <input type="checkbox" formControlName="allowVoicemail" [disabled]="!editing" />
-                <span>Allow voicemail</span>
+                <span>{{ 'clients.detail.fields.allowVoicemail' | transloco }}</span>
               </label>
             </div>
           </section>
 
           <section class="section">
-            <h2 class="section-title">Tags and Case Type</h2>
+            <h2 class="section-title">{{ 'clients.detail.sections.tags' | transloco }}</h2>
             <div class="tags-wrap">
               <span *ngFor="let tag of client.tags" class="tag-pill">
                 {{ tag }}
@@ -234,15 +235,15 @@ import { ClientService } from '../services/client.service';
                 [value]="tagInput"
                 (input)="tagInput = $any($event.target).value"
                 (keydown.enter)="addTag($event)"
-                placeholder="Add tag and press Enter"
+                [placeholder]="'clients.detail.tags.addTagPlaceholder' | transloco"
               />
               <button type="button" class="btn-primary" [disabled]="tagsSaving" (click)="saveTags()">
-                {{ tagsSaving ? 'Saving tags...' : 'Save tags' }}
+                {{ tagsSaving ? ('clients.detail.tags.savingTags' | transloco) : ('clients.detail.tags.saveTags' | transloco) }}
               </button>
             </div>
 
             <div *ngIf="client.canEditTags && filteredTagHints.length" class="tag-hints">
-              <span class="hint-label">Suggestions:</span>
+              <span class="hint-label">{{ 'clients.detail.tags.suggestions' | transloco }}</span>
               <button
                 *ngFor="let hint of filteredTagHints"
                 type="button"
@@ -257,7 +258,7 @@ import { ClientService } from '../services/client.service';
           </section>
 
           <section class="section">
-            <h2 class="section-title">Profile Photo</h2>
+            <h2 class="section-title">{{ 'clients.detail.sections.photo' | transloco }}</h2>
             <div class="photo-block">
               <img *ngIf="photoSrc"
                    class="profile-photo"
@@ -286,9 +287,9 @@ import { ClientService } from '../services/client.service';
           </section>
 
           <section class="section">
-            <h2 class="section-title">Profile Notes</h2>
+            <h2 class="section-title">{{ 'clients.detail.sections.notes' | transloco }}</h2>
             <label class="field">
-              <span>Notes</span>
+              <span>{{ 'clients.detail.fields.notes' | transloco }}</span>
               <textarea rows="4" formControlName="notes" [readonly]="!editing"></textarea>
             </label>
           </section>

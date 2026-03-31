@@ -1,12 +1,482 @@
 {
   "app.title": "PSY Assistant CRM",
-  "nav.leads": "Потенційні клієнти",
-  "nav.clients": "Клієнти",
-  "nav.schedule": "Розклад",
-  "nav.sessions": "Сесії",
-  "nav.admin": "Адміністрування",
-  "nav.logout": "Вийти",
-  "common.cancel": "Скасувати",
-  "schedule.validation.required": "Це поле обов'язкове",
-  "schedule.calendar.today": "Сьогодні"
+  "common": {
+    "actions": {
+      "save": "Зберегти",
+      "cancel": "Скасувати",
+      "delete": "Видалити",
+      "edit": "Редагувати",
+      "confirm": "Підтвердити",
+      "back": "Назад",
+      "next": "Далі",
+      "submit": "Відправити",
+      "retry": "Повторити",
+      "close": "Закрити",
+      "copy": "Копіювати",
+      "done": "Готово",
+      "continue": "Продовжити",
+      "previous": "Попередній",
+      "approve": "Затвердити",
+      "reject": "Відхилити"
+    },
+    "validation": {
+      "required": "Це поле обов'язкове",
+      "email": "Введіть коректну електронну адресу",
+      "phone": "Введіть коректний номер телефону",
+      "minLength": "Мінімум {{min}} символів",
+      "maxLength": "Максимум {{max}} символів",
+      "pattern": "Невірний формат",
+      "passwordMismatch": "Паролі не збігаються"
+    },
+    "status": {
+      "loading": "Завантаження...",
+      "success": "Успішно",
+      "error": "Помилка",
+      "warning": "Попередження",
+      "info": "Інформація"
+    },
+    "aria": {
+      "closeErrorMessage": "Закрити повідомлення про помилку",
+      "previousPage": "Попередня сторінка",
+      "nextPage": "Наступна сторінка",
+      "closeModal": "Закрити модальне вікно",
+      "editItem": "Редагувати {{item}}",
+      "deleteItem": "Видалити {{item}}",
+      "resetPassword": "Скинути пароль для {{user}}"
+    },
+    "confirmation": {
+      "deleteTitle": "Підтвердження видалення",
+      "deleteMessage": "Ви впевнені, що хочете видалити цей елемент?",
+      "unsavedChanges": "У вас є незбережені зміни. Ви хочете вийти?"
+    },
+    "pagination": {
+      "showing": "Показано {{from}} до {{to}} з {{total}} елементів",
+      "itemsPerPage": "Елементів на сторінці"
+    }
+  },
+  "nav": {
+    "leads": "Потенційні клієнти",
+    "clients": "Клієнти",
+    "schedule": "Розклад",
+    "sessions": "Сесії",
+    "billing": "Виставлення рахунків",
+    "reports": "Звіти",
+    "admin": "Адміністрування",
+    "logout": "Вийти"
+  },
+  "auth": {
+    "login": {
+      "title": "Вхід",
+      "emailLabel": "Електронна пошта",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "Введіть ваш пароль",
+      "rememberMe": "Запам'ятати мене",
+      "forgotPassword": "Забули пароль?",
+      "loginButton": "Увійти",
+      "errors": {
+        "invalidCredentials": "Невірна електронна адреса або пароль",
+        "accountLocked": "Обліковий запис заблоковано. Зв'яжіться з адміністратором"
+      }
+    },
+    "firstTimeSetup": {
+      "title": "Ласкаво просимо!",
+      "subtitle": "Перш ніж почати, встановіть надійний пароль",
+      "currentPasswordLabel": "Поточний тимчасовий пароль",
+      "currentPasswordPlaceholder": "Введіть ваш тимчасовий пароль",
+      "currentPasswordRequired": "Поточний пароль обов'язковий",
+      "newPasswordLabel": "Новий пароль",
+      "newPasswordPlaceholder": "Введіть ваш новий пароль",
+      "newPasswordHint": "Мінімум 10 символів з великими, малими літерами, цифрою та спеціальним символом",
+      "newPasswordRequired": "Пароль повинен містити щонайменше 10 символів", "confirmPasswordLabel": "Підтвердіть новий пароль",
+      "confirmPasswordPlaceholder": "Повторно введіть ваш новий пароль",
+      "confirmPasswordRequired": "Будь ласка, підтвердіть ваш пароль",
+      "passwordMismatch": "Паролі не збігаються",
+      "passwordStrength": {
+        "prompt": "Виберіть пароль",
+        "weak": "Слабкий",
+        "medium": "Середній",
+        "strong": "Сильний"
+      },
+      "changePasswordButton": "Змінити пароль і продовжити"
+    }
+  },
+  "leads": {
+    "title": "Потенційні клієнти",
+    "list": {
+      "filterLabel": "Фільтрувати потенційних клієнтів",
+      "statusLabel": "Статус",
+      "statusAll": "Усі статуси",
+      "statusNew": "Новий",
+      "statusContacted": "Контактований",
+      "statusQualified": "Кваліфікований",
+      "statusConverted": "Конвертований",
+      "statusLost": "Втрачений",
+      "noLeads": "Потенційні клієнти не знайдені",
+      "ariaFilters": "Фільтри потенційних клієнтів",
+      "ariaList": "Список потенційних клієнтів",
+      "ariaPagination": "Пагінація списку потенційних клієнтів",
+      "tableHeaders": {
+        "name": "Ім'я",
+        "contact": "Контакт",
+        "source": "Джерело",
+        "status": "Статус",
+        "owner": "Власник",
+        "created": "Створено",
+        "actions": "Дії"
+      }
+    },
+    "create": {
+      "title": "Створити потенційного клієнта",
+      "nameLabel": "Ім'я",
+      "namePlaceholder": "Повне ім'я",
+      "contactTypeLabel": "Тип контакту",
+      "contactTypeAriaLabel": "Тип контакту",
+      "contactTypeEmail": "Електронна пошта",
+      "contactTypePhone": "Телефон",
+      "contactValueLabel": "Контакт",
+      "contactValuePlaceholder": "електронна пошта або телефон",
+      "sourceLabel": "Джерело",
+      "sourcePlaceholder": "наприклад, рекомендація, веб-сайт",
+      "notesLabel": "Примітки",
+      "notesPlaceholder": "Додаткові примітки"
+    },
+    "edit": {
+      "title": "Редагувати потенційного клієнта"
+    },
+    "convert": {
+      "title": "Конвертувати в клієнта",
+      "notesLabel": "Додаткові примітки",
+      "notesPlaceholder": "Додаткові примітки для запису клієнта"
+    }
+  },
+  "clients": {
+    "title": "Клієнти",
+    "detail": {
+      "badge": "Клієнт",
+      "editProfile": "Редагувати профіль",
+      "cancel": "Скасувати",
+      "saveChanges": "Зберегти зміни",
+      "saving": "Збереження...",
+      "sections": {
+        "basicInfo": "Основна інформація",
+        "contactDetails": "Контактні дані",
+        "address": "Адреса",
+        "referral": "Інформація про направлення",
+        "emergencyContact": "Контакт для екстрених випадків",
+        "commPrefs": "Налаштування зв'язку",
+        "tags": "Теги",
+        "photo": "Фото профілю",
+        "notes": "Примітки профілю"
+      },
+      "fields": {
+        "preferredName": "Бажане ім'я",
+        "dateOfBirth": "Дата народження",
+        "pronouns": "Займенники",
+        "gender": "Стать",
+        "email": "Електронна пошта",
+        "phone": "Телефон",
+        "secondaryPhone": "Додатковий телефон",
+        "addressLine1": "Адреса рядок 1",
+        "addressLine2": "Адреса рядок 2",
+        "city": "Місто",
+        "region": "Регіон",
+        "postalCode": "Поштовий індекс",
+        "country": "Країна",
+        "referralSource": "Джерело направлення",
+        "referralContact": "Контакт направлення",
+        "referralNotes": "Примітки щодо направлення",
+        "emergencyName": "Ім'я",
+        "emergencyRelationship": "Відносини",
+        "emergencyPhone": "Телефон",
+        "emergencyEmail": "Електронна пошта",
+        "preferredMethod": "Бажаний метод",
+        "allowPhone": "Дозволити телефонні дзвінки",
+        "allowSms": "Дозволити SMS",
+        "allowEmail": "Дозволити електронну пошту",
+        "allowVoicemail": "Дозволити голосову пошту",
+        "notes": "Примітки"
+      },
+      "tags": {
+        "addTagPlaceholder": "Додайте тег і натисніть Enter",
+        "saveTags": "Зберегти теги",
+        "savingTags": "Збереження тегів...",
+        "suggestions": "Пропозиції:"
+      }
+    }
+  },
+  "therapists": {
+    "wizard": {
+      "title": "Завершити ваш профіль",
+      "subtitle": "Допоможіть нам зрозуміти ваш досвід та переваги",
+      "personalInfo": {
+        "title": "Особиста інформація",
+        "subtitle": "Основна інформація про вас",
+        "fullNameLabel": "Повне ім'я",
+        "fullNamePlaceholder": "Введіть ваше повне ім'я",
+        "phoneLabel": "Номер телефону",
+        "phonePlaceholder": "+380XXXXXXXXX",
+        "contactPhoneLabel": "Контактний телефон (якщо інший)",
+        "bioLabel": "Професійна біографія",
+        "bioPlaceholder": "Розкажіть про ваш досвід та підхід...",
+        "bioCharCount": "{{count}}/500",
+        "required": "*"
+      },
+      "credentials": {
+        "title": "Професійні кваліфікації",
+        "subtitle": "Ваші кваліфікації та досвід",
+        "titleLabel": "Професійна назва",
+        "titlePlaceholder": "Виберіть вашу назву",
+        "yearsExperienceLabel": "Років досвіду",
+        "yearsExperiencePlaceholder": "0",
+        "licenseNumbersLabel": "Номери ліцензій",
+        "licenseNumbersPlaceholder": "Введіть номери ліцензій (по одному в рядку)",
+        "certificationsLabel": "Сертифікати",
+        "certificationsPlaceholder": "Вкажіть ваші дипломи (наприклад, PhD, PsyD, LMFT тощо)",
+        "educationLabel": "Освіта",
+        "educationPlaceholder": "Ваша освіта"
+      },
+      "specializations": {
+        "title": "Спеціалізації та мови",
+        "subtitle": "Галузі вашої експертизи",
+        "specializationsLabel": "Спеціалізації",
+        "specializationsPlaceholder": "Виберіть ваші спеціалізації",
+        "specializationsFilterPlaceholder": "Пошук спеціалізацій",
+        "languagesLabel": "Мови",
+        "languagesPlaceholder": "Виберіть мови, якими ви говорите",
+        "languagesFilterPlaceholder": "Пошук мов"
+      },
+      "preferences": {
+        "title": "Налаштування сесій",
+        "subtitle": "Ваші налаштування сесій та тарифи",
+        "sessionDurationLabel": "Тривалість сесії за замовчуванням",
+        "sessionDurationPlaceholder": "Виберіть тривалість",
+        "hourlyRateLabel": "Погодинна ставка (USD)",
+        "hourlyRatePlaceholder": "0.00",
+        "accept": "Прийняти всі рекомендовані налаштування"
+      },
+      "actions": {
+        "saveAndContinue": "Зберегти та продовжити",
+        "completeLater": "Завершити пізніше",
+        "back": "Назад",
+        "completeProfile": "Завершити профіль"
+      }
+    },
+    "types": {
+      "psychologist": "Психолог",
+      "psychiatrist": "Психіатр",
+      "therapist": "Терапевт",
+      "counselor": "Консультант"
+    },
+    "list": {
+      "ariaFilters": "Фільтри терапевтів",
+      "ariaList": "Список терапевтів",
+      "ariaPagination": "Пагінація списку терапевтів"
+    }
+  },
+  "schedule": {
+    "title": "Управління розкладом",
+    "mySchedule": "Мій розклад",
+    "therapistSchedule": "Розклад {{name}}",
+    "configureSchedule": "Налаштувати розклад",
+    "requestLeave": "Запит на відпустку",
+    "loading": "Завантаження розкладу...",
+    "error": "Не вдалося завантажити розклад. Спробуйте ще раз.",
+    "retry": "Повторити",
+    "calendar": {
+      "today": "Сьогодні",
+      "previousWeek": "Попередній тиждень",
+      "nextWeek": "Наступний тиждень",
+      "weekRange": "{{start}} - {{end}}"
+    },
+    "legend": {
+      "available": "Доступний",
+      "unavailable": "Недоступний",
+      "override": "Виняток",
+      "leave": "Відпустка",
+      "booked": "Заброньовано"
+    },
+    "recurring": {
+      "title": "Робочі години тижня",
+      "monday": "Понеділок",
+      "tuesday": "Вівторок",
+      "wednesday": "Середа",
+      "thursday": "Четвер",
+      "friday": "П'ятниця",
+      "saturday": "Субота",
+      "sunday": "Неділя",
+      "unavailable": "Недоступний",
+      "addException": "Додати виняток",
+      "startTime": "Час початку",
+      "endTime": "Час завершення"
+    },
+    "override": {
+      "title": "Винятки для конкретних дат",
+      "addOverride": "Додати виняток",
+      "edit": "Редагувати",
+      "delete": "Видалити",
+      "unavailable": "Недоступний",
+      "extendedHours": "Розширені години",
+      "reason": "Причина"
+    },
+    "leave": {
+      "title": "Періоди відпусток",
+      "requestLeave": "Запит на відпустку",
+      "viewDetails": "Переглянути деталі",
+      "cancel": "Скасувати",
+      "approve": "Затвердити",
+      "reject": "Відхилити",
+      "type": "Тип відпустки",
+      "dateRange": "Діапазон дат",
+      "startDate": "Дата початку",
+      "endDate": "Дата завершення",
+      "notes": "Примітки",
+      "notesPlaceholder": "Надайте додаткову інформацію про ваш запит на відпустку",
+      "submit": "Відправити",
+      "conflicts": "Виявлено конфлікти",
+      "conflictWarning": "Наступні зустрічі будуть порушені:",
+      "noConflicts": "Конфліктів не виявлено"
+    },
+    "leaveType": {
+      "annual": "Щорічна відпустка",
+      "sick": "Лікарняний",
+      "publicHoliday": "Державне свято",
+      "other": "Інше"
+    },
+    "leaveStatus": {
+      "pending": "В очікуванні",
+      "approved": "Затверджено",
+      "rejected": "Відхилено",
+      "cancelled": "Скасовано"
+    },
+    "validation": {
+      "startBeforeEnd": "Час початку повинен бути раніше часу завершення",
+      "endDateAfterStart": "Дата завершення повинна бути після дати початку",
+      "required": "Це поле обов'язкове",
+      "invalidTime": "Невірний формат часу"
+    }
+  },
+  "admin": {
+    "title": "Адміністрування",
+    "tabs": {
+      "users": "Користувачі",
+      "therapists": "Терапевти",
+      "leaveRequests": "Запити в очікуванні"
+    },
+    "users": {
+      "list": {
+        "roleLabel": "Роль",
+        "statusLabel": "Статус",
+        "statusActive": "Активний",
+        "statusInactive": "Неактивний",
+        "ariaFilters": "Фільтри користувачів",
+        "ariaList": "Список користувачів",
+        "ariaPagination": "Пагінація списку користувачів",
+        "tableHeaders": {
+          "email": "Електронна пошта",
+          "status": "Статус",
+          "actions": "Дії"
+        },
+        "closeError": "Закрити повідомлення про помилку"
+      },
+      "create": {
+        "done": "Готово"
+      },
+      "edit": {
+        "roleLabel": "Роль"
+      }
+    },
+    "therapists": {
+      "list": {
+        "roleLabel": "Роль",
+        "statusLabel": "Статус",
+        "statusActive": "Активний",
+        "statusInactive": "Неактивний",
+        "ariaFilters": "Фільтри терапевтів",
+        "ariaList": "Список терапевтів",
+        "ariaPagination": "Пагінація списку терапевтів",
+        "tableHeaders": {
+          "name": "Ім'я",
+          "email": "Електронна пошта",
+          "phone": "Телефон",
+          "specializations": "Спеціалізації",
+          "status": "Статус",
+          "created": "Створено",
+          "actions": "Дії"
+        }
+      },
+      "detail": {
+        "sections": {
+          "biography": "Біографія",
+          "specializations": "Спеціалізації",
+          "languages": "Мови",
+          "metadata": "Метадані"
+        },
+        "fields": {
+          "email": "Електронна пошта",
+          "phone": "Телефон",
+          "created": "Створено",
+          "version": "Версія"
+        }
+      },
+      "create": {
+        "title": "Створити обліковий запис терапевта",
+        "fullNameLabel": "Повне ім'я",
+        "fullNamePlaceholder": "Введіть повне ім'я терапевта",
+        "emailLabel": "Електронна пошта",
+        "emailPlaceholder": "therapist@example.com",
+        "phoneLabel": "Номер телефону",
+        "phonePlaceholder": "+380 (XX) XXX-XX-XX"
+      },
+      "edit": {
+        "bioLabel": "Професійна біографія",
+        "bioPlaceholder": "Коротка професійна біографія..."
+      },
+      "accountCreated": {
+        "title": "Обліковий запис терапевта успішно створено",
+        "subtitle": "Обліковий запис створено з автоматично згенерованим тимчасовим паролем",
+        "credentialsLabel": "Облікові дані",
+        "emailLabel": "Електронна пошта",
+        "passwordLabel": "Тимчасовий пароль",
+        "copyCredentials": "Копіювати облікові дані",
+        "copyPassword": "Копіювати тільки пароль",
+        "instructions": "Поділіться цими обліковими даними безпечно з терапевтом. Він буде змушений змінити пароль при першому вході.",
+        "reminder": "Цей пароль не буде показано знову. Переконайтеся, що зберегли його безпечно.",
+        "viewProfile": "Переглянути профіль терапевта",
+        "done": "Готово"
+      }
+    },
+    "leave": {
+      "pendingRequests": "Запити на відпустку в очікуванні",
+      "noPendingRequests": "Немає запитів на відпустку в очікуванні",
+      "reviewRequest": "Переглянути запит на відпустку",
+      "therapist": "Терапевт",
+      "submittedAt": "Дата подання",
+      "therapistNotes": "Примітки терапевта",
+      "adminNotes": "Примітки адміністратора / Причина",
+      "adminNotesPlaceholder": "Додайте примітки (необов'язково для затвердження, обов'язкові для відхилення)",
+      "selectRequestToReview": "Виберіть запит зі списку для перегляду"
+    }
+  },
+  "sessions": {
+    "title": "Сесії"
+  },
+  "billing": {
+    "title": "Виставлення рахунків"
+  },
+  "reports": {
+    "title": "Звіти"
+  },
+  "errors": {
+    "http": {
+      "400": "Невірний запит",
+      "401": "Неавторизовано",
+      "403": "Заборонено",
+      "404": "Сторінку не знайдено",
+      "500": "Внутрішня помилка сервера"
+    },
+    "validation": {
+      "generic": "Будь ласка, перевірте ваші дані та спробуйте знову"
+    }
+  }
 }

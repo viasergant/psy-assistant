@@ -43,7 +43,7 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserCreationResponse } from '.
           </div>
 
           <div class="actions">
-            <button type="button" class="btn-primary" (click)="closeSuccess()">Done</button>
+            <button type="button" class="btn-primary" (click)="closeSuccess()">{{ 'admin.users.create.done' | transloco }}</button>
           </div>
         </div>
 
@@ -102,7 +102,7 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserCreationResponse } from '.
             </div>
 
             <div class="actions">
-              <button type="button" (click)="cancel()" [disabled]="saving">Cancel</button>
+              <button type="button" (click)="cancel()" [disabled]="saving">{{ 'common.actions.cancel' | transloco }}</button>
               <button type="submit" [disabled]="saving">
                 {{ saving ? 'Creating…' : 'Create user' }}
               </button>

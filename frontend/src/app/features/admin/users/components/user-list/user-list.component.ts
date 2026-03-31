@@ -38,9 +38,9 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
       </header>
 
       <!-- Filters -->
-      <div class="filters" role="group" aria-label="User filters">
+      <div class="filters" role="group" [attr.aria-label]="'admin.users.list.ariaFilters' | transloco">
         <div class="filter-group">
-          <label for="roleFilter">Role</label>
+          <label for="roleFilter">{{ 'admin.users.list.roleLabel' | transloco }}</label>
           <select id="roleFilter" [(ngModel)]="roleFilter" (change)="applyFilters()">
             <option value="">All roles</option>
             <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
@@ -48,11 +48,11 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
         </div>
 
         <div class="filter-group">
-          <label for="statusFilter">Status</label>
+          <label for="statusFilter">{{ 'admin.users.list.statusLabel' | transloco }}</label>
           <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
             <option value="">All statuses</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
+            <option value="true">{{ 'admin.users.list.statusActive' | transloco }}</option>
+            <option value="false">{{ 'admin.users.list.statusInactive' | transloco }}</option>
           </select>
         </div>
       </div>
@@ -62,7 +62,7 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
       <div *ngIf="!loading && loadError" class="alert-error" role="alert">{{ loadError }}</div>
       <div *ngIf="!loading && errorMessage" class="alert-error" role="alert">
         {{ errorMessage }}
-        <button class="close-btn" (click)="errorMessage = null" aria-label="Close error message">&times;</button>
+        <button class="close-btn" (click)="errorMessage = null" [attr.aria-label]="'admin.users.list.closeError' | transloco">&times;</button>
       </div>
       <div *ngIf="!loading && !loadError && users.length === 0" class="state-msg">
         No users match the current filters.
@@ -70,7 +70,7 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
 
       <!-- Table -->
       <div class="table-wrapper" *ngIf="!loading && users.length > 0">
-        <table aria-label="User list">
+        <table [attr.aria-label]="'admin.users.list.ariaList' | transloco">
           <thead>
             <tr>
               <th scope="col">
@@ -79,21 +79,21 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
                   Name
                 </button>
               </th>
-              <th scope="col">Email</th>
+              <th scope="col">{{ 'admin.users.list.tableHeaders.email' | transloco }}</th>
               <th scope="col">
                 <button class="sort-btn" (click)="sort('role')" type="button"
                         [attr.aria-sort]="ariaSort('role')">
                   Role
                 </button>
               </th>
-              <th scope="col">Status</th>
+              <th scope="col">{{ 'admin.users.list.tableHeaders.status' | transloco }}</th>
               <th scope="col">
                 <button class="sort-btn" (click)="sort('createdAt')" type="button"
                         [attr.aria-sort]="ariaSort('createdAt')">
                   Created
                 </button>
               </th>
-              <th scope="col"><span class="sr-only">Actions</span></th>
+              <th scope="col"><span class="sr-only">{{ 'admin.users.list.tableHeaders.actions' | transloco }}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -140,14 +140,14 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
       </div>
 
       <!-- Pagination -->
-      <nav class="pagination" aria-label="User list pagination" *ngIf="totalPages > 1">
-        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 0"
-                aria-label="Previous page">
+      <nav class="pagination" [attr.aria-label]="'admin.users.list.ariaPagination' | transloco" *ngIf="totalPages > 1">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
+                [attr.aria-label]="'common.pagination.previousPage' | transloco">
           &lsaquo;
         </button>
         <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
         <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages - 1"
-                aria-label="Next page">
+                [attr.aria-label]="'common.pagination.nextPage' | transloco">
           &rsaquo;
         </button>
       </nav>

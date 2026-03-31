@@ -69,12 +69,12 @@ import { LeaveRequestService } from '../../services/leave-request.service';
           </div>
 
           <div class="field">
-            <label for="requestNotes">Notes (optional)</label>
+            <label for="requestNotes">{{ 'schedule.leave.notes' | transloco }} (optional)</label>
             <textarea
               id="requestNotes"
               formControlName="requestNotes"
               rows="4"
-              placeholder="Provide any additional information about your leave request"
+              [placeholder]="'schedule.leave.notesPlaceholder' | transloco"
             ></textarea>
           </div>
 

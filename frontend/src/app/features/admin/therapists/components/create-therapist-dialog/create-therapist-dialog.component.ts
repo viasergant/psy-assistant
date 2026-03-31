@@ -48,7 +48,7 @@ interface TherapistWithAccountResponseDto {
               formControlName="fullName"
               [attr.aria-invalid]="isInvalid('fullName')"
               aria-required="true"
-              placeholder="Enter therapist's full name"
+              [placeholder]="'admin.therapists.create.fullNamePlaceholder' | transloco"
             />
             <span *ngIf="isInvalid('fullName')" class="error-msg" role="alert">
               Full name is required.
@@ -132,7 +132,7 @@ interface TherapistWithAccountResponseDto {
           </div>
 
           <div class="actions">
-            <button type="button" (click)="cancel()" [disabled]="saving">Cancel</button>
+            <button type="button" (click)="cancel()" [disabled]="saving">{{ 'common.actions.cancel' | transloco }}</button>
             <button type="submit" [disabled]="saving">
               {{ saving ? 'Creating…' : 'Create account' }}
             </button>

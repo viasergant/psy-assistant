@@ -39,9 +39,9 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
       </header>
 
       <!-- Filters -->
-      <div class="filters" role="group" aria-label="Therapist filters">
+      <div class="filters" role="group" [attr.aria-label]="'admin.therapists.list.ariaFilters' | transloco">
         <div class="filter-group">
-          <label for="roleFilter">Role</label>
+          <label for="roleFilter">{{ 'admin.therapists.list.roleLabel' | transloco }}</label>
           <select id="roleFilter" [(ngModel)]="roleFilter" (change)="onRoleFilterChange()">
             <option value="">All roles</option>
             <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
@@ -49,11 +49,11 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
         </div>
 
         <div class="filter-group">
-          <label for="statusFilter">Status</label>
+          <label for="statusFilter">{{ 'admin.therapists.list.statusLabel' | transloco }}</label>
           <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
             <option value="">All statuses</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
+            <option value="true">{{ 'admin.therapists.list.statusActive' | transloco }}</option>
+            <option value="false">{{ 'admin.therapists.list.statusInactive' | transloco }}</option>
           </select>
         </div>
 
@@ -77,17 +77,17 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
 
       <!-- Table -->
       <div class="table-wrapper" *ngIf="!loading && therapists.length > 0">
-        <table aria-label="Therapist list">
+        <table [attr.aria-label]="'admin.therapists.list.ariaList' | transloco">
           <thead>
             <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Email</th>
-              <th scope="col">Phone</th>
+              <th scope="col">{{ 'admin.therapists.list.tableHeaders.name' | transloco }}</th>
+              <th scope="col">{{ 'admin.therapists.list.tableHeaders.email' | transloco }}</th>
+              <th scope="col">{{ 'admin.therapists.list.tableHeaders.phone' | transloco }}</th>
               <th scope="col">Employment Status</th>
-              <th scope="col">Specializations</th>
-              <th scope="col">Status</th>
-              <th scope="col">Created</th>
-              <th scope="col"><span class="sr-only">Actions</span></th>
+              <th scope="col">{{ 'admin.therapists.list.tableHeaders.specializations' | transloco }}</th>
+              <th scope="col">{{ 'admin.therapists.list.tableHeaders.status' | transloco }}</th>
+              <th scope="col">{{ 'admin.therapists.list.tableHeaders.created' | transloco }}</th>
+              <th scope="col"><span class="sr-only">{{ 'admin.therapists.list.tableHeaders.actions' | transloco }}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -130,14 +130,14 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
       </div>
 
       <!-- Pagination -->
-      <nav class="pagination" aria-label="Therapist list pagination" *ngIf="totalPages > 1">
-        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 0"
-                aria-label="Previous page">
+      <nav class="pagination" [attr.aria-label]="'admin.therapists.list.ariaPagination' | transloco" *ngIf="totalPages > 1">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
+                [attr.aria-label]="'common.pagination.previousPage' | transloco">
           &lsaquo;
         </button>
         <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
         <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages - 1"
-                aria-label="Next page">
+                [attr.aria-label]="'common.pagination.nextPage' | transloco">
           &rsaquo;
         </button>
       </nav>

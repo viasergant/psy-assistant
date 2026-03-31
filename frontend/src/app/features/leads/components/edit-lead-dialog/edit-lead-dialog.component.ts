@@ -96,9 +96,9 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
 
             <div *ngFor="let cm of contactMethods.controls; let i = index"
                  [formGroupName]="i" class="contact-row">
-              <select formControlName="type" aria-label="Contact type">
-                <option value="EMAIL">Email</option>
-                <option value="PHONE">Phone</option>
+              <select formControlName="type" [attr.aria-label]="'leads.create.contactTypeAriaLabel' | transloco">
+                <option value="EMAIL">{{ 'leads.create.contactTypeEmail' | transloco }}</option>
+                <option value="PHONE">{{ 'leads.create.contactTypePhone' | transloco }}</option>
               </select>
               <input
                 type="text"
@@ -120,12 +120,12 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
           </fieldset>
 
           <div class="field">
-            <label for="source">Source</label>
-            <input id="source" type="text" formControlName="source" placeholder="e.g. referral, website" />
+            <label for="source">{{ 'leads.create.sourceLabel' | transloco }}</label>
+            <input id="source" type="text" formControlName="source" [placeholder]="'leads.create.sourcePlaceholder' | transloco" />
           </div>
 
           <div class="field">
-            <label for="notes">Notes</label>
+            <label for="notes">{{ 'leads.create.notesLabel' | transloco }}</label>
             <textarea id="notes" formControlName="notes" rows="3"></textarea>
           </div>
 
@@ -142,7 +142,7 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
           <div *ngIf="serverError" class="alert-error" role="alert">{{ serverError }}</div>
 
           <div class="actions">
-            <button type="button" (click)="cancel()" [disabled]="saving">Cancel</button>
+            <button type="button" (click)="cancel()" [disabled]="saving">{{ 'common.actions.cancel' | transloco }}</button>
             <button type="submit" [disabled]="saving">
               {{ saving ? 'Saving…' : 'Save changes' }}
             </button>

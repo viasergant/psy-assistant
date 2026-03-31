@@ -1,6 +1,6 @@
 <div class="language-switcher">
   <p-select
-    [options]="languages"
+    [options]="languages$ | async"
     [(ngModel)]="selectedLanguage"
     (ngModelChange)="onLanguageChange($event)"
     optionLabel="label"

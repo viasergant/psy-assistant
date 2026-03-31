@@ -33,7 +33,7 @@ import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserRole, UserSummary } f
           </div>
 
           <div class="field">
-            <label for="role">Role</label>
+            <label for="role">{{ 'admin.users.edit.roleLabel' | transloco }}</label>
             <select id="role" formControlName="role">
               <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
             </select>
@@ -53,7 +53,7 @@ import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserRole, UserSummary } f
           </div>
 
           <div class="actions">
-            <button type="button" (click)="cancel()" [disabled]="saving">Cancel</button>
+            <button type="button" (click)="cancel()" [disabled]="saving">{{ 'common.actions.cancel' | transloco }}</button>
             <button type="submit" [disabled]="saving">
               {{ saving ? 'Saving…' : 'Save changes' }}
             </button>

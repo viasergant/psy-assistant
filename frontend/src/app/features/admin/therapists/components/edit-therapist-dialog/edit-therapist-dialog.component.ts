@@ -88,7 +88,7 @@ import {
               id="bio"
               formControlName="bio"
               rows="4"
-              placeholder="Brief professional biography..."
+              [placeholder]="'admin.therapists.edit.bioPlaceholder' | transloco"
             ></textarea>
           </div>
 
@@ -124,7 +124,7 @@ import {
           </div>
 
           <div class="actions">
-            <button type="button" (click)="cancel()" [disabled]="saving">Cancel</button>
+            <button type="button" (click)="cancel()" [disabled]="saving">{{ 'common.actions.cancel' | transloco }}</button>
             <button type="submit" [disabled]="saving">
               {{ saving ? 'Saving…' : 'Save changes' }}
             </button>

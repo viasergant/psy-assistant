@@ -47,7 +47,7 @@ import { AuthService } from '../../../core/auth/auth.service';
           </div>
 
           <div class="field">
-            <label for="password">Password</label>
+            <label for="password">{{ 'auth.login.passwordLabel' | transloco }}</label>
             <input
               id="password"
               type="password"

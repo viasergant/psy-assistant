@@ -34,14 +34,14 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
   template: `
     <div class="page">
       <header class="page-header">
-        <h1>Leads</h1>
+        <h1>{{ 'leads.title' | transloco }}</h1>
         <button class="btn-primary" (click)="openCreate()">+ New lead</button>
       </header>
 
       <!-- Filters -->
-      <div class="filters" role="group" aria-label="Lead filters">
+      <div class="filters" role="group" [attr.aria-label]="'leads.list.ariaFilters' | transloco">
         <div class="filter-group">
-          <label for="statusFilter">Status</label>
+          <label for="statusFilter">{{ 'leads.list.statusLabel' | transloco }}</label>
           <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
             <option value="">All statuses</option>
             <option *ngFor="let s of allStatuses" [value]="s">{{ statusLabels[s] }}</option>
@@ -70,26 +70,26 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
 
       <!-- Table -->
       <div class="table-wrapper" *ngIf="!loading && leads.length > 0">
-        <table aria-label="Lead list">
+        <table [attr.aria-label]="'leads.list.ariaList' | transloco">
           <thead>
             <tr>
               <th scope="col">
                 <button class="sort-btn" (click)="sortBy('fullName')" type="button"
-                        [attr.aria-sort]="ariaSort('fullName')">Name</button>
+                        [attr.aria-sort]="ariaSort('fullName')">{{ 'leads.list.tableHeaders.name' | transloco }}</button>
               </th>
-              <th scope="col">Contact</th>
-              <th scope="col">Source</th>
+              <th scope="col">{{ 'leads.list.tableHeaders.contact' | transloco }}</th>
+              <th scope="col">{{ 'leads.list.tableHeaders.source' | transloco }}</th>
               <th scope="col">
                 <button class="sort-btn" (click)="sortBy('status')" type="button"
-                        [attr.aria-sort]="ariaSort('status')">Status</button>
+                        [attr.aria-sort]="ariaSort('status')">{{ 'leads.list.tableHeaders.status' | transloco }}</button>
               </th>
-              <th scope="col">Owner</th>
+              <th scope="col">{{ 'leads.list.tableHeaders.owner' | transloco }}</th>
               <th scope="col">Last contact</th>
               <th scope="col">
                 <button class="sort-btn" (click)="sortBy('createdAt')" type="button"
-                        [attr.aria-sort]="ariaSort('createdAt')">Created</button>
+                        [attr.aria-sort]="ariaSort('createdAt')">{{ 'leads.list.tableHeaders.created' | transloco }}</button>
               </th>
-              <th scope="col"><span class="sr-only">Actions</span></th>
+              <th scope="col"><span class="sr-only">{{ 'leads.list.tableHeaders.actions' | transloco }}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -124,12 +124,12 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
       </div>
 
       <!-- Pagination -->
-      <nav class="pagination" aria-label="Lead list pagination" *ngIf="totalPages > 1">
-        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 0"
-                aria-label="Previous page">&lsaquo;</button>
-        <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
-        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages - 1"
-                aria-label="Next page">&rsaquo;</button>
+      <nav class="pagination" [attr.aria-label]="'leads.list.ariaPagination' | transloco" *ngIf="totalPages > 1">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
+                [attr.aria-label]="'common.pagination.previousPage' | transloco">&lsaquo;</button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages"
+                [attr.aria-label]="'common.pagination.nextPage' | transloco">&rsaquo;</button>
       </nav>
       <p class="total-count" *ngIf="!loading">
         {{ totalElements }} lead{{ totalElements !== 1 ? 's' : '' }} found

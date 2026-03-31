@@ -81,7 +81,7 @@
           <textarea
             [(ngModel)]="adminNotes"
             rows="3"
-            placeholder="Add notes (optional for approval, required for rejection)"
+            [placeholder]="'admin.leave.adminNotesPlaceholder' | transloco"
             [disabled]="isProcessing"
           ></textarea>
         </div>

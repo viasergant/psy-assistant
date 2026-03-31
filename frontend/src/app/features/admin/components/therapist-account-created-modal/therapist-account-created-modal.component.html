@@ -12,7 +12,7 @@
   <ng-template pTemplate="header">
     <div class="dialog-header">
       <i class="pi pi-check-circle success-icon"></i>
-      <h2>Therapist Account Created</h2>
+      <h2>{{ 'admin.therapists.accountCreated.title' | transloco }}</h2>
     </div>
   </ng-template>
 
@@ -24,29 +24,29 @@
     <div class="credentials-section">
       <div class="credentials-header">
         <i class="pi pi-key"></i>
-        <span>TEMPORARY LOGIN CREDENTIALS</span>
+        <span>{{ 'admin.therapists.accountCreated.credentialsLabel' | transloco }}</span>
       </div>
 
       <div class="credentials-body">
         <div class="credential-row">
-          <span class="label">Email:</span>
+          <span class="label">{{ 'admin.therapists.accountCreated.emailLabel' | transloco }}:</span>
           <span class="value">{{ userData?.email }}</span>
         </div>
         <div class="credential-row">
-          <span class="label">Password:</span>
+          <span class="label">{{ 'admin.therapists.accountCreated.passwordLabel' | transloco }}:</span>
           <span class="value password">{{ userData?.temporaryPassword }}</span>
         </div>
       </div>
 
       <div class="button-group">
         <p-button
-          label="Copy Credentials"
+          [label]="'admin.therapists.accountCreated.copyCredentials' | transloco"
           icon="pi pi-copy"
           (onClick)="copyCredentials()"
           styleClass="p-button-outlined copy-btn">
         </p-button>
         <p-button
-          label="Copy Password Only"
+          [label]="'admin.therapists.accountCreated.copyPassword' | transloco"
           icon="pi pi-copy"
           (onClick)="copyPassword()"
           styleClass="p-button-outlined copy-btn">
@@ -79,13 +79,13 @@
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
       <p-button
-        label="View Therapist Profile"
+        [label]="'admin.therapists.accountCreated.viewProfile' | transloco"
         icon="pi pi-user"
         (onClick)="onViewProfile()"
         styleClass="p-button-text">
       </p-button>
       <p-button
-        label="Done"
+        [label]="'admin.therapists.accountCreated.done' | transloco"
         icon="pi pi-check"
         (onClick)="onClose()"
         styleClass="p-button-primary">

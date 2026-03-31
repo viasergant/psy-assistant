@@ -1,87 +1,483 @@
 {
   "app.title": "PSY Assistant CRM",
-  "nav.leads": "Leads",
-  "nav.clients": "Clients",
-  "nav.schedule": "Schedule",
-  "nav.sessions": "Sessions",
-  "nav.billing": "Billing",
-  "nav.reports": "Reports",
-  "nav.admin": "Admin",
-  "nav.logout": "Logout",
-  "admin.title": "Administration",
-  "admin.tabs.users": "Users",
-  "admin.tabs.therapists": "Therapists",
-  "admin.tabs.leaveRequests": "Pending Requests",
-  "schedule.title": "Schedule Management",
-  "schedule.mySchedule": "My Schedule",
-  "schedule.therapistSchedule": "{{name}}'s Schedule",
-  "schedule.configureSchedule": "Configure Schedule",
-  "schedule.requestLeave": "Request Leave",
-  "schedule.loading": "Loading schedule...",
-  "schedule.error": "Failed to load schedule. Please try again.",
-  "schedule.retry": "Retry",
-  "schedule.calendar.today": "Today",
-  "schedule.calendar.previousWeek": "Previous week",
-  "schedule.calendar.nextWeek": "Next week",
-  "schedule.calendar.weekRange": "{{start}} - {{end}}",
-  "schedule.legend.available": "Available",
-  "schedule.legend.unavailable": "Unavailable",
-  "schedule.legend.override": "Override",
-  "schedule.legend.leave": "Leave",
-  "schedule.legend.booked": "Booked",
-  "schedule.recurring.title": "Weekly Working Hours",
-  "schedule.recurring.monday": "Monday",
-  "schedule.recurring.tuesday": "Tuesday not",
-  "schedule.recurring.wednesday": "Wednesday",
-  "schedule.recurring.thursday": "Thursday",
-  "schedule.recurring.friday": "Friday",
-  "schedule.recurring.saturday": "Saturday",
-  "schedule.recurring.sunday": "Sunday",
-  "schedule.recurring.unavailable": "Unavailable",
-  "schedule.recurring.addException": "Add Exception",
-  "schedule.recurring.startTime": "Start Time",
-  "schedule.recurring.endTime": "End Time",
-  "schedule.override.title": "Specific Date Overrides",
-  "schedule.override.addOverride": "Add Override",
-  "schedule.override.edit": "Edit",
-  "schedule.override.delete": "Delete",
-  "schedule.override.unavailable": "Unavailable",
-  "schedule.override.extendedHours": "Extended hours",
-  "schedule.override.reason": "Reason",
-  "schedule.leave.title": "Leave Periods",
-  "schedule.leave.requestLeave": "Request Leave",
-  "schedule.leave.viewDetails": "View Details",
-  "schedule.leave.cancel": "Cancel",
-  "schedule.leave.approve": "Approve",
-  "schedule.leave.reject": "Reject",
-  "schedule.leave.type": "Leave Type",
-  "schedule.leave.dateRange": "Date Range",
-  "schedule.leave.startDate": "Start Date",
-  "schedule.leave.endDate": "End Date",
-  "schedule.leave.notes": "Notes",
-  "schedule.leave.submit": "Submit",
-  "schedule.leave.conflicts": "Conflicts Detected",
-  "schedule.leave.conflictWarning": "The following appointments will be affected:",
-  "schedule.leave.noConflicts": "No conflicts found",
-  "schedule.leaveType.annual": "Annual Leave",
-  "schedule.leaveType.sick": "Sick Leave",
-  "schedule.leaveType.publicHoliday": "Public Holiday",
-  "schedule.leaveType.other": "Other",
-  "schedule.leaveStatus.pending": "Pending",
-  "schedule.leaveStatus.approved": "Approved",
-  "schedule.leaveStatus.rejected": "Rejected",
-  "schedule.leaveStatus.cancelled": "Cancelled",
-  "schedule.validation.startBeforeEnd": "Start time must be before end time",
-  "schedule.validation.endDateAfterStart": "End date must be after start date",
-  "schedule.validation.required": "This field is required",
-  "schedule.validation.invalidTime": "Invalid time format",
-  "admin.leave.pendingRequests": "Pending Leave Requests",
-  "admin.leave.noPendingRequests": "No pending leave requests",
-  "admin.leave.reviewRequest": "Review Leave Request",
-  "admin.leave.therapist": "Therapist",
-  "admin.leave.submittedAt": "Submitted At",
-  "admin.leave.therapistNotes": "Therapist Notes",
-  "admin.leave.adminNotes": "Admin Notes / Reason",
-  "admin.leave.selectRequestToReview": "Select a request from the list to review",
-  "common.cancel": "Cancel"
+  "common": {
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "confirm": "Confirm",
+      "back": "Back",
+      "next": "Next",
+      "submit": "Submit",
+      "retry": "Retry",
+      "close": "Close",
+      "copy": "Copy",
+      "done": "Done",
+      "continue": "Continue",
+      "previous": "Previous",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
+    "validation": {
+      "required": "This field is required",
+      "email": "Please enter a valid email address",
+      "phone": "Please enter a valid phone number",
+      "minLength": "Must be at least {{min}} characters",
+      "maxLength": "Must not exceed {{max}} characters",
+      "pattern": "Invalid format",
+      "passwordMismatch": "Passwords do not match"
+    },
+    "status": {
+      "loading": "Loading...",
+      "success": "Success",
+      "error": "Error",
+      "warning": "Warning",
+      "info": "Info"
+    },
+    "aria": {
+      "closeErrorMessage": "Close error message",
+      "previousPage": "Previous page",
+      "nextPage": "Next page",
+      "closeModal": "Close modal",
+      "editItem": "Edit {{item}}",
+      "deleteItem": "Delete {{item}}",
+      "resetPassword": "Reset password for {{user}}"
+    },
+    "confirmation": {
+      "deleteTitle": "Confirm Deletion",
+      "deleteMessage": "Are you sure you want to delete this item?",
+      "unsavedChanges": "You have unsaved changes. Do you want to leave?"
+    },
+    "pagination": {
+      "showing": "Showing {{from}} to {{to}} of {{total}} items",
+      "itemsPerPage": "Items per page"
+    }
+  },
+  "nav": {
+    "leads": "Leads",
+    "clients": "Clients",
+    "schedule": "Schedule",
+    "sessions": "Sessions",
+    "billing": "Billing",
+    "reports": "Reports",
+    "admin": "Admin",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "loginButton": "Sign In",
+      "errors": {
+        "invalidCredentials": "Invalid email or password",
+        "accountLocked": "Account is locked. Contact administrator"
+      }
+    },
+    "firstTimeSetup": {
+      "title": "Welcome!",
+      "subtitle": "Before you begin, please set a secure password",
+      "currentPasswordLabel": "Current Temporary Password",
+      "currentPasswordPlaceholder": "Enter your temporary password",
+      "currentPasswordRequired": "Current password is required",
+      "newPasswordLabel": "New Password",
+      "newPasswordPlaceholder": "Enter your new password",
+      "newPasswordHint": "Minimum 10 characters with uppercase, lowercase, number, and special character",
+      "newPasswordRequired": "Password must be at least 10 characters long",
+      "confirmPasswordLabel": "Confirm New Password",
+      "confirmPasswordPlaceholder": "Re-enter your new password",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordMismatch": "Passwords do not match",
+      "passwordStrength": {
+        "prompt": "Choose a password",
+        "weak": "Weak",
+        "medium": "Medium",
+        "strong": "Strong"
+      },
+      "changePasswordButton": "Change Password & Continue"
+    }
+  },
+  "leads": {
+    "title": "Leads",
+    "list": {
+      "filterLabel": "Filter leads",
+      "statusLabel": "Status",
+      "statusAll": "All Statuses",
+      "statusNew": "New",
+      "statusContacted": "Contacted",
+      "statusQualified": "Qualified",
+      "statusConverted": "Converted",
+      "statusLost": "Lost",
+      "noLeads": "No leads found",
+      "ariaFilters": "Lead filters",
+      "ariaList": "Lead list",
+      "ariaPagination": "Lead list pagination",
+      "tableHeaders": {
+        "name": "Name",
+        "contact": "Contact",
+        "source": "Source",
+        "status": "Status",
+        "owner": "Owner",
+        "created": "Created",
+        "actions": "Actions"
+      }
+    },
+    "create": {
+      "title": "Create Lead",
+      "nameLabel": "Name",
+      "namePlaceholder": "Full name",
+      "contactTypeLabel": "Contact Type",
+      "contactTypeAriaLabel": "Contact type",
+      "contactTypeEmail": "Email",
+      "contactTypePhone": "Phone",
+      "contactValueLabel": "Contact",
+      "contactValuePlaceholder": "email or phone",
+      "sourceLabel": "Source",
+      "sourcePlaceholder": "e.g. referral, website",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Optional notes"
+    },
+    "edit": {
+      "title": "Edit Lead"
+    },
+    "convert": {
+      "title": "Convert Lead to Client",
+      "notesLabel": "Additional Notes",
+      "notesPlaceholder": "Additional notes for the client record"
+    }
+  },
+  "clients": {
+    "title": "Clients",
+    "detail": {
+      "badge": "Client",
+      "editProfile": "Edit profile",
+      "cancel": "Cancel",
+      "saveChanges": "Save changes",
+      "saving": "Saving...",
+      "sections": {
+        "basicInfo": "Basic Information",
+        "contactDetails": "Contact Details",
+        "address": "Address",
+        "referral": "Referral Information",
+        "emergencyContact": "Emergency Contact",
+        "commPrefs": "Communication Preferences",
+        "tags": "Tags",
+        "photo": "Profile Photo",
+        "notes": "Profile Notes"
+      },
+      "fields": {
+        "preferredName": "Preferred name",
+        "dateOfBirth": "Date of birth",
+        "pronouns": "Pronouns",
+        "gender": "Gender",
+        "email": "Email",
+        "phone": "Phone",
+        "secondaryPhone": "Secondary phone",
+        "addressLine1": "Address line 1",
+        "addressLine2": "Address line 2",
+        "city": "City",
+        "region": "Region",
+        "postalCode": "Postal code",
+        "country": "Country",
+        "referralSource": "Referral source",
+        "referralContact": "Referral contact",
+        "referralNotes": "Referral notes",
+        "emergencyName": "Name",
+        "emergencyRelationship": "Relationship",
+        "emergencyPhone": "Phone",
+        "emergencyEmail": "Email",
+        "preferredMethod": "Preferred method",
+        "allowPhone": "Allow phone",
+        "allowSms": "Allow SMS",
+        "allowEmail": "Allow email",
+        "allowVoicemail": "Allow voicemail",
+        "notes": "Notes"
+      },
+      "tags": {
+        "addTagPlaceholder": "Add tag and press Enter",
+        "saveTags": "Save tags",
+        "savingTags": "Saving tags...",
+        "suggestions": "Suggestions:"
+      }
+    }
+  },
+  "therapists": {
+    "wizard": {
+      "title": "Complete Your Profile",
+      "subtitle": "Help us understand your expertise and preferences",
+      "personalInfo": {
+        "title": "Personal Information",
+        "subtitle": "Basic information about you",
+        "fullNameLabel": "Full Name",
+        "fullNamePlaceholder": "Enter your full name",
+        "phoneLabel": "Phone Number",
+        "phonePlaceholder": "+1234567890",
+        "contactPhoneLabel": "Contact Phone (if different)",
+        "bioLabel": "Professional Bio",
+        "bioPlaceholder": "Tell us about your experience and approach...",
+        "bioCharCount": "{{count}}/500",
+        "required": "*"
+      },
+      "credentials": {
+        "title": "Professional Credentials",
+        "subtitle": "Your qualifications and experience",
+        "titleLabel": "Professional Title",
+        "titlePlaceholder": "Select your title",
+        "yearsExperienceLabel": "Years of Experience",
+        "yearsExperiencePlaceholder": "0",
+        "licenseNumbersLabel": "License Numbers",
+        "licenseNumbersPlaceholder": "Enter license numbers (one per line)",
+        "certificationsLabel": "Certifications",
+        "certificationsPlaceholder": "List your credentials (e.g., PhD, PsyD, LMFT, etc.)",
+        "educationLabel": "Education",
+        "educationPlaceholder": "Your educational background"
+      },
+      "specializations": {
+        "title": "Specializations & Languages",
+        "subtitle": "Your areas of expertise",
+        "specializationsLabel": "Specializations",
+        "specializationsPlaceholder": "Select your specializations",
+        "specializationsFilterPlaceholder": "Search specializations",
+        "languagesLabel": "Languages",
+        "languagesPlaceholder": "Select languages you speak",
+        "languagesFilterPlaceholder": "Search languages"
+      },
+      "preferences": {
+        "title": "Session Preferences",
+        "subtitle": "Your session settings and rates",
+        "sessionDurationLabel": "Default Session Duration",
+        "sessionDurationPlaceholder": "Select duration",
+        "hourlyRateLabel": "Hourly Rate (USD)",
+        "hourlyRatePlaceholder": "0.00",
+        "accept": "Accept all recommended settings"
+      },
+      "actions": {
+        "saveAndContinue": "Save & Continue",
+        "completeLater": "Complete Later",
+        "back": "Back",
+        "completeProfile": "Complete Profile"
+      }
+    },
+    "types": {
+      "psychologist": "Psychologist",
+      "psychiatrist": "Psychiatrist",
+      "therapist": "Therapist",
+      "counselor": "Counselor"
+    },
+    "list": {
+      "ariaFilters": "Therapist filters",
+      "ariaList": "Therapist list",
+      "ariaPagination": "Therapist list pagination"
+    }
+  },
+  "schedule": {
+    "title": "Schedule Management",
+    "mySchedule": "My Schedule",
+    "therapistSchedule": "{{name}}'s Schedule",
+    "configureSchedule": "Configure Schedule",
+    "requestLeave": "Request Leave",
+    "loading": "Loading schedule...",
+    "error": "Failed to load schedule. Please try again.",
+    "retry": "Retry",
+    "calendar": {
+      "today": "Today",
+      "previousWeek": "Previous week",
+      "nextWeek": "Next week",
+      "weekRange": "{{start}} - {{end}}"
+    },
+    "legend": {
+      "available": "Available",
+      "unavailable": "Unavailable",
+      "override": "Override",
+      "leave": "Leave",
+      "booked": "Booked"
+    },
+    "recurring": {
+      "title": "Weekly Working Hours",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday",
+      "unavailable": "Unavailable",
+      "addException": "Add Exception",
+      "startTime": "Start Time",
+      "endTime": "End Time"
+    },
+    "override": {
+      "title": "Specific Date Overrides",
+      "addOverride": "Add Override",
+      "edit": "Edit",
+      "delete": "Delete",
+      "unavailable": "Unavailable",
+      "extendedHours": "Extended hours",
+      "reason": "Reason"
+    },
+    "leave": {
+      "title": "Leave Periods",
+      "requestLeave": "Request Leave",
+      "viewDetails": "View Details",
+      "cancel": "Cancel",
+      "approve": "Approve",
+      "reject": "Reject",
+      "type": "Leave Type",
+      "dateRange": "Date Range",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "notes": "Notes",
+      "notesPlaceholder": "Provide any additional information about your leave request",
+      "submit": "Submit",
+      "conflicts": "Conflicts Detected",
+      "conflictWarning": "The following appointments will be affected:",
+      "noConflicts": "No conflicts found"
+    },
+    "leaveType": {
+      "annual": "Annual Leave",
+      "sick": "Sick Leave",
+      "publicHoliday": "Public Holiday",
+      "other": "Other"
+    },
+    "leaveStatus": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "validation": {
+      "startBeforeEnd": "Start time must be before end time",
+      "endDateAfterStart": "End date must be after start date",
+      "required": "This field is required",
+      "invalidTime": "Invalid time format"
+    }
+  },
+  "admin": {
+    "title": "Administration",
+    "tabs": {
+      "users": "Users",
+      "therapists": "Therapists",
+      "leaveRequests": "Pending Requests"
+    },
+    "users": {
+      "list": {
+        "roleLabel": "Role",
+        "statusLabel": "Status",
+        "statusActive": "Active",
+        "statusInactive": "Inactive",
+        "ariaFilters": "User filters",
+        "ariaList": "User list",
+        "ariaPagination": "User list pagination",
+        "tableHeaders": {
+          "email": "Email",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "closeError": "Close error message"
+      },
+      "create": {
+        "done": "Done"
+      },
+      "edit": {
+        "roleLabel": "Role"
+      }
+    },
+    "therapists": {
+      "list": {
+        "roleLabel": "Role",
+        "statusLabel": "Status",
+        "statusActive": "Active",
+        "statusInactive": "Inactive",
+        "ariaFilters": "Therapist filters",
+        "ariaList": "Therapist list",
+        "ariaPagination": "Therapist list pagination",
+        "tableHeaders": {
+          "name": "Name",
+          "email": "Email",
+          "phone": "Phone",
+          "specializations": "Specializations",
+          "status": "Status",
+          "created": "Created",
+          "actions": "Actions"
+        }
+      },
+      "detail": {
+        "sections": {
+          "biography": "Biography",
+          "specializations": "Specializations",
+          "languages": "Languages",
+          "metadata": "Metadata"
+        },
+        "fields": {
+          "email": "Email",
+          "phone": "Phone",
+          "created": "Created",
+          "version": "Version"
+        }
+      },
+      "create": {
+        "title": "Create Therapist Account",
+        "fullNameLabel": "Full Name",
+        "fullNamePlaceholder": "Enter therapist's full name",
+        "emailLabel": "Email",
+        "emailPlaceholder": "therapist@example.com",
+        "phoneLabel": "Phone Number",
+        "phonePlaceholder": "+1 (555) 123-4567"
+      },
+      "edit": {
+        "bioLabel": "Professional Bio",
+        "bioPlaceholder": "Brief professional biography..."
+      },
+      "accountCreated": {
+        "title": "Therapist Account Successfully Created",
+        "subtitle": "The account has been created with an auto-generated temporary password",
+        "credentialsLabel": "Credentials",
+        "emailLabel": "Email",
+        "passwordLabel": "Temporary Password",
+        "copyCredentials": "Copy Credentials",
+        "copyPassword": "Copy Password Only",
+        "instructions": "Share these credentials securely with the therapist. They will be required to change their password on first login.",
+        "reminder": "This password will not be shown again. Make sure to save it securely.",
+        "viewProfile": "View Therapist Profile",
+        "done": "Done"
+      }
+    },
+    "leave": {
+      "pendingRequests": "Pending Leave Requests",
+      "noPendingRequests": "No pending leave requests",
+      "reviewRequest": "Review Leave Request",
+      "therapist": "Therapist",
+      "submittedAt": "Submitted At",
+      "therapistNotes": "Therapist Notes",
+      "adminNotes": "Admin Notes / Reason",
+      "adminNotesPlaceholder": "Add notes (optional for approval, required for rejection)",
+      "selectRequestToReview": "Select a request from the list to review"
+    }
+  },
+  "sessions": {
+    "title": "Sessions"
+  },
+  "billing": {
+    "title": "Billing"
+  },
+  "reports": {
+    "title": "Reports"
+  },
+  "errors": {
+    "http": {
+      "400": "Bad Request",
+      "401": "Unauthorized",
+      "403": "Forbidden",
+      "404": "Page Not Found",
+      "500": "Internal Server Error"
+    },
+    "validation": {
+      "generic": "Please check your input and try again"
+    }
+  }
 }

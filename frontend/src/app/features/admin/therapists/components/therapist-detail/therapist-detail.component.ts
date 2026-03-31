@@ -43,11 +43,11 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
           <h2>Contact Information</h2>
           <div class="info-grid">
             <div class="info-item">
-              <label>Email</label>
+              <label>{{ 'admin.therapists.detail.fields.email' | transloco }}</label>
               <p>{{ therapist.email }}</p>
             </div>
             <div class="info-item">
-              <label>Phone</label>
+              <label>{{ 'admin.therapists.detail.fields.phone' | transloco }}</label>
               <p>{{ therapist.phone || '—' }}</p>
             </div>
             <div class="info-item">
@@ -63,13 +63,13 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
 
         <!-- Biography -->
         <section class="profile-section" *ngIf="therapist.bio">
-          <h2>Biography</h2>
+          <h2>{{ 'admin.therapists.detail.sections.biography' | transloco }}</h2>
           <p class="bio-text">{{ therapist.bio }}</p>
         </section>
 
         <!-- Specializations -->
         <section class="profile-section">
-          <h2>Specializations</h2>
+          <h2>{{ 'admin.therapists.detail.sections.specializations' | transloco }}</h2>
           <div class="chips-container" *ngIf="therapist.specializations.length > 0">
             <span *ngFor="let spec of therapist.specializations" class="chip">
               {{ spec.name }}
@@ -80,7 +80,7 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
 
         <!-- Languages -->
         <section class="profile-section">
-          <h2>Languages</h2>
+          <h2>{{ 'admin.therapists.detail.sections.languages' | transloco }}</h2>
           <div class="chips-container" *ngIf="therapist.languages.length > 0">
             <span *ngFor="let lang of therapist.languages" class="chip">
               {{ lang.name }}
@@ -91,10 +91,10 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
 
         <!-- Metadata -->
         <section class="profile-section metadata">
-          <h2>Metadata</h2>
+          <h2>{{ 'admin.therapists.detail.sections.metadata' | transloco }}</h2>
           <div class="info-grid">
             <div class="info-item">
-              <label>Created</label>
+              <label>{{ 'admin.therapists.detail.fields.created' | transloco }}</label>
               <p>{{ therapist.createdAt | date:'dd MMM yyyy, HH:mm' }}</p>
             </div>
             <div class="info-item">
@@ -110,7 +110,7 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
               <p>{{ therapist.lastModifiedBy }}</p>
             </div>
             <div class="info-item">
-              <label>Version</label>
+              <label>{{ 'admin.therapists.detail.fields.version' | transloco }}</label>
               <p>{{ therapist.version }}</p>
             </div>
           </div>

@@ -5,7 +5,7 @@
       <button type="button" class="btn-icon" (click)="previousWeek()" title="Previous week">
         <span class="icon">←</span>
       </button>
-      <button type="button" class="btn-today" (click)="goToToday()">Today</button>
+      <button type="button" class="btn-today" (click)="goToToday()">{{ 'schedule.calendar.today' | transloco }}</button>
       <button type="button" class="btn-icon" (click)="nextWeek()" title="Next week">
         <span class="icon">→</span>
       </button>
@@ -49,10 +49,10 @@
             [title]="getCellTitle(cell)"
           >
             <div class="cell-content" *ngIf="cell.isLeave || cell.hasOverride || cell.isBooked">
-              <span *ngIf="cell.isLeave && cell.leaveStatus === 'PENDING'" class="cell-label">Pending</span>
-              <span *ngIf="cell.isLeave && cell.leaveStatus === 'APPROVED'" class="cell-label">Leave</span>
-              <span *ngIf="cell.hasOverride" class="cell-label">Override</span>
-              <span *ngIf="cell.isBooked" class="cell-label">Booked</span>
+              <span *ngIf="cell.isLeave && cell.leaveStatus === 'PENDING'" class="cell-label">{{ 'schedule.leaveStatus.pending' | transloco }}</span>
+              <span *ngIf="cell.isLeave && cell.leaveStatus === 'APPROVED'" class="cell-label">{{ 'schedule.legend.leave' | transloco }}</span>
+              <span *ngIf="cell.hasOverride" class="cell-label">{{ 'schedule.legend.override' | transloco }}</span>
+              <span *ngIf="cell.isBooked" class="cell-label">{{ 'schedule.legend.booked' | transloco }}</span>
             </div>
           </div>
         </div>
@@ -64,27 +64,27 @@
   <footer class="calendar-legend">
     <div class="legend-item">
       <span class="legend-indicator cell-available"></span>
-      <span class="legend-label">Available</span>
+      <span class="legend-label">{{ 'schedule.legend.available' | transloco }}</span>
     </div>
     <div class="legend-item">
       <span class="legend-indicator cell-unavailable"></span>
-      <span class="legend-label">Unavailable</span>
+      <span class="legend-label">{{ 'schedule.legend.unavailable' | transloco }}</span>
     </div>
     <div class="legend-item">
       <span class="legend-indicator cell-override"></span>
-      <span class="legend-label">Override</span>
+      <span class="legend-label">{{ 'schedule.legend.override' | transloco }}</span>
     </div>
     <div class="legend-item">
       <span class="legend-indicator cell-leave"></span>
-      <span class="legend-label">Leave</span>
+      <span class="legend-label">{{ 'schedule.legend.leave' | transloco }}</span>
     </div>
     <div class="legend-item">
       <span class="legend-indicator cell-leave-pending"></span>
-      <span class="legend-label">Leave (Pending)</span>
+      <span class="legend-label">{{ 'schedule.leaveStatus.pending' | transloco }}</span>
     </div>
     <div class="legend-item">
       <span class="legend-indicator cell-booked"></span>
-      <span class="legend-label">Booked</span>
+      <span class="legend-label">{{ 'schedule.legend.booked' | transloco }}</span>
     </div>
   </footer>
 </div>

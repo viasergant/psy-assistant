@@ -10,6 +10,6 @@ public record AvailabilitySlotResponse(
     LocalDate date,
     LocalTime startTime,
     LocalTime endTime,
-    String status  // "available", "booked" (future extension)
+    Boolean available  // true if slot is available, false if booked
 ) {
 }

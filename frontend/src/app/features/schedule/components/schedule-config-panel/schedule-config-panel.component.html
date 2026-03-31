@@ -1,0 +1,120 @@
+<div class="config-panel" [@slideIn]>
+  <header class="config-header">
+    <h2 class="config-title">Schedule Configuration</h2>
+    <button class="btn-close" (click)="onClose()" type="button">
+      <i class="pi pi-times"></i>
+    </button>
+  </header>
+  
+  <div class="config-body" *ngIf="!isLoading">
+    <!-- Section A: Recurring Schedule -->
+    <section class="config-section">
+      <h3 class="section-title">
+        <i class="pi pi-calendar"></i>
+        Weekly Working Hours
+      </h3>
+      
+      <div class="recurring-schedule">
+        <div class="day-row" *ngFor="let day of weekDays">
+          <label class="day-checkbox">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="day.enabled"
+              (change)="onDayToggle(day)" />
+            <span class="checkbox-custom"></span>
+            <span class="day-label">{{ day.name }}</span>
+          </label>
+          
+          <div class="time-pickers" *ngIf="day.enabled">
+            <select 
+              class="time-select"
+              [(ngModel)]="day.startTime"
+              [disabled]="!day.enabled">
+              <option *ngFor="let time of timeOptions" [value]="time">
+                {{ time }}
+              </option>
+            </select>
+            
+            <span class="time-separator">—</span>
+            
+            <select 
+              class="time-select"
+              [(ngModel)]="day.endTime"
+              [disabled]="!day.enabled">
+              <option *ngFor="let time of timeOptions" [value]="time">
+                {{ time }}
+              </option>
+            </select>
+          </div>
+          
+          <span class="unavailable-label" *ngIf="!day.enabled">
+            Unavailable
+          </span>
+        </div>
+      </div>
+      
+      <button 
+        class="btn-primary btn-save" 
+        (click)="applyRecurringSchedule()"
+        [disabled]="isSaving"
+        type="button">
+        <i class="pi pi-check" *ngIf="!isSaving"></i>
+        <i class="pi pi-spinner pi-spin" *ngIf="isSaving"></i>
+        {{ isSaving ? 'Saving...' : 'Save Weekly Schedule' }}
+      </button>
+    </section>
+    
+    <!-- Section B: Overrides -->
+    <section class="config-section">
+      <h3 class="section-title">
+        <i class="pi pi-exclamation-triangle"></i>
+        Schedule Overrides
+      </h3>
+      
+      <div class="overrides-list" *ngIf="overrides.length > 0; else noOverrides">
+        <div class="override-card" *ngFor="let override of overrides">
+          <div class="override-header">
+            <span class="override-date">
+              📅 {{ override.date }}
+            </span>
+            <span 
+              class="override-badge" 
+              [ngClass]="override.available ? 'badge--available' : 'badge--unavailable'">
+              {{ getOverrideType(override) }}
+            </span>
+          </div>
+          
+          <div class="override-body">
+            <p class="override-description">
+              {{ getOverrideDescription(override) }}
+            </p>
+          </div>
+          
+          <div class="override-actions">
+            <button 
+              class="btn-text btn-text--danger" 
+              (click)="deleteOverride(override)"
+              type="button">
+              <i class="pi pi-trash"></i>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <ng-template #noOverrides>
+        <p class="empty-message">No schedule overrides configured.</p>
+      </ng-template>
+      
+      <p class="help-text">
+        <i class="pi pi-info-circle"></i>
+        Override management coming soon. For now, you can delete existing overrides.
+      </p>
+    </section>
+  </div>
+  
+  <div class="config-loading" *ngIf="isLoading">
+    <i class="pi pi-spinner pi-spin"></i>
+    <p>Loading schedule...</p>
+  </div>
+</div>

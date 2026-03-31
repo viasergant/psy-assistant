@@ -5,7 +5,8 @@ import {
   DayOfWeek,
   getDayLabel,
   AvailabilitySlot,
-  getDayOfWeek
+  getDayOfWeek,
+  LeaveStatus
 } from '../../models/schedule.model';
 import { AvailabilityService } from '../../services/availability.service';
 import { startOfWeek, addDays, format, isSameDay, parseISO } from 'date-fns';
@@ -30,6 +31,7 @@ interface CalendarCell {
   available: boolean;
   hasOverride: boolean;
   isLeave: boolean;
+  leaveStatus?: 'PENDING' | 'APPROVED';
   isBooked: boolean;
 }
 
@@ -110,18 +112,22 @@ export class ScheduleCalendarComponent implements OnInit {
 
   /**
    * Load availability data from backend
+   * Public so it can be called by parent component after config changes
    */
-  private loadAvailability(): void {
+  public loadAvailability(): void {
     if (!this.therapistProfileId) return;
 
     this.loading = true;
     const startDate = format(this.currentWeekStart, 'yyyy-MM-dd');
     const endDate = format(addDays(this.currentWeekStart, 6), 'yyyy-MM-dd');
 
+    console.log(`Loading availability for therapist ${this.therapistProfileId} from ${startDate} to ${endDate}`);
+
     this.availabilityService
       .getAvailableSlots(this.therapistProfileId, startDate, endDate)
       .subscribe({
         next: slots => {
+          console.log(`Received ${slots.length} available slots:`, slots);
           this.buildCalendarGrid(slots);
           this.loading = false;
         },
@@ -142,13 +148,15 @@ export class ScheduleCalendarComponent implements OnInit {
       const row: CalendarCell[] = [];
 
       for (const day of this.weekDays) {
+        // Normalize time format: backend returns "HH:mm:ss", frontend uses "HH:mm"
         const slot = availabilitySlots.find(
           s =>
             s.date === day.dateString &&
-            s.startTime === timeSlot.timeString
+            s.startTime.substring(0, 5) === timeSlot.timeString
         );
 
-        const isLeave = this.isDateInLeave(day.date);
+        const isLeave = this.getLeaveStatusForDate(day.date) !== null;
+        const leaveStatus = this.getLeaveStatusForDate(day.date);
         const hasOverride = this.hasOverrideForDate(day.date);
         const available = slot?.available ?? false;
 
@@ -158,6 +166,7 @@ export class ScheduleCalendarComponent implements OnInit {
           available,
           hasOverride,
           isLeave,
+          leaveStatus: leaveStatus || undefined,
           isBooked: false // TODO: integrate with appointment data
         });
       }
@@ -167,18 +176,25 @@ export class ScheduleCalendarComponent implements OnInit {
   }
 
   /**
-   * Check if date falls within a leave period
+   * Check if date falls within a leave period and return status
    */
-  private isDateInLeave(date: Date): boolean {
-    if (!this.schedule?.leavePeriodsup) return false;
+  private getLeaveStatusForDate(date: Date): 'PENDING' | 'APPROVED' | null {
+    if (!this.schedule?.leavePeriods) return null;
 
-    return this.schedule.leavePeriodsup.some(leave => {
-      if (leave.status !== 'APPROVED') return false;
+    for (const leave of this.schedule.leavePeriods) {
+      // Only show PENDING and APPROVED leave (not REJECTED or CANCELLED)
+      if (leave.status !== 'PENDING' && leave.status !== 'APPROVED') {
+        continue;
+      }
 
       const start = parseISO(leave.startDate);
       const end = parseISO(leave.endDate);
-      return date >= start && date <= end;
-    });
+      if (date >= start && date <= end) {
+        return leave.status === 'APPROVED' ? 'APPROVED' : 'PENDING';
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -232,7 +248,9 @@ export class ScheduleCalendarComponent implements OnInit {
    * Get CSS class for calendar cell
    */
   getCellClass(cell: CalendarCell): string {
-    if (cell.isLeave) return 'cell-leave';
+    if (cell.isLeave) {
+      return cell.leaveStatus === 'PENDING' ? 'cell-leave-pending' : 'cell-leave';
+    }
     if (cell.isBooked) return 'cell-booked';
     if (cell.hasOverride) return 'cell-override';
     if (cell.available) return 'cell-available';
@@ -243,7 +261,9 @@ export class ScheduleCalendarComponent implements OnInit {
    * Get tooltip text for calendar cell
    */
   getCellTitle(cell: CalendarCell): string {
-    if (cell.isLeave) return 'On leave';
+    if (cell.isLeave) {
+      return cell.leaveStatus === 'PENDING' ? 'Leave request pending approval' : 'On leave (approved)';
+    }
     if (cell.isBooked) return 'Appointment booked';
     if (cell.hasOverride) return 'Schedule override';
     if (cell.available) return 'Available';

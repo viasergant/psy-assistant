@@ -27,7 +27,8 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Role-based access control:
  * <ul>
- *     <li>SYSTEM_ADMINISTRATOR: approve, reject, view all</li>
+ *     <li>SYSTEM_ADMINISTRATOR: full access - submit, approve, reject, cancel, view all</li>
+ *     <li>RECEPTION_ADMIN_STAFF: submit, cancel, view</li>
  *     <li>THERAPIST: submit, cancel, view own</li>
  * </ul>
  */
@@ -47,14 +48,14 @@ public class TherapistLeaveController {
     }
 
     /**
-     * Submits a new leave request (therapist).
+     * Submits a new leave request.
      *
      * @param therapistProfileId therapist profile UUID
      * @param request leave request details
      * @return created leave request
      */
     @PostMapping("/leave")
-    @PreAuthorize("hasRole('THERAPIST')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<TherapistLeave> submitLeaveRequest(
         @PathVariable final UUID therapistProfileId,
         @Valid @RequestBody final LeaveRequestSubmission request
@@ -117,13 +118,13 @@ public class TherapistLeaveController {
     }
 
     /**
-     * Cancels a leave request (therapist).
+     * Cancels a leave request.
      *
      * @param leaveId leave request UUID
      * @return updated leave request
      */
     @PutMapping("/leave/{leaveId}/cancel")
-    @PreAuthorize("hasRole('THERAPIST')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<TherapistLeave> cancelLeaveRequest(@PathVariable final UUID leaveId) {
         // TODO: Add access control check - therapist can only cancel their own requests
 
@@ -133,14 +134,14 @@ public class TherapistLeaveController {
     }
 
     /**
-     * Retrieves all leave periods for a therapist (therapist view).
+     * Retrieves all leave periods for a therapist.
      *
      * @param therapistProfileId therapist profile UUID
      * @param status optional status filter
      * @return list of leave periods
      */
     @GetMapping("/leave")
-    @PreAuthorize("hasAnyRole('THERAPIST', 'SYSTEM_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<List<TherapistLeave>> getLeaveForTherapist(
         @PathVariable final UUID therapistProfileId,
         @RequestParam(required = false) final LeaveStatus status
@@ -178,7 +179,7 @@ public class TherapistLeaveController {
      * @return conflict warning response
      */
     @GetMapping("/leave/conflicts")
-    @PreAuthorize("hasRole('THERAPIST')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<ConflictWarningResponse> checkLeaveConflicts(
         @PathVariable final UUID therapistProfileId,
         @RequestParam final String startDate,

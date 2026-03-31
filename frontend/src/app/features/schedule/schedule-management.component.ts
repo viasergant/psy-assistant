@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ScheduleCalendarComponent } from './components/schedule-calendar/schedule-calendar.component';
+import { ScheduleConfigPanelComponent } from './components/schedule-config-panel/schedule-config-panel.component';
+import { LeaveRequestDialogComponent } from './components/leave-request-dialog/leave-request-dialog.component';
 import { ScheduleApiService } from './services/schedule-api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { TherapistManagementService } from '../admin/therapists/services/therapist-management.service';
@@ -11,13 +13,19 @@ import {
   isSystemAdmin,
   canEditSchedule
 } from './guards/schedule.guard';
-import { ScheduleSummary } from './models/schedule.model';
+import { ScheduleSummary, Leave } from './models/schedule.model';
 import { TherapistProfile } from '../admin/therapists/models/therapist.model';
 
 @Component({
   selector: 'app-schedule-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, ScheduleCalendarComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ScheduleCalendarComponent,
+    ScheduleConfigPanelComponent,
+    LeaveRequestDialogComponent
+  ],
   template: `
     <div class="schedule-management">
       <header class="page-header">
@@ -77,6 +85,23 @@ import { TherapistProfile } from '../admin/therapists/models/therapist.model';
           </button>
         </div>
       </div>
+
+      <!-- Configuration Panel -->
+      <app-schedule-config-panel
+        *ngIf="showConfigPanel && therapistProfileId"
+        [therapistProfileId]="therapistProfileId"
+        [timezone]="schedule?.timezone || 'America/New_York'"
+        (close)="closeConfigPanel()"
+        (saved)="onConfigSaved()"
+      ></app-schedule-config-panel>
+
+      <!-- Leave Request Dialog -->
+      <app-leave-request-dialog
+        *ngIf="showLeaveRequestModal && therapistProfileId"
+        [therapistProfileId]="therapistProfileId"
+        (submitted)="onLeaveRequestSubmitted($event)"
+        (cancelled)="closeLeaveRequestModal()"
+      ></app-leave-request-dialog>
     </div>
   `,
   styles: [
@@ -201,6 +226,8 @@ import { TherapistProfile } from '../admin/therapists/models/therapist.model';
   ]
 })
 export class ScheduleManagementComponent implements OnInit {
+  @ViewChild(ScheduleCalendarComponent) calendarComponent?: ScheduleCalendarComponent;
+  
   therapistProfileId: string | null = null;
   selectedTherapistId: string | null = null;
   schedule: ScheduleSummary | null = null;
@@ -210,6 +237,8 @@ export class ScheduleManagementComponent implements OnInit {
   canEdit = false;
   loading = false;
   error: string | null = null;
+  showConfigPanel = false;
+  showLeaveRequestModal = false;
 
   constructor(
     private scheduleApiService: ScheduleApiService,
@@ -308,12 +337,48 @@ export class ScheduleManagementComponent implements OnInit {
   }
 
   openConfigPanel(): void {
-    // TODO: Open configuration side panel
-    console.log('Open config panel');
+    this.showConfigPanel = true;
+  }
+
+  closeConfigPanel(): void {
+    this.showConfigPanel = false;
+  }
+
+  onConfigSaved(): void {
+    console.log('Config saved - reloading schedule and calendar');
+    // Reload schedule after configuration changes
+    this.loadSchedule();
+    
+    // Wait a moment for DB transaction to commit, then reload calendar
+    // This ensures the availability query sees the new recurring schedule
+    console.log('Triggering calendar reload with slight delay...');
+    setTimeout(() => {
+      console.log('Now reloading calendar, calendarComponent exists:', !!this.calendarComponent);
+      this.calendarComponent?.loadAvailability();
+    }, 500);
   }
 
   openLeaveRequestModal(): void {
-    // TODO: Open leave request modal
-    console.log('Open leave request modal');
+    if (!this.therapistProfileId) {
+      console.warn('Cannot open leave request modal: no therapist profile ID');
+      return;
+    }
+    this.showLeaveRequestModal = true;
+  }
+
+  closeLeaveRequestModal(): void {
+    this.showLeaveRequestModal = false;
+  }
+
+  onLeaveRequestSubmitted(leave: Leave): void {
+    console.log('Leave request submitted:', leave);
+    this.showLeaveRequestModal = false;
+    
+    // Reload schedule to reflect the new leave request
+    this.loadSchedule();
+    
+    // Optionally show a success message
+    // You could add a toast notification here in the future
+    alert(`Leave request submitted successfully! Your request is now pending approval.`);
   }
 }

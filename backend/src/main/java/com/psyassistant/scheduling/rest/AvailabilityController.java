@@ -61,7 +61,7 @@ public class AvailabilityController {
                 slot.date(),
                 slot.startTime(),
                 slot.endTime(),
-                "available"  // Future: check against booked appointments
+                true  // Future: check against booked appointments
             ))
             .collect(Collectors.toList());
 

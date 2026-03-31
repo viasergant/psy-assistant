@@ -1,0 +1,85 @@
+<div class="schedule-calendar">
+  <!-- Calendar Header -->
+  <header class="calendar-header">
+    <div class="week-navigation">
+      <button type="button" class="btn-icon" (click)="previousWeek()" title="Previous week">
+        <span class="icon">←</span>
+      </button>
+      <button type="button" class="btn-today" (click)="goToToday()">Today</button>
+      <button type="button" class="btn-icon" (click)="nextWeek()" title="Next week">
+        <span class="icon">→</span>
+      </button>
+    </div>
+    <h2 class="week-range">{{ getWeekRangeDisplay() }}</h2>
+  </header>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading schedule...</p>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div *ngIf="!loading" class="calendar-grid-container">
+    <div class="calendar-grid">
+      <!-- Header Row with Day Labels -->
+      <div class="grid-header">
+        <div class="time-column-header"></div>
+        <div *ngFor="let day of weekDays" class="day-header">
+          <div class="day-name">{{ day.dayLabel }}</div>
+          <div class="day-date">{{ day.date | date: 'd' }}</div>
+        </div>
+      </div>
+
+      <!-- Time Slots Grid -->
+      <div class="grid-body">
+        <div *ngFor="let row of calendarCells; let rowIndex = index" class="grid-row">
+          <!-- Time Label Column -->
+          <div class="time-label" *ngIf="row[0]">
+            {{ row[0].timeSlot.displayTime }}
+          </div>
+
+          <!-- Day Columns -->
+          <div
+            *ngFor="let cell of row"
+            class="calendar-cell"
+            [class]="getCellClass(cell)"
+            [class.editable]="editable"
+            (click)="onCellClick(cell)"
+            [title]="getCellTitle(cell)"
+          >
+            <div class="cell-content" *ngIf="cell.isLeave || cell.hasOverride || cell.isBooked">
+              <span *ngIf="cell.isLeave" class="cell-label">Leave</span>
+              <span *ngIf="cell.hasOverride" class="cell-label">Override</span>
+              <span *ngIf="cell.isBooked" class="cell-label">Booked</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <footer class="calendar-legend">
+    <div class="legend-item">
+      <span class="legend-indicator cell-available"></span>
+      <span class="legend-label">Available</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-indicator cell-unavailable"></span>
+      <span class="legend-label">Unavailable</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-indicator cell-override"></span>
+      <span class="legend-label">Override</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-indicator cell-leave"></span>
+      <span class="legend-label">Leave</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-indicator cell-booked"></span>
+      <span class="legend-label">Booked</span>
+    </div>
+  </footer>
+</div>

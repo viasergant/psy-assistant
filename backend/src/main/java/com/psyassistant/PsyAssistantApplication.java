@@ -3,11 +3,17 @@ package com.psyassistant;
 import java.util.TimeZone;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * Entry point for the Psychological Assistance CRM backend application.
+ *
+ * <p><strong>@EnableAsync</strong>: Enables Spring's asynchronous method execution capability,
+ * used by {@link com.psyassistant.scheduling.service.AppointmentAuditService} for
+ * non-blocking audit logging.
  */
 @SpringBootApplication
+@EnableAsync
 public class PsyAssistantApplication {
 
     private static final String LEGACY_KYIV_TIME_ZONE = "Europe/Kiev";

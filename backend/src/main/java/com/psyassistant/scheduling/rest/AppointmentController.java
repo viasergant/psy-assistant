@@ -3,11 +3,14 @@ package com.psyassistant.scheduling.rest;
 import com.psyassistant.scheduling.domain.Appointment;
 import com.psyassistant.scheduling.dto.AppointmentMapper;
 import com.psyassistant.scheduling.dto.AppointmentResponse;
+import com.psyassistant.scheduling.dto.CancelAppointmentRequest;
 import com.psyassistant.scheduling.dto.CheckConflictsRequest;
 import com.psyassistant.scheduling.dto.ConflictCheckResponse;
 import com.psyassistant.scheduling.dto.CreateAppointmentRequest;
+import com.psyassistant.scheduling.dto.RescheduleAppointmentRequest;
 import com.psyassistant.scheduling.service.AppointmentService;
 import com.psyassistant.scheduling.service.ConflictDetectionService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +23,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,7 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/appointments")
 public class AppointmentController {
 
-    private static final Logger log = LoggerFactory.getLogger(AppointmentController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AppointmentController.class);
 
     private final AppointmentService appointmentService;
     private final ConflictDetectionService conflictDetectionService;
@@ -79,7 +85,7 @@ public class AppointmentController {
         final UUID actorUserId = getCurrentUserId();
         final String actorName = getCurrentUsername();
 
-        log.info("Creating appointment: therapist={}, client={}, startTime={}, duration={}, allowOverride={}",
+        LOG.info("Creating appointment: therapist={}, client={}, startTime={}, duration={}, allowOverride={}",
                 request.therapistProfileId(),
                 request.clientId(),
                 request.startTime(),
@@ -118,7 +124,7 @@ public class AppointmentController {
     public ResponseEntity<ConflictCheckResponse> checkConflicts(
             @Valid @RequestBody final CheckConflictsRequest request) {
 
-        log.debug("Checking conflicts: therapist={}, startTime={}, duration={}",
+        LOG.debug("Checking conflicts: therapist={}, startTime={}, duration={}",
                 request.therapistProfileId(),
                 request.startTime(),
                 request.durationMinutes());
@@ -141,6 +147,102 @@ public class AppointmentController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Retrieves an appointment by ID.
+     *
+     * @param appointmentId appointment UUID
+     * @return appointment details
+     * @throws EntityNotFoundException if not found (404 Not Found)
+     */
+    @GetMapping("/{appointmentId}")
+    @PreAuthorize("hasAnyRole('STAFF', 'THERAPIST', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<AppointmentResponse> getAppointment(
+            @PathVariable final UUID appointmentId) {
+
+        LOG.debug("Fetching appointment: id={}", appointmentId);
+
+        final Appointment appointment = appointmentService.getAppointment(appointmentId);
+        final AppointmentResponse response = appointmentMapper.toResponse(appointment);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Reschedules an existing appointment to a new time.
+     *
+     * <p>Applies conflict detection to the new time slot (excluding this appointment).
+     * Preserves original start time and tracks reschedule reason.
+     *
+     * @param appointmentId appointment UUID to reschedule
+     * @param request reschedule request with new time and reason
+     * @return rescheduled appointment (200 OK)
+     * @throws EntityNotFoundException if appointment not found (404)
+     * @throws IllegalStateException if appointment already cancelled (400)
+     * @throws AppointmentService.ConflictException if new time conflicts and override not allowed (409)
+     */
+    @PutMapping("/{appointmentId}/reschedule")
+    @PreAuthorize("hasAnyRole('STAFF', 'THERAPIST', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<AppointmentResponse> rescheduleAppointment(
+            @PathVariable final UUID appointmentId,
+            @Valid @RequestBody final RescheduleAppointmentRequest request) {
+
+        final UUID actorUserId = getCurrentUserId();
+        final String actorName = getCurrentUsername();
+
+        LOG.info("Rescheduling appointment: id={}, newStartTime={}, reason={}",
+                appointmentId, request.newStartTime(), request.reason());
+
+        final Appointment rescheduled = appointmentService.rescheduleAppointment(
+                appointmentId,
+                request.newStartTime(),
+                request.reason(),
+                request.allowConflictOverride(),
+                actorUserId,
+                actorName
+        );
+
+        final AppointmentResponse response = appointmentMapper.toResponse(rescheduled);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Cancels an existing appointment.
+     *
+     * <p>Once cancelled, the time slot becomes available for new bookings.
+     * Records cancellation type, reason, timestamp, and cancelling user.
+     *
+     * @param appointmentId appointment UUID to cancel
+     * @param request cancellation request with type and reason
+     * @return cancelled appointment (200 OK)
+     * @throws EntityNotFoundException if appointment not found (404)
+     * @throws IllegalStateException if appointment already cancelled (400)
+     */
+    @PutMapping("/{appointmentId}/cancel")
+    @PreAuthorize("hasAnyRole('STAFF', 'THERAPIST', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<AppointmentResponse> cancelAppointment(
+            @PathVariable final UUID appointmentId,
+            @Valid @RequestBody final CancelAppointmentRequest request) {
+
+        final UUID actorUserId = getCurrentUserId();
+        final String actorName = getCurrentUsername();
+
+        LOG.info("Cancelling appointment: id={}, type={}, reason={}",
+                appointmentId, request.cancellationType(), request.reason());
+
+        final Appointment cancelled = appointmentService.cancelAppointment(
+                appointmentId,
+                request.cancellationType(),
+                request.reason(),
+                actorUserId,
+                actorName
+        );
+
+        final AppointmentResponse response = appointmentMapper.toResponse(cancelled);
+
+        return ResponseEntity.ok(response);
+    }
+
     // ========== Exception Handlers ==========
 
     /**
@@ -153,7 +255,7 @@ public class AppointmentController {
     public ResponseEntity<Map<String, Object>> handleConflictException(
             final AppointmentService.ConflictException ex) {
 
-        log.warn("Appointment conflict: {}", ex.getMessage());
+        LOG.warn("Appointment conflict: {}", ex.getMessage());
 
         final List<ConflictCheckResponse.ConflictingAppointment> conflictDtos =
                 ex.getConflictingAppointments().stream()
@@ -179,10 +281,50 @@ public class AppointmentController {
     public ResponseEntity<Map<String, String>> handleValidationException(
             final IllegalArgumentException ex) {
 
-        log.warn("Validation error: {}", ex.getMessage());
+        LOG.warn("Validation error: {}", ex.getMessage());
 
         final Map<String, String> errorResponse = Map.of(
                 "error", "VALIDATION_ERROR",
+                "message", ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
+     * Handles entity not found errors (404 Not Found).
+     *
+     * @param ex entity not found exception
+     * @return 404 Not Found with error message
+     */
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleEntityNotFoundException(
+            final EntityNotFoundException ex) {
+
+        LOG.warn("Entity not found: {}", ex.getMessage());
+
+        final Map<String, String> errorResponse = Map.of(
+                "error", "NOT_FOUND",
+                "message", ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    /**
+     * Handles illegal state errors (400 Bad Request).
+     *
+     * @param ex illegal state exception (e.g., rescheduling cancelled appointment)
+     * @return 400 Bad Request with error message
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalStateException(
+            final IllegalStateException ex) {
+
+        LOG.warn("Illegal state: {}", ex.getMessage());
+
+        final Map<String, String> errorResponse = Map.of(
+                "error", "ILLEGAL_STATE",
                 "message", ex.getMessage()
         );
 
@@ -202,11 +344,11 @@ public class AppointmentController {
             try {
                 return UUID.fromString(auth.getName());
             } catch (final IllegalArgumentException e) {
-                log.warn("Failed to parse user ID from authentication: {}", auth.getName());
-                return UUID.randomUUID(); // Fallback for system operations
+                LOG.warn("Failed to parse user ID from authentication: {}", auth.getName());
+                return UUID.randomUUID();
             }
         }
-        return UUID.randomUUID(); // Fallback for non-authenticated operations
+        return UUID.randomUUID();
     }
 
     /**

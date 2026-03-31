@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AppointmentService {
 
-    private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AppointmentService.class);
 
     private final AppointmentRepository appointmentRepository;
     private final SessionTypeRepository sessionTypeRepository;
@@ -65,8 +65,8 @@ public class AppointmentService {
      *     <li>If no conflicts: creates appointment normally</li>
      * </ul>
      *
-     * <p><strong>Optimistic Locking Retry</strong>: Automatically retries up to 3 times on concurrent modification.
-     * Retry backoff: 50ms, 100ms, 200ms (exponential 2x multiplier).
+     * <p><strong>Optimistic Locking Retry</strong>: Automatically retries up to 3 times
+     * on concurrent modification. Retry backoff: 50ms, 100ms, 200ms (exponential 2x multiplier).
      *
      * @param therapistProfileId therapist UUID
      * @param clientId client UUID
@@ -114,7 +114,7 @@ public class AppointmentService {
         );
 
         if (!conflicts.isEmpty() && !allowConflictOverride) {
-            log.warn("Appointment conflict detected: therapist={}, startTime={}, duration={}, conflictCount={}",
+            LOG.warn("Appointment conflict detected: therapist={}, startTime={}, duration={}, conflictCount={}",
                     therapistProfileId, startTime, durationMinutes, conflicts.size());
             throw new ConflictException("Appointment conflicts with existing bookings", conflicts);
         }
@@ -133,7 +133,7 @@ public class AppointmentService {
 
         if (!conflicts.isEmpty() && allowConflictOverride) {
             appointment.setIsConflictOverride(true);
-            log.info("Appointment created with conflict override: therapist={}, startTime={}, conflictCount={}",
+            LOG.info("Appointment created with conflict override: therapist={}, startTime={}, conflictCount={}",
                     therapistProfileId, startTime, conflicts.size());
         }
 
@@ -166,7 +166,7 @@ public class AppointmentService {
             );
         }
 
-        log.info("Appointment created: id={}, therapist={}, client={}, startTime={}",
+        LOG.info("Appointment created: id={}, therapist={}, client={}, startTime={}",
                 saved.getId(), therapistProfileId, clientId, startTime);
 
         return saved;
@@ -209,6 +209,167 @@ public class AppointmentService {
     @Transactional(readOnly = true)
     public List<Appointment> getAppointmentsByClient(final UUID clientId) {
         return appointmentRepository.findByClientIdOrderByStartTimeDesc(clientId);
+    }
+
+    /**
+     * Reschedules an existing appointment to a new time.
+     *
+     * <p>Applies conflict detection to the new time slot (excluding the appointment being rescheduled).
+     * Preserves the original start time and tracks reschedule metadata.
+     *
+     * <p><strong>Optimistic Locking Retry</strong>: Automatically retries up to 3 times on concurrent modification.
+     *
+     * @param appointmentId appointment UUID to reschedule
+     * @param newStartTime new start time for the appointment
+     * @param reason human-readable reason for reschedule (min 10 chars)
+     * @param allowConflictOverride if true, reschedule even if conflicts exist at new time
+     * @param actorUserId user performing the reschedule (for audit)
+     * @param actorName display name of actor (for audit)
+     * @return rescheduled appointment
+     * @throws EntityNotFoundException if appointment not found
+     * @throws ConflictException if new time conflicts and override not allowed
+     * @throws IllegalStateException if appointment is already cancelled
+     */
+    @Retryable(
+            retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 50, multiplier = 2)
+    )
+    @Transactional
+    public Appointment rescheduleAppointment(final UUID appointmentId,
+                                              final ZonedDateTime newStartTime,
+                                              final String reason,
+                                              final boolean allowConflictOverride,
+                                              final UUID actorUserId,
+                                              final String actorName) {
+
+        // Fetch existing appointment
+        final Appointment appointment = getAppointment(appointmentId);
+
+        // Validate appointment is not cancelled
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot reschedule cancelled appointment: " + appointmentId);
+        }
+
+        // Conflict detection for new time (exclude current appointment)
+        final List<Appointment> conflicts = conflictDetectionService.findConflictingAppointmentsExcluding(
+                appointment.getTherapistProfileId(),
+                newStartTime,
+                appointment.getDurationMinutes(),
+                appointmentId
+        );
+
+        if (!conflicts.isEmpty() && !allowConflictOverride) {
+            LOG.warn("Reschedule conflict detected: appointmentId={}, newStartTime={}, conflictCount={}",
+                    appointmentId, newStartTime, conflicts.size());
+            throw new ConflictException("New time slot conflicts with existing bookings", conflicts);
+        }
+
+        // Reschedule via entity method
+        appointment.reschedule(newStartTime, reason, actorUserId);
+
+        if (!conflicts.isEmpty() && allowConflictOverride) {
+            appointment.setIsConflictOverride(true);
+            LOG.info("Appointment rescheduled with conflict override: id={}, newStartTime={}",
+                    appointmentId, newStartTime);
+        }
+
+        final Appointment saved = appointmentRepository.save(appointment);
+
+        // Async audit trail
+        final String metadata = String.format(
+                "{\"oldStartTime\": \"%s\", \"newStartTime\": \"%s\", \"reason\": \"%s\"}",
+                appointment.getOriginalStartTime() != null ? appointment.getOriginalStartTime() : appointment.getStartTime(),
+                newStartTime,
+                reason.replace("\"", "\\\"")
+        );
+
+        if (!conflicts.isEmpty() && allowConflictOverride) {
+            auditService.recordAuditEntryWithMetadata(
+                    saved.getId(),
+                    AuditActionType.CONFLICT_OVERRIDE,
+                    actorUserId,
+                    actorName,
+                    metadata
+            );
+        }
+
+        auditService.recordAuditEntryWithMetadata(
+                saved.getId(),
+                AuditActionType.RESCHEDULED,
+                actorUserId,
+                actorName,
+                metadata
+        );
+
+        LOG.info("Appointment rescheduled: id={}, oldStartTime={}, newStartTime={}",
+                saved.getId(), appointment.getStartTime(), newStartTime);
+
+        return saved;
+    }
+
+    /**
+     * Cancels an existing appointment with classification and reason.
+     *
+     * <p>Once cancelled, the time slot becomes available for new bookings.
+     * Records full cancellation metadata including type, reason, timestamp, and cancelling user.
+     *
+     * <p><strong>Optimistic Locking Retry</strong>: Automatically retries up to 3 times on concurrent modification.
+     *
+     * @param appointmentId appointment UUID to cancel
+     * @param cancellationType who initiated cancellation (CLIENT_INITIATED, THERAPIST_INITIATED, LATE_CANCELLATION)
+     * @param reason human-readable cancellation reason (min 10 chars)
+     * @param actorUserId user performing the cancellation (for audit)
+     * @param actorName display name of actor (for audit)
+     * @return cancelled appointment
+     * @throws EntityNotFoundException if appointment not found
+     * @throws IllegalStateException if appointment is already cancelled
+     */
+    @Retryable(
+            retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 50, multiplier = 2)
+    )
+    @Transactional
+    public Appointment cancelAppointment(final UUID appointmentId,
+                                          final CancellationType cancellationType,
+                                          final String reason,
+                                          final UUID actorUserId,
+                                          final String actorName) {
+
+        // Fetch existing appointment
+        final Appointment appointment = getAppointment(appointmentId);
+
+        // Validate appointment is not already cancelled
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new IllegalStateException("Appointment is already cancelled: " + appointmentId);
+        }
+
+        // Cancel via entity method
+        appointment.cancel(cancellationType, reason, actorUserId);
+
+        final Appointment saved = appointmentRepository.save(appointment);
+
+        // Async audit trail
+        final String metadata = String.format(
+                "{\"cancellationType\": \"%s\", \"reason\": \"%s\", \"originalStartTime\": \"%s\"}",
+                cancellationType,
+                reason.replace("\"", "\\\""),
+                appointment.getStartTime()
+        );
+
+        auditService.recordAuditEntryWithMetadata(
+                saved.getId(),
+                AuditActionType.CANCELLED,
+                actorUserId,
+                actorName,
+                metadata
+        );
+
+        LOG.info("Appointment cancelled: id={}, type={}, reason={}",
+                saved.getId(), cancellationType, reason);
+
+        return saved;
     }
 
     // ========== Validation Helpers ==========

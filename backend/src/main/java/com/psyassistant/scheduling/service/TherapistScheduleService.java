@@ -30,6 +30,13 @@ public class TherapistScheduleService {
     private final TherapistScheduleOverrideRepository overrideRepository;
     private final TherapistScheduleAuditService auditService;
 
+    /**
+     * Constructs the schedule service.
+     *
+     * @param recurringScheduleRepository repository for recurring schedules
+     * @param overrideRepository repository for overrides
+     * @param auditService audit service
+     */
     public TherapistScheduleService(final TherapistRecurringScheduleRepository recurringScheduleRepository,
                                      final TherapistScheduleOverrideRepository overrideRepository,
                                      final TherapistScheduleAuditService auditService) {

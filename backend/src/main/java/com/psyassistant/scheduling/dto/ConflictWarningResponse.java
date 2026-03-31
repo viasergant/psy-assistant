@@ -14,6 +14,9 @@ public record ConflictWarningResponse(
     int conflictCount,
     List<AppointmentConflict> conflicts
 ) {
+    /**
+     * Represents a single appointment conflict.
+     */
     public record AppointmentConflict(
         LocalDate date,
         LocalTime time,

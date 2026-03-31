@@ -16,6 +16,9 @@ public record ScheduleSummaryResponse(
     List<OverrideEntry> overrides,
     List<LeaveEntry> leavePeriods
 ) {
+    /**
+     * Recurring schedule entry.
+     */
     public record RecurringScheduleEntry(
         UUID id,
         Integer dayOfWeek,
@@ -25,6 +28,9 @@ public record ScheduleSummaryResponse(
     ) {
     }
 
+    /**
+     * Override entry.
+     */
     public record OverrideEntry(
         UUID id,
         LocalDate overrideDate,
@@ -35,6 +41,9 @@ public record ScheduleSummaryResponse(
     ) {
     }
 
+    /**
+     * Leave entry.
+     */
     public record LeaveEntry(
         UUID id,
         LocalDate startDate,

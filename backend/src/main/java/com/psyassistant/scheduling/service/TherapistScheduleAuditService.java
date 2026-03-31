@@ -18,6 +18,11 @@ public class TherapistScheduleAuditService {
 
     private final TherapistScheduleAuditEntryRepository auditEntryRepository;
 
+    /**
+     * Constructs the audit service.
+     *
+     * @param auditEntryRepository repository for audit entries
+     */
     public TherapistScheduleAuditService(final TherapistScheduleAuditEntryRepository auditEntryRepository) {
         this.auditEntryRepository = auditEntryRepository;
     }
@@ -88,7 +93,8 @@ public class TherapistScheduleAuditService {
      * @param authentication authentication object
      * @return user UUID or null if not available
      */
-    private UUID extractUserIdFromAuthentication(final org.springframework.security.core.Authentication authentication) {
+    private UUID extractUserIdFromAuthentication(
+            final org.springframework.security.core.Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
@@ -110,11 +116,20 @@ public class TherapistScheduleAuditService {
 
     /**
      * Record for a single field change.
-     *
-     * @param fieldName name of the changed field
-     * @param oldValue previous value as string
-     * @param newValue new value as string
      */
-    public record FieldChange(String fieldName, String oldValue, String newValue) {
+    public record FieldChange(
+        /**
+         * Name of the changed field.
+         */
+        String fieldName,
+        /**
+         * Previous value as string.
+         */
+        String oldValue,
+        /**
+         * New value as string.
+         */
+        String newValue
+    ) {
     }
 }

@@ -29,6 +29,12 @@ public class TherapistLeaveService {
     private final TherapistLeaveRepository leaveRepository;
     private final TherapistScheduleAuditService auditService;
 
+    /**
+     * Constructs the leave service.
+     *
+     * @param leaveRepository repository for leave periods
+     * @param auditService audit service
+     */
     public TherapistLeaveService(final TherapistLeaveRepository leaveRepository,
                                   final TherapistScheduleAuditService auditService) {
         this.leaveRepository = leaveRepository;

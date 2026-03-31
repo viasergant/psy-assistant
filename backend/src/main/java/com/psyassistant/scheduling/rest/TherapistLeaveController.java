@@ -37,6 +37,11 @@ public class TherapistLeaveController {
 
     private final TherapistLeaveService leaveService;
 
+    /**
+     * Constructs the leave controller.
+     *
+     * @param leaveService leave service
+     */
     public TherapistLeaveController(final TherapistLeaveService leaveService) {
         this.leaveService = leaveService;
     }

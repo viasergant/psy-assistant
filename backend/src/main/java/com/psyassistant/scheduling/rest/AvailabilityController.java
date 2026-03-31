@@ -26,6 +26,11 @@ public class AvailabilityController {
 
     private final AvailabilityQueryService availabilityQueryService;
 
+    /**
+     * Constructs the availability controller.
+     *
+     * @param availabilityQueryService availability query service
+     */
     public AvailabilityController(final AvailabilityQueryService availabilityQueryService) {
         this.availabilityQueryService = availabilityQueryService;
     }

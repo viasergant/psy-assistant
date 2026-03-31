@@ -6,7 +6,6 @@ import com.psyassistant.scheduling.domain.TherapistScheduleOverride;
 import com.psyassistant.scheduling.repository.TherapistLeaveRepository;
 import com.psyassistant.scheduling.repository.TherapistRecurringScheduleRepository;
 import com.psyassistant.scheduling.repository.TherapistScheduleOverrideRepository;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -38,6 +37,13 @@ public class AvailabilityQueryService {
     private final TherapistScheduleOverrideRepository overrideRepository;
     private final TherapistLeaveRepository leaveRepository;
 
+    /**
+     * Constructs the availability query service.
+     *
+     * @param recurringScheduleRepository repository for recurring schedules
+     * @param overrideRepository repository for overrides
+     * @param leaveRepository repository for leave periods
+     */
     public AvailabilityQueryService(final TherapistRecurringScheduleRepository recurringScheduleRepository,
                                      final TherapistScheduleOverrideRepository overrideRepository,
                                      final TherapistLeaveRepository leaveRepository) {

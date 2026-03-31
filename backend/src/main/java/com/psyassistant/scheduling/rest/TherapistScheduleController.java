@@ -42,6 +42,12 @@ public class TherapistScheduleController {
     private final TherapistScheduleService scheduleService;
     private final TherapistLeaveService leaveService;
 
+    /**
+     * Constructs the schedule controller.
+     *
+     * @param scheduleService schedule service
+     * @param leaveService leave service
+     */
     public TherapistScheduleController(final TherapistScheduleService scheduleService,
                                         final TherapistLeaveService leaveService) {
         this.scheduleService = scheduleService;

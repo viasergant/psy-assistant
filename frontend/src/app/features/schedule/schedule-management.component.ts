@@ -377,6 +377,11 @@ export class ScheduleManagementComponent implements OnInit {
     // Reload schedule to reflect the new leave request
     this.loadSchedule();
     
+    // Reload calendar grid to show the leave request
+    setTimeout(() => {
+      this.calendarComponent?.loadAvailability();
+    }, 500);
+    
     // Optionally show a success message
     // You could add a toast notification here in the future
     alert(`Leave request submitted successfully! Your request is now pending approval.`);

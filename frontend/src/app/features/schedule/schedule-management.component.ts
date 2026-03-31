@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ScheduleCalendarComponent } from './components/schedule-calendar/schedule-calendar.component';
 import { ScheduleApiService } from './services/schedule-api.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { TherapistManagementService } from '../admin/therapists/services/therapist-management.service';
 import {
   getCurrentUserRole,
   getCurrentTherapistProfileId,
@@ -10,11 +12,12 @@ import {
   canEditSchedule
 } from './guards/schedule.guard';
 import { ScheduleSummary } from './models/schedule.model';
+import { TherapistProfile } from '../admin/therapists/models/therapist.model';
 
 @Component({
   selector: 'app-schedule-management',
   standalone: true,
-  imports: [CommonModule, ScheduleCalendarComponent],
+  imports: [CommonModule, FormsModule, ScheduleCalendarComponent],
   template: `
     <div class="schedule-management">
       <header class="page-header">
@@ -23,6 +26,19 @@ import { ScheduleSummary } from './models/schedule.model';
           <p class="subtitle" *ngIf="therapistName">{{ therapistName }}'s Schedule</p>
         </div>
         <div class="header-actions">
+          <!-- Admin therapist selector -->
+          <select
+            *ngIf="isAdmin"
+            [(ngModel)]="selectedTherapistId"
+            (ngModelChange)="onTherapistChange()"
+            class="therapist-selector"
+          >
+            <option [value]="null">Select a therapist...</option>
+            <option *ngFor="let therapist of therapists" [value]="therapist.id">
+              {{ therapist.name }}
+            </option>
+          </select>
+
           <button
             *ngIf="canEdit"
             type="button"
@@ -97,6 +113,23 @@ import { ScheduleSummary } from './models/schedule.model';
       .header-actions {
         display: flex;
         gap: 1rem;
+        align-items: center;
+      }
+
+      .therapist-selector {
+        padding: 0.625rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        background: var(--color-surface);
+        color: var(--color-text-primary);
+        font-size: 0.875rem;
+        cursor: pointer;
+        min-width: 200px;
+
+        &:focus {
+          outline: none;
+          border-color: var(--color-accent);
+        }
       }
 
       .btn-primary,
@@ -169,14 +202,18 @@ import { ScheduleSummary } from './models/schedule.model';
 })
 export class ScheduleManagementComponent implements OnInit {
   therapistProfileId: string | null = null;
+  selectedTherapistId: string | null = null;
   schedule: ScheduleSummary | null = null;
   therapistName = '';
+  therapists: TherapistProfile[] = [];
+  isAdmin = false;
   canEdit = false;
   loading = false;
   error: string | null = null;
 
   constructor(
     private scheduleApiService: ScheduleApiService,
+    private therapistManagementService: TherapistManagementService,
     private authService: AuthService
   ) {}
 
@@ -188,20 +225,54 @@ export class ScheduleManagementComponent implements OnInit {
     const role = getCurrentUserRole(this.authService);
     const currentProfileId = getCurrentTherapistProfileId(this.authService);
 
-    if (isSystemAdmin(this.authService)) {
-      // Admin can select any therapist (for now show their own if they have one)
-      this.therapistProfileId = currentProfileId;
+    this.isAdmin = isSystemAdmin(this.authService);
+
+    if (this.isAdmin) {
+      // Admin can select any therapist - load therapist list
       this.canEdit = true;
+      this.loadTherapists();
     } else if (role === 'THERAPIST' || role === 'RECEPTION_ADMIN_STAFF') {
       // Therapist views their own schedule
       this.therapistProfileId = currentProfileId;
       this.canEdit = canEditSchedule(this.authService, currentProfileId ?? undefined);
-    }
 
-    if (this.therapistProfileId) {
+      if (this.therapistProfileId) {
+        this.loadSchedule();
+      } else {
+        this.error = 'Unable to determine therapist profile';
+      }
+    }
+  }
+
+  private loadTherapists(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.therapistManagementService.getTherapists(0, 100).subscribe({
+      next: page => {
+        this.therapists = page.content;
+        this.loading = false;
+        
+        // Auto-select first therapist if available
+        if (this.therapists.length > 0) {
+          this.selectedTherapistId = this.therapists[0].id;
+          this.onTherapistChange();
+        } else {
+          this.error = 'No therapists found in the system';
+        }
+      },
+      error: err => {
+        console.error('Error loading therapists:', err);
+        this.error = 'Failed to load therapist list';
+        this.loading = false;
+      }
+    });
+  }
+
+  onTherapistChange(): void {
+    if (this.selectedTherapistId) {
+      this.therapistProfileId = this.selectedTherapistId;
       this.loadSchedule();
-    } else {
-      this.error = 'Unable to determine therapist profile';
     }
   }
 
@@ -211,7 +282,13 @@ export class ScheduleManagementComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.scheduleApiService.getMySchedule().subscribe({
+    // If admin, use getScheduleSummary with therapistProfileId
+    // If therapist, use getMySchedule
+    const scheduleRequest = this.isAdmin
+      ? this.scheduleApiService.getScheduleSummary(this.therapistProfileId)
+      : this.scheduleApiService.getMySchedule();
+
+    scheduleRequest.subscribe({
       next: schedule => {
         this.schedule = schedule;
         this.therapistName = schedule.therapistName;

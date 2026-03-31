@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Computes 30-minute slots respecting recurring schedule, overrides, and approved leave.
  */
 @RestController
-@RequestMapping("/api/availability")
+@RequestMapping("/api/v1/therapists/{therapistProfileId}")
 public class AvailabilityController {
 
     private final AvailabilityQueryService availabilityQueryService;
@@ -43,7 +43,7 @@ public class AvailabilityController {
      * @param endDate query end date (inclusive)
      * @return list of available slots
      */
-    @GetMapping("/therapists/{therapistProfileId}")
+    @GetMapping("/availability")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<List<AvailabilitySlotResponse>> getAvailableSlots(
         @PathVariable final UUID therapistProfileId,

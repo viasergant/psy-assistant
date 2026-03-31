@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * </ul>
  */
 @RestController
-@RequestMapping("/api/leave")
+@RequestMapping("/api/v1/therapists/{therapistProfileId}")
 public class TherapistLeaveController {
 
     private final TherapistLeaveService leaveService;
@@ -53,7 +53,7 @@ public class TherapistLeaveController {
      * @param request leave request details
      * @return created leave request
      */
-    @PostMapping("/therapists/{therapistProfileId}/requests")
+    @PostMapping("/leave")
     @PreAuthorize("hasRole('THERAPIST')")
     public ResponseEntity<TherapistLeave> submitLeaveRequest(
         @PathVariable final UUID therapistProfileId,
@@ -79,7 +79,7 @@ public class TherapistLeaveController {
      * @param request approval details
      * @return updated leave request
      */
-    @PutMapping("/requests/{leaveId}/approve")
+    @PutMapping("/leave/{leaveId}/approve")
     @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<TherapistLeave> approveLeaveRequest(
         @PathVariable final UUID leaveId,
@@ -101,7 +101,7 @@ public class TherapistLeaveController {
      * @param request rejection details
      * @return updated leave request
      */
-    @PutMapping("/requests/{leaveId}/reject")
+    @PutMapping("/leave/{leaveId}/reject")
     @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<TherapistLeave> rejectLeaveRequest(
         @PathVariable final UUID leaveId,
@@ -122,7 +122,7 @@ public class TherapistLeaveController {
      * @param leaveId leave request UUID
      * @return updated leave request
      */
-    @PutMapping("/requests/{leaveId}/cancel")
+    @PutMapping("/leave/{leaveId}/cancel")
     @PreAuthorize("hasRole('THERAPIST')")
     public ResponseEntity<TherapistLeave> cancelLeaveRequest(@PathVariable final UUID leaveId) {
         // TODO: Add access control check - therapist can only cancel their own requests
@@ -139,7 +139,7 @@ public class TherapistLeaveController {
      * @param status optional status filter
      * @return list of leave periods
      */
-    @GetMapping("/therapists/{therapistProfileId}/requests")
+    @GetMapping("/leave")
     @PreAuthorize("hasAnyRole('THERAPIST', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<List<TherapistLeave>> getLeaveForTherapist(
         @PathVariable final UUID therapistProfileId,
@@ -159,7 +159,7 @@ public class TherapistLeaveController {
      *
      * @return list of pending leave requests
      */
-    @GetMapping("/requests/pending")
+    @GetMapping("/leave/pending")
     @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<List<TherapistLeave>> getAllPendingLeaveRequests() {
         final List<TherapistLeave> pending = leaveService.getAllPendingLeaveRequests();
@@ -177,7 +177,7 @@ public class TherapistLeaveController {
      * @param endDate end date
      * @return conflict warning response
      */
-    @GetMapping("/therapists/{therapistProfileId}/conflicts")
+    @GetMapping("/leave/conflicts")
     @PreAuthorize("hasRole('THERAPIST')")
     public ResponseEntity<ConflictWarningResponse> checkLeaveConflicts(
         @PathVariable final UUID therapistProfileId,

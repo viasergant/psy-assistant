@@ -64,6 +64,27 @@ export class AppointmentApiService {
   }
 
   /**
+   * Get all appointments for a therapist within a date range
+   *
+   * @param therapistProfileId therapist UUID
+   * @param startDate start date (format: yyyy-MM-dd)
+   * @param endDate end date (format: yyyy-MM-dd)
+   * @returns list of appointments ordered by start time
+   */
+  getTherapistAppointments(
+    therapistProfileId: string,
+    startDate: string,
+    endDate: string
+  ): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(
+      `${this.apiBase}/therapist/${therapistProfileId}`,
+      {
+        params: { startDate, endDate }
+      }
+    );
+  }
+
+  /**
    * Get all appointments for a client
    *
    * @param clientId client UUID

@@ -11,7 +11,9 @@ import {
   Appointment
 } from '../../models/schedule.model';
 import { AvailabilityService } from '../../services/availability.service';
+import { AppointmentApiService } from '../../services/appointment-api.service';
 import { startOfWeek, addDays, format, isSameDay, parseISO } from 'date-fns';
+import { forkJoin } from 'rxjs';
 import { AppointmentBookingDialogComponent } from '../appointment-booking-dialog/appointment-booking-dialog.component';
 import { AppointmentRescheduleDialogComponent } from '../appointment-reschedule-dialog/appointment-reschedule-dialog.component';
 import { AppointmentCancelDialogComponent } from '../appointment-cancel-dialog/appointment-cancel-dialog.component';
@@ -63,6 +65,7 @@ export class ScheduleCalendarComponent implements OnInit {
   weekDays: WeekDay[] = [];
   timeSlots: TimeSlot[] = [];
   calendarCells: CalendarCell[][] = [];
+  appointments: Appointment[] = [];
   loading = false;
 
   // Dialog state
@@ -72,7 +75,10 @@ export class ScheduleCalendarComponent implements OnInit {
   selectedAppointment: Appointment | null = null;
   selectedDateTime: Date | null = null;
 
-  constructor(private availabilityService: AvailabilityService) {}
+  constructor(
+    private availabilityService: AvailabilityService,
+    private appointmentService: AppointmentApiService
+  ) {}
 
   ngOnInit(): void {
     this.generateWeekDays();
@@ -130,7 +136,7 @@ export class ScheduleCalendarComponent implements OnInit {
   }
 
   /**
-   * Load availability data from backend
+   * Load availability data and appointments from backend
    * Public so it can be called by parent component after config changes
    */
   public loadAvailability(): void {
@@ -140,21 +146,23 @@ export class ScheduleCalendarComponent implements OnInit {
     const startDate = format(this.currentWeekStart, 'yyyy-MM-dd');
     const endDate = format(addDays(this.currentWeekStart, 6), 'yyyy-MM-dd');
 
-    console.log(`Loading availability for therapist ${this.therapistProfileId} from ${startDate} to ${endDate}`);
+    console.log(`Loading availability and appointments for therapist ${this.therapistProfileId} from ${startDate} to ${endDate}`);
 
-    this.availabilityService
-      .getAvailableSlots(this.therapistProfileId, startDate, endDate)
-      .subscribe({
-        next: slots => {
-          console.log(`Received ${slots.length} available slots:`, slots);
-          this.buildCalendarGrid(slots);
-          this.loading = false;
-        },
-        error: err => {
-          console.error('Error loading availability:', err);
-          this.loading = false;
-        }
-      });
+    forkJoin({
+      slots: this.availabilityService.getAvailableSlots(this.therapistProfileId, startDate, endDate),
+      appointments: this.appointmentService.getTherapistAppointments(this.therapistProfileId, startDate, endDate)
+    }).subscribe({
+      next: ({ slots, appointments }) => {
+        console.log(`Received ${slots.length} available slots and ${appointments.length} appointments`);
+        this.appointments = appointments;
+        this.buildCalendarGrid(slots);
+        this.loading = false;
+      },
+      error: err => {
+        console.error('Error loading availability and appointments:', err);
+        this.loading = false;
+      }
+    });
   }
 
   /**
@@ -179,6 +187,9 @@ export class ScheduleCalendarComponent implements OnInit {
         const hasOverride = this.hasOverrideForDate(day.date);
         const available = slot?.available ?? false;
 
+        // Check if this time slot has an appointment
+        const isBooked = this.isSlotBooked(day.date, timeSlot.hour, timeSlot.minute);
+
         row.push({
           day,
           timeSlot,
@@ -186,7 +197,7 @@ export class ScheduleCalendarComponent implements OnInit {
           hasOverride,
           isLeave,
           leaveStatus: leaveStatus || undefined,
-          isBooked: false // TODO: integrate with appointment data
+          isBooked
         });
       }
 
@@ -225,6 +236,25 @@ export class ScheduleCalendarComponent implements OnInit {
     return this.schedule.overrides.some(override =>
       isSameDay(parseISO(override.date), date)
     );
+  }
+
+  /**
+   * Check if a specific time slot has an appointment
+   */
+  private isSlotBooked(date: Date, hour: number, minute: number): boolean {
+    if (!this.appointments || this.appointments.length === 0) return false;
+
+    return this.appointments.some(appointment => {
+      const appointmentStart = parseISO(appointment.startTime);
+      const appointmentEnd = parseISO(appointment.endTime);
+      
+      // Create a date-time for the slot
+      const slotDateTime = new Date(date);
+      slotDateTime.setHours(hour, minute, 0, 0);
+
+      // Check if slot falls within appointment time range (inclusive start, exclusive end)
+      return slotDateTime >= appointmentStart && slotDateTime < appointmentEnd;
+    });
   }
 
   /**

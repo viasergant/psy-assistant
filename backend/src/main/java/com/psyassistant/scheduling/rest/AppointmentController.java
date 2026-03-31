@@ -14,6 +14,7 @@ import com.psyassistant.scheduling.service.AppointmentService;
 import com.psyassistant.scheduling.service.ConflictDetectionService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -197,6 +199,50 @@ public class AppointmentController {
         final AppointmentResponse response = appointmentMapper.toResponse(appointment);
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieves all appointments for a therapist within a date range.
+     *
+     * <p>Returns non-cancelled appointments ordered by start time ascending.
+     * Used by calendar UI to populate appointment grid.
+     *
+     * @param therapistProfileId therapist UUID
+     * @param startDate start date (inclusive, format: yyyy-MM-dd)
+     * @param endDate end date (exclusive, format: yyyy-MM-dd)
+     * @return list of appointments (200 OK)
+     */
+    @GetMapping("/therapist/{therapistProfileId}")
+    @PreAuthorize("hasAnyRole('STAFF', 'THERAPIST', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<List<AppointmentResponse>> getTherapistAppointments(
+            @PathVariable final UUID therapistProfileId,
+            @RequestParam final String startDate,
+            @RequestParam final String endDate) {
+
+        LOG.debug("Fetching appointments: therapist={}, startDate={}, endDate={}",
+                therapistProfileId, startDate, endDate);
+
+        // Parse dates and convert to ZonedDateTime at start of day in UTC
+        final ZonedDateTime startDateTime = java.time.LocalDate.parse(startDate)
+                .atStartOfDay(java.time.ZoneOffset.UTC);
+        final ZonedDateTime endDateTime = java.time.LocalDate.parse(endDate)
+                .atStartOfDay(java.time.ZoneOffset.UTC)
+                .plusDays(1); // Make endDate exclusive
+
+        final List<Appointment> appointments = appointmentService
+                .getAppointmentsByTherapistAndDateRange(
+                        therapistProfileId,
+                        startDateTime,
+                        endDateTime
+                );
+
+        final List<AppointmentResponse> responses = appointments.stream()
+                .map(appointmentMapper::toResponse)
+                .toList();
+
+        LOG.debug("Found {} appointments for therapist {}", responses.size(), therapistProfileId);
+
+        return ResponseEntity.ok(responses);
     }
 
     /**

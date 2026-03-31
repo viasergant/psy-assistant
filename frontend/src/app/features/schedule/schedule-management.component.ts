@@ -195,7 +195,7 @@ export class ScheduleManagementComponent implements OnInit {
     } else if (role === 'THERAPIST' || role === 'RECEPTION_ADMIN_STAFF') {
       // Therapist views their own schedule
       this.therapistProfileId = currentProfileId;
-      this.canEdit = canEditSchedule(this.authService, currentProfileId);
+      this.canEdit = canEditSchedule(this.authService, currentProfileId ?? undefined);
     }
 
     if (this.therapistProfileId) {

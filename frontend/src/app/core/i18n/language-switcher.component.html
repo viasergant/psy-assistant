@@ -1,0 +1,14 @@
+<div class="language-switcher">
+  <p-dropdown
+    [options]="languages"
+    [(ngModel)]="selectedLanguage"
+    (onChange)="onLanguageChange($event.value)"
+    optionLabel="label"
+    optionValue="code"
+    [style]="{ minWidth: '150px' }"
+    styleClass="language-dropdown"
+    appendTo="body"
+    aria-label="Select language"
+    [tabindex]="0"
+  />
+</div>

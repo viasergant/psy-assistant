@@ -50,6 +50,9 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(nullable = false, length = 5)
+    private String language;
+
     /** Required by JPA. */
     protected User() {
     }
@@ -69,6 +72,7 @@ public class User {
         this.passwordHash = passwordHash;
         this.role = role;
         this.active = active;
+        this.language = "en"; // Default locale
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
     }
@@ -220,5 +224,24 @@ public class User {
         this.passwordHash = newPasswordHash;
         this.mustChangePassword = false;
         this.updatedAt = Instant.now();
+
+    /**
+     * Returns the user's preferred language (locale).
+     *
+     * @return language code (e.g., 'en', 'uk')
+     */
+    public String getLanguage() {
+        return language;
+    }
+
+    /**
+     * Sets the user's preferred language and updates the updatedAt timestamp.
+     *
+     * @param language language code (e.g., 'en', 'uk')
+     */
+    public void setLanguage(final String language) {
+        this.language = language;
+        this.updatedAt = Instant.now();
+    }
     }
 }

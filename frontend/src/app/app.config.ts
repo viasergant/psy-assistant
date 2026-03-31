@@ -14,8 +14,18 @@ import Aura from '@primeuix/themes/aura';
 
 import { appRoutes } from './app.routes';
 import { jwtInterceptor } from './core/auth/jwt.interceptor';
+import { localeInterceptor } from './core/i18n/locale.interceptor';
 import { TranslocoHttpLoader } from './core/i18n/transloco-loader';
 import { AuthService } from './core/auth/auth.service';
+import { I18nService } from './core/i18n/i18n.service';
+
+/**
+ * Initializes i18n on app startup before rendering.
+ * Reads locale from cookie → browser → default, then loads translation files.
+ */
+function initI18n(i18nService: I18nService): () => Promise<void> {
+  return () => i18nService.initialize();
+}
 
 /**
  * Attempts a silent token refresh on application startup using the HttpOnly
@@ -37,18 +47,28 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([jwtInterceptor])),
+    provideHttpClient(withInterceptors([localeInterceptor, jwtInterceptor])),
     provideAnimationsAsync(),
     provideTransloco({
       config: {
-        availableLangs: ['en'],
+        availableLangs: ['en', 'uk'],
         defaultLang: 'en',
         reRenderOnLangChange: true,
-        prodMode: !isDevMode()
+        prodMode: !isDevMode(),
+        missingHandler: {
+          useFallbackTranslation: true,
+          logMissingKey: true
+        }
       },
       loader: TranslocoHttpLoader
     }),
     providePrimeNG({ theme: { preset: Aura } }),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initI18n,
+      deps: [I18nService],
+      multi: true
+    },
     {
       provide: APP_INITIALIZER,
       useFactory: initAuth,

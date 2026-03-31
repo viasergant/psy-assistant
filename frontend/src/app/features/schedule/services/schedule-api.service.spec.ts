@@ -13,6 +13,7 @@ import {
 describe('ScheduleApiService', () => {
   let service: ScheduleApiService;
   let httpMock: HttpTestingController;
+  const therapistProfileId = 'test-therapist-id';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -39,26 +40,26 @@ describe('ScheduleApiService', () => {
       timezone: 'America/New_York',
       recurringSchedule: [],
       overrides: [],
-      leavePeriodsup: []
+      leavePeriods: []
     };
 
-    service.getScheduleSummary('test-id').subscribe(summary => {
+    service.getScheduleSummary(therapistProfileId).subscribe(summary => {
       expect(summary).toEqual(mockSummary);
     });
 
-    const req = httpMock.expectOne('/api/v1/therapists/test-id/schedule');
+    const req = httpMock.expectOne(`/api/v1/therapists/${therapistProfileId}/schedule`);
     expect(req.request.method).toBe('GET');
     req.flush(mockSummary);
   });
 
   it('should get my schedule', () => {
     const mockSummary: ScheduleSummary = {
-      therapistProfileId: 'my-id',
-      therapistName: 'My Name',
+      therapistProfileId: '123',
+      therapistName: 'Dr. Smith',
       timezone: 'America/New_York',
       recurringSchedule: [],
       overrides: [],
-      leavePeriodsup: []
+      leavePeriods: []
     };
 
     service.getMySchedule().subscribe(summary => {
@@ -72,7 +73,7 @@ describe('ScheduleApiService', () => {
 
   it('should create recurring schedule', () => {
     const request: RecurringScheduleRequest = {
-      dayOfWeek: DayOfWeek.MONDAY,
+      dayOfWeek: 1, // MONDAY
       startTime: '09:00',
       endTime: '17:00',
       timezone: 'America/New_York'
@@ -81,7 +82,10 @@ describe('ScheduleApiService', () => {
     const mockResponse: RecurringSchedule = {
       id: 'schedule-id',
       therapistProfileId: 'test-id',
-      ...request
+      dayOfWeek: 1,
+      startTime: '09:00',
+      endTime: '17:00',
+      timezone: 'America/New_York'
     };
 
     service.createRecurringSchedule('test-id', request).subscribe(schedule => {

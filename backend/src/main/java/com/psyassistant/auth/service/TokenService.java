@@ -104,18 +104,42 @@ public class TokenService {
      * @return signed JWT string
      */
     public String buildAccessToken(final User user) {
+        return buildAccessToken(user, null);
+    }
+
+    /**
+     * Builds and signs a JWT access token for the given user with optional therapist profile ID.
+     *
+     * <p>The {@code roles} claim contains:
+     * <ol>
+     *   <li>The {@code ROLE_X} value for the user's role (for {@code hasRole()} checks)</li>
+     *   <li>All {@link Permission} names granted to the role (for {@code hasAuthority()} checks)</li>
+     * </ol>
+     *
+     * <p>If the therapistProfileId is provided, it is included as a claim for therapist-specific operations.
+     *
+     * @param user the authenticated user
+     * @param therapistProfileId optional therapist profile UUID (for THERAPIST role users)
+     * @return signed JWT string
+     */
+    public String buildAccessToken(final User user, final UUID therapistProfileId) {
         Instant now = Instant.now();
         Duration ttl = accessTtlFor(user.getRole());
 
         List<String> authorities = buildAuthorities(user.getRole());
 
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
                 .issuer(issuer)
                 .subject(user.getId().toString())
                 .issuedAt(now)
                 .expiresAt(now.plus(ttl))
-                .claim(ROLES_CLAIM, authorities)
-                .build();
+                .claim(ROLES_CLAIM, authorities);
+
+        if (therapistProfileId != null) {
+            claimsBuilder.claim("therapistProfileId", therapistProfileId.toString());
+        }
+
+        JwtClaimsSet claims = claimsBuilder.build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

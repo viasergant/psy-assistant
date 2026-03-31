@@ -15,6 +15,9 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,12 +34,12 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Role-based access control:
  * <ul>
  *     <li>SYSTEM_ADMINISTRATOR: full CRUD on all schedules</li>
- *     <li>RECEPTION_ADMIN_STAFF + THERAPIST: CRUDon own schedule</li>
+ *     <li>RECEPTION_ADMIN_STAFF + THERAPIST: CRUD on own schedule</li>
  *     <li>THERAPIST only: read-only</li>
  * </ul>
  */
 @RestController
-@RequestMapping("/api/schedules/therapists/{therapistProfileId}")
+@RequestMapping("/api/v1/therapists/{therapistProfileId}")
 public class TherapistScheduleController {
 
     private final TherapistScheduleService scheduleService;
@@ -54,21 +57,44 @@ public class TherapistScheduleController {
         this.leaveService = leaveService;
     }
 
+    /**
+     * Resolves "me" token to the actual therapist profile ID from JWT.
+     *
+     * @param pathParam the path parameter (either "me" or a UUID string)
+     * @return the resolved UUID
+     * @throws IllegalArgumentException if pathParam is "me" but no therapistProfileId in JWT
+     */
+    private UUID resolveTherapistProfileId(final String pathParam) {
+        if ("me".equals(pathParam)) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Jwt jwt) {
+                String therapistProfileId = jwt.getClaimAsString("therapistProfileId");
+                if (therapistProfileId != null) {
+                    return UUID.fromString(therapistProfileId);
+                }
+            }
+            throw new IllegalArgumentException(
+                "Cannot resolve 'me': therapistProfileId not found in JWT token");
+        }
+        return UUID.fromString(pathParam);
+    }
+
     // ========== Schedule Summary ==========
 
     /**
      * Retrieves complete schedule summary (recurring + overrides + leave).
      *
-     * @param therapistProfileId therapist profile UUID
+     * @param therapistProfileIdParam therapist profile UUID or "me"
      * @return schedule summary
      */
-    @GetMapping
+    @GetMapping("/schedule")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<ScheduleSummaryResponse> getScheduleSummary(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @RequestParam(required = false) final LocalDate startDate,
         @RequestParam(required = false) final LocalDate endDate
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         // TODO: Add access control check - therapist can only view own schedule unless admin
 
         final List<TherapistRecurringSchedule> recurring = scheduleService.getRecurringSchedule(therapistProfileId);
@@ -127,12 +153,13 @@ public class TherapistScheduleController {
      * @param request recurring schedule details
      * @return created schedule entry
      */
-    @PostMapping("/recurring")
+    @PostMapping("/schedule/recurring")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistRecurringSchedule> createRecurringSchedule(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @Valid @RequestBody final RecurringScheduleRequest request
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         // TODO: Add access control check - reception staff can only edit own schedule
 
         final var created = scheduleService.createRecurringSchedule(
@@ -154,13 +181,14 @@ public class TherapistScheduleController {
      * @param request updated schedule details
      * @return updated schedule entry
      */
-    @PutMapping("/recurring/{scheduleId}")
+    @PutMapping("/schedule/recurring/{scheduleId}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistRecurringSchedule> updateRecurringSchedule(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @PathVariable final UUID scheduleId,
         @Valid @RequestBody final RecurringScheduleRequest request
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         // TODO: Add access control check
 
         final var updated = scheduleService.updateRecurringSchedule(
@@ -180,12 +208,13 @@ public class TherapistScheduleController {
      * @param scheduleId schedule entry UUID
      * @return no content
      */
-    @DeleteMapping("/recurring/{scheduleId}")
+    @DeleteMapping("/schedule/recurring/{scheduleId}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<Void> deleteRecurringSchedule(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @PathVariable final UUID scheduleId
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         // TODO: Add access control check
 
         scheduleService.deleteRecurringSchedule(scheduleId);
@@ -202,12 +231,13 @@ public class TherapistScheduleController {
      * @param request override details
      * @return created override
      */
-    @PostMapping("/overrides")
+    @PostMapping("/schedule/overrides")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistScheduleOverride> createOverride(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @Valid @RequestBody final ScheduleOverrideRequest request
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         // TODO: Add access control check
 
         final TherapistScheduleOverride created;
@@ -242,13 +272,14 @@ public class TherapistScheduleController {
      * @param request updated override details
      * @return updated override
      */
-    @PutMapping("/overrides/{overrideId}")
+    @PutMapping("/schedule/overrides/{overrideId}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistScheduleOverride> updateOverride(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @PathVariable final UUID overrideId,
         @Valid @RequestBody final ScheduleOverrideRequest request
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         // TODO: Add access control check
 
         final var updated = scheduleService.updateOverride(
@@ -269,12 +300,13 @@ public class TherapistScheduleController {
      * @param overrideId override UUID
      * @return no content
      */
-    @DeleteMapping("/overrides/{overrideId}")
+    @DeleteMapping("/schedule/overrides/{overrideId}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<Void> deleteOverride(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @PathVariable final UUID overrideId
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         // TODO: Add access control check
 
         scheduleService.deleteOverride(overrideId);

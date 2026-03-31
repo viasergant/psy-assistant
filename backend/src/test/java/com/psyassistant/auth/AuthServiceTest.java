@@ -17,6 +17,7 @@ import com.psyassistant.auth.service.AuthResult;
 import com.psyassistant.auth.service.AuthService;
 import com.psyassistant.auth.service.TokenService;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.therapists.repository.TherapistProfileRepository;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
@@ -57,6 +58,9 @@ class AuthServiceTest {
     @Mock
     private AuditLogService auditLogService;
 
+    @Mock
+    private TherapistProfileRepository therapistProfileRepository;
+
     private AuthService authService;
 
     private User activeUser;
@@ -67,7 +71,7 @@ class AuthServiceTest {
     void setUp() {
         authService = new AuthService(
                 userRepository, refreshTokenRepository, tokenService,
-                passwordEncoder, auditLogService);
+                passwordEncoder, auditLogService, therapistProfileRepository);
         ReflectionTestUtils.setField(authService, "maxAdminSessions", 1);
         ReflectionTestUtils.setField(authService, "maxUserSessions", 5);
 
@@ -83,10 +87,11 @@ class AuthServiceTest {
         when(refreshTokenRepository.countActiveSessions(any())).thenReturn(0L);
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
-        when(tokenService.buildAccessToken(any())).thenReturn("jwt-token");
+        when(tokenService.buildAccessToken(any(), any())).thenReturn("jwt-token");
         when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
         when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(therapistProfileRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
 
         AuthResult result = authService.authenticate(
                 new LoginRequest("user@example.com", "pass"), "127.0.0.1");
@@ -143,7 +148,7 @@ class AuthServiceTest {
         when(refreshTokenRepository.countActiveSessions(any())).thenReturn(1L);
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
-        when(tokenService.buildAccessToken(any())).thenReturn("jwt-token");
+        when(tokenService.buildAccessToken(any(), any())).thenReturn("jwt-token");
         when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
         when(tokenService.refreshTtlFor(UserRole.SYSTEM_ADMINISTRATOR)).thenReturn(Duration.ofHours(24));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -161,10 +166,11 @@ class AuthServiceTest {
         when(refreshTokenRepository.countActiveSessions(any())).thenReturn(3L);
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
-        when(tokenService.buildAccessToken(any())).thenReturn("jwt-token");
+        when(tokenService.buildAccessToken(any(), any())).thenReturn("jwt-token");
         when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
         when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(therapistProfileRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
 
         authService.authenticate(
                 new LoginRequest("user@example.com", "pass"), "127.0.0.1");
@@ -180,10 +186,11 @@ class AuthServiceTest {
         when(refreshTokenRepository.countActiveSessions(any())).thenReturn(5L);
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
-        when(tokenService.buildAccessToken(any())).thenReturn("jwt-token");
+        when(tokenService.buildAccessToken(any(), any())).thenReturn("jwt-token");
         when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
         when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(therapistProfileRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
 
         RefreshToken oldest = mock(RefreshToken.class);
         when(refreshTokenRepository.findOldestActiveByUserId(any()))
@@ -203,10 +210,11 @@ class AuthServiceTest {
                 .thenReturn(Optional.of(stored));
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
-        when(tokenService.buildAccessToken(any())).thenReturn("jwt-token");
+        when(tokenService.buildAccessToken(any(), any())).thenReturn("jwt-token");
         when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
         when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(therapistProfileRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
 
         AuthResult result = authService.refresh("raw-token", "127.0.0.1");
 

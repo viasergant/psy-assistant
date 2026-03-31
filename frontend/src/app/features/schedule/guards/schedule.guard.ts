@@ -5,14 +5,14 @@ import { jwtDecode } from 'jwt-decode';
 
 interface JwtPayload {
   sub: string;
-  role: string;
+  roles: string[]; // Array of authorities including "ROLE_X" and permissions
   therapistProfileId?: string;
   exp: number;
 }
 
 /**
  * Route guard that checks if user has permission to access schedule management
- * Allowed roles: SYSTEM_ADMINISTRATOR, THERAPIST (with or without RECEPTION_ADMIN_STAFF)
+ * Allowed roles: SYSTEM_ADMINISTRATOR, THERAPIST, RECEPTION_ADMIN_STAFF, SUPERVISOR
  */
 export const scheduleGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
@@ -20,34 +20,43 @@ export const scheduleGuard: CanActivateFn = () => {
 
   const token = authService.token;
   if (!token) {
+    console.warn('Schedule guard: No token found, redirecting to login');
     return router.createUrlTree(['/auth/login']);
   }
 
   try {
     const decoded = jwtDecode<JwtPayload>(token);
-    const role = decoded.role;
+    const roles = decoded.roles || [];
 
-    // Allow SYSTEM_ADMINISTRATOR, THERAPIST, RECEPTION_ADMIN_STAFF, SUPERVISOR
+    console.log('Schedule guard: User roles:', roles);
+
+    // Check if user has any of the allowed roles (with ROLE_ prefix)
     const allowedRoles = [
-      'SYSTEM_ADMINISTRATOR',
-      'THERAPIST',
-      'RECEPTION_ADMIN_STAFF',
-      'SUPERVISOR'
+      'ROLE_SYSTEM_ADMINISTRATOR',
+      'ROLE_THERAPIST',
+      'ROLE_RECEPTION_ADMIN_STAFF',
+      'ROLE_SUPERVISOR'
     ];
 
-    if (allowedRoles.includes(role)) {
+    const hasAccess = roles.some(role => allowedRoles.includes(role));
+
+    if (hasAccess) {
+      console.log('Schedule guard: Access granted');
       return true;
     }
 
-    return router.createUrlTree(['/']);
+    // User doesn't have permission - redirect to clients with a console warning
+    console.warn(`Schedule guard: Access denied. User roles: ${roles.join(', ')}. Required one of:`, allowedRoles);
+    return router.createUrlTree(['/clients']);
   } catch (error) {
-    console.error('Error decoding JWT:', error);
+    console.error('Schedule guard: Error decoding JWT:', error);
     return router.createUrlTree(['/auth/login']);
   }
 };
 
 /**
  * Helper to get current user role from JWT
+ * Extracts the primary role from the roles array (strips ROLE_ prefix)
  */
 export function getCurrentUserRole(authService: AuthService): string | null {
   const token = authService.token;
@@ -55,7 +64,8 @@ export function getCurrentUserRole(authService: AuthService): string | null {
 
   try {
     const decoded = jwtDecode<JwtPayload>(token);
-    return decoded.role;
+    const roleEntry = decoded.roles?.find(r => r.startsWith('ROLE_'));
+    return roleEntry ? roleEntry.replace('ROLE_', '') : null;
   } catch (error) {
     console.error('Error decoding JWT:', error);
     return null;

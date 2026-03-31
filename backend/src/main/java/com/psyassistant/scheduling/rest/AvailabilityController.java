@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Computes 30-minute slots respecting recurring schedule, overrides, and approved leave.
  */
 @RestController
-@RequestMapping("/api/availability")
+@RequestMapping("/api/v1/therapists/{therapistProfileId}")
 public class AvailabilityController {
 
     private final AvailabilityQueryService availabilityQueryService;
@@ -36,20 +39,43 @@ public class AvailabilityController {
     }
 
     /**
+     * Resolves "me" token to the actual therapist profile ID from JWT.
+     *
+     * @param pathParam the path parameter (either "me" or a UUID string)
+     * @return the resolved UUID
+     * @throws IllegalArgumentException if pathParam is "me" but no therapistProfileId in JWT
+     */
+    private UUID resolveTherapistProfileId(final String pathParam) {
+        if ("me".equals(pathParam)) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Jwt jwt) {
+                String therapistProfileId = jwt.getClaimAsString("therapistProfileId");
+                if (therapistProfileId != null) {
+                    return UUID.fromString(therapistProfileId);
+                }
+            }
+            throw new IllegalArgumentException(
+                "Cannot resolve 'me': therapistProfileId not found in JWT token");
+        }
+        return UUID.fromString(pathParam);
+    }
+
+    /**
      * Retrieves available 30-minute slots for a therapist across a date range.
      *
-     * @param therapistProfileId therapist profile UUID
+     * @param therapistProfileIdParam therapist profile UUID or "me"
      * @param startDate query start date (inclusive)
      * @param endDate query end date (inclusive)
      * @return list of available slots
      */
-    @GetMapping("/therapists/{therapistProfileId}")
+    @GetMapping("/availability")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<List<AvailabilitySlotResponse>> getAvailableSlots(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) final LocalDate startDate,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) final LocalDate endDate
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         final var slots = availabilityQueryService.computeAvailableSlots(
             therapistProfileId,
             startDate,
@@ -61,7 +87,7 @@ public class AvailabilityController {
                 slot.date(),
                 slot.startTime(),
                 slot.endTime(),
-                "available"  // Future: check against booked appointments
+                true  // Future: check against booked appointments
             ))
             .collect(Collectors.toList());
 

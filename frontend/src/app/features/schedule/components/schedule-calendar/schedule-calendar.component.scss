@@ -215,6 +215,17 @@
     border-left: 3px solid #e57373;
   }
 
+  &.cell-leave-pending {
+    background: repeating-linear-gradient(
+      45deg,
+      #fff8e1,
+      #fff8e1 10px,
+      #ffecb3 10px,
+      #ffecb3 20px
+    );
+    border-left: 3px solid #ffa726;
+  }
+
   &.cell-booked {
     background: #2c5f4f;
     color: white;

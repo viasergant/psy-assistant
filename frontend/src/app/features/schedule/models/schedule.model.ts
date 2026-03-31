@@ -1,12 +1,14 @@
 /**
  * Recurring weekly schedule for a therapist
+ * Note: Backend sends dayOfWeek as Integer (1=Monday, 2=Tuesday, ..., 7=Sunday)
+ * startTime/endTime can be either string "HH:mm:ss" or array [hour, minute, second]
  */
 export interface RecurringSchedule {
   id?: string;
   therapistProfileId: string;
-  dayOfWeek: DayOfWeek;
-  startTime: string; // HH:mm format
-  endTime: string;   // HH:mm format
+  dayOfWeek: number; // ISO-8601: 1=Monday, 7=Sunday
+  startTime: string | any; // HH:mm format or array [h, m, s]
+  endTime: string | any;   // HH:mm format or array [h, m, s]
   timezone: string;
   createdAt?: string;
   updatedAt?: string;
@@ -33,14 +35,16 @@ export interface ScheduleOverride {
 export interface Leave {
   id?: string;
   therapistProfileId: string;
+  therapistName?: string; // Optional - only populated in admin views with join
   leaveType: LeaveType;
   startDate: string; // yyyy-MM-dd format
   endDate: string;   // yyyy-MM-dd format
   status: LeaveStatus;
   requestNotes?: string;
-  responseNotes?: string;
-  approvedBy?: string;
-  approvedAt?: string;
+  adminNotes?: string; // Changed from responseNotes to match backend
+  requestedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -54,7 +58,7 @@ export interface ScheduleSummary {
   timezone: string;
   recurringSchedule: RecurringSchedule[];
   overrides: ScheduleOverride[];
-  leavePeriodsup: Leave[];
+  leavePeriods: Leave[];
 }
 
 /**
@@ -84,9 +88,10 @@ export interface AppointmentConflict {
 
 /**
  * Request to create/update recurring schedule
+ * Note: Backend expects dayOfWeek as Integer (1=Monday, 2=Tuesday, ..., 7=Sunday)
  */
 export interface RecurringScheduleRequest {
-  dayOfWeek: DayOfWeek;
+  dayOfWeek: number | DayOfWeek; // Accept both number and enum for flexibility
   startTime: string;
   endTime: string;
   timezone: string;
@@ -117,8 +122,8 @@ export interface LeaveRequest {
  * Request to approve/reject leave
  */
 export interface LeaveApprovalRequest {
-  approve: boolean;
-  responseNotes?: string;
+  reviewerUserId: string; // UUID of admin/staff approving/rejecting
+  adminNotes?: string; // Optional notes from admin
 }
 
 /**

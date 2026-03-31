@@ -8,6 +8,10 @@
   "nav.reports": "Reports",
   "nav.admin": "Admin",
   "nav.logout": "Logout",
+  "admin.title": "Administration",
+  "admin.tabs.users": "Users",
+  "admin.tabs.therapists": "Therapists",
+  "admin.tabs.leaveRequests": "Pending Requests",
   "schedule.title": "Schedule Management",
   "schedule.mySchedule": "My Schedule",
   "schedule.therapistSchedule": "{{name}}'s Schedule",
@@ -70,5 +74,14 @@
   "schedule.validation.startBeforeEnd": "Start time must be before end time",
   "schedule.validation.endDateAfterStart": "End date must be after start date",
   "schedule.validation.required": "This field is required",
-  "schedule.validation.invalidTime": "Invalid time format"
+  "schedule.validation.invalidTime": "Invalid time format",
+  "admin.leave.pendingRequests": "Pending Leave Requests",
+  "admin.leave.noPendingRequests": "No pending leave requests",
+  "admin.leave.reviewRequest": "Review Leave Request",
+  "admin.leave.therapist": "Therapist",
+  "admin.leave.submittedAt": "Submitted At",
+  "admin.leave.therapistNotes": "Therapist Notes",
+  "admin.leave.adminNotes": "Admin Notes / Reason",
+  "admin.leave.selectRequestToReview": "Select a request from the list to review",
+  "common.cancel": "Cancel"
 }

@@ -49,7 +49,8 @@
             [title]="getCellTitle(cell)"
           >
             <div class="cell-content" *ngIf="cell.isLeave || cell.hasOverride || cell.isBooked">
-              <span *ngIf="cell.isLeave" class="cell-label">Leave</span>
+              <span *ngIf="cell.isLeave && cell.leaveStatus === 'PENDING'" class="cell-label">Pending</span>
+              <span *ngIf="cell.isLeave && cell.leaveStatus === 'APPROVED'" class="cell-label">Leave</span>
               <span *ngIf="cell.hasOverride" class="cell-label">Override</span>
               <span *ngIf="cell.isBooked" class="cell-label">Booked</span>
             </div>
@@ -76,6 +77,10 @@
     <div class="legend-item">
       <span class="legend-indicator cell-leave"></span>
       <span class="legend-label">Leave</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-indicator cell-leave-pending"></span>
+      <span class="legend-label">Leave (Pending)</span>
     </div>
     <div class="legend-item">
       <span class="legend-indicator cell-booked"></span>

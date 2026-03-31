@@ -13,6 +13,9 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,14 +28,18 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST controller for therapist leave request management.
  *
+ * <p>Therapist-specific leave operations. For admin operations (viewing all pending requests,
+ * approving/rejecting), see {@link LeaveAdminController}.
+ *
  * <p>Role-based access control:
  * <ul>
- *     <li>SYSTEM_ADMINISTRATOR: approve, reject, view all</li>
+ *     <li>SYSTEM_ADMINISTRATOR: full access - submit, cancel, view all</li>
+ *     <li>RECEPTION_ADMIN_STAFF: submit, cancel, view (approve/reject via admin endpoints)</li>
  *     <li>THERAPIST: submit, cancel, view own</li>
  * </ul>
  */
 @RestController
-@RequestMapping("/api/leave")
+@RequestMapping("/api/v1/therapists/{therapistProfileId}")
 public class TherapistLeaveController {
 
     private final TherapistLeaveService leaveService;
@@ -47,18 +54,41 @@ public class TherapistLeaveController {
     }
 
     /**
-     * Submits a new leave request (therapist).
+     * Resolves "me" token to the actual therapist profile ID from JWT.
      *
-     * @param therapistProfileId therapist profile UUID
+     * @param pathParam the path parameter (either "me" or a UUID string)
+     * @return the resolved UUID
+     * @throws IllegalArgumentException if pathParam is "me" but no therapistProfileId in JWT
+     */
+    private UUID resolveTherapistProfileId(final String pathParam) {
+        if ("me".equals(pathParam)) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Jwt jwt) {
+                String therapistProfileId = jwt.getClaimAsString("therapistProfileId");
+                if (therapistProfileId != null) {
+                    return UUID.fromString(therapistProfileId);
+                }
+            }
+            throw new IllegalArgumentException(
+                "Cannot resolve 'me': therapistProfileId not found in JWT token");
+        }
+        return UUID.fromString(pathParam);
+    }
+
+    /**
+     * Submits a new leave request.
+     *
+     * @param therapistProfileIdParam therapist profile UUID or "me"
      * @param request leave request details
      * @return created leave request
      */
-    @PostMapping("/therapists/{therapistProfileId}/requests")
-    @PreAuthorize("hasRole('THERAPIST')")
+    @PostMapping("/leave")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<TherapistLeave> submitLeaveRequest(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @Valid @RequestBody final LeaveRequestSubmission request
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         // TODO: Add access control check - therapist can only submit for themselves
 
         final var created = leaveService.submitLeaveRequest(
@@ -75,12 +105,15 @@ public class TherapistLeaveController {
     /**
      * Approves a leave request (admin).
      *
+     * <p>Note: For better API design, consider using {@code POST /api/v1/admin/leave/{leaveId}/approve}
+     * instead (see {@link LeaveAdminController}).
+     *
      * @param leaveId leave request UUID
      * @param request approval details
      * @return updated leave request
      */
-    @PutMapping("/requests/{leaveId}/approve")
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
+    @PutMapping("/leave/{leaveId}/approve")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistLeave> approveLeaveRequest(
         @PathVariable final UUID leaveId,
         @Valid @RequestBody final LeaveApprovalRequest request
@@ -97,12 +130,15 @@ public class TherapistLeaveController {
     /**
      * Rejects a leave request (admin).
      *
+     * <p>Note: For better API design, consider using {@code PUT /api/v1/admin/leave/{leaveId}/reject}
+     * instead (see {@link LeaveAdminController}).
+     *
      * @param leaveId leave request UUID
      * @param request rejection details
      * @return updated leave request
      */
-    @PutMapping("/requests/{leaveId}/reject")
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
+    @PutMapping("/leave/{leaveId}/reject")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistLeave> rejectLeaveRequest(
         @PathVariable final UUID leaveId,
         @Valid @RequestBody final LeaveApprovalRequest request
@@ -117,13 +153,13 @@ public class TherapistLeaveController {
     }
 
     /**
-     * Cancels a leave request (therapist).
+     * Cancels a leave request.
      *
      * @param leaveId leave request UUID
      * @return updated leave request
      */
-    @PutMapping("/requests/{leaveId}/cancel")
-    @PreAuthorize("hasRole('THERAPIST')")
+    @PutMapping("/leave/{leaveId}/cancel")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<TherapistLeave> cancelLeaveRequest(@PathVariable final UUID leaveId) {
         // TODO: Add access control check - therapist can only cancel their own requests
 
@@ -133,18 +169,19 @@ public class TherapistLeaveController {
     }
 
     /**
-     * Retrieves all leave periods for a therapist (therapist view).
+     * Retrieves all leave periods for a therapist.
      *
      * @param therapistProfileId therapist profile UUID
      * @param status optional status filter
      * @return list of leave periods
      */
-    @GetMapping("/therapists/{therapistProfileId}/requests")
-    @PreAuthorize("hasAnyRole('THERAPIST', 'SYSTEM_ADMINISTRATOR')")
+    @GetMapping("/leave")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<List<TherapistLeave>> getLeaveForTherapist(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @RequestParam(required = false) final LeaveStatus status
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         // TODO: Add access control check - therapist can only view own leave
 
         final List<TherapistLeave> leave = status != null
@@ -157,10 +194,13 @@ public class TherapistLeaveController {
     /**
      * Retrieves all pending leave requests (admin view).
      *
+     * <p>Note: This endpoint is incorrectly placed under the therapist-specific path.
+     * Consider using {@code GET /api/v1/admin/leave/pending} instead (see {@link LeaveAdminController}).
+     *
      * @return list of pending leave requests
      */
-    @GetMapping("/requests/pending")
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
+    @GetMapping("/leave/pending")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<List<TherapistLeave>> getAllPendingLeaveRequests() {
         final List<TherapistLeave> pending = leaveService.getAllPendingLeaveRequests();
 
@@ -177,13 +217,14 @@ public class TherapistLeaveController {
      * @param endDate end date
      * @return conflict warning response
      */
-    @GetMapping("/therapists/{therapistProfileId}/conflicts")
-    @PreAuthorize("hasRole('THERAPIST')")
+    @GetMapping("/leave/conflicts")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<ConflictWarningResponse> checkLeaveConflicts(
-        @PathVariable final UUID therapistProfileId,
+        @PathVariable("therapistProfileId") final String therapistProfileIdParam,
         @RequestParam final String startDate,
         @RequestParam final String endDate
     ) {
+        final UUID therapistProfileId = resolveTherapistProfileId(therapistProfileIdParam);
         // TODO: Query existing appointments and return conflicts
         // For now, return empty conflicts (appointments module not implemented yet)
 

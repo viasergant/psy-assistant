@@ -20,12 +20,15 @@ export const scheduleGuard: CanActivateFn = () => {
 
   const token = authService.token;
   if (!token) {
+    console.warn('Schedule guard: No token found, redirecting to login');
     return router.createUrlTree(['/auth/login']);
   }
 
   try {
     const decoded = jwtDecode<JwtPayload>(token);
     const role = decoded.role;
+
+    console.log('Schedule guard: User role:', role);
 
     // Allow SYSTEM_ADMINISTRATOR, THERAPIST, RECEPTION_ADMIN_STAFF, SUPERVISOR
     const allowedRoles = [
@@ -36,12 +39,15 @@ export const scheduleGuard: CanActivateFn = () => {
     ];
 
     if (allowedRoles.includes(role)) {
+      console.log('Schedule guard: Access granted');
       return true;
     }
 
-    return router.createUrlTree(['/']);
+    // User doesn't have permission - redirect to clients with a console warning
+    console.warn(`Schedule guard: Access denied. User role: ${role}. Allowed roles:`, allowedRoles);
+    return router.createUrlTree(['/clients']);
   } catch (error) {
-    console.error('Error decoding JWT:', error);
+    console.error('Schedule guard: Error decoding JWT:', error);
     return router.createUrlTree(['/auth/login']);
   }
 };

@@ -7,6 +7,7 @@ import com.psyassistant.auth.dto.LoginRequest;
 import com.psyassistant.auth.dto.LoginResponse;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.therapists.repository.TherapistProfileRepository;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
@@ -56,6 +57,7 @@ public class AuthService {
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    private final TherapistProfileRepository therapistProfileRepository;
 
     /**
      * Constructs the service with all required collaborators.
@@ -65,18 +67,21 @@ public class AuthService {
      * @param tokenService           JWT and token utilities
      * @param passwordEncoder        BCrypt encoder
      * @param auditLogService        audit recorder
+     * @param therapistProfileRepository therapist profile repository for linking users to profiles
      */
     public AuthService(
             final UserRepository userRepository,
             final RefreshTokenRepository refreshTokenRepository,
             final TokenService tokenService,
             final PasswordEncoder passwordEncoder,
-            final AuditLogService auditLogService) {
+            final AuditLogService auditLogService,
+            final TherapistProfileRepository therapistProfileRepository) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.tokenService = tokenService;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
+        this.therapistProfileRepository = therapistProfileRepository;
     }
 
     /**
@@ -125,7 +130,22 @@ public class AuthService {
         Instant expiresAt = Instant.now().plus(tokenService.refreshTtlFor(user.getRole()));
         refreshTokenRepository.save(new RefreshToken(user, hash, expiresAt));
 
-        String accessToken = tokenService.buildAccessToken(user);
+        // For therapists, look up their profile ID to include in the JWT
+        UUID therapistProfileId = null;
+        if (user.getRole() == UserRole.THERAPIST) {
+            therapistProfileId = therapistProfileRepository.findByEmailIgnoreCase(user.getEmail())
+                    .map(profile -> profile.getId())
+                    .orElse(null);
+            if (therapistProfileId != null) {
+                LOG.debug("Including therapistProfileId={} in JWT for user={}", 
+                        therapistProfileId, user.getId());
+            } else {
+                LOG.warn("User userId={} has THERAPIST role but no TherapistProfile found", 
+                        user.getId());
+            }
+        }
+
+        String accessToken = tokenService.buildAccessToken(user, therapistProfileId);
         Instant expiresAtAccess = tokenService.accessTokenExpiresAt(user.getRole());
 
         auditLogService.record(new AuditLog.Builder(EVENT_LOGIN_SUCCESS)
@@ -188,7 +208,15 @@ public class AuthService {
         Instant newExpiry = Instant.now().plus(tokenService.refreshTtlFor(user.getRole()));
         refreshTokenRepository.save(new RefreshToken(user, newHash, newExpiry));
 
-        String accessToken = tokenService.buildAccessToken(user);
+        // For therapists, look up their profile ID to include in the JWT
+        UUID therapistProfileId = null;
+        if (user.getRole() == UserRole.THERAPIST) {
+            therapistProfileId = therapistProfileRepository.findByEmailIgnoreCase(user.getEmail())
+                    .map(profile -> profile.getId())
+                    .orElse(null);
+        }
+
+        String accessToken = tokenService.buildAccessToken(user, therapistProfileId);
         Instant accessExpiry = tokenService.accessTokenExpiresAt(user.getRole());
 
         auditLogService.record(new AuditLog.Builder(EVENT_TOKEN_REFRESH)
@@ -285,7 +313,15 @@ public class AuthService {
         RefreshToken refreshToken = new RefreshToken(user, hash, expiresAt);
         refreshTokenRepository.save(refreshToken);
 
-        String accessToken = tokenService.buildAccessToken(user);
+        // For therapists, look up their profile ID to include in the JWT
+        UUID therapistProfileId = null;
+        if (user.getRole() == UserRole.THERAPIST) {
+            therapistProfileId = therapistProfileRepository.findByEmailIgnoreCase(user.getEmail())
+                    .map(profile -> profile.getId())
+                    .orElse(null);
+        }
+
+        String accessToken = tokenService.buildAccessToken(user, therapistProfileId);
         Instant accessExpiry = tokenService.accessTokenExpiresAt(user.getRole());
 
         auditLogService.record(new AuditLog.Builder(EVENT_PASSWORD_CHANGED)

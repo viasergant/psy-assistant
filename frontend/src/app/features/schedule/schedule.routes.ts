@@ -1,12 +1,13 @@
 import { Routes } from '@angular/router';
-import { Component } from '@angular/core';
-
-@Component({
-  standalone: true,
-  template: `<h1>Schedule — coming soon</h1>`
-})
-export class SchedulePlaceholderComponent {}
+import { scheduleGuard } from './guards/schedule.guard';
 
 export default [
-  { path: '', component: SchedulePlaceholderComponent }
+  {
+    path: '',
+    canActivate: [scheduleGuard],
+    loadComponent: () =>
+      import('./schedule-management.component').then(
+        m => m.ScheduleManagementComponent
+      )
+  }
 ] satisfies Routes;

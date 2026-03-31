@@ -1,0 +1,120 @@
+<div class="pending-leave-requests-container">
+  <div class="header">
+    <h2>{{ 'admin.leave.pendingRequests' | transloco }}</h2>
+    <button class="btn-refresh" (click)="loadPendingRequests()" [disabled]="isLoading">
+      <span *ngIf="!isLoading">🔄</span>
+      <span *ngIf="isLoading">⏳</span>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <p>Loading pending requests...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && pendingRequests.length === 0" class="empty-state">
+    <p>✅ {{ 'admin.leave.noPendingRequests' | transloco }}</p>
+  </div>
+
+  <!-- Requests List -->
+  <div *ngIf="!isLoading && pendingRequests.length > 0" class="requests-layout">
+    <!-- Left: List of pending requests -->
+    <div class="requests-list">
+      <div
+        *ngFor="let request of pendingRequests"
+        class="request-card"
+        [class.selected]="selectedRequest?.id === request.id"
+        (click)="selectRequest(request)"
+      >
+        <div class="request-header">
+          <span class="therapist-name">{{ request.therapistName || 'Therapist' }}</span>
+          <span class="leave-type-badge">{{ getLeaveTypeDisplay(request.leaveType) }}</span>
+        </div>
+        <div class="request-dates">
+          📅 {{ getDateRange(request) }}
+        </div>
+        <div class="request-submitted">
+          <small>Submitted: {{ request.requestedAt | date: 'short' }}</small>
+        </div>
+        <div *ngIf="request.requestNotes" class="request-notes-preview">
+          <small>{{ request.requestNotes | slice:0:80 }}{{ request.requestNotes.length > 80 ? '...' : '' }}</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Request details and actions -->
+    <div class="request-details" *ngIf="selectedRequest">
+      <div class="details-header">
+        <h3>{{ 'admin.leave.reviewRequest' | transloco }}</h3>
+        <button class="btn-close" (click)="cancelReview()">✕</button>
+      </div>
+
+      <div class="details-content">
+        <div class="detail-row">
+          <label>{{ 'admin.leave.therapist' | transloco }}:</label>
+          <span>{{ selectedRequest.therapistName || 'N/A' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <label>{{ 'schedule.leave.type' | transloco }}:</label>
+          <span>{{ getLeaveTypeDisplay(selectedRequest.leaveType) }}</span>
+        </div>
+
+        <div class="detail-row">
+          <label>{{ 'schedule.leave.dateRange' | transloco }}:</label>
+          <span>{{ getDateRange(selectedRequest) }}</span>
+        </div>
+
+        <div class="detail-row">
+          <label>{{ 'admin.leave.submittedAt' | transloco }}:</label>
+          <span>{{ selectedRequest.requestedAt | date: 'medium' }}</span>
+        </div>
+
+        <div class="detail-row" *ngIf="selectedRequest.requestNotes">
+          <label>{{ 'admin.leave.therapistNotes' | transloco }}:</label>
+          <div class="notes-display">{{ selectedRequest.requestNotes }}</div>
+        </div>
+
+        <div class="detail-row">
+          <label>{{ 'admin.leave.adminNotes' | transloco }}:</label>
+          <textarea
+            [(ngModel)]="adminNotes"
+            rows="3"
+            placeholder="Add notes (optional for approval, required for rejection)"
+            [disabled]="isProcessing"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button
+          class="btn-approve"
+          (click)="approveRequest()"
+          [disabled]="isProcessing"
+        >
+          ✓ {{ 'schedule.leave.approve' | transloco }}
+        </button>
+        <button
+          class="btn-reject"
+          (click)="rejectRequest()"
+          [disabled]="isProcessing"
+        >
+          ✕ {{ 'schedule.leave.reject' | transloco }}
+        </button>
+        <button
+          class="btn-cancel"
+          (click)="cancelReview()"
+          [disabled]="isProcessing"
+        >
+          {{ 'common.cancel' | transloco }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Placeholder when no request is selected -->
+    <div class="request-details-placeholder" *ngIf="!selectedRequest">
+      <p>{{ 'admin.leave.selectRequestToReview' | transloco }}</p>
+    </div>
+  </div>
+</div>

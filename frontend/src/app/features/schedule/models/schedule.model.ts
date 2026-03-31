@@ -35,14 +35,16 @@ export interface ScheduleOverride {
 export interface Leave {
   id?: string;
   therapistProfileId: string;
+  therapistName?: string; // Optional - only populated in admin views with join
   leaveType: LeaveType;
   startDate: string; // yyyy-MM-dd format
   endDate: string;   // yyyy-MM-dd format
   status: LeaveStatus;
   requestNotes?: string;
-  responseNotes?: string;
-  approvedBy?: string;
-  approvedAt?: string;
+  adminNotes?: string; // Changed from responseNotes to match backend
+  requestedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -120,8 +122,8 @@ export interface LeaveRequest {
  * Request to approve/reject leave
  */
 export interface LeaveApprovalRequest {
-  approve: boolean;
-  responseNotes?: string;
+  reviewerUserId: string; // UUID of admin/staff approving/rejecting
+  adminNotes?: string; // Optional notes from admin
 }
 
 /**

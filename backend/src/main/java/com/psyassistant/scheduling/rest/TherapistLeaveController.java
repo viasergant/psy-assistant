@@ -25,10 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST controller for therapist leave request management.
  *
+ * <p>Therapist-specific leave operations. For admin operations (viewing all pending requests,
+ * approving/rejecting), see {@link LeaveAdminController}.
+ *
  * <p>Role-based access control:
  * <ul>
- *     <li>SYSTEM_ADMINISTRATOR: full access - submit, approve, reject, cancel, view all</li>
- *     <li>RECEPTION_ADMIN_STAFF: submit, cancel, view</li>
+ *     <li>SYSTEM_ADMINISTRATOR: full access - submit, cancel, view all</li>
+ *     <li>RECEPTION_ADMIN_STAFF: submit, cancel, view (approve/reject via admin endpoints)</li>
  *     <li>THERAPIST: submit, cancel, view own</li>
  * </ul>
  */
@@ -76,12 +79,15 @@ public class TherapistLeaveController {
     /**
      * Approves a leave request (admin).
      *
+     * <p>Note: For better API design, consider using {@code POST /api/v1/admin/leave/{leaveId}/approve}
+     * instead (see {@link LeaveAdminController}).
+     *
      * @param leaveId leave request UUID
      * @param request approval details
      * @return updated leave request
      */
     @PutMapping("/leave/{leaveId}/approve")
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistLeave> approveLeaveRequest(
         @PathVariable final UUID leaveId,
         @Valid @RequestBody final LeaveApprovalRequest request
@@ -98,12 +104,15 @@ public class TherapistLeaveController {
     /**
      * Rejects a leave request (admin).
      *
+     * <p>Note: For better API design, consider using {@code PUT /api/v1/admin/leave/{leaveId}/reject}
+     * instead (see {@link LeaveAdminController}).
+     *
      * @param leaveId leave request UUID
      * @param request rejection details
      * @return updated leave request
      */
     @PutMapping("/leave/{leaveId}/reject")
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistLeave> rejectLeaveRequest(
         @PathVariable final UUID leaveId,
         @Valid @RequestBody final LeaveApprovalRequest request
@@ -158,10 +167,13 @@ public class TherapistLeaveController {
     /**
      * Retrieves all pending leave requests (admin view).
      *
+     * <p>Note: This endpoint is incorrectly placed under the therapist-specific path.
+     * Consider using {@code GET /api/v1/admin/leave/pending} instead (see {@link LeaveAdminController}).
+     *
      * @return list of pending leave requests
      */
     @GetMapping("/leave/pending")
-    @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<List<TherapistLeave>> getAllPendingLeaveRequests() {
         final List<TherapistLeave> pending = leaveService.getAllPendingLeaveRequests();
 

@@ -15,6 +15,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class LeaveRequestService {
   private readonly apiBase = '/api/v1/therapists';
+  private readonly adminApiBase = '/api/v1/admin/leave';
 
   constructor(private http: HttpClient) {}
 
@@ -131,6 +132,41 @@ export class LeaveRequestService {
     return this.http.get<ConflictWarning>(
       `${this.apiBase}/me/leave/conflicts`,
       { params }
+    );
+  }
+
+  // ========== Admin Operations ==========
+
+  /**
+   * Get all pending leave requests across all therapists (admin only)
+   */
+  getAllPendingLeaveRequests(): Observable<Leave[]> {
+    return this.http.get<Leave[]>(`${this.adminApiBase}/pending`);
+  }
+
+  /**
+   * Approve a leave request (admin only)
+   */
+  approveLeaveRequestAdmin(
+    leaveId: string,
+    request: LeaveApprovalRequest
+  ): Observable<Leave> {
+    return this.http.put<Leave>(
+      `${this.adminApiBase}/${leaveId}/approve`,
+      request
+    );
+  }
+
+  /**
+   * Reject a leave request (admin only)
+   */
+  rejectLeaveRequestAdmin(
+    leaveId: string,
+    request: LeaveApprovalRequest
+  ): Observable<Leave> {
+    return this.http.put<Leave>(
+      `${this.adminApiBase}/${leaveId}/reject`,
+      request
     );
   }
 }

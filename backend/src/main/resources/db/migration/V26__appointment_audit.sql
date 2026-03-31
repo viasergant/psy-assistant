@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS appointment_audit (
     -- Action metadata
     action_type         VARCHAR(50) NOT NULL,
     action_timestamp    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    actor_user_id       UUID NOT NULL REFERENCES user_account(id),
+    actor_user_id       UUID NOT NULL REFERENCES users(id),
     actor_name          VARCHAR(255) NOT NULL,
     
     -- Request context

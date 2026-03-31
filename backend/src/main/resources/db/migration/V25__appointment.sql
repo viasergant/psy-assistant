@@ -1,9 +1,12 @@
 -- V25: Appointment table with conflict detection support
 
+-- Enable btree_gist extension for UUID support in GIST indexes
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
 CREATE TABLE IF NOT EXISTS appointment (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     therapist_profile_id    UUID NOT NULL REFERENCES therapist_profile(id) ON DELETE RESTRICT,
-    client_id               UUID NOT NULL REFERENCES client(id) ON DELETE RESTRICT,
+    client_id               UUID NOT NULL REFERENCES clients(id) ON DELETE RESTRICT,
     session_type_id         UUID NOT NULL REFERENCES session_type(id) ON DELETE RESTRICT,
     
     -- Scheduling fields
@@ -19,13 +22,13 @@ CREATE TABLE IF NOT EXISTS appointment (
     cancellation_type       VARCHAR(50),
     cancellation_reason     VARCHAR(1000),
     cancelled_at            TIMESTAMPTZ,
-    cancelled_by            UUID REFERENCES user_account(id),
+    cancelled_by            UUID REFERENCES users(id),
     
     -- Reschedule tracking
     reschedule_reason       VARCHAR(1000),
     original_start_time     TIMESTAMPTZ,
     rescheduled_at          TIMESTAMPTZ,
-    rescheduled_by          UUID REFERENCES user_account(id),
+    rescheduled_by          UUID REFERENCES users(id),
     
     -- Notes and metadata
     notes                   TEXT,
@@ -50,12 +53,21 @@ CREATE TABLE IF NOT EXISTS appointment (
     )
 );
 
+-- Helper function to compute appointment time range (marked IMMUTABLE for index usage)
+CREATE OR REPLACE FUNCTION appointment_time_range(start_time TIMESTAMPTZ, duration_minutes INTEGER)
+RETURNS tstzrange
+LANGUAGE SQL
+IMMUTABLE
+AS $$
+    SELECT tstzrange(start_time, start_time + (duration_minutes * INTERVAL '1 minute'));
+$$;
+
 -- CRITICAL: GIST index for O(log n) conflict detection using PostgreSQL tstzrange
--- This index enables fast overlap queries: WHERE tstzrange(start_time, end_time) && target_range
+-- This index enables fast overlap queries: WHERE appointment_time_range(start_time, duration_minutes) && target_range
 CREATE INDEX idx_appointment_conflict_detection ON appointment 
 USING GIST (
     therapist_profile_id, 
-    tstzrange(start_time, start_time + (duration_minutes || ' minutes')::INTERVAL)
+    appointment_time_range(start_time, duration_minutes)
 )
 WHERE status != 'CANCELLED';
 

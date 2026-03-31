@@ -1,9 +1,17 @@
 package com.psyassistant.scheduling.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 import com.psyassistant.scheduling.domain.Appointment;
 import com.psyassistant.scheduling.domain.AppointmentStatus;
 import com.psyassistant.scheduling.domain.SessionType;
 import com.psyassistant.scheduling.repository.AppointmentRepository;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,17 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link ConflictDetectionService}.
@@ -55,7 +52,7 @@ class ConflictDetectionServiceTest {
 
     @Test
     @DisplayName("Adjacent appointments should NOT conflict (end = start)")
-    void testAdjacentAppointments_NoConflict() {
+    void testAdjacentAppointmentsNoConflict() {
         // Existing: 10:00-11:00
         // Proposed: 11:00-12:00
         // Expected: NO conflict (adjacent but not overlapping)
@@ -80,7 +77,7 @@ class ConflictDetectionServiceTest {
 
     @Test
     @DisplayName("Partial overlap should conflict")
-    void testPartialOverlap_HasConflict() {
+    void testPartialOverlapHasConflict() {
         // Existing: 10:00-11:00
         // Proposed: 10:30-11:30
         // Expected: CONFLICT (30 minutes overlap)
@@ -108,7 +105,7 @@ class ConflictDetectionServiceTest {
 
     @Test
     @DisplayName("Exact time match should conflict")
-    void testExactTimeMatch_HasConflict() {
+    void testExactTimeMatchHasConflict() {
         // Existing: 10:00-11:00
         // Proposed: 10:00-11:00
         // Expected: CONFLICT (exact match)
@@ -135,7 +132,7 @@ class ConflictDetectionServiceTest {
 
     @Test
     @DisplayName("One appointment contains the other should conflict")
-    void testOneContainsOther_HasConflict() {
+    void testOneContainsOtherHasConflict() {
         // Existing: 10:00-12:00 (2 hours)
         // Proposed: 10:30-11:00 (30 minutes inside)
         // Expected: CONFLICT
@@ -162,7 +159,7 @@ class ConflictDetectionServiceTest {
 
     @Test
     @DisplayName("No conflicts when therapist schedule is empty")
-    void testEmptySchedule_NoConflict() {
+    void testEmptyScheduleNoConflict() {
         final ZonedDateTime proposedStart = baseTime;
         final Integer proposedDuration = 60;
 
@@ -183,7 +180,7 @@ class ConflictDetectionServiceTest {
 
     @Test
     @DisplayName("hasConflicts returns true when conflicts exist")
-    void testHasConflicts_WhenConflictsExist() {
+    void testHasConflictsWhenConflictsExist() {
         final ZonedDateTime proposedStart = baseTime;
         final Integer proposedDuration = 60;
 
@@ -206,7 +203,7 @@ class ConflictDetectionServiceTest {
 
     @Test
     @DisplayName("hasConflicts returns false when no conflicts exist")
-    void testHasConflicts_WhenNoConflictsExist() {
+    void testHasConflictsWhenNoConflictsExist() {
         final ZonedDateTime proposedStart = baseTime;
         final Integer proposedDuration = 60;
 

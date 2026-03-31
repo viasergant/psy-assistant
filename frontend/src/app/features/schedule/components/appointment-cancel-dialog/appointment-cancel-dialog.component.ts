@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { DropdownModule } from 'primeng/dropdown';
+import { Select } from 'primeng/select';
 import { Subject, takeUntil } from 'rxjs';
 import {
   Appointment,
@@ -18,7 +18,7 @@ import { AppointmentApiService } from '../../services/appointment-api.service';
 @Component({
   selector: 'app-appointment-cancel-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, DropdownModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" [attr.aria-labelledby]="'cancel-title'">
       <div class="dialog" @fadeInUp>
@@ -74,7 +74,7 @@ import { AppointmentApiService } from '../../services/appointment-api.service';
               {{ 'schedule.appointment.cancel.cancellationTypeLabel' | transloco }}
               <span class="required" aria-hidden="true">*</span>
             </label>
-            <p-dropdown
+            <p-select
               inputId="cancellationType"
               formControlName="cancellationType"
               [options]="cancellationTypes"

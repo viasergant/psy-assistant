@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePicker } from 'primeng/datepicker';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs';
 import {
   Appointment,
@@ -19,7 +19,7 @@ import { AppointmentApiService } from '../../services/appointment-api.service';
 @Component({
   selector: 'app-appointment-reschedule-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, CalendarModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, DatePicker],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" [attr.aria-labelledby]="'reschedule-title'">
       <div class="dialog" @fadeInUp>
@@ -51,7 +51,7 @@ import { AppointmentApiService } from '../../services/appointment-api.service';
               {{ 'schedule.appointment.reschedule.newTimeLabel' | transloco }}
               <span class="required" aria-hidden="true">*</span>
             </label>
-            <p-calendar
+            <p-datepicker
               inputId="newStartTime"
               formControlName="newStartTime"
               [placeholder]="'schedule.appointment.reschedule.newTimePlaceholder' | transloco"

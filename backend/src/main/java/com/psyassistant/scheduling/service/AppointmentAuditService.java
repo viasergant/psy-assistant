@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AppointmentAuditService {
 
-    private static final Logger log = LoggerFactory.getLogger(AppointmentAuditService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AppointmentAuditService.class);
 
     private final AppointmentAuditRepository auditRepository;
 
@@ -59,11 +59,11 @@ public class AppointmentAuditService {
                     actorName
             );
             auditRepository.save(audit);
-            log.debug("Audit entry created: appointmentId={}, actionType={}, actor={}",
+            LOG.debug("Audit entry created: appointmentId={}, actionType={}, actor={}",
                     appointmentId, actionType, actorName);
         } catch (final Exception e) {
             // Log failure but don't propagate - audit failures should not block business operations
-            log.error("Failed to create audit entry: appointmentId={}, actionType={}, actor={}",
+            LOG.error("Failed to create audit entry: appointmentId={}, actionType={}, actor={}",
                     appointmentId, actionType, actorName, e);
         }
     }
@@ -95,10 +95,10 @@ public class AppointmentAuditService {
                     .build();
 
             auditRepository.save(audit);
-            log.debug("Audit entry with metadata created: appointmentId={}, actionType={}, actor={}",
+            LOG.debug("Audit entry with metadata created: appointmentId={}, actionType={}, actor={}",
                     appointmentId, actionType, actorName);
         } catch (final Exception e) {
-            log.error("Failed to create audit entry with metadata: appointmentId={}, actionType={}, actor={}",
+            LOG.error("Failed to create audit entry with metadata: appointmentId={}, actionType={}, actor={}",
                     appointmentId, actionType, actorName, e);
         }
     }
@@ -134,10 +134,10 @@ public class AppointmentAuditService {
                     .build();
 
             auditRepository.save(audit);
-            log.debug("Audit field change created: appointmentId={}, field={}, actor={}",
+            LOG.debug("Audit field change created: appointmentId={}, field={}, actor={}",
                     appointmentId, fieldName, actorName);
         } catch (final Exception e) {
-            log.error("Failed to create audit field change: appointmentId={}, field={}, actor={}",
+            LOG.error("Failed to create audit field change: appointmentId={}, field={}, actor={}",
                     appointmentId, fieldName, actorName, e);
         }
     }

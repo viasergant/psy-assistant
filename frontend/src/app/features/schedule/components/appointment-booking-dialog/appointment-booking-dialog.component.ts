@@ -3,8 +3,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { CalendarModule } from 'primeng/calendar';
-import { DropdownModule } from 'primeng/dropdown';
+import { DatePicker } from 'primeng/datepicker';
+import { Select } from 'primeng/select';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import {
   Appointment,
@@ -26,7 +26,7 @@ interface ClientOption {
 @Component({
   selector: 'app-appointment-booking-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, CalendarModule, DropdownModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, DatePicker, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" [attr.aria-labelledby]="'booking-title'">
       <div class="dialog" @fadeInUp>
@@ -52,7 +52,7 @@ interface ClientOption {
                 {{ 'schedule.appointment.booking.clientLabel' | transloco }}
                 <span class="required" aria-hidden="true">*</span>
               </label>
-              <p-dropdown
+              <p-select
                 inputId="client"
                 formControlName="clientId"
                 [options]="clients"
@@ -75,7 +75,7 @@ interface ClientOption {
                 {{ 'schedule.appointment.booking.sessionTypeLabel' | transloco }}
                 <span class="required" aria-hidden="true">*</span>
               </label>
-              <p-dropdown
+              <p-select
                 inputId="sessionType"
                 formControlName="sessionTypeId"
                 [options]="sessionTypes"
@@ -98,7 +98,7 @@ interface ClientOption {
                 {{ 'schedule.appointment.booking.dateLabel' | transloco }}
                 <span class="required" aria-hidden="true">*</span>
               </label>
-              <p-calendar
+              <p-datepicker
                 inputId="startTime"
                 formControlName="startTime"
                 [placeholder]="'schedule.appointment.booking.datePlaceholder' | transloco"

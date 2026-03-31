@@ -60,8 +60,10 @@ public class AppointmentService {
      *
      * <p><strong>Conflict Handling</strong>:
      * <ul>
-     *     <li>If conflicts detected and {@code allowConflictOverride = false}: throws {@link ConflictException}</li>
-     *     <li>If conflicts detected and {@code allowConflictOverride = true}: creates appointment with override flag</li>
+     *     <li>If conflicts detected and {@code allowConflictOverride = false}:
+     *         throws {@link ConflictException}</li>
+     *     <li>If conflicts detected and {@code allowConflictOverride = true}:
+     *         creates appointment with override flag</li>
      *     <li>If no conflicts: creates appointment normally</li>
      * </ul>
      *
@@ -277,9 +279,12 @@ public class AppointmentService {
         final Appointment saved = appointmentRepository.save(appointment);
 
         // Async audit trail
+        final ZonedDateTime oldTime = appointment.getOriginalStartTime() != null
+                ? appointment.getOriginalStartTime()
+                : appointment.getStartTime();
         final String metadata = String.format(
                 "{\"oldStartTime\": \"%s\", \"newStartTime\": \"%s\", \"reason\": \"%s\"}",
-                appointment.getOriginalStartTime() != null ? appointment.getOriginalStartTime() : appointment.getStartTime(),
+                oldTime,
                 newStartTime,
                 reason.replace("\"", "\\\"")
         );

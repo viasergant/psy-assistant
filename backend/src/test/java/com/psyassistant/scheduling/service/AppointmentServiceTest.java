@@ -1,12 +1,5 @@
 package com.psyassistant.scheduling.service;
 
-import com.psyassistant.scheduling.domain.Appointment;
-import com.psyassistant.scheduling.domain.AppointmentStatus;
-import com.psyassistant.scheduling.domain.AuditActionType;
-import com.psyassistant.scheduling.domain.CancellationType;
-import com.psyassistant.scheduling.domain.SessionType;
-import com.psyassistant.scheduling.repository.AppointmentRepository;
-import com.psyassistant.scheduling.repository.SessionTypeRepository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,16 +8,20 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import com.psyassistant.scheduling.domain.Appointment;
+import com.psyassistant.scheduling.domain.AppointmentStatus;
+import com.psyassistant.scheduling.domain.AuditActionType;
+import com.psyassistant.scheduling.domain.CancellationType;
+import com.psyassistant.scheduling.domain.SessionType;
+import com.psyassistant.scheduling.repository.AppointmentRepository;
+import com.psyassistant.scheduling.repository.SessionTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
-
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Unit tests for {@link AppointmentService}.
@@ -80,18 +78,15 @@ class AppointmentServiceTest {
         actorUserId = UUID.randomUUID();
         startTime = ZonedDateTime.of(2026, 3, 31, 10, 0, 0, 0, ZoneId.of("America/New_York"));
 
-        sessionType = new SessionType();
-        sessionType.setId(sessionTypeId);
-        sessionType.setCode("IN_PERSON");
-        sessionType.setName("In-Person Session");
-        sessionType.setIsActive(true);
+        sessionType = new SessionType("IN_PERSON", "In-Person Session", null);
+        ReflectionTestUtils.setField(sessionType, "id", sessionTypeId);
     }
 
     // ========== Create Appointment Tests ==========
 
     @Test
     @DisplayName("Create appointment successfully with no conflicts")
-    void testCreateAppointment_NoConflicts_Success() {
+    void testCreateAppointmentNoConflictsSuccess() {
         // Arrange
         when(sessionTypeRepository.findById(sessionTypeId)).thenReturn(Optional.of(sessionType));
         when(conflictDetectionService.findConflictingAppointments(therapistId, startTime, 60))
@@ -120,14 +115,16 @@ class AppointmentServiceTest {
         assertThat(result.getIsConflictOverride()).isFalse();
 
         verify(sessionTypeRepository).findById(sessionTypeId);
-        verify(conflictDetectionService).findConflictingAppointments(therapistId, startTime, 60);
+        verify(conflictDetectionService).findConflictingAppointments(
+                therapistId, startTime, 60);
         verify(appointmentRepository).save(any(Appointment.class));
-        verify(auditService).recordAuditEntry(any(UUID.class), eq(AuditActionType.CREATED), eq(actorUserId), eq("Dr. Smith"));
+        verify(auditService).recordAuditEntry(
+                any(UUID.class), eq(AuditActionType.CREATED), eq(actorUserId), eq("Dr. Smith"));
     }
 
     @Test
     @DisplayName("Create appointment with conflict throws ConflictException when override not allowed")
-    void testCreateAppointment_ConflictWithoutOverride_ThrowsException() {
+    void testCreateAppointmentConflictWithoutOverrideThrowsException() {
         // Arrange
         when(sessionTypeRepository.findById(sessionTypeId)).thenReturn(Optional.of(sessionType));
 
@@ -160,7 +157,7 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Create appointment with conflict override creates appointment with override flag")
-    void testCreateAppointment_ConflictWithOverride_Success() {
+    void testCreateAppointmentConflictWithOverrideSuccess() {
         // Arrange
         when(sessionTypeRepository.findById(sessionTypeId)).thenReturn(Optional.of(sessionType));
 
@@ -202,7 +199,7 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Create appointment with invalid duration throws IllegalArgumentException")
-    void testCreateAppointment_InvalidDuration_ThrowsException() {
+    void testCreateAppointmentInvalidDurationThrowsException() {
         // Arrange
         when(sessionTypeRepository.findById(sessionTypeId)).thenReturn(Optional.of(sessionType));
 
@@ -227,7 +224,7 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Create appointment with duration exceeding 8 hours throws IllegalArgumentException")
-    void testCreateAppointment_DurationTooLong_ThrowsException() {
+    void testCreateAppointmentDurationTooLongThrowsException() {
         // Arrange
         when(sessionTypeRepository.findById(sessionTypeId)).thenReturn(Optional.of(sessionType));
 
@@ -252,7 +249,7 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Create appointment with non-existent session type throws EntityNotFoundException")
-    void testCreateAppointment_SessionTypeNotFound_ThrowsException() {
+    void testCreateAppointmentSessionTypeNotFoundThrowsException() {
         // Arrange
         when(sessionTypeRepository.findById(sessionTypeId)).thenReturn(Optional.empty());
 
@@ -279,11 +276,11 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Reschedule appointment successfully with no conflicts")
-    void testRescheduleAppointment_NoConflicts_Success() {
+    void testRescheduleAppointmentNoConflictsSuccess() {
         // Arrange
         final UUID appointmentId = UUID.randomUUID();
         final Appointment existingAppointment = createMockAppointment();
-        existingAppointment.setId(appointmentId);
+        ReflectionTestUtils.setField(existingAppointment, "id", appointmentId);
 
         when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(existingAppointment));
 
@@ -320,11 +317,11 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Reschedule appointment with conflict throws ConflictException when override not allowed")
-    void testRescheduleAppointment_ConflictWithoutOverride_ThrowsException() {
+    void testRescheduleAppointmentConflictWithoutOverrideThrowsException() {
         // Arrange
         final UUID appointmentId = UUID.randomUUID();
         final Appointment existingAppointment = createMockAppointment();
-        existingAppointment.setId(appointmentId);
+        ReflectionTestUtils.setField(existingAppointment, "id", appointmentId);
 
         when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(existingAppointment));
 
@@ -350,11 +347,11 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Reschedule cancelled appointment throws IllegalStateException")
-    void testRescheduleAppointment_AlreadyCancelled_ThrowsException() {
+    void testRescheduleAppointmentAlreadyCancelledThrowsException() {
         // Arrange
         final UUID appointmentId = UUID.randomUUID();
         final Appointment cancelledAppointment = createMockAppointment();
-        cancelledAppointment.setId(appointmentId);
+        ReflectionTestUtils.setField(cancelledAppointment, "id", appointmentId);
         cancelledAppointment.setStatus(AppointmentStatus.CANCELLED);
 
         when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(cancelledAppointment));
@@ -377,7 +374,7 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Reschedule non-existent appointment throws EntityNotFoundException")
-    void testRescheduleAppointment_NotFound_ThrowsException() {
+    void testRescheduleAppointmentNotFoundThrowsException() {
         // Arrange
         final UUID appointmentId = UUID.randomUUID();
         when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.empty());
@@ -399,11 +396,11 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Cancel appointment successfully")
-    void testCancelAppointment_Success() {
+    void testCancelAppointmentSuccess() {
         // Arrange
         final UUID appointmentId = UUID.randomUUID();
         final Appointment existingAppointment = createMockAppointment();
-        existingAppointment.setId(appointmentId);
+        ReflectionTestUtils.setField(existingAppointment, "id", appointmentId);
 
         when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(existingAppointment));
         when(appointmentRepository.save(any(Appointment.class))).thenReturn(existingAppointment);
@@ -431,11 +428,11 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Cancel already cancelled appointment throws IllegalStateException")
-    void testCancelAppointment_AlreadyCancelled_ThrowsException() {
+    void testCancelAppointmentAlreadyCancelledThrowsException() {
         // Arrange
         final UUID appointmentId = UUID.randomUUID();
         final Appointment cancelledAppointment = createMockAppointment();
-        cancelledAppointment.setId(appointmentId);
+        ReflectionTestUtils.setField(cancelledAppointment, "id", appointmentId);
         cancelledAppointment.setStatus(AppointmentStatus.CANCELLED);
 
         when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(cancelledAppointment));
@@ -456,7 +453,7 @@ class AppointmentServiceTest {
 
     @Test
     @DisplayName("Cancel non-existent appointment throws EntityNotFoundException")
-    void testCancelAppointment_NotFound_ThrowsException() {
+    void testCancelAppointmentNotFoundThrowsException() {
         // Arrange
         final UUID appointmentId = UUID.randomUUID();
         when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.empty());
@@ -484,7 +481,7 @@ class AppointmentServiceTest {
                 60,
                 "America/New_York"
         );
-        appointment.setId(UUID.randomUUID());
+        ReflectionTestUtils.setField(appointment, "id", UUID.randomUUID());
         appointment.setStatus(AppointmentStatus.SCHEDULED);
         appointment.setIsConflictOverride(false);
         return appointment;

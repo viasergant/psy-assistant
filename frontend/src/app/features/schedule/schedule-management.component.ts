@@ -33,8 +33,8 @@ import { TherapistProfile } from '../admin/therapists/models/therapist.model';
             (ngModelChange)="onTherapistChange()"
             class="therapist-selector"
           >
-            <option [value]="null">Select a therapist...</option>
-            <option *ngFor="let therapist of therapists" [value]="therapist.id">
+            <option [ngValue]="null">Select a therapist...</option>
+            <option *ngFor="let therapist of therapists" [ngValue]="therapist.id">
               {{ therapist.name }}
             </option>
           </select>
@@ -270,9 +270,14 @@ export class ScheduleManagementComponent implements OnInit {
   }
 
   onTherapistChange(): void {
-    if (this.selectedTherapistId) {
+    if (this.selectedTherapistId && this.selectedTherapistId !== 'null') {
       this.therapistProfileId = this.selectedTherapistId;
       this.loadSchedule();
+    } else {
+      // User selected "Select a therapist..." - clear schedule
+      this.therapistProfileId = null;
+      this.schedule = null;
+      this.therapistName = '';
     }
   }
 

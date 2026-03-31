@@ -1,0 +1,12 @@
+{
+  "app.title": "PSY Assistant CRM",
+  "nav.leads": "Потенційні клієнти",
+  "nav.clients": "Клієнти",
+  "nav.schedule": "Розклад",
+  "nav.sessions": "Сесії",
+  "nav.admin": "Адміністрування",
+  "nav.logout": "Вийти",
+  "common.cancel": "Скасувати",
+  "schedule.validation.required": "Це поле обов'язкове",
+  "schedule.calendar.today": "Сьогодні"
+}

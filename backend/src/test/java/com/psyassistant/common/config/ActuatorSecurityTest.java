@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles({"test", "prod"})
+@ActiveProfiles("test")
 class ActuatorSecurityTest {
 
     @Autowired

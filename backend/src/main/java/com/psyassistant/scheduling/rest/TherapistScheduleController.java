@@ -31,12 +31,12 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Role-based access control:
  * <ul>
  *     <li>SYSTEM_ADMINISTRATOR: full CRUD on all schedules</li>
- *     <li>RECEPTION_ADMIN_STAFF + THERAPIST: CRUDon own schedule</li>
+ *     <li>RECEPTION_ADMIN_STAFF + THERAPIST: CRUD on own schedule</li>
  *     <li>THERAPIST only: read-only</li>
  * </ul>
  */
 @RestController
-@RequestMapping("/api/schedules/therapists/{therapistProfileId}")
+@RequestMapping("/api/v1/therapists/{therapistProfileId}")
 public class TherapistScheduleController {
 
     private final TherapistScheduleService scheduleService;
@@ -62,7 +62,7 @@ public class TherapistScheduleController {
      * @param therapistProfileId therapist profile UUID
      * @return schedule summary
      */
-    @GetMapping
+    @GetMapping("/schedule")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF', 'THERAPIST')")
     public ResponseEntity<ScheduleSummaryResponse> getScheduleSummary(
         @PathVariable final UUID therapistProfileId,
@@ -127,7 +127,7 @@ public class TherapistScheduleController {
      * @param request recurring schedule details
      * @return created schedule entry
      */
-    @PostMapping("/recurring")
+    @PostMapping("/schedule/recurring")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistRecurringSchedule> createRecurringSchedule(
         @PathVariable final UUID therapistProfileId,
@@ -154,7 +154,7 @@ public class TherapistScheduleController {
      * @param request updated schedule details
      * @return updated schedule entry
      */
-    @PutMapping("/recurring/{scheduleId}")
+    @PutMapping("/schedule/recurring/{scheduleId}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistRecurringSchedule> updateRecurringSchedule(
         @PathVariable final UUID therapistProfileId,
@@ -180,7 +180,7 @@ public class TherapistScheduleController {
      * @param scheduleId schedule entry UUID
      * @return no content
      */
-    @DeleteMapping("/recurring/{scheduleId}")
+    @DeleteMapping("/schedule/recurring/{scheduleId}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<Void> deleteRecurringSchedule(
         @PathVariable final UUID therapistProfileId,
@@ -202,7 +202,7 @@ public class TherapistScheduleController {
      * @param request override details
      * @return created override
      */
-    @PostMapping("/overrides")
+    @PostMapping("/schedule/overrides")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistScheduleOverride> createOverride(
         @PathVariable final UUID therapistProfileId,
@@ -242,7 +242,7 @@ public class TherapistScheduleController {
      * @param request updated override details
      * @return updated override
      */
-    @PutMapping("/overrides/{overrideId}")
+    @PutMapping("/schedule/overrides/{overrideId}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<TherapistScheduleOverride> updateOverride(
         @PathVariable final UUID therapistProfileId,
@@ -269,7 +269,7 @@ public class TherapistScheduleController {
      * @param overrideId override UUID
      * @return no content
      */
-    @DeleteMapping("/overrides/{overrideId}")
+    @DeleteMapping("/schedule/overrides/{overrideId}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF')")
     public ResponseEntity<Void> deleteOverride(
         @PathVariable final UUID therapistProfileId,

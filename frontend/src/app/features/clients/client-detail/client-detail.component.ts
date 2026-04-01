@@ -9,6 +9,7 @@ import {
   UpdateClientTagsPayload,
 } from '../models/client.model';
 import { ClientService } from '../services/client.service';
+import { ClientTimelineComponent } from '../components/timeline/client-timeline.component';
 
 /**
  * Client profile page for PA-23 slice-one read and update flow.
@@ -16,7 +17,7 @@ import { ClientService } from '../services/client.service';
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, TranslocoModule, ClientTimelineComponent],
   template: `
     <div class="page">
       <a class="back-link" routerLink="/leads">&larr; Back to leads</a>
@@ -303,6 +304,10 @@ import { ClientService } from '../services/client.service';
         <div class="section" *ngIf="client.notes">
           <h2 class="section-title">Pre-conversion history</h2>
           <div class="notes-block">{{ client.notes }}</div>
+        </div>
+
+        <div class="section">
+          <app-client-timeline [clientId]="client.id" />
         </div>
       </div>
     </div>

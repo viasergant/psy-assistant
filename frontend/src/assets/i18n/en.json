@@ -206,6 +206,45 @@
       }
     }
   },
+  "search": {
+    "client": {
+      "placeholder": "Search clients by name, email, phone, or code...",
+      "noResults": "No clients found"
+    }
+  },
+  "timeline": {
+    "title": "Activity Timeline",
+    "filter": {
+      "placeholder": "All Events"
+    },
+    "eventType": {
+      "APPOINTMENT": "Appointment",
+      "PROFILE_CHANGE": "Profile Change",
+      "CONVERSION": "Conversion",
+      "NOTE": "Note",
+      "PAYMENT": "Payment",
+      "COMMUNICATION": "Communication"
+    },
+    "eventSubtype": {
+      "appointment.scheduled": "Scheduled",
+      "appointment.confirmed": "Confirmed",
+      "appointment.completed": "Completed",
+      "appointment.cancelled": "Cancelled",
+      "appointment.no_show": "No Show",
+      "lead.converted": "Converted from Lead"
+    },
+    "by": "by",
+    "empty": "No activity yet",
+    "loading": "Loading timeline...",
+    "loadMore": "Load More",
+    "appointment": {
+      "duration": "Duration",
+      "minutes": " min"
+    },
+    "conversion": {
+      "fromLead": "Client created from lead conversion"
+    }
+  },
   "therapists": {
     "wizard": {
       "title": "Complete Your Profile",

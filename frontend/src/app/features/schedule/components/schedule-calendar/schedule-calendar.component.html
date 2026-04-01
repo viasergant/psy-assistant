@@ -105,6 +105,12 @@
       [style.top.px]="appointmentMenuPosition.y"
       (click)="$event.stopPropagation()"
     >
+      <button type="button" class="menu-item" (click)="onEditMenuAction()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11.333 2A2.121 2.121 0 0 1 14 4.667L5.333 13.333H2v-3.333L10.667 1.333a.5.5 0 0 1 .666.667z" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span>{{ 'schedule.appointment.actions.edit' | transloco }}</span>
+      </button>
       <button type="button" class="menu-item" (click)="onRescheduleMenuAction()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M8 1v6l3 3" stroke-linecap="round" />
@@ -146,4 +152,11 @@
     (submitted)="onCancelSubmitted($event)"
     (cancelled)="onCancelDialogCancelled()"
   ></app-appointment-cancel-dialog>
+
+  <app-appointment-edit-dialog
+    *ngIf="showEditDialog && selectedAppointment"
+    [appointment]="selectedAppointment"
+    (submitted)="onEditSubmitted($event)"
+    (cancelled)="onEditCancelled()"
+  ></app-appointment-edit-dialog>
 </div>

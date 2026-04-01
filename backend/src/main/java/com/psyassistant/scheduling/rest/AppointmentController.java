@@ -9,6 +9,7 @@ import com.psyassistant.scheduling.dto.ConflictCheckResponse;
 import com.psyassistant.scheduling.dto.CreateAppointmentRequest;
 import com.psyassistant.scheduling.dto.RescheduleAppointmentRequest;
 import com.psyassistant.scheduling.dto.SessionTypeResponse;
+import com.psyassistant.scheduling.dto.UpdateAppointmentStatusRequest;
 import com.psyassistant.scheduling.repository.SessionTypeRepository;
 import com.psyassistant.scheduling.service.AppointmentService;
 import com.psyassistant.scheduling.service.ConflictDetectionService;
@@ -27,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -317,6 +319,42 @@ public class AppointmentController {
         );
 
         final AppointmentResponse response = appointmentMapper.toResponse(cancelled);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Updates an existing appointment's status.
+     *
+     * <p>Allows manual status changes (e.g., SCHEDULED → CONFIRMED, SCHEDULED → COMPLETED, etc.).
+     * Does not allow changing already cancelled appointments or direct cancellation (use cancel endpoint).
+     *
+     * @param appointmentId appointment UUID to update
+     * @param request status update request
+     * @return updated appointment (200 OK)
+     * @throws EntityNotFoundException if appointment not found (404)
+     * @throws IllegalArgumentException if invalid status transition (400)
+     */
+    @PatchMapping("/{appointmentId}/status")
+    @PreAuthorize("hasAnyRole('STAFF', 'THERAPIST', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<AppointmentResponse> updateAppointmentStatus(
+            @PathVariable final UUID appointmentId,
+            @Valid @RequestBody final UpdateAppointmentStatusRequest request) {
+
+        final UUID actorUserId = getCurrentUserId();
+        final String actorName = getCurrentUsername();
+
+        LOG.info("Updating appointment status: id={}, newStatus={}", appointmentId, request.status());
+
+        final Appointment updated = appointmentService.updateAppointmentStatus(
+                appointmentId,
+                request.status(),
+                request.notes(),
+                actorUserId,
+                actorName
+        );
+
+        final AppointmentResponse response = appointmentMapper.toResponse(updated);
 
         return ResponseEntity.ok(response);
     }

@@ -15,6 +15,11 @@ public class SessionRecordMapper {
 
     private final ClientRepository clientRepository;
 
+    /**
+     * Constructs a new SessionRecordMapper.
+     *
+     * @param clientRepository the client repository
+     */
     public SessionRecordMapper(final ClientRepository clientRepository) {
         this.clientRepository = clientRepository;
     }

@@ -45,6 +45,13 @@ public class SessionRecordService {
     private final AppointmentRepository appointmentRepository;
     private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * Constructs a new SessionRecordService.
+     *
+     * @param sessionRecordRepository the session record repository
+     * @param appointmentRepository the appointment repository
+     * @param eventPublisher the application event publisher
+     */
     public SessionRecordService(final SessionRecordRepository sessionRecordRepository,
                                  final AppointmentRepository appointmentRepository,
                                  final ApplicationEventPublisher eventPublisher) {

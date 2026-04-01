@@ -447,6 +447,18 @@
         "cancelButton": "Cancel Appointment",
         "cancellingInProgress": "Cancelling..."
       },
+      "edit": {
+        "title": "Edit Appointment",
+        "appointmentTimeLabel": "Appointment Time",
+        "durationLabel": "Duration",
+        "minutes": "minutes",
+        "statusLabel": "Status",
+        "notesLabel": "Notes",
+        "notesPlaceholder": "Optional notes about status change",
+        "characters": "characters",
+        "updateButton": "Update Appointment",
+        "updatingInProgress": "Updating..."
+      },
       "cancellationType": {
         "clientInitiated": "Client Initiated",
         "therapistInitiated": "Therapist Initiated",
@@ -460,6 +472,7 @@
         "noShow": "No Show"
       },
       "actions": {
+        "edit": "Edit",
         "reschedule": "Reschedule",
         "cancel": "Cancel"
       },
@@ -480,11 +493,13 @@
       "success": {
         "booked": "Appointment successfully booked",
         "rescheduled": "Appointment successfully rescheduled",
-        "cancelled": "Appointment successfully cancelled"
+        "cancelled": "Appointment successfully cancelled",
+        "updated": "Appointment successfully updated"
       },
       "error": {
         "bookingFailed": "Failed to book appointment. Please try again.",
         "rescheduleFailed": "Failed to reschedule appointment. Please try again.",
+        "updateFailed": "Failed to update appointment. Please try again.",
         "cancelFailed": "Failed to cancel appointment. Please try again.",
         "conflictDetectionFailed": "Failed to check for conflicts. Please try again.",
         "alreadyCancelled": "This appointment has already been cancelled"

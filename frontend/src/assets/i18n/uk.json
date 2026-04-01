@@ -446,6 +446,18 @@
         "cancelButton": "Скасувати прийом",
         "cancellingInProgress": "Скасування..."
       },
+      "edit": {
+        "title": "Редагувати прийом",
+        "appointmentTimeLabel": "Час прийому",
+        "durationLabel": "Тривалість",
+        "minutes": "хвилин",
+        "statusLabel": "Статус",
+        "notesLabel": "Примітки",
+        "notesPlaceholder": "Додаткові примітки про зміну статусу",
+        "characters": "символів",
+        "updateButton": "Оновити прийом",
+        "updatingInProgress": "Оновлення..."
+      },
       "cancellationType": {
         "clientInitiated": "Ініційовано клієнтом",
         "therapistInitiated": "Ініційовано терапевтом",
@@ -459,6 +471,7 @@
         "noShow": "Не з'явився"
       },
       "actions": {
+        "edit": "Редагувати",
         "reschedule": "Перенести",
         "cancel": "Скасувати"
       },
@@ -479,12 +492,14 @@
       "success": {
         "booked": "Прийом успішно записано",
         "rescheduled": "Прийом успішно перенесено",
-        "cancelled": "Прийом успішно скасовано"
+        "cancelled": "Прийом успішно скасовано",
+        "updated": "Прийом успішно оновлено"
       },
       "error": {
         "bookingFailed": "Не вдалося записати на прийом. Будь ласка, спробуйте ще раз.",
         "rescheduleFailed": "Не вдалося перенести прийом. Будь ласка, спробуйте ще раз.",
         "cancelFailed": "Не вдалося скасувати прийом. Будь ласка, спробуйте ще раз.",
+        "updateFailed": "Не вдалося оновити прийом. Будь ласка, спробуйте ще раз.",
         "conflictDetectionFailed": "Не вдалося перевірити конфлікти. Будь ласка, спробуйте ще раз.",
         "alreadyCancelled": "Цей прийом вже скасовано"
       }

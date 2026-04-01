@@ -132,4 +132,23 @@ export class AppointmentApiService {
       request
     );
   }
+
+  /**
+   * Update appointment status
+   *
+   * @param appointmentId appointment UUID
+   * @param request status update request
+   * @returns updated appointment
+   * @throws EntityNotFound (404) if appointment doesn't exist
+   * @throws IllegalArgument (400) if invalid status transition
+   */
+  updateAppointmentStatus(
+    appointmentId: string,
+    request: { status: string; notes?: string }
+  ): Observable<Appointment> {
+    return this.http.patch<Appointment>(
+      `${this.apiBase}/${appointmentId}/status`,
+      request
+    );
+  }
 }

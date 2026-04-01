@@ -46,6 +46,12 @@ public class SessionRecordController {
     private final SessionRecordService sessionRecordService;
     private final SessionRecordMapper sessionRecordMapper;
 
+    /**
+     * Constructs a new SessionRecordController.
+     *
+     * @param sessionRecordService the session record service
+     * @param sessionRecordMapper the session record mapper
+     */
     public SessionRecordController(final SessionRecordService sessionRecordService,
                                     final SessionRecordMapper sessionRecordMapper) {
         this.sessionRecordService = sessionRecordService;

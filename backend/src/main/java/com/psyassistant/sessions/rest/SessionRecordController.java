@@ -1,15 +1,19 @@
 package com.psyassistant.sessions.rest;
 
 import com.psyassistant.sessions.domain.SessionRecord;
+import com.psyassistant.sessions.domain.SessionStatus;
 import com.psyassistant.sessions.dto.SessionRecordMapper;
 import com.psyassistant.sessions.dto.SessionRecordResponse;
 import com.psyassistant.sessions.dto.StartSessionRequest;
 import com.psyassistant.sessions.service.SessionRecordService;
 import jakarta.validation.Valid;
 import java.security.Principal;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -45,6 +50,44 @@ public class SessionRecordController {
                                     final SessionRecordMapper sessionRecordMapper) {
         this.sessionRecordService = sessionRecordService;
         this.sessionRecordMapper = sessionRecordMapper;
+    }
+
+    /**
+     * Queries session records with optional filters.
+     *
+     * <p>GET /api/sessions?therapistId={uuid}&startDate={date}&endDate={date}&status={status}
+     *
+     * <p>Returns sessions ordered by session date descending. All query parameters are optional.
+     *
+     * @param therapistId optional therapist UUID filter
+     * @param startDate optional start date filter (ISO format: yyyy-MM-dd)
+     * @param endDate optional end date filter (ISO format: yyyy-MM-dd)
+     * @param status optional status filter (PENDING, IN_PROGRESS, COMPLETED, CANCELLED)
+     * @return 200 OK with list of session records (may be empty)
+     */
+    @GetMapping
+    @PreAuthorize("hasAnyRole('THERAPIST', 'ADMIN', 'RECEPTIONIST')")
+    public ResponseEntity<List<SessionRecordResponse>> getSessions(
+            @RequestParam(required = false) final UUID therapistId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            final LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            final LocalDate endDate,
+            @RequestParam(required = false) final SessionStatus status) {
+
+        LOG.debug("GET /api/sessions: therapistId={}, startDate={}, endDate={}, status={}",
+                therapistId, startDate, endDate, status);
+
+        final List<SessionRecord> sessions = sessionRecordService.getSessions(
+                therapistId, startDate, endDate, status);
+
+        final List<SessionRecordResponse> responses = sessions.stream()
+                .map(sessionRecordMapper::toResponse)
+                .toList();
+
+        LOG.info("Returning {} session records", responses.size());
+
+        return ResponseEntity.ok(responses);
     }
 
     /**

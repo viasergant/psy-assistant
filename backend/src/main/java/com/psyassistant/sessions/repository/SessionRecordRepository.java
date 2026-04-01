@@ -1,9 +1,14 @@
 package com.psyassistant.sessions.repository;
 
 import com.psyassistant.sessions.domain.SessionRecord;
+import com.psyassistant.sessions.domain.SessionStatus;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -29,4 +34,34 @@ public interface SessionRecordRepository extends JpaRepository<SessionRecord, UU
      * @return true if a session record exists, false otherwise
      */
     boolean existsByAppointmentId(UUID appointmentId);
+
+    /**
+     * Finds all session records for a specific therapist, ordered by session date descending.
+     *
+     * @param therapistId therapist UUID
+     * @return list of session records, empty if none found
+     */
+    List<SessionRecord> findByTherapistIdOrderBySessionDateDesc(UUID therapistId);
+
+    /**
+     * Query sessions with optional filters.
+     *
+     * @param therapistId optional therapist UUID filter
+     * @param startDate optional start date filter (inclusive)
+     * @param endDate optional end date filter (inclusive)
+     * @param status optional status filter
+     * @return list of matching session records, ordered by session date descending
+     */
+    @Query("SELECT s FROM SessionRecord s WHERE "
+            + "(:therapistId IS NULL OR s.therapistId = :therapistId) AND "
+            + "(:startDate IS NULL OR s.sessionDate >= :startDate) AND "
+            + "(:endDate IS NULL OR s.sessionDate <= :endDate) AND "
+            + "(:status IS NULL OR s.status = :status) "
+            + "ORDER BY s.sessionDate DESC, s.scheduledStartTime DESC")
+    List<SessionRecord> findSessions(
+            @Param("therapistId") UUID therapistId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("status") SessionStatus status
+    );
 }

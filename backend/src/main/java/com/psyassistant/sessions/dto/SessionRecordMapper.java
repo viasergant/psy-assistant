@@ -1,5 +1,7 @@
 package com.psyassistant.sessions.dto;
 
+import com.psyassistant.crm.clients.Client;
+import com.psyassistant.crm.clients.ClientRepository;
 import com.psyassistant.sessions.domain.SessionRecord;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +13,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class SessionRecordMapper {
 
+    private final ClientRepository clientRepository;
+
+    public SessionRecordMapper(final ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
+    }
+
     /**
      * Converts a session record entity to a response DTO.
      *
@@ -21,6 +29,11 @@ public class SessionRecordMapper {
         if (sessionRecord == null) {
             return null;
         }
+
+        // Fetch client name
+        final String clientName = clientRepository.findById(sessionRecord.getClientId())
+                .map(Client::getFullName)
+                .orElse("Unknown Client");
 
         final SessionRecordResponse.SessionTypeInfo sessionTypeInfo =
                 new SessionRecordResponse.SessionTypeInfo(
@@ -34,6 +47,7 @@ public class SessionRecordMapper {
                 sessionRecord.getId(),
                 sessionRecord.getAppointmentId(),
                 sessionRecord.getClientId(),
+                clientName,
                 sessionRecord.getTherapistId(),
                 sessionRecord.getSessionDate(),
                 sessionRecord.getScheduledStartTime(),

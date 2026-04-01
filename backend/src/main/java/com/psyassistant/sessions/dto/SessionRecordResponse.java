@@ -16,6 +16,7 @@ public record SessionRecordResponse(
         UUID id,
         UUID appointmentId,
         UUID clientId,
+        String clientName,
         UUID therapistId,
         LocalDate sessionDate,
         LocalTime scheduledStartTime,

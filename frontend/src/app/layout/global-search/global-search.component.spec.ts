@@ -7,6 +7,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Pipe, PipeTransform } from '@angular/core';
 import { ClientSearchResult } from '../../features/clients/models/client.model';
+import { AutoCompleteSelectEvent } from 'primeng/autocomplete';
 
 @Pipe({ name: 'transloco', standalone: true })
 class MockTranslocoPipe implements PipeTransform {
@@ -123,8 +124,12 @@ describe('GlobalSearchComponent', () => {
   describe('onSelect', () => {
     it('should navigate to client detail when client is selected', () => {
       const selectedClient = mockSearchResults[0];
+      const event: AutoCompleteSelectEvent = {
+        originalEvent: new Event('select'),
+        value: selectedClient
+      };
       
-      component.onSelect(selectedClient);
+      component.onSelect(event);
       
       expect(routerSpy.navigate).toHaveBeenCalledWith(['/clients', '1']);
     });
@@ -132,8 +137,12 @@ describe('GlobalSearchComponent', () => {
     it('should clear selection after navigation', (done) => {
       const selectedClient = mockSearchResults[0];
       component.selectedClient = selectedClient;
+      const event: AutoCompleteSelectEvent = {
+        originalEvent: new Event('select'),
+        value: selectedClient
+      };
       
-      component.onSelect(selectedClient);
+      component.onSelect(event);
       
       setTimeout(() => {
         expect(component.selectedClient).toBeNull();
@@ -142,12 +151,20 @@ describe('GlobalSearchComponent', () => {
     });
 
     it('should not navigate when event is null', () => {
-      component.onSelect(null as any);
+      const event: AutoCompleteSelectEvent = {
+        originalEvent: new Event('select'),
+        value: null
+      };
+      component.onSelect(event);
       expect(routerSpy.navigate).not.toHaveBeenCalled();
     });
 
     it('should not navigate when event id is missing', () => {
-      component.onSelect({ id: '', name: 'Test' } as any);
+      const event: AutoCompleteSelectEvent = {
+        originalEvent: new Event('select'),
+        value: { id: '', name: 'Test' } as any
+      };
+      component.onSelect(event);
       expect(routerSpy.navigate).not.toHaveBeenCalled();
     });
   });

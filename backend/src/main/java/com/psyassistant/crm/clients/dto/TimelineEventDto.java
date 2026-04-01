@@ -14,7 +14,9 @@ public record TimelineEventDto(
     @Schema(description = "Event unique identifier", example = "123e4567-e89b-12d3-a456-426614174000")
     UUID eventId,
 
-    @Schema(description = "Event type", example = "APPOINTMENT", allowableValues = {"APPOINTMENT", "PROFILE_CHANGE", "CONVERSION", "NOTE", "PAYMENT", "COMMUNICATION"})
+    @Schema(description = "Event type",
+            example = "APPOINTMENT",
+            allowableValues = {"APPOINTMENT", "PROFILE_CHANGE", "CONVERSION", "NOTE", "PAYMENT", "COMMUNICATION"})
     String eventType,
 
     @Schema(description = "Event subtype", example = "appointment.scheduled")

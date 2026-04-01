@@ -1,7 +1,7 @@
 import { Component, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { AutoComplete, AutoCompleteModule } from 'primeng/autocomplete';
+import { AutoComplete, AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { ClientSearchResult } from '../../features/clients/models/client.model';
 import { ClientService } from '../../features/clients/services/client.service';
@@ -124,9 +124,10 @@ export class GlobalSearchComponent implements OnDestroy {
       });
   }
 
-  onSelect(event: ClientSearchResult): void {
-    if (event && event.id) {
-      this.router.navigate(['/clients', event.id]);
+  onSelect(event: AutoCompleteSelectEvent): void {
+    const client = event.value as ClientSearchResult;
+    if (client && client.id) {
+      this.router.navigate(['/clients', client.id]);
       // Clear selection after navigation
       setTimeout(() => {
         this.selectedClient = null;

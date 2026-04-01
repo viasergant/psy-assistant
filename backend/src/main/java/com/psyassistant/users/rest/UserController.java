@@ -42,7 +42,7 @@ public class UserController {
      * Updates the current user's language preference.
      *
      * @param request   language update request
-     * @param principalName current user's ID as string
+     * @param principalName current user's ID as string (from JWT subject)
      * @return 204 No Content on success
      */
     @Operation(
@@ -60,7 +60,7 @@ public class UserController {
     @PatchMapping("/language")
     public ResponseEntity<Void> updateLanguage(
             @Valid @RequestBody final UpdateLanguageRequest request,
-            @AuthenticationPrincipal(expression = "username") final String principalName) {
+            @AuthenticationPrincipal(expression = "subject") final String principalName) {
 
         UUID userId = UUID.fromString(principalName);
         User user = userRepository.findById(userId)

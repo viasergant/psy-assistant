@@ -33,7 +33,7 @@ SELECT
     ) AS event_data,
     a.created_at AS created_at
 FROM appointment a
-LEFT JOIN users u ON a.created_by = u.username
+LEFT JOIN users u ON a.created_by = u.email
 WHERE a.status != 'CANCELLED' OR a.status = 'CANCELLED'  -- Include all appointments
 
 UNION ALL
@@ -83,7 +83,7 @@ SELECT
     ) AS event_data,
     c.created_at AS created_at
 FROM clients c
-LEFT JOIN users u ON c.created_by = u.username
+LEFT JOIN users u ON c.created_by = u.email
 WHERE c.source_lead_id IS NOT NULL;  -- Only clients created from lead conversion
 
 -- Create indexes on materialized view for fast queries

@@ -205,6 +205,45 @@
       }
     }
   },
+  "search": {
+    "client": {
+      "placeholder": "Шукати клієнтів за іменем, електронною поштою, телефоном або кодом...",
+      "noResults": "Клієнтів не знайдено"
+    }
+  },
+  "timeline": {
+    "title": "Хронологія активності",
+    "filter": {
+      "placeholder": "Всі події"
+    },
+    "eventType": {
+      "APPOINTMENT": "Призначення",
+      "PROFILE_CHANGE": "Зміна профілю",
+      "CONVERSION": "Конверсія",
+      "NOTE": "Примітка",
+      "PAYMENT": "Платіж",
+      "COMMUNICATION": "Комунікація"
+    },
+    "eventSubtype": {
+      "appointment.scheduled": "Заплановано",
+      "appointment.confirmed": "Підтверджено",
+      "appointment.completed": "Завершено",
+      "appointment.cancelled": "Скасовано",
+      "appointment.no_show": "Не з'явився",
+      "lead.converted": "Конвертовано з ліда"
+    },
+    "by": "від",
+    "empty": "Поки немає активності",
+    "loading": "Завантаження хронології...",
+    "loadMore": "Завантажити більше",
+    "appointment": {
+      "duration": "Тривалість",
+      "minutes": " хв"
+    },
+    "conversion": {
+      "fromLead": "Клієнт створений з конверсії ліда"
+    }
+  },
   "therapists": {
     "wizard": {
       "title": "Завершити ваш профіль",

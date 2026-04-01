@@ -43,6 +43,27 @@ export interface ClientDetail {
   createdBy: string | null;
 }
 
+/** Search result for client autocomplete. */
+export interface ClientSearchResult {
+  id: string;
+  name: string;
+  clientCode: string | null;
+  email: string | null;
+  phone: string | null;
+  tags: string[];
+}
+
+/** Activity timeline event for a client. */
+export interface TimelineEvent {
+  eventId: string;
+  eventType: 'APPOINTMENT' | 'PROFILE_CHANGE' | 'CONVERSION' | 'NOTE' | 'PAYMENT' | 'COMMUNICATION';
+  eventSubtype: string;
+  eventTimestamp: string;
+  actorName: string | null;
+  eventData: Record<string, any>;
+  createdAt: string;
+}
+
 /** Request body for replacing all client tags. */
 export interface UpdateClientTagsPayload {
   version: number;

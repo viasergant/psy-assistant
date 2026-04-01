@@ -47,14 +47,18 @@ import org.springframework.web.server.ResponseStatusException;
 public class ClientController {
 
     private final ClientProfileService clientProfileService;
+    private final TimelineService timelineService;
 
     /**
      * Constructs the controller.
      *
      * @param clientProfileService client profile service
+     * @param timelineService timeline service
      */
-    public ClientController(final ClientProfileService clientProfileService) {
+    public ClientController(final ClientProfileService clientProfileService,
+                           final TimelineService timelineService) {
         this.clientProfileService = clientProfileService;
+        this.timelineService = timelineService;
     }
 
     /**
@@ -185,5 +189,65 @@ public class ClientController {
                 .contentType(mediaType)
                 .header(HttpHeaders.CACHE_CONTROL, "no-store")
                 .body(photo.content());
+    }
+
+    /**
+     * Searches clients by name, email, phone, code, or tags.
+     * Returns results ordered by relevance.
+     *
+     * @param query search term (case-insensitive)
+     * @param limit maximum number of results (default 10, max 50)
+     * @return 200 with list of matching clients
+     */
+    @Operation(summary = "Search clients",
+            description = "Full-text search across name, email, phone, code, and tags")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Search results",
+            content = @Content(array = @ArraySchema(
+                schema = @Schema(implementation = com.psyassistant.crm.clients.dto.ClientSearchDto.class)))),
+        @ApiResponse(responseCode = "403", description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/search")
+    @PreAuthorize("hasAuthority('MANAGE_CLIENTS') "
+            + "or hasAuthority('READ_CLIENTS_ALL') "
+            + "or hasAuthority('READ_ASSIGNED_CLIENTS')")
+    public ResponseEntity<List<com.psyassistant.crm.clients.dto.ClientSearchDto>> searchClients(
+            @RequestParam("q") final String query,
+            @RequestParam(value = "limit", defaultValue = "10") final int limit) {
+        return ResponseEntity.ok(clientProfileService.searchClients(query, limit));
+    }
+
+    /**
+     * Returns the activity timeline for a specific client.
+     * Aggregates appointments, profile changes, and conversion history.
+     *
+     * @param id client UUID
+     * @param eventTypes optional event type filter (comma-separated)
+     * @param page page number (0-based, default 0)
+     * @param size page size (default 50, max 100)
+     * @return 200 with list of timeline events in descending chronological order
+     */
+    @Operation(summary = "Get client timeline",
+            description = "Returns activity timeline with appointments, profile changes, and history")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Timeline events",
+            content = @Content(array = @ArraySchema(
+                schema = @Schema(implementation = com.psyassistant.crm.clients.dto.TimelineEventDto.class)))),
+        @ApiResponse(responseCode = "403", description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Client not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/{id}/timeline")
+    @PreAuthorize("hasAuthority('MANAGE_CLIENTS') "
+            + "or hasAuthority('READ_CLIENTS_ALL') "
+            + "or hasAuthority('READ_ASSIGNED_CLIENTS')")
+    public ResponseEntity<List<com.psyassistant.crm.clients.dto.TimelineEventDto>> getClientTimeline(
+            @PathVariable final UUID id,
+            @RequestParam(value = "eventTypes", required = false) final List<String> eventTypes,
+            @RequestParam(value = "page", defaultValue = "0") final int page,
+            @RequestParam(value = "size", defaultValue = "50") final int size) {
+        return ResponseEntity.ok(timelineService.getClientTimeline(id, eventTypes, page, size));
     }
 }

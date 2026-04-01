@@ -10,6 +10,7 @@
 ## Build And Test
 
 - Backend setup and local run:
+	- Do not use Docker
 	- Start DB: cd backend && docker compose up -d
 	- Run app (local profile): cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 	- Validate build, tests, and style checks: cd backend && ./mvnw verify

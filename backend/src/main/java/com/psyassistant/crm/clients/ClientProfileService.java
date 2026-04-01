@@ -403,4 +403,41 @@ public class ClientProfileService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         return unique.stream().limit(20).toList();
     }
+
+    /**
+     * Searches clients using full-text search on name, email, phone, code, and tags.
+     * Returns up to the specified limit of results ordered by relevance.
+     * Requires MANAGE_CLIENTS, READ_CLIENTS_ALL, or READ_ASSIGNED_CLIENTS authority.
+     *
+     * @param query search term (case-insensitive)
+     * @param limit maximum number of results (default 10, max 50)
+     * @return list of matching clients with tags
+     */
+    @Transactional(readOnly = true)
+    public List<com.psyassistant.crm.clients.dto.ClientSearchDto> searchClients(
+            final String query, final int limit) {
+        boolean canManageClients = hasAuthority("MANAGE_CLIENTS");
+        boolean canReadAll = hasAuthority("READ_CLIENTS_ALL");
+        boolean canReadAssigned = hasAuthority("READ_ASSIGNED_CLIENTS");
+
+        if (!canManageClients && !canReadAll && !canReadAssigned) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        if (query == null || query.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        int effectiveLimit = Math.min(Math.max(limit, 1), 50);
+
+        List<Client> clients = clientRepository.searchClients(query.trim(), effectiveLimit);
+
+        return clients.stream()
+                .map(client -> com.psyassistant.crm.clients.dto.ClientSearchDto.from(
+                        client,
+                        getSortedTags(client.getId())
+                ))
+                .toList();
+    }
 }
+

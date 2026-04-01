@@ -35,7 +35,7 @@ import org.springframework.web.server.ResponseStatusException;
  *     <li>Retrieving session records</li>
  * </ul>
  *
- * <p>Authorization: Requires authenticated therapist, admin, or receptionist roles.
+ * <p>Authorization: Requires authenticated therapist, admin staff, or system administrator roles.
  */
 @RestController
 @RequestMapping("/api/sessions")
@@ -66,7 +66,7 @@ public class SessionRecordController {
      * @return 200 OK with list of session records (may be empty)
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('THERAPIST', 'ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('THERAPIST', 'RECEPTION_ADMIN_STAFF', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<List<SessionRecordResponse>> getSessions(
             @RequestParam(required = false) final UUID therapistId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -103,7 +103,7 @@ public class SessionRecordController {
      * @return 201 Created with session record, 409 Conflict if session already exists
      */
     @PostMapping("/start")
-    @PreAuthorize("hasAnyRole('THERAPIST', 'ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('THERAPIST', 'RECEPTION_ADMIN_STAFF', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<SessionRecordResponse> startSession(
             @Valid @RequestBody final StartSessionRequest request,
             final Principal principal) {
@@ -144,7 +144,7 @@ public class SessionRecordController {
      * @return 200 OK with session record, 404 Not Found if session does not exist
      */
     @GetMapping("/{sessionId}")
-    @PreAuthorize("hasAnyRole('THERAPIST', 'ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('THERAPIST', 'RECEPTION_ADMIN_STAFF', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<SessionRecordResponse> getSessionRecord(@PathVariable final UUID sessionId) {
 
         final SessionRecord session = sessionRecordService.getSessionRecord(sessionId);
@@ -162,7 +162,7 @@ public class SessionRecordController {
      * @return 200 OK with session record, 404 Not Found if no session found for appointment
      */
     @GetMapping("/by-appointment/{appointmentId}")
-    @PreAuthorize("hasAnyRole('THERAPIST', 'ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('THERAPIST', 'RECEPTION_ADMIN_STAFF', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<SessionRecordResponse> getSessionByAppointment(
             @PathVariable final UUID appointmentId) {
 

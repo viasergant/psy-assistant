@@ -20,10 +20,11 @@ import { SessionService } from '../../services/session.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    TranslocoPipe,Dialog,
+    TranslocoPipe,
+    Dialog,
     Button,
     Textarea,
-    Calendar,
+    DatePicker,
   ],
   templateUrl: './complete-session-dialog.component.html',
   styleUrls: ['./complete-session-dialog.component.scss'],

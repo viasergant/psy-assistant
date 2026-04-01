@@ -369,6 +369,11 @@
         "conflictWarning": "There are conflicting appointments at this time:",
         "overrideLabel": "I confirm this appointment is urgent and should override the conflict",
         "checkingConflicts": "Checking for conflicts...",
+        "outsideWorkingHoursWarning": "Outside Working Hours",
+        "outsideWorkingHoursMessage": "This time is outside the therapist's scheduled working hours. Are you sure you want to proceed?",
+        "duringLeaveWarning": "Therapist on Leave",
+        "duringLeaveMessage": "The therapist has approved leave during this time. Are you sure you want to proceed?",
+        "confirmOverrideLabel": "I confirm this appointment should be created despite the warning",
         "bookButton": "Book Appointment",
         "bookingInProgress": "Booking..."
       },
@@ -379,10 +384,15 @@
         "newDateLabel": "New Date",
         "newTimePlaceholder": "Select new time",
         "reasonLabel": "Reason for Rescheduling",
-        "reasonPlaceholder": "Provide a reason for rescheduling (10-1000 characters)",
+        "reasonPlaceholder": "Provide a reason for rescheduling (max 1000 characters)",
         "conflictsDetected": "Scheduling Conflicts Detected",
         "conflictWarning": "The new time conflicts with existing appointments:",
         "overrideLabel": "I confirm this reschedule is urgent and should override the conflict",
+        "outsideWorkingHoursWarning": "Outside Working Hours",
+        "outsideWorkingHoursMessage": "This time is outside the therapist's scheduled working hours. Are you sure you want to proceed?",
+        "duringLeaveWarning": "Therapist on Leave",
+        "duringLeaveMessage": "The therapist has approved leave during this time. Are you sure you want to proceed?",
+        "confirmOverrideLabel": "I confirm this appointment should be rescheduled despite the warning",
         "rescheduleButton": "Reschedule Appointment",
         "reschedulingInProgress": "Rescheduling..."
       },
@@ -393,7 +403,7 @@
         "cancellationTypeLabel": "Cancellation Type",
         "cancellationTypePlaceholder": "Select cancellation type",
         "reasonLabel": "Reason for Cancellation",
-        "reasonPlaceholder": "Provide a reason for cancellation (10-1000 characters)",
+        "reasonPlaceholder": "Provide a reason for cancellation (max 1000 characters)",
         "confirmationMessage": "Are you sure you want to cancel this appointment? This action cannot be undone.",
         "cancelButton": "Cancel Appointment",
         "cancellingInProgress": "Cancelling..."
@@ -409,6 +419,10 @@
         "completed": "Completed",
         "cancelled": "Cancelled",
         "noShow": "No Show"
+      },
+      "actions": {
+        "reschedule": "Reschedule",
+        "cancel": "Cancel"
       },
       "validation": {
         "clientRequired": "Please select a client",

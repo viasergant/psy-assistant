@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoService, TranslocoPipe } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
 import { Subject, takeUntil } from 'rxjs';
 import {
@@ -102,7 +102,6 @@ import { AppointmentApiService } from '../../services/appointment-api.service';
               formControlName="reason"
               rows="4"
               [placeholder]="'schedule.appointment.cancel.reasonPlaceholder' | transloco"
-              minlength="10"
               maxlength="1000"
               [attr.aria-invalid]="isInvalid('reason')"
               aria-required="true"
@@ -112,9 +111,7 @@ import { AppointmentApiService } from '../../services/appointment-api.service';
                 <ng-container *ngIf="form.get('reason')?.hasError('required')">
                   {{ 'schedule.appointment.validation.reasonRequired' | transloco }}
                 </ng-container>
-                <ng-container *ngIf="form.get('reason')?.hasError('minlength')">
-                  {{ 'schedule.appointment.validation.reasonMinLength' | transloco }}
-                </ng-container>
+
                 <ng-container *ngIf="form.get('reason')?.hasError('maxlength')">
                   {{ 'schedule.appointment.validation.reasonMaxLength' | transloco }}
                 </ng-container>
@@ -481,7 +478,7 @@ export class AppointmentCancelDialogComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private appointmentService: AppointmentApiService,
-    private translocoService: TranslocoPipe
+    private translocoService: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -498,15 +495,15 @@ export class AppointmentCancelDialogComponent implements OnInit, OnDestroy {
     this.cancellationTypes = [
       {
         value: CancellationType.CLIENT_INITIATED,
-        label: 'Client Initiated'
+        label: this.translocoService.translate('schedule.appointment.cancellationType.clientInitiated')
       },
       {
         value: CancellationType.THERAPIST_INITIATED,
-        label: 'Therapist Initiated'
+        label: this.translocoService.translate('schedule.appointment.cancellationType.therapistInitiated')
       },
       {
         value: CancellationType.LATE_CANCELLATION,
-        label: 'Late Cancellation'
+        label: this.translocoService.translate('schedule.appointment.cancellationType.lateCancellation')
       }
     ];
   }
@@ -514,7 +511,7 @@ export class AppointmentCancelDialogComponent implements OnInit, OnDestroy {
   private initializeForm(): void {
     this.form = this.fb.group({
       cancellationType: ['', Validators.required],
-      reason: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]]
+      reason: ['', [Validators.required, Validators.maxLength(1000)]]
     });
   }
 

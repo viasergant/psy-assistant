@@ -53,14 +53,15 @@
             class="calendar-cell"
             [class]="getCellClass(cell)"
             [class.editable]="editable"
-            (click)="onCellClick(cell)"
+            (click)="onCellClick(cell, $event)"
             [title]="getCellTitle(cell)"
           >
-            <div class="cell-content" *ngIf="cell.isLeave || cell.hasOverride || cell.isBooked">
+            <div class="cell-content" *ngIf="cell.isLeave || cell.hasOverride || cell.isBooked || cell.available">
               <span *ngIf="cell.isLeave && cell.leaveStatus === 'PENDING'" class="cell-label">{{ 'schedule.leaveStatus.pending' | transloco }}</span>
               <span *ngIf="cell.isLeave && cell.leaveStatus === 'APPROVED'" class="cell-label">{{ 'schedule.legend.leave' | transloco }}</span>
               <span *ngIf="cell.hasOverride" class="cell-label">{{ 'schedule.legend.override' | transloco }}</span>
-              <span *ngIf="cell.isBooked" class="cell-label">{{ 'schedule.legend.booked' | transloco }}</span>
+              <span *ngIf="cell.isBooked" class="cell-label">{{ cell.clientName || ('schedule.legend.booked' | transloco) }}</span>
+              <span *ngIf="cell.available && !cell.isBooked && !cell.isLeave && !cell.hasOverride" class="cell-time-range">{{ getTimeRange(cell) }}</span>
             </div>
           </div>
         </div>
@@ -96,11 +97,37 @@
     </div>
   </footer>
 
+  <!-- Appointment Context Menu -->
+  <div *ngIf="showAppointmentMenu" class="appointment-menu-overlay" (click)="closeAppointmentMenu()">
+    <div 
+      class="appointment-menu" 
+      [style.left.px]="appointmentMenuPosition.x" 
+      [style.top.px]="appointmentMenuPosition.y"
+      (click)="$event.stopPropagation()"
+    >
+      <button type="button" class="menu-item" (click)="onRescheduleMenuAction()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 1v6l3 3" stroke-linecap="round" />
+          <circle cx="8" cy="8" r="6" />
+        </svg>
+        <span>{{ 'schedule.appointment.actions.reschedule' | transloco }}</span>
+      </button>
+      <button type="button" class="menu-item menu-item-danger" (click)="onCancelMenuAction()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 4L4 12M4 4l8 8" stroke-linecap="round" />
+        </svg>
+        <span>{{ 'schedule.appointment.actions.cancel' | transloco }}</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Appointment Dialogs -->
   <app-appointment-booking-dialog
     *ngIf="showBookingDialog"
     [therapistProfileId]="therapistProfileId"
     [clients]="clients"
+    [initialDateTime]="selectedDateTime || undefined"
+    [schedule]="schedule"
     (submitted)="onBookingSubmitted($event)"
     (cancelled)="onBookingCancelled()"
   ></app-appointment-booking-dialog>
@@ -108,6 +135,7 @@
   <app-appointment-reschedule-dialog
     *ngIf="showRescheduleDialog && selectedAppointment"
     [appointment]="selectedAppointment"
+    [schedule]="schedule"
     (submitted)="onRescheduleSubmitted($event)"
     (cancelled)="onRescheduleCancelled()"
   ></app-appointment-reschedule-dialog>

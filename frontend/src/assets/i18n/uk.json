@@ -368,6 +368,11 @@
         "conflictWarning": "На цей час вже є інші прийоми:",
         "overrideLabel": "Я підтверджую, що цей прийом терміновий і має перекрити конфлікт",
         "checkingConflicts": "Перевірка конфліктів...",
+        "outsideWorkingHoursWarning": "Поза робочим часом",
+        "outsideWorkingHoursMessage": "Цей час знаходиться поза запланованим робочим часом терапевта. Ви впевнені, що хочете продовжити?",
+        "duringLeaveWarning": "Терапевт у відпустці",
+        "duringLeaveMessage": "Терапевт має затверджену відпустку в цей час. Ви впевнені, що хочете продовжити?",
+        "confirmOverrideLabel": "Я підтверджую, що цей прийом має бути створений незважаючи на попередження",
         "bookButton": "Записати на прийом",
         "bookingInProgress": "Запис..."
       },
@@ -378,10 +383,15 @@
         "newDateLabel": "Нова дата",
         "newTimePlaceholder": "Оберіть новий час",
         "reasonLabel": "Причина перенесення",
-        "reasonPlaceholder": "Вкажіть причину перенесення (10-1000 символів)",
+        "reasonPlaceholder": "Вкажіть причину перенесення (макс. 1000 символів)",
         "conflictsDetected": "Виявлено конфлікти розкладу",
         "conflictWarning": "Новий час конфліктує з існуючими прийомами:",
         "overrideLabel": "Я підтверджую, що це перенесення термінове і має перекрити конфлікт",
+        "outsideWorkingHoursWarning": "Поза робочим часом",
+        "outsideWorkingHoursMessage": "Цей час знаходиться поза запланованим робочим часом терапевта. Ви впевнені, що хочете продовжити?",
+        "duringLeaveWarning": "Терапевт у відпустці",
+        "duringLeaveMessage": "Терапевт має затверджену відпустку в цей час. Ви впевнені, що хочете продовжити?",
+        "confirmOverrideLabel": "Я підтверджую, що цей прийом має бути перенесений незважаючи на попередження",
         "rescheduleButton": "Перенести прийом",
         "reschedulingInProgress": "Перенесення..."
       },
@@ -392,7 +402,7 @@
         "cancellationTypeLabel": "Тип скасування",
         "cancellationTypePlaceholder": "Оберіть тип скасування",
         "reasonLabel": "Причина скасування",
-        "reasonPlaceholder": "Вкажіть причину скасування (10-1000 символів)",
+        "reasonPlaceholder": "Вкажіть причину скасування (макс. 1000 символів)",
         "confirmationMessage": "Ви впевнені, що хочете скасувати цей прийом? Цю дію неможливо скасувати.",
         "cancelButton": "Скасувати прийом",
         "cancellingInProgress": "Скасування..."
@@ -408,6 +418,10 @@
         "completed": "Завершено",
         "cancelled": "Скасовано",
         "noShow": "Не з'явився"
+      },
+      "actions": {
+        "reschedule": "Перенести",
+        "cancel": "Скасувати"
       },
       "validation": {
         "clientRequired": "Будь ласка, оберіть клієнта",

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, EventEmitter, Input, OnInit, Output, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { DatePicker } from 'primeng/datepicker';
@@ -11,7 +11,8 @@ import {
   CreateAppointmentRequest,
   SessionType,
   ConflictingAppointment,
-  ConflictCheckResponse
+  ConflictCheckResponse,
+  ScheduleSummary
 } from '../../models/schedule.model';
 import { AppointmentApiService } from '../../services/appointment-api.service';
 
@@ -200,6 +201,48 @@ interface ClientOption {
             </div>
           </div>
 
+          <!-- Outside Working Hours Warning -->
+          <div *ngIf="isOutsideWorkingHours && !checkingConflicts" class="warning-message" role="alert">
+            <div class="warning-header">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <strong>{{ 'schedule.appointment.booking.outsideWorkingHoursWarning' | transloco }}</strong>
+            </div>
+            <p class="warning-description">{{ 'schedule.appointment.booking.outsideWorkingHoursMessage' | transloco }}</p>
+            <div class="override-checkbox">
+              <input
+                type="checkbox"
+                id="confirmOutsideHours"
+                formControlName="confirmOutsideHours"
+              />
+              <label for="confirmOutsideHours">
+                {{ 'schedule.appointment.booking.confirmOverrideLabel' | transloco }}
+              </label>
+            </div>
+          </div>
+
+          <!-- During Leave Warning -->
+          <div *ngIf="isDuringLeave && !checkingConflicts" class="warning-message leave-warning" role="alert">
+            <div class="warning-header">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <strong>{{ 'schedule.appointment.booking.duringLeaveWarning' | transloco }}</strong>
+            </div>
+            <p class="warning-description">{{ 'schedule.appointment.booking.duringLeaveMessage' | transloco }}</p>
+            <div *ngIf="!isOutsideWorkingHours" class="override-checkbox">
+              <input
+                type="checkbox"
+                id="confirmOutsideHoursLeave"
+                formControlName="confirmOutsideHours"
+              />
+              <label for="confirmOutsideHoursLeave">
+                {{ 'schedule.appointment.booking.confirmOverrideLabel' | transloco }}
+              </label>
+            </div>
+          </div>
+
           <!-- Server Error -->
           <div *ngIf="serverError" class="alert-error" role="alert">{{ serverError }}</div>
 
@@ -211,7 +254,7 @@ interface ClientOption {
             <button
               type="submit"
               class="btn-primary"
-              [disabled]="saving || !form.valid || (conflicts.length > 0 && !form.value.allowConflictOverride)"
+              [disabled]="saving || !form.valid || (conflicts.length > 0 && !form.value.allowConflictOverride) || ((isOutsideWorkingHours || isDuringLeave) && !form.value.confirmOutsideHours)"
             >
               <span *ngIf="!saving">{{ 'schedule.appointment.booking.bookButton' | transloco }}</span>
               <span *ngIf="saving">{{ 'schedule.appointment.booking.bookingInProgress' | transloco }}</span>
@@ -469,6 +512,50 @@ interface ClientOption {
       flex: 1;
     }
 
+    .warning-message {
+      background: linear-gradient(135deg, #FEF9C3 0%, #FDE68A 100%);
+      border: 1.5px solid #F59E0B;
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .warning-message.leave-warning {
+      background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+      border-color: #EF4444;
+    }
+
+    .warning-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      color: #D97706;
+    }
+
+    .leave-warning .warning-header {
+      color: #DC2626;
+    }
+
+    .warning-header svg {
+      flex-shrink: 0;
+    }
+
+    .warning-description {
+      margin: 0 0 0.875rem 0;
+      font-size: 0.875rem;
+      color: #92400E;
+    }
+
+    .leave-warning .warning-description {
+      color: #991B1B;
+    }
+
+    .leave-warning .override-checkbox label {
+      color: #991B1B;
+    }
+
     .alert-error {
       background: var(--color-error-bg, #FEF2F2);
       border: 1.5px solid var(--color-error, #DC2626);
@@ -563,9 +650,11 @@ interface ClientOption {
     }
   `]
 })
-export class AppointmentBookingDialogComponent implements OnInit, OnDestroy {
+export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnDestroy {
   @Input() therapistProfileId!: string;
   @Input() clients: ClientOption[] = [];
+  @Input() initialDateTime?: Date;
+  @Input() schedule?: ScheduleSummary; // Schedule data for working hours and leave checks
   @Output() submitted = new EventEmitter<Appointment>();
   @Output() cancelled = new EventEmitter<void>();
 
@@ -576,6 +665,10 @@ export class AppointmentBookingDialogComponent implements OnInit, OnDestroy {
   saving = false;
   serverError: string | null = null;
   minDate = new Date();
+
+  // Working hours and leave warnings
+  isOutsideWorkingHours = false;
+  isDuringLeave = false;
 
   private destroy$ = new Subject<void>();
 
@@ -590,6 +683,15 @@ export class AppointmentBookingDialogComponent implements OnInit, OnDestroy {
     this.setupConflictDetection();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    // Update form when initialDateTime input changes
+    if (changes['initialDateTime'] && this.form && changes['initialDateTime'].currentValue) {
+      this.form.patchValue({
+        startTime: changes['initialDateTime'].currentValue
+      });
+    }
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -599,10 +701,11 @@ export class AppointmentBookingDialogComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       clientId: ['', Validators.required],
       sessionTypeId: ['', Validators.required],
-      startTime: ['', [Validators.required, this.pastDateValidator.bind(this)]],
+      startTime: [this.initialDateTime || '', [Validators.required, this.pastDateValidator.bind(this)]],
       durationMinutes: [60, [Validators.required, Validators.min(15), Validators.max(480)]],
       notes: [''],
-      allowConflictOverride: [false]
+      allowConflictOverride: [false],
+      confirmOutsideHours: [false] // Confirmation for outside hours/leave
     });
   }
 
@@ -630,7 +733,10 @@ export class AppointmentBookingDialogComponent implements OnInit, OnDestroy {
         distinctUntilChanged((prev, curr) =>
           prev.startTime === curr.startTime && prev.durationMinutes === curr.durationMinutes
         ),
-        switchMap(() => this.checkForConflicts()),
+        switchMap(() => {
+          this.checkWorkingHoursAndLeave(); // Check working hours and leave
+          return this.checkForConflicts();
+        }),
         takeUntil(this.destroy$)
       )
       .subscribe();
@@ -670,6 +776,104 @@ export class AppointmentBookingDialogComponent implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Check if selected time is outside working hours or during leave
+   */
+  private checkWorkingHoursAndLeave(): void {
+    const { startTime } = this.form.value;
+    
+    if (!startTime || !this.schedule) {
+      this.isOutsideWorkingHours = false;
+      this.isDuringLeave = false;
+      return;
+    }
+
+    const appointmentDate = new Date(startTime);
+    const dateStr = this.formatDate(appointmentDate);
+    const dayOfWeek = appointmentDate.getDay() === 0 ? 7 : appointmentDate.getDay(); // Convert Sunday from 0 to 7
+    const timeStr = this.formatTime24(appointmentDate);
+
+    // Check if during leave
+    this.isDuringLeave = this.schedule.leavePeriods?.some(leave => 
+      leave.status === 'APPROVED' &&
+      dateStr >= leave.startDate &&
+      dateStr <= leave.endDate
+    ) || false;
+
+    // Check if outside working hours
+    // First check for date-specific override
+    const override = this.schedule.overrides?.find(o => o.date === dateStr);
+    if (override) {
+      if (!override.available) {
+        this.isOutsideWorkingHours = true;
+      } else if (override.startTime && override.endTime) {
+        this.isOutsideWorkingHours = !this.isTimeBetween(timeStr, override.startTime, override.endTime);
+      } else {
+        this.isOutsideWorkingHours = false;
+      }
+    } else {
+      // Check recurring schedule for this day of week
+      const daySchedule = this.schedule.recurringSchedule?.filter(s => s.dayOfWeek === dayOfWeek) || [];
+      if (daySchedule.length === 0) {
+        this.isOutsideWorkingHours = true; // No schedule for this day
+      } else {
+        // Check if time falls within any of the scheduled time ranges for this day
+        this.isOutsideWorkingHours = !daySchedule.some(s => {
+          const startTimeStr = this.normalizeTime(s.startTime);
+          const endTimeStr = this.normalizeTime(s.endTime);
+          return this.isTimeBetween(timeStr, startTimeStr, endTimeStr);
+        });
+      }
+    }
+
+    // Reset confirmation if warnings change
+    if (this.isOutsideWorkingHours || this.isDuringLeave) {
+      this.form.patchValue({ confirmOutsideHours: false }, { emitEvent: false });
+    }
+  }
+
+  /**
+   * Helper to format date as yyyy-MM-dd
+   */
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Helper to format time as HH:mm
+   */
+  private formatTime24(date: Date): string {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  /**
+   * Normalize time from various formats to HH:mm
+   */
+  private normalizeTime(time: string | any): string {
+    if (typeof time === 'string') {
+      // Remove seconds if present: "HH:mm:ss" -> "HH:mm"
+      return time.substring(0, 5);
+    } else if (Array.isArray(time) && time.length >= 2) {
+      // Array format [hour, minute, second]
+      const hours = String(time[0]).padStart(2, '0');
+      const minutes = String(time[1]).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+    return '00:00';
+  }
+
+  /**
+   * Check if a time is between start and end times
+   */
+  private isTimeBetween(time: string, start: string, end: string): boolean {
+    return time >= start && time < end;
+  }
+
   formatTime(isoString: string): string {
     return new Date(isoString).toLocaleString('en-US', {
       month: 'short',
@@ -693,6 +897,11 @@ export class AppointmentBookingDialogComponent implements OnInit, OnDestroy {
     }
 
     if (this.conflicts.length > 0 && !this.form.value.allowConflictOverride) {
+      return;
+    }
+
+    // Check if user needs to confirm outside hours/leave warning
+    if ((this.isOutsideWorkingHours || this.isDuringLeave) && !this.form.value.confirmOutsideHours) {
       return;
     }
 

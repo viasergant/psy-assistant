@@ -7,7 +7,6 @@ import {
   getDayLabel,
   AvailabilitySlot,
   getDayOfWeek,
-  LeaveStatus,
   Appointment
 } from '../../models/schedule.model';
 import { AvailabilityService } from '../../services/availability.service';
@@ -40,6 +39,7 @@ interface CalendarCell {
   isLeave: boolean;
   leaveStatus?: 'PENDING' | 'APPROVED';
   isBooked: boolean;
+  clientName?: string; // Client name for booked appointments
 }
 
 @Component({
@@ -74,6 +74,10 @@ export class ScheduleCalendarComponent implements OnInit {
   showCancelDialog = false;
   selectedAppointment: Appointment | null = null;
   selectedDateTime: Date | null = null;
+  
+  // Appointment menu state
+  showAppointmentMenu = false;
+  appointmentMenuPosition = { x: 0, y: 0 };
 
   constructor(
     private availabilityService: AvailabilityService,
@@ -189,6 +193,16 @@ export class ScheduleCalendarComponent implements OnInit {
 
         // Check if this time slot has an appointment
         const isBooked = this.isSlotBooked(day.date, timeSlot.hour, timeSlot.minute);
+        
+        // Get client name for booked slots
+        let clientName: string | undefined;
+        if (isBooked) {
+          const appointment = this.getAppointmentForSlot(day.date, timeSlot.hour, timeSlot.minute);
+          if (appointment) {
+            const client = this.clients.find(c => c.id === appointment.clientId);
+            clientName = client?.name;
+          }
+        }
 
         row.push({
           day,
@@ -197,7 +211,8 @@ export class ScheduleCalendarComponent implements OnInit {
           hasOverride,
           isLeave,
           leaveStatus: leaveStatus || undefined,
-          isBooked
+          isBooked,
+          clientName
         });
       }
 
@@ -252,6 +267,25 @@ export class ScheduleCalendarComponent implements OnInit {
       const slotDateTime = new Date(date);
       slotDateTime.setHours(hour, minute, 0, 0);
 
+      // Check if slot falls within appointment time range (inclusive start, exclusive end)
+      return slotDateTime >= appointmentStart && slotDateTime < appointmentEnd;
+    });
+  }
+
+  /**
+   * Get the appointment for a specific time slot
+   */
+  private getAppointmentForSlot(date: Date, hour: number, minute: number): Appointment | undefined {
+    if (!this.appointments || this.appointments.length === 0) return undefined;
+
+    return this.appointments.find(appointment => {
+      const appointmentStart = parseISO(appointment.startTime);
+      const appointmentEnd = parseISO(appointment.endTime);
+      
+      // Create a date-time for the slot
+      const slotDateTime = new Date(date);
+      slotDateTime.setHours(hour, minute, 0, 0);
+      
       // Check if slot falls within appointment time range (inclusive start, exclusive end)
       return slotDateTime >= appointmentStart && slotDateTime < appointmentEnd;
     });
@@ -313,25 +347,84 @@ export class ScheduleCalendarComponent implements OnInit {
     if (cell.isLeave) {
       return cell.leaveStatus === 'PENDING' ? 'Leave request pending approval' : 'On leave (approved)';
     }
-    if (cell.isBooked) return 'Appointment booked';
+    if (cell.isBooked) {
+      return cell.clientName ? `Appointment: ${cell.clientName}` : 'Appointment booked';
+    }
     if (cell.hasOverride) return 'Schedule override';
     if (cell.available) return 'Available';
     return 'Unavailable';
   }
 
   /**
+   * Get time range display for a cell (start - end time) in 24h format
+   */
+  getTimeRange(cell: CalendarCell): string {
+    const startHour = cell.timeSlot.hour;
+    const startMinute = cell.timeSlot.minute;
+    
+    // Calculate end time (30 minutes later)
+    let endHour = startHour;
+    let endMinute = startMinute + 30;
+    if (endMinute >= 60) {
+      endMinute = 0;
+      endHour++;
+    }
+    
+    // Format times in 24h format
+    const formatTime = (hour: number, minute: number): string => {
+      return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    };
+    
+    return `${formatTime(startHour, startMinute)} - ${formatTime(endHour, endMinute)}`;
+  }
+
+  /**
    * Handle cell click
    */
-  onCellClick(cell: CalendarCell): void {
+  onCellClick(cell: CalendarCell, event: MouseEvent): void {
     if (!this.editable) return;
     if (cell.isBooked) {
-      // TODO: Show appointment details menu (reschedule/cancel)
-      console.log('Appointment clicked:', cell);
+      // Show appointment menu with Reschedule and Cancel options
+      const appointment = this.getAppointmentForSlot(cell.day.date, cell.timeSlot.hour, cell.timeSlot.minute);
+      if (appointment) {
+        this.selectedAppointment = appointment;
+        this.appointmentMenuPosition = { x: event.clientX, y: event.clientY };
+        this.showAppointmentMenu = true;
+        event.stopPropagation();
+      }
     } else if (cell.available) {
-      // Open booking dialog for this time slot
-      this.selectedDateTime = this.createDateTimeFromCell(cell);
-      this.openBookingDialog();
+      // Open booking dialog for this time slot with prefilled date/time
+      const dateTime = this.createDateTimeFromCell(cell);
+      this.openBookingDialog(dateTime);
     }
+  }
+  
+  /**
+   * Handle reschedule action from menu
+   */
+  onRescheduleMenuAction(): void {
+    if (this.selectedAppointment) {
+      this.showAppointmentMenu = false;
+      this.openRescheduleDialog(this.selectedAppointment);
+    }
+  }
+  
+  /**
+   * Handle cancel action from menu
+   */
+  onCancelMenuAction(): void {
+    if (this.selectedAppointment) {
+      this.showAppointmentMenu = false;
+      this.openCancelDialog(this.selectedAppointment);
+    }
+  }
+  
+  /**
+   * Close appointment menu
+   */
+  closeAppointmentMenu(): void {
+    this.showAppointmentMenu = false;
+    this.selectedAppointment = null;
   }
 
   /**
@@ -343,10 +436,8 @@ export class ScheduleCalendarComponent implements OnInit {
     return date;
   }
 
-  // ========== Appointment Booking Dialog ==========
-
   /**
-   * Open booking dialog
+   * Open booking dialog with optional prefilled date/time
    */
   openBookingDialog(dateTime?: Date): void {
     this.selectedDateTime = dateTime || null;

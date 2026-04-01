@@ -3,11 +3,9 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MessageService } from 'primeng/api';
-import { AutoComplete } from 'primeng/autocomplete';
 import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { MultiSelect } from 'primeng/multiselect';
-import { Paginator } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
@@ -43,10 +41,8 @@ interface DateRangeOption {
     DatePicker,
     Select,
     MultiSelect,
-    AutoComplete,
     Tag,
     Skeleton,
-    Paginator,
     CompleteSessionDialogComponent,
     CancelSessionDialogComponent,
   ],
@@ -154,7 +150,7 @@ export class SessionListComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadSessions(): void {
+  loadSessions(): void {
     this.loading = true;
     this.error = null;
 
@@ -258,7 +254,7 @@ export class SessionListComponent implements OnInit, OnDestroy {
     });
   }
 
-  getStatusSeverity(status: SessionStatus): string {
+  getStatusSeverity(status: SessionStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | null {
     switch (status) {
       case SessionStatus.PENDING:
         return 'secondary';

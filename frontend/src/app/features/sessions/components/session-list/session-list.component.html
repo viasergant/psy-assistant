@@ -1,0 +1,221 @@
+<div class="session-list-container">
+  <div class="page-header">
+    <h1>{{ 'sessions.title' | transloco }}</h1>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section" [formGroup]="filterForm">
+    <div class="filters-row">
+      <!-- Date Range Filter -->
+      <div class="filter-field">
+        <label for="dateRange">{{ 'sessions.list.filterDateRange' | transloco }}</label>
+        <p-select
+          inputId="dateRange"
+          formControlName="dateRange"
+          [options]="dateRangeOptions"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+
+      <!-- Custom Date Range -->
+      <div class="filter-field" *ngIf="isCustomDateRange">
+        <label for="customStartDate">{{ 'schedule.leave.startDate' | transloco }}</label>
+        <p-calendar
+          inputId="customStartDate"
+          formControlName="customStartDate"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="filter-field" *ngIf="isCustomDateRange">
+        <label for="customEndDate">{{ 'schedule.leave.endDate' | transloco }}</label>
+        <p-calendar
+          inputId="customEndDate"
+          formControlName="customEndDate"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+
+      <!-- Client Search -->
+      <div class="filter-field">
+        <label for="clientSearch">{{ 'sessions.list.filterClient' | transloco }}</label>
+        <input
+          type="text"
+          pInputText
+          id="clientSearch"
+          formControlName="clientSearch"
+          [placeholder]="'sessions.list.filterClient' | transloco"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-field">
+        <label for="statusFilter">{{ 'sessions.list.filterStatus' | transloco }}</label>
+        <p-multiselect
+          inputId="statusFilter"
+          formControlName="statusFilter"
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          [placeholder]="'sessions.list.filterStatus' | transloco"
+          styleClass="w-full"
+        />
+      </div>
+
+      <!-- Clear Filters Button -->
+      <div class="filter-actions">
+        <p-button
+          [label]="'sessions.list.clearFilters' | transloco"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="clearFilters()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <p-skeleton height="3rem" styleClass="mb-3" />
+    <p-skeleton height="3rem" styleClass="mb-3" />
+    <p-skeleton height="3rem" styleClass="mb-3" />
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container" role="alert">
+    <p class="error-message">{{ error }}</p>
+    <p-button
+      [label]="'common.actions.retry' | transloco"
+      severity="secondary"
+      (onClick)="loadSessions()"
+    />
+  </div>
+
+  <!-- Sessions Table -->
+  <div *ngIf="!loading && !error" class="table-container">
+    <p-table
+      [value]="filteredSessions"
+      [paginator]="true"
+      [rows]="rows"
+      [first]="first"
+      [showCurrentPageReport]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      currentPageReportTemplate="{{ 'common.pagination.showing' | transloco }}"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ 'sessions.list.client' | transloco }}</th>
+          <th>{{ 'sessions.list.dateTime' | transloco }}</th>
+          <th>{{ 'sessions.list.type' | transloco }}</th>
+          <th>{{ 'sessions.list.status' | transloco }}</th>
+          <th>{{ 'sessions.list.actions' | transloco }}</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-session>
+        <tr>
+          <!-- Client -->
+          <td>{{ session.clientName }}</td>
+
+          <!-- Date/Time -->
+          <td>
+            {{ session.sessionDate }} {{ session.scheduledStartTime }}
+            <span class="duration-badge">({{ session.plannedDuration }} min)</span>
+          </td>
+
+          <!-- Type -->
+          <td>{{ 'sessions.types.' + session.sessionType | transloco }}</td>
+
+          <!-- Status -->
+          <td>
+            <p-tag
+              [value]="'sessions.status.' + session.status.toLowerCase() | transloco"
+              [severity]="getStatusSeverity(session.status)"
+              [styleClass]="'status-badge status-' + session.status.toLowerCase()"
+            />
+          </td>
+
+          <!-- Actions -->
+          <td class="actions-cell">
+            <p-button
+              *ngIf="canStartSession(session)"
+              [label]="'sessions.actions.start' | transloco"
+              severity="success"
+              size="small"
+              (onClick)="startSession(session)"
+            />
+            <p-button
+              *ngIf="canCompleteSession(session)"
+              [label]="'sessions.actions.complete' | transloco"
+              severity="info"
+              size="small"
+              (onClick)="openCompleteDialog(session)"
+            />
+            <p-button
+              *ngIf="canCancelSession(session)"
+              [label]="'sessions.actions.cancel' | transloco"
+              severity="danger"
+              [outlined]="true"
+              size="small"
+              (onClick)="openCancelDialog(session)"
+            />
+            <p-button
+              *ngIf="session.status === SessionStatus.COMPLETED || session.status === SessionStatus.CANCELLED"
+              [label]="'sessions.actions.view' | transloco"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="empty-state">
+            <div class="empty-content">
+              <p class="empty-message">
+                {{ filteredSessions.length === 0 && sessions.length > 0 
+                   ? ('sessions.emptyState.noSessions' | transloco) 
+                   : ('sessions.emptyState.noSessionsEver' | transloco) }}
+              </p>
+              <p-button
+                *ngIf="filteredSessions.length === 0 && sessions.length > 0"
+                [label]="'sessions.emptyState.clearFilters' | transloco"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="clearFilters()"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Complete Session Dialog -->
+  <app-complete-session-dialog
+    *ngIf="showCompleteDialog && selectedSession"
+    [session]="selectedSession"
+    [visible]="showCompleteDialog"
+    (completed)="onSessionCompleted()"
+    (cancelled)="onDialogClose()"
+  />
+
+  <!-- Cancel Session Dialog -->
+  <app-cancel-session-dialog
+    *ngIf="showCancelDialog && selectedSession"
+    [session]="selectedSession"
+    [visible]="showCancelDialog"
+    (cancelled)="onSessionCancelled()"
+    (closed)="onDialogClose()"
+  />
+</div>

@@ -1,0 +1,97 @@
+<p-dialog
+  [visible]="visible"
+  [modal]="true"
+  [closable]="true"
+  [style]="{ width: '600px' }"
+  [header]="'sessions.dialog.completeTitle' | transloco"
+  (onHide)="cancel()"
+>
+  <form [formGroup]="completeForm" (ngSubmit)="submit()" novalidate>
+    <!-- Session Details Card -->
+    <div class="session-details-card">
+      <h3>{{ 'sessions.dialog.sessionDetails' | transloco }}</h3>
+      <div class="detail-row">
+        <span class="detail-label">{{ 'sessions.list.client' | transloco }}:</span>
+        <span class="detail-value">{{ session.clientName }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">{{ 'sessions.list.dateTime' | transloco }}:</span>
+        <span class="detail-value">
+          {{ session.sessionDate }} {{ session.scheduledStartTime }}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">{{ 'sessions.list.type' | transloco }}:</span>
+        <span class="detail-value">{{ 'sessions.types.' + session.sessionType | transloco }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Duration:</span>
+        <span class="detail-value">{{ session.plannedDuration }} min</span>
+      </div>
+    </div>
+
+    <!-- Session Notes -->
+    <div class="field">
+      <label for="sessionNotes">
+        {{ 'sessions.dialog.sessionNotes' | transloco }}
+        <span class="required" aria-hidden="true">*</span>
+      </label>
+      <textarea
+        pTextarea
+        id="sessionNotes"
+        formControlName="sessionNotes"
+        rows="8"
+        [placeholder]="'sessions.dialog.sessionNotesPlaceholder' | transloco"
+        [attr.aria-invalid]="isInvalid('sessionNotes')"
+        aria-required="true"
+        class="w-full"
+      ></textarea>
+      <div class="field-footer">
+        <span *ngIf="isInvalid('sessionNotes')" class="error-msg" role="alert">
+          <ng-container *ngIf="completeForm.get('sessionNotes')?.hasError('required')">
+            {{ 'common.validation.required' | transloco }}
+          </ng-container>
+          <ng-container *ngIf="completeForm.get('sessionNotes')?.hasError('minlength')">
+            {{ 'common.validation.minLength' | transloco: { min: 10 } }}
+          </ng-container>
+        </span>
+        <span class="char-count">{{ notesLength }} characters</span>
+      </div>
+    </div>
+
+    <!-- Actual End Time -->
+    <div class="field">
+      <label for="actualEndTime">
+        {{ 'sessions.dialog.actualEndTime' | transloco }}
+      </label>
+      <p-calendar
+        inputId="actualEndTime"
+        formControlName="actualEndTime"
+        [timeOnly]="true"
+        [showIcon]="true"
+        appendTo="body"
+        styleClass="w-full"
+      />
+      <small class="field-hint">{{ 'sessions.hints.actualEndTime' | transloco }}</small>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        [label]="'common.actions.cancel' | transloco"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="cancel()"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'sessions.dialog.save' | transloco"
+        severity="primary"
+        (onClick)="submit()"
+        [loading]="loading"
+        [disabled]="completeForm.invalid"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

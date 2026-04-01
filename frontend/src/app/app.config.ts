@@ -11,6 +11,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideTransloco } from '@jsverse/transloco';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
+import { MessageService } from 'primeng/api';
 
 import { appRoutes } from './app.routes';
 import { jwtInterceptor } from './core/auth/jwt.interceptor';
@@ -63,6 +64,7 @@ export const appConfig: ApplicationConfig = {
       loader: TranslocoHttpLoader
     }),
     providePrimeNG({ theme: { preset: Aura } }),
+    MessageService,
     {
       provide: APP_INITIALIZER,
       useFactory: initI18n,

@@ -113,7 +113,7 @@ public class SessionRecordService {
 
         // Create session record with immutable fields from appointment
         final SessionRecord sessionRecord = new SessionRecord(
-                appointment.getId(),
+                event.appointmentId(),  // Use event ID directly, not appointment.getId()
                 appointment.getClientId(),
                 appointment.getTherapistProfileId(),
                 LocalDate.from(appointment.getStartTime()),
@@ -185,7 +185,7 @@ public class SessionRecordService {
 
         // Create session record FIRST (before publishing event)
         final SessionRecord sessionRecord = new SessionRecord(
-                appointment.getId(),
+                appointmentId,  // Use appointmentId parameter directly, not appointment.getId()
                 appointment.getClientId(),
                 appointment.getTherapistProfileId(),
                 LocalDate.from(appointment.getStartTime()),

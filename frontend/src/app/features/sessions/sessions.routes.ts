@@ -1,12 +1,11 @@
 import { Routes } from '@angular/router';
-import { Component } from '@angular/core';
-
-@Component({
-  standalone: true,
-  template: `<h1>Sessions — coming soon</h1>`
-})
-export class SessionsPlaceholderComponent {}
 
 export default [
-  { path: '', component: SessionsPlaceholderComponent }
+  {
+    path: '',
+    loadComponent: () =>
+      import('./components/session-list/session-list.component').then(
+        (m) => m.SessionListComponent
+      ),
+  },
 ] satisfies Routes;

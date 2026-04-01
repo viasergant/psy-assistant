@@ -21,8 +21,14 @@ public class ReferenceDataController {
     private final SpecializationRepository specializationRepository;
     private final LanguageRepository languageRepository;
 
-    public ReferenceDataController(SpecializationRepository specializationRepository,
-                                   LanguageRepository languageRepository) {
+    /**
+     * Constructs a new ReferenceDataController.
+     *
+     * @param specializationRepository the specialization repository
+     * @param languageRepository the language repository
+     */
+    public ReferenceDataController(final SpecializationRepository specializationRepository,
+                                   final LanguageRepository languageRepository) {
         this.specializationRepository = specializationRepository;
         this.languageRepository = languageRepository;
     }

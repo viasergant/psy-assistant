@@ -394,6 +394,96 @@ public class AppointmentService {
         return saved;
     }
 
+    /**
+     * Updates an appointment's status.
+     *
+     * <p>Allows manual status transitions (e.g., marking as CONFIRMED, COMPLETED, or NO_SHOW).
+     * Publishes status change event for potential session record updates.
+     *
+     * <p><strong>Optimistic Locking Retry</strong>: Automatically retries up to 3 times on concurrent modification.
+     *
+     * @param appointmentId appointment UUID
+     * @param newStatus new appointment status
+     * @param notes optional notes about the status change
+     * @param actorUserId user performing the update (for audit)
+     * @param actorName display name of actor (for audit)
+     * @return updated appointment
+     * @throws EntityNotFoundException if appointment not found
+     * @throws IllegalArgumentException if invalid status transition
+     */
+    @Retryable(
+            retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 50, multiplier = 2)
+    )
+    @Transactional
+    public Appointment updateAppointmentStatus(final UUID appointmentId,
+                                                final AppointmentStatus newStatus,
+                                                final String notes,
+                                                final UUID actorUserId,
+                                                final String actorName) {
+
+        // Fetch existing appointment
+        final Appointment appointment = getAppointment(appointmentId);
+
+        // Capture old status before change
+        final AppointmentStatus oldStatus = appointment.getStatus();
+
+        // Validate status transition
+        if (oldStatus == AppointmentStatus.CANCELLED) {
+            throw new IllegalArgumentException("Cannot change status of cancelled appointment");
+        }
+
+        // Prevent direct cancel via this endpoint (use dedicated cancel endpoint)
+        if (newStatus == AppointmentStatus.CANCELLED) {
+            throw new IllegalArgumentException("Use the cancel endpoint to cancel appointments");
+        }
+
+        // Update status
+        appointment.setStatus(newStatus);
+        
+        // Update notes if provided
+        if (notes != null && !notes.isBlank()) {
+            final String existingNotes = appointment.getNotes();
+            final String updatedNotes = existingNotes != null && !existingNotes.isBlank()
+                    ? existingNotes + "\n\n[Status update] " + notes
+                    : notes;
+            appointment.setNotes(updatedNotes);
+        }
+
+        final Appointment saved = appointmentRepository.save(appointment);
+
+        // Async audit trail
+        final String metadata = String.format(
+                "{\"oldStatus\": \"%s\", \"newStatus\": \"%s\", \"notes\": \"%s\"}",
+                oldStatus,
+                newStatus,
+                notes != null ? notes.replace("\"", "\\\"") : ""
+        );
+
+        auditService.recordAuditEntryWithMetadata(
+                saved.getId(),
+                AuditActionType.STATUS_CHANGED,
+                actorUserId,
+                actorName,
+                metadata
+        );
+
+        // Publish event for session record updates
+        eventPublisher.publishEvent(AppointmentStatusChangedEvent.of(
+                saved.getId(),
+                oldStatus,
+                newStatus,
+                actorUserId,
+                actorName
+        ));
+
+        LOG.info("Appointment status updated: id={}, oldStatus={}, newStatus={}, actor={}",
+                saved.getId(), oldStatus, newStatus, actorName);
+
+        return saved;
+    }
+
     // ========== Validation Helpers ==========
 
     private void validateDuration(final Integer durationMinutes) {

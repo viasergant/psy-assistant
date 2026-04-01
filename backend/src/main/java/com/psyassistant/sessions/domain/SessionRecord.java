@@ -15,6 +15,8 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Represents a clinical session record linked to an appointment.
@@ -75,7 +77,8 @@ public class SessionRecord extends BaseEntity {
     private SessionType sessionType;
 
     /** Planned duration. Immutable snapshot from appointment. */
-    @Column(name = "planned_duration", nullable = false, updatable = false)
+    @JdbcTypeCode(SqlTypes.INTERVAL_SECOND)
+    @Column(name = "planned_duration", nullable = false, updatable = false, columnDefinition = "interval")
     private Duration plannedDuration;
 
     // ========== Mutable Status ==========

@@ -16,6 +16,7 @@ import { forkJoin } from 'rxjs';
 import { AppointmentBookingDialogComponent } from '../appointment-booking-dialog/appointment-booking-dialog.component';
 import { AppointmentRescheduleDialogComponent } from '../appointment-reschedule-dialog/appointment-reschedule-dialog.component';
 import { AppointmentCancelDialogComponent } from '../appointment-cancel-dialog/appointment-cancel-dialog.component';
+import { AppointmentEditDialogComponent } from '../appointment-edit-dialog/appointment-edit-dialog.component';
 
 interface WeekDay {
   date: Date;
@@ -50,7 +51,8 @@ interface CalendarCell {
     TranslocoPipe,
     AppointmentBookingDialogComponent,
     AppointmentRescheduleDialogComponent,
-    AppointmentCancelDialogComponent
+    AppointmentCancelDialogComponent,
+    AppointmentEditDialogComponent
   ],
   templateUrl: './schedule-calendar.component.html',
   styleUrls: ['./schedule-calendar.component.scss']
@@ -71,6 +73,7 @@ export class ScheduleCalendarComponent implements OnInit {
   // Dialog state
   showBookingDialog = false;
   showRescheduleDialog = false;
+  showEditDialog = false;
   showCancelDialog = false;
   selectedAppointment: Appointment | null = null;
   selectedDateTime: Date | null = null;
@@ -408,6 +411,16 @@ export class ScheduleCalendarComponent implements OnInit {
       this.openRescheduleDialog(this.selectedAppointment);
     }
   }
+
+  /**
+   * Handle edit action from menu
+   */
+  onEditMenuAction(): void {
+    if (this.selectedAppointment) {
+      this.showAppointmentMenu = false;
+      this.openEditDialog(this.selectedAppointment);
+    }
+  }
   
   /**
    * Handle cancel action from menu
@@ -521,6 +534,36 @@ export class ScheduleCalendarComponent implements OnInit {
    */
   onCancelDialogCancelled(): void {
     this.showCancelDialog = false;
+    this.selectedAppointment = null;
+  }
+
+  // ========== Appointment Edit Dialog ==========
+
+  /**
+   * Open edit dialog for an appointment
+   */
+  openEditDialog(appointment: Appointment): void {
+    this.selectedAppointment = appointment;
+    this.showEditDialog = true;
+  }
+
+  /**
+   * Handle edit submission
+   */
+  onEditSubmitted(appointment: Appointment): void {
+    this.showEditDialog = false;
+    this.selectedAppointment = null;
+    console.log('Appointment updated:', appointment);
+    // Reload calendar to show updated appointment
+    this.loadAvailability();
+    // TODO: Emit event to parent component
+  }
+
+  /**
+   * Handle edit dialog close
+   */
+  onEditCancelled(): void {
+    this.showEditDialog = false;
     this.selectedAppointment = null;
   }
 }

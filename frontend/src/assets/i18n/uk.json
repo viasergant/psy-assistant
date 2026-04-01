@@ -446,6 +446,18 @@
         "cancelButton": "Скасувати прийом",
         "cancellingInProgress": "Скасування..."
       },
+      "edit": {
+        "title": "Редагувати прийом",
+        "appointmentTimeLabel": "Час прийому",
+        "durationLabel": "Тривалість",
+        "minutes": "хвилин",
+        "statusLabel": "Статус",
+        "notesLabel": "Примітки",
+        "notesPlaceholder": "Додаткові примітки про зміну статусу",
+        "characters": "символів",
+        "updateButton": "Оновити прийом",
+        "updatingInProgress": "Оновлення..."
+      },
       "cancellationType": {
         "clientInitiated": "Ініційовано клієнтом",
         "therapistInitiated": "Ініційовано терапевтом",
@@ -459,6 +471,7 @@
         "noShow": "Не з'явився"
       },
       "actions": {
+        "edit": "Редагувати",
         "reschedule": "Перенести",
         "cancel": "Скасувати"
       },
@@ -479,12 +492,14 @@
       "success": {
         "booked": "Прийом успішно записано",
         "rescheduled": "Прийом успішно перенесено",
-        "cancelled": "Прийом успішно скасовано"
+        "cancelled": "Прийом успішно скасовано",
+        "updated": "Прийом успішно оновлено"
       },
       "error": {
         "bookingFailed": "Не вдалося записати на прийом. Будь ласка, спробуйте ще раз.",
         "rescheduleFailed": "Не вдалося перенести прийом. Будь ласка, спробуйте ще раз.",
         "cancelFailed": "Не вдалося скасувати прийом. Будь ласка, спробуйте ще раз.",
+        "updateFailed": "Не вдалося оновити прийом. Будь ласка, спробуйте ще раз.",
         "conflictDetectionFailed": "Не вдалося перевірити конфлікти. Будь ласка, спробуйте ще раз.",
         "alreadyCancelled": "Цей прийом вже скасовано"
       }
@@ -599,7 +614,73 @@
     }
   },
   "sessions": {
-    "title": "Сесії"
+    "title": "Сесії",
+    "list": {
+      "client": "Клієнт",
+      "dateTime": "Дата/Час",
+      "type": "Тип",
+      "status": "Статус",
+      "actions": "Дії",
+      "filterClient": "Фільтр за клієнтом",
+      "filterDateRange": "Діапазон дат",
+      "filterStatus": "Статус",
+      "clearFilters": "Очистити фільтри",
+      "today": "Сьогодні",
+      "thisWeek": "Цей тиждень",
+      "last7Days": "Останні 7 днів",
+      "last30Days": "Останні 30 днів",
+      "customRange": "Власний діапазон"
+    },
+    "types": {
+      "INITIAL_CONSULTATION": "Початкова консультація",
+      "FOLLOW_UP": "Подальша сесія",
+      "CHECK_IN": "Перевірка стану",
+      "CRISIS_INTERVENTION": "Кризове втручання"
+    },
+    "status": {
+      "pending": "Очікує",
+      "inProgress": "В процесі",
+      "completed": "Завершено",
+      "cancelled": "Скасовано"
+    },
+    "actions": {
+      "start": "Розпочати сесію",
+      "complete": "Завершити сесію",
+      "cancel": "Скасувати",
+      "view": "Переглянути"
+    },
+    "dialog": {
+      "completeTitle": "Завершити сесію",
+      "sessionDetails": "Деталі сесії",
+      "sessionNotes": "Нотатки сесії",
+      "sessionNotesPlaceholder": "Введіть нотатки сесії...",
+      "actualEndTime": "Фактичний час завершення (необов'язково)",
+      "save": "Завершити сесію",
+      "cancel": "Скасувати",
+      "cancelTitle": "Скасувати сесію",
+      "cancellationReason": "Причина скасування",
+      "cancellationReasonPlaceholder": "Чому ця сесія скасовується?"
+    },
+    "messages": {
+      "sessionStarted": "Сесію успішно розпочато",
+      "sessionCompleted": "Сесію успішно завершено",
+      "sessionCancelled": "Сесію скасовано",
+      "loadError": "Не вдалося завантажити сесії. Спробуйте ще раз.",
+      "startError": "Не вдалося розпочати сесію",
+      "completeError": "Не вдалося завершити сесію",
+      "cancelError": "Не вдалося скасувати сесію"
+    },
+    "emptyState": {
+      "noSessions": "Не знайдено сесій для вибраних фільтрів",
+      "clearFilters": "Очистити всі фільтри",
+      "noSessionsEver": "Ваші сесії з'являться тут після планування зустрічей"
+    },
+    "warnings": {
+      "cancelConfirmation": "Ви впевнені, що хочете скасувати цю сесію? Цю дію не можна скасувати."
+    },
+    "hints": {
+      "actualEndTime": "Залиште порожнім для використання поточного часу"
+    }
   },
   "billing": {
     "title": "Виставлення рахунків"

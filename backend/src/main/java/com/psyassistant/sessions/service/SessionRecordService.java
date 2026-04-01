@@ -45,6 +45,13 @@ public class SessionRecordService {
     private final AppointmentRepository appointmentRepository;
     private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * Constructs a new SessionRecordService.
+     *
+     * @param sessionRecordRepository the session record repository
+     * @param appointmentRepository the appointment repository
+     * @param eventPublisher the application event publisher
+     */
     public SessionRecordService(final SessionRecordRepository sessionRecordRepository,
                                  final AppointmentRepository appointmentRepository,
                                  final ApplicationEventPublisher eventPublisher) {
@@ -247,5 +254,28 @@ public class SessionRecordService {
         return sessionRecordRepository.findByAppointmentId(appointmentId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No session found for appointment: " + appointmentId));
+    }
+
+    /**
+     * Queries session records with optional filters.
+     *
+     * <p>Returns sessions matching the provided criteria, ordered by date descending.
+     * If no filters are provided, returns all sessions for the specified therapist.
+     *
+     * @param therapistId optional therapist UUID filter
+     * @param startDate optional start date filter (inclusive)
+     * @param endDate optional end date filter (inclusive)
+     * @param status optional status filter
+     * @return list of matching session records, may be empty
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<SessionRecord> getSessions(final UUID therapistId,
+                                                       final LocalDate startDate,
+                                                       final LocalDate endDate,
+                                                       final SessionStatus status) {
+        LOG.debug("Querying sessions: therapistId={}, startDate={}, endDate={}, status={}",
+                therapistId, startDate, endDate, status);
+
+        return sessionRecordRepository.findSessions(therapistId, startDate, endDate, status);
     }
 }

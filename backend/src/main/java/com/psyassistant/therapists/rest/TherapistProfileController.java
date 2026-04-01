@@ -39,7 +39,12 @@ public class TherapistProfileController {
 
     private final TherapistProfileService therapistProfileService;
 
-    public TherapistProfileController(TherapistProfileService therapistProfileService) {
+    /**
+     * Constructs a new TherapistProfileController.
+     *
+     * @param therapistProfileService the therapist profile service
+     */
+    public TherapistProfileController(final TherapistProfileService therapistProfileService) {
         this.therapistProfileService = therapistProfileService;
     }
 
@@ -56,8 +61,8 @@ public class TherapistProfileController {
     @GetMapping
     @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<PageResponse<TherapistProfileAdminDto>> listTherapists(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size
+        @RequestParam(defaultValue = "0") final int page,
+        @RequestParam(defaultValue = "20") final int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
         Page<TherapistProfile> profilePage = therapistProfileService.getAllProfiles(pageable);
@@ -87,7 +92,7 @@ public class TherapistProfileController {
     @PostMapping
     @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<TherapistProfileAdminDto> createTherapist(
-        @Valid @RequestBody CreateTherapistProfileRequest request
+        @Valid @RequestBody final CreateTherapistProfileRequest request
     ) {
         // Validate required fields
         if (request.email() == null || request.email().isBlank()) {
@@ -136,7 +141,7 @@ public class TherapistProfileController {
     @PostMapping("/with-account")
     @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<TherapistWithAccountResponseDto> createTherapistWithAccount(
-        @Valid @RequestBody CreateTherapistWithAccountRequest request
+        @Valid @RequestBody final CreateTherapistWithAccountRequest request
     ) {
         try {
             TherapistWithAccountResponseDto response = therapistProfileService
@@ -165,7 +170,7 @@ public class TherapistProfileController {
      */
     @GetMapping("/by-email/{email:.+}")
     @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
-    public ResponseEntity<TherapistProfileAdminDto> getTherapistByEmail(@PathVariable String email) {
+    public ResponseEntity<TherapistProfileAdminDto> getTherapistByEmail(@PathVariable final String email) {
         try {
             LOG.info("Fetching therapist profile by email: {}", email);
             TherapistProfile profile = therapistProfileService.getProfileByEmail(email);
@@ -186,7 +191,7 @@ public class TherapistProfileController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN') or hasRole('THERAPIST')")
-    public ResponseEntity<TherapistProfileAdminDto> getTherapist(@PathVariable UUID id) {
+    public ResponseEntity<TherapistProfileAdminDto> getTherapist(@PathVariable final UUID id) {
         try {
             TherapistProfile profile = therapistProfileService.getProfile(id);
             return ResponseEntity.ok(TherapistProfileAdminDto.fromAdmin(profile));
@@ -211,8 +216,8 @@ public class TherapistProfileController {
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<TherapistProfileAdminDto> updateTherapist(
-        @PathVariable UUID id,
-        @Valid @RequestBody UpdateTherapistProfileRequest request
+        @PathVariable final UUID id,
+        @Valid @RequestBody final UpdateTherapistProfileRequest request
     ) {
         // Validate version exists
         if (request.version() == null) {
@@ -266,8 +271,8 @@ public class TherapistProfileController {
     @PostMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR') or hasRole('ADMIN')")
     public ResponseEntity<TherapistProfileAdminDto> deactivateTherapist(
-        @PathVariable UUID id,
-        @RequestBody(required = false) DeactivateRequest request
+        @PathVariable final UUID id,
+        @RequestBody(required = false) final DeactivateRequest request
     ) {
         try {
             String reason = request != null ? request.reason() : null;

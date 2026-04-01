@@ -447,6 +447,18 @@
         "cancelButton": "Cancel Appointment",
         "cancellingInProgress": "Cancelling..."
       },
+      "edit": {
+        "title": "Edit Appointment",
+        "appointmentTimeLabel": "Appointment Time",
+        "durationLabel": "Duration",
+        "minutes": "minutes",
+        "statusLabel": "Status",
+        "notesLabel": "Notes",
+        "notesPlaceholder": "Optional notes about status change",
+        "characters": "characters",
+        "updateButton": "Update Appointment",
+        "updatingInProgress": "Updating..."
+      },
       "cancellationType": {
         "clientInitiated": "Client Initiated",
         "therapistInitiated": "Therapist Initiated",
@@ -460,6 +472,7 @@
         "noShow": "No Show"
       },
       "actions": {
+        "edit": "Edit",
         "reschedule": "Reschedule",
         "cancel": "Cancel"
       },
@@ -480,11 +493,13 @@
       "success": {
         "booked": "Appointment successfully booked",
         "rescheduled": "Appointment successfully rescheduled",
-        "cancelled": "Appointment successfully cancelled"
+        "cancelled": "Appointment successfully cancelled",
+        "updated": "Appointment successfully updated"
       },
       "error": {
         "bookingFailed": "Failed to book appointment. Please try again.",
         "rescheduleFailed": "Failed to reschedule appointment. Please try again.",
+        "updateFailed": "Failed to update appointment. Please try again.",
         "cancelFailed": "Failed to cancel appointment. Please try again.",
         "conflictDetectionFailed": "Failed to check for conflicts. Please try again.",
         "alreadyCancelled": "This appointment has already been cancelled"
@@ -600,7 +615,73 @@
     }
   },
   "sessions": {
-    "title": "Sessions"
+    "title": "Sessions",
+    "list": {
+      "client": "Client",
+      "dateTime": "Date/Time",
+      "type": "Type",
+      "status": "Status",
+      "actions": "Actions",
+      "filterClient": "Filter by client",
+      "filterDateRange": "Date Range",
+      "filterStatus": "Status",
+      "clearFilters": "Clear Filters",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "last7Days": "Last 7 Days",
+      "last30Days": "Last 30 Days",
+      "customRange": "Custom Range"
+    },
+    "types": {
+      "INITIAL_CONSULTATION": "Initial Consultation",
+      "FOLLOW_UP": "Follow-Up Session",
+      "CHECK_IN": "Check-In",
+      "CRISIS_INTERVENTION": "Crisis Intervention"
+    },
+    "status": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "actions": {
+      "start": "Start Session",
+      "complete": "Complete Session",
+      "cancel": "Cancel",
+      "view": "View"
+    },
+    "dialog": {
+      "completeTitle": "Complete Session",
+      "sessionDetails": "Session Details",
+      "sessionNotes": "Session Notes",
+      "sessionNotesPlaceholder": "Enter session notes...",
+      "actualEndTime": "Actual End Time (optional)",
+      "save": "Complete Session",
+      "cancel": "Cancel",
+      "cancelTitle": "Cancel Session",
+      "cancellationReason": "Cancellation Reason",
+      "cancellationReasonPlaceholder": "Why is this session being cancelled?"
+    },
+    "messages": {
+      "sessionStarted": "Session started successfully",
+      "sessionCompleted": "Session completed successfully",
+      "sessionCancelled": "Session cancelled",
+      "loadError": "Failed to load sessions. Please try again.",
+      "startError": "Failed to start session",
+      "completeError": "Failed to complete session",
+      "cancelError": "Failed to cancel session"
+    },
+    "emptyState": {
+      "noSessions": "No sessions found for the selected filters",
+      "clearFilters": "Clear all filters",
+      "noSessionsEver": "Your sessions will appear here once appointments are scheduled"
+    },
+    "warnings": {
+      "cancelConfirmation": "Are you sure you want to cancel this session? This action cannot be undone."
+    },
+    "hints": {
+      "actualEndTime": "Leave blank to use current time"
+    }
   },
   "billing": {
     "title": "Billing"

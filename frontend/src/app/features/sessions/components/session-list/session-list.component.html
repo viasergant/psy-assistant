@@ -22,7 +22,7 @@
       <!-- Custom Date Range -->
       <div class="filter-field" *ngIf="isCustomDateRange">
         <label for="customStartDate">{{ 'schedule.leave.startDate' | transloco }}</label>
-        <p-calendar
+        <p-datepicker
           inputId="customStartDate"
           formControlName="customStartDate"
           dateFormat="yy-mm-dd"
@@ -33,7 +33,7 @@
 
       <div class="filter-field" *ngIf="isCustomDateRange">
         <label for="customEndDate">{{ 'schedule.leave.endDate' | transloco }}</label>
-        <p-calendar
+        <p-datepicker
           inputId="customEndDate"
           formControlName="customEndDate"
           dateFormat="yy-mm-dd"

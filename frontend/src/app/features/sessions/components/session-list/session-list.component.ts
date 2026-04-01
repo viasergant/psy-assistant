@@ -5,7 +5,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MessageService } from 'primeng/api';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Button } from 'primeng/button';
-import { Calendar } from 'primeng/calendar';
+import { DatePicker } from 'primeng/datepicker';
 import { MultiSelect } from 'primeng/multiselect';
 import { Paginator } from 'primeng/paginator';
 import { Select } from 'primeng/select';
@@ -40,7 +40,7 @@ interface DateRangeOption {
     TranslocoPipe,
     TableModule,
     Button,
-    Calendar,
+    DatePicker,
     Select,
     MultiSelect,
     AutoComplete,

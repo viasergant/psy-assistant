@@ -10,7 +10,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { Paginator } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { Skeleton } from 'primeng/skeleton';
-import { Table, TableModule } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { Subject, debounceTime, distinctUntilChanged, finalize, takeUntil } from 'rxjs';
 import { SessionRecord, SessionFilters, SessionStatus } from '../../models/session.model';

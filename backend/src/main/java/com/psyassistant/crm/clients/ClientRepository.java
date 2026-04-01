@@ -21,8 +21,9 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
     Optional<Client> findBySourceLeadId(UUID sourceLeadId);
 
     /**
-     * Searches clients using PostgreSQL full-text search.
+     * Searches clients using PostgreSQL full-text search with prefix matching.
      * Matches against name, email, phone, and client code fields.
+     * Supports partial keyword matching (e.g., "lead" matches "lead1", "leading").
      * Uses GIN index on search_vector for sub-500ms performance on 10k+ records.
      *
      * @param searchQuery text query (case-insensitive, supports partial matching)
@@ -36,10 +37,20 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
             SELECT DISTINCT c2.id
             FROM clients c2
             LEFT JOIN client_tags ct ON c2.id = ct.client_id
-            WHERE c2.search_vector @@ plainto_tsquery('simple', :searchQuery)
+            WHERE c2.search_vector @@ to_tsquery('simple', :searchQuery || ':*')
+               OR c2.full_name ILIKE '%' || :searchQuery || '%'
+               OR c2.email ILIKE '%' || :searchQuery || '%'
+               OR c2.phone ILIKE '%' || :searchQuery || '%'
+               OR c2.client_code ILIKE '%' || :searchQuery || '%'
                OR ct.tag ILIKE '%' || :searchQuery || '%'
         )
-        ORDER BY ts_rank(c.search_vector, plainto_tsquery('simple', :searchQuery)) DESC
+        ORDER BY 
+            CASE 
+                WHEN c.search_vector @@ to_tsquery('simple', :searchQuery || ':*') 
+                THEN ts_rank(c.search_vector, to_tsquery('simple', :searchQuery || ':*'))
+                ELSE 0
+            END DESC,
+            c.full_name
         LIMIT :limit
         """, nativeQuery = true)
     List<Client> searchClients(@Param("searchQuery") String searchQuery, @Param("limit") int limit);

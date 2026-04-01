@@ -10,7 +10,7 @@
   h1 {
     font-size: 2rem;
     font-weight: 600;
-    color: var(--gray-900);
+    color: var(--text-color);
     margin: 0;
   }
 }
@@ -21,6 +21,24 @@
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  ::ng-deep {
+    .p-select,
+    .p-datepicker,
+    .p-multiselect,
+    .p-inputtext {
+      width: 100%;
+    }
+
+    .p-select .p-select-label,
+    .p-multiselect .p-multiselect-label {
+      padding: 0.75rem;
+    }
+
+    .p-datepicker input {
+      padding: 0.75rem;
+    }
+  }
 }
 
 .filters-row {
@@ -38,7 +56,7 @@
   label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--gray-700);
+    color: var(--text-color);
   }
 }
 
@@ -54,12 +72,12 @@
 .error-container {
   text-align: center;
   padding: 3rem 2rem;
-  background: var(--red-50);
+  background: var(--red-50, #fef2f2);
   border-radius: 8px;
-  border: 1px solid var(--red-200);
+  border: 1px solid var(--red-200, #fecaca);
 
   .error-message {
-    color: var(--red-700);
+    color: var(--red-700, #b91c1c);
     margin-bottom: 1rem;
     font-size: 1rem;
   }
@@ -73,7 +91,7 @@
 }
 
 .duration-badge {
-  color: var(--gray-600);
+  color: var(--text-color-secondary);
   font-size: 0.875rem;
   margin-left: 0.5rem;
 }
@@ -84,23 +102,23 @@
   text-transform: uppercase;
 
   &.status-pending {
-    background: var(--gray-200) !important;
-    color: var(--gray-700) !important;
+    background: var(--gray-200, #e5e7eb) !important;
+    color: var(--gray-700, #374151) !important;
   }
 
   &.status-in_progress {
-    background: var(--green-100) !important;
-    color: var(--green-700) !important;
+    background: var(--green-100, #dcfce7) !important;
+    color: var(--green-700, #15803d) !important;
   }
 
   &.status-completed {
-    background: var(--blue-100) !important;
-    color: var(--blue-700) !important;
+    background: var(--blue-100, #dbeafe) !important;
+    color: var(--blue-700, #1d4ed8) !important;
   }
 
   &.status-cancelled {
-    background: var(--red-100) !important;
-    color: var(--red-700) !important;
+    background: var(--red-100, #fee2e2) !important;
+    color: var(--red-700, #b91c1c) !important;
   }
 }
 
@@ -116,7 +134,7 @@
     padding: 3rem 2rem;
 
     .empty-message {
-      color: var(--gray-600);
+      color: var(--text-color-secondary);
       font-size: 1rem;
       margin-bottom: 1rem;
     }

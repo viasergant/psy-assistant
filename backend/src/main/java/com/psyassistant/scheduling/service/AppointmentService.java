@@ -5,6 +5,7 @@ import com.psyassistant.scheduling.domain.AppointmentStatus;
 import com.psyassistant.scheduling.domain.AuditActionType;
 import com.psyassistant.scheduling.domain.CancellationType;
 import com.psyassistant.scheduling.domain.SessionType;
+import com.psyassistant.scheduling.event.AppointmentStatusChangedEvent;
 import com.psyassistant.scheduling.repository.AppointmentRepository;
 import com.psyassistant.scheduling.repository.SessionTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -44,15 +46,18 @@ public class AppointmentService {
     private final SessionTypeRepository sessionTypeRepository;
     private final ConflictDetectionService conflictDetectionService;
     private final AppointmentAuditService auditService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public AppointmentService(final AppointmentRepository appointmentRepository,
                                final SessionTypeRepository sessionTypeRepository,
                                final ConflictDetectionService conflictDetectionService,
-                               final AppointmentAuditService auditService) {
+                               final AppointmentAuditService auditService,
+                               final ApplicationEventPublisher eventPublisher) {
         this.appointmentRepository = appointmentRepository;
         this.sessionTypeRepository = sessionTypeRepository;
         this.conflictDetectionService = conflictDetectionService;
         this.auditService = auditService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -350,6 +355,9 @@ public class AppointmentService {
             throw new IllegalStateException("Appointment is already cancelled: " + appointmentId);
         }
 
+        // Capture old status before change
+        final AppointmentStatus oldStatus = appointment.getStatus();
+
         // Cancel via entity method
         appointment.cancel(cancellationType, reason, actorUserId);
 
@@ -371,8 +379,17 @@ public class AppointmentService {
                 metadata
         );
 
-        LOG.info("Appointment cancelled: id={}, type={}, reason={}",
-                saved.getId(), cancellationType, reason);
+        // Publish event for session record creation/cancellation
+        eventPublisher.publishEvent(AppointmentStatusChangedEvent.of(
+                saved.getId(),
+                oldStatus,
+                AppointmentStatus.CANCELLED,
+                actorUserId,
+                actorName
+        ));
+
+        LOG.info("Appointment cancelled: id={}, type={}, reason={}, oldStatus={}",
+                saved.getId(), cancellationType, reason, oldStatus);
 
         return saved;
     }

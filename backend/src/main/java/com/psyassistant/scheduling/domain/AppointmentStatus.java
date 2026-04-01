@@ -17,6 +17,11 @@ public enum AppointmentStatus {
     CONFIRMED,
 
     /**
+     * Session is currently in progress (therapist has started the session).
+     */
+    IN_PROGRESS,
+
+    /**
      * Session completed successfully.
      */
     COMPLETED,

@@ -46,6 +46,10 @@ public interface SessionRecordRepository extends JpaRepository<SessionRecord, UU
     /**
      * Query sessions with optional filters.
      *
+     * <p>Uses COALESCE for date parameters to avoid PostgreSQL type inference issues.
+     * When a date parameter is null, COALESCE returns the session date itself,
+     * making the condition always true (e.g., sessionDate >= sessionDate).
+     *
      * @param therapistId optional therapist UUID filter
      * @param startDate optional start date filter (inclusive)
      * @param endDate optional end date filter (inclusive)
@@ -54,8 +58,8 @@ public interface SessionRecordRepository extends JpaRepository<SessionRecord, UU
      */
     @Query("SELECT s FROM SessionRecord s WHERE "
             + "(:therapistId IS NULL OR s.therapistId = :therapistId) AND "
-            + "(:startDate IS NULL OR s.sessionDate >= :startDate) AND "
-            + "(:endDate IS NULL OR s.sessionDate <= :endDate) AND "
+            + "s.sessionDate >= COALESCE(:startDate, s.sessionDate) AND "
+            + "s.sessionDate <= COALESCE(:endDate, s.sessionDate) AND "
             + "(:status IS NULL OR s.status = :status) "
             + "ORDER BY s.sessionDate DESC, s.scheduledStartTime DESC")
     List<SessionRecord> findSessions(

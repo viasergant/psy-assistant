@@ -64,7 +64,7 @@ def test_convert_qualified_lead_to_client(admin_client, qualified_lead, created_
     convert_response = admin_client.post(
         f"/api/v1/leads/{lead_id}/convert",
         json=conversion_payload,
-        expected_status=200
+        expected_status=201
     )
 
     conversion_data = convert_response.json()
@@ -97,7 +97,7 @@ def test_convert_lead_preserves_contact_methods(admin_client, qualified_lead, cr
     convert_response = admin_client.post(
         f"/api/v1/leads/{lead_id}/convert",
         json=conversion_payload,
-        expected_status=200
+        expected_status=201
     )
 
     client_id = convert_response.json()["clientId"]
@@ -128,7 +128,7 @@ def test_cannot_convert_already_converted_lead(admin_client, qualified_lead, cre
     first_convert = admin_client.post(
         f"/api/v1/leads/{lead_id}/convert",
         json=conversion_payload,
-        expected_status=200
+        expected_status=201
     )
     created_resources["clients"].append(first_convert.json()["clientId"])
 
@@ -157,7 +157,7 @@ def test_conversion_creates_audit_trail(admin_client, qualified_lead, created_re
     convert_response = admin_client.post(
         f"/api/v1/leads/{lead_id}/convert",
         json=conversion_payload,
-        expected_status=200
+        expected_status=201
     )
 
     client_id = convert_response.json()["clientId"]

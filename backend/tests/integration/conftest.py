@@ -99,44 +99,58 @@ def admin_token(api_client: APIClient, test_config: Dict[str, Any]) -> str:
     return token
 
 
-@pytest.fixture(scope="function")
-def admin_client(api_client: APIClient, admin_token: str) -> Generator[APIClient, None, None]:
+@pytest.fixture(scope="session")
+def session_admin_client(api_client: APIClient, admin_token: str) -> APIClient:
     """
-    Provide API client authenticated as admin for individual test.
+    Provide session-scoped API client authenticated as admin.
+    
+    Used by fixtures that need admin access during session setup (e.g., reference_data).
 
     Args:
         api_client: Session-scoped API client
         admin_token: Admin JWT token
 
+    Returns:
+        Authenticated API client for the session
+    """
+    api_client.set_token(admin_token)
+    return api_client
+
+
+@pytest.fixture(scope="function")
+def admin_client(session_admin_client: APIClient) -> Generator[APIClient, None, None]:
+    """
+    Provide API client authenticated as admin for individual test.
+
+    Args:
+        session_admin_client: Session-scoped admin client
+
     Yields:
         Authenticated API client
     """
-    # Set admin token
-    api_client.set_token(admin_token)
+    yield session_admin_client
 
-    yield api_client
-
-    # Cleanup after test (token remains set for session)
+    # Token remains set for session
 
 
 @pytest.fixture(scope="session")
-def reference_data(admin_client: APIClient) -> Dict[str, Any]:
+def reference_data(session_admin_client: APIClient) -> Dict[str, Any]:
     """
     Load reference data (specializations, languages, session types) once per session.
 
     Args:
-        admin_client: Authenticated admin API client
+        session_admin_client: Authenticated admin API client
 
     Returns:
         Dictionary with reference data lists
     """
-    specializations_response = admin_client.get("/api/v1/specializations")
+    specializations_response = session_admin_client.get("/api/v1/specializations")
     specializations = specializations_response.json()
 
-    languages_response = admin_client.get("/api/v1/languages")
+    languages_response = session_admin_client.get("/api/v1/languages")
     languages = languages_response.json()
 
-    session_types_response = admin_client.get("/api/v1/appointments/session-types")
+    session_types_response = session_admin_client.get("/api/v1/appointments/session-types")
     session_types = session_types_response.json()
 
     return {

@@ -15,14 +15,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
  * Catches all unhandled exceptions and returns a structured {@link ErrorResponse} JSON body.
@@ -259,6 +262,131 @@ public class GlobalExceptionHandler {
                                 )
                 );
         }
+
+    /**
+     * Handles type conversion failures on path/query parameters (400).
+     *
+     * <p>Triggered when a request parameter cannot be converted to the expected type,
+     * such as passing an invalid UUID string where a UUID is expected.
+     *
+     * @param ex      the type mismatch exception
+     * @param request the current HTTP request
+     * @return 400 Bad Request with clear error message
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            final MethodArgumentTypeMismatchException ex,
+            final HttpServletRequest request) {
+        String message = String.format("Invalid value for parameter '%s': %s",
+                ex.getName(), ex.getValue());
+        return ResponseEntity.badRequest().body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.BAD_REQUEST.value(),
+                        message,
+                        "INVALID_PARAMETER",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles malformed JSON requests or unrecognized fields (400).
+     *
+     * <p>Triggered when the request body cannot be parsed or contains fields
+     * not present in the target DTO.
+     *
+     * @param ex      the message not readable exception
+     * @param request the current HTTP request
+     * @return 400 Bad Request
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+            final HttpMessageNotReadableException ex,
+            final HttpServletRequest request) {
+        String message = ex.getMessage();
+        if (message != null && message.contains("Unrecognized field")) {
+            // Extract field name from error message for better UX
+            message = "Invalid request: " + message.substring(0, Math.min(message.length(), 200));
+        } else {
+            message = "Malformed request body";
+        }
+        return ResponseEntity.badRequest().body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.BAD_REQUEST.value(),
+                        message,
+                        "MALFORMED_REQUEST",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles unsupported HTTP methods (405).
+     *
+     * <p>Triggered when a request uses an HTTP method not supported by the endpoint.
+     *
+     * @param ex      the method not supported exception
+     * @param request the current HTTP request
+     * @return 405 Method Not Allowed
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(
+            final HttpRequestMethodNotSupportedException ex,
+            final HttpServletRequest request) {
+        String message = String.format("Method %s not supported for this endpoint", ex.getMethod());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.METHOD_NOT_ALLOWED.value(),
+                        message,
+                        "METHOD_NOT_ALLOWED",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles domain-level validation failures (400).
+     *
+     * <p>Triggered by service-layer validation that throws IllegalArgumentException,
+     * such as invalid business rule violations.
+     *
+     * @param ex      the illegal argument exception
+     * @param request the current HTTP request
+     * @return 400 Bad Request (or 404 if message indicates resource not found)
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(
+            final IllegalArgumentException ex,
+            final HttpServletRequest request) {
+        String message = ex.getMessage();
+        
+        // Check if this is a "not found" case
+        if (message != null && message.toLowerCase().contains("not found")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new ErrorResponse(
+                            Instant.now(),
+                            HttpStatus.NOT_FOUND.value(),
+                            message,
+                            "NOT_FOUND",
+                            request.getRequestURI()
+                    )
+            );
+        }
+        
+        // Otherwise treat as bad request
+        return ResponseEntity.badRequest().body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.BAD_REQUEST.value(),
+                        message != null ? message : "Invalid request",
+                        "INVALID_REQUEST",
+                        request.getRequestURI()
+                )
+        );
+    }
 
     /**
      * Handles every {@link Exception} not caught by a more specific handler.

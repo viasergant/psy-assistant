@@ -1,5 +1,6 @@
 package com.psyassistant.crm.leads.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -12,6 +13,7 @@ import jakarta.validation.constraints.Size;
  * @param value     the actual email address or phone number
  * @param isPrimary whether this is the preferred contact method
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record ContactMethodRequest(
         @NotNull(message = "Contact method type must not be null")
         @Pattern(regexp = "EMAIL|PHONE", message = "Type must be EMAIL or PHONE")

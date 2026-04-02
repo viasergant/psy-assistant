@@ -8,7 +8,7 @@ from .utils.auth_helper import APIClient, login, refresh_token
 
 
 def test_login_with_valid_admin_credentials(unauthenticated_client, test_config):
-    """Test successful admin login returns access token and refresh token."""
+    """Test successful admin login returns access token (refresh token is in HttpOnly cookie)."""
     response = unauthenticated_client.post(
         "/api/v1/auth/login",
         json={
@@ -21,11 +21,13 @@ def test_login_with_valid_admin_credentials(unauthenticated_client, test_config)
     data = response.json()
 
     assert "accessToken" in data, "Response should contain accessToken"
-    assert "refreshToken" in data, "Response should contain refreshToken"
+    assert "accessTokenExpiresAt" in data, "Response should contain accessTokenExpiresAt"
+    assert "tokenType" in data, "Response should contain tokenType"
     assert isinstance(data["accessToken"], str), "accessToken should be a string"
-    assert isinstance(data["refreshToken"], str), "refreshToken should be a string"
     assert len(data["accessToken"]) > 20, "accessToken should be a valid JWT"
-    assert len(data["refreshToken"]) > 20, "refreshToken should be valid"
+    assert data["tokenType"] == "Bearer", "tokenType should be Bearer"
+    
+    # Note: refreshToken is delivered via HttpOnly cookie, not in JSON response
 
 
 def test_login_with_invalid_credentials_returns_401(unauthenticated_client):

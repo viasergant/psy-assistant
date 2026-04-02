@@ -7,6 +7,7 @@
 	- frontend: Angular 20 standalone architecture, PrimeNG, Transloco
 - Use this root guidance for cross-repo tasks. When a task is app-specific, follow the app README first.
 - Add/modify corresponding integration tests when changing backend logic
+- Add/modify corresponding scenarios to docs/test-scenarios.md
 
 ## Build And Test
 

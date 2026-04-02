@@ -3,7 +3,7 @@ End-to-end flow tests for complete user journeys.
 Tests multi-step workflows across features.
 """
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from .utils.data_factory import DataFactory
 
 
@@ -75,7 +75,6 @@ def test_e2e_therapist_onboarding(admin_client, reference_data, created_resource
 
     # Step 4: Admin approves leave
     approval_payload = {
-        "reviewerUserId": "00000000-0000-0000-0000-000000000000",
         "adminNotes": "Approved"
     }
 
@@ -95,8 +94,8 @@ def test_e2e_therapist_onboarding(admin_client, reference_data, created_resource
 
     summary_data = schedule_summary.json()
 
-    assert len(summary_data["recurring"]) == 5, "Should have Mon-Fri schedules"
-    assert len(summary_data["leave"]) >= 1, "Should include approved leave"
+    assert len(summary_data["recurringSchedule"]) == 5, "Should have Mon-Fri schedules"
+    assert len(summary_data["leavePeriods"]) >= 1, "Should include approved leave"
 
 
 @pytest.mark.e2e
@@ -124,7 +123,7 @@ def test_e2e_lead_to_appointment(admin_client, reference_data, created_resources
     created_resources["therapists"].append(therapist_id)
 
     # Set working hours for tomorrow (get tomorrow's day of week)
-    tomorrow = datetime.now() + timedelta(days=1)
+    tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
     tomorrow_day = tomorrow.isoweekday()  # 1=Monday, 7=Sunday
 
     schedule_payload = DataFactory.recurring_schedule(
@@ -180,7 +179,7 @@ def test_e2e_lead_to_appointment(admin_client, reference_data, created_resources
     convert_response = admin_client.post(
         f"/api/v1/leads/{lead_id}/convert",
         json=conversion_payload,
-        expected_status=200
+        expected_status=201
     )
 
     client_id = convert_response.json()["clientId"]
@@ -259,7 +258,7 @@ def test_e2e_appointment_to_session(admin_client, reference_data, created_resour
     convert_response = admin_client.post(
         f"/api/v1/leads/{lead_id}/convert",
         json={"fullName": lead_data["fullName"], "contactMethods": lead_data["contactMethods"]},
-        expected_status=200
+        expected_status=201
     )
     client_id = convert_response.json()["clientId"]
     created_resources["clients"].append(client_id)

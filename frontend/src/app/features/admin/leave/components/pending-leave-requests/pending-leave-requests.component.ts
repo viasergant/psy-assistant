@@ -2,16 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
-import { jwtDecode } from 'jwt-decode';
-import { AuthService } from '../../../../../core/auth/auth.service';
 import { LeaveRequestService } from '../../../../schedule/services/leave-request.service';
 import { Leave, LeaveApprovalRequest } from '../../../../schedule/models/schedule.model';
-
-interface JwtPayload {
-  sub: string; // User ID
-  roles: string[];
-  exp: number;
-}
 
 /**
  * Component for managing pending leave requests (admin/reception staff only)
@@ -31,28 +23,8 @@ export class PendingLeaveRequestsComponent implements OnInit {
   isProcessing = false;
 
   constructor(
-    private leaveRequestService: LeaveRequestService,
-    private authService: AuthService
+    private leaveRequestService: LeaveRequestService
   ) {}
-
-  /**
-   * Get current user ID from JWT token
-   */
-  private getCurrentUserId(): string {
-    const token = this.authService.token;
-    if (!token) {
-      console.error('No authentication token found');
-      return '';
-    }
-
-    try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      return decoded.sub;
-    } catch (error) {
-      console.error('Failed to decode JWT token:', error);
-      return '';
-    }
-  }
 
   ngOnInit(): void {
     this.loadPendingRequests();
@@ -89,15 +61,8 @@ export class PendingLeaveRequestsComponent implements OnInit {
   approveRequest(): void {
     if (!this.selectedRequest || !this.selectedRequest.id) return;
 
-    const currentUserId = this.getCurrentUserId();
-    if (!currentUserId) {
-      alert('Failed to get current user ID. Please try logging in again.');
-      return;
-    }
-
     this.isProcessing = true;
     const approvalRequest: LeaveApprovalRequest = {
-      reviewerUserId: currentUserId,
       adminNotes: this.adminNotes || undefined
     };
 
@@ -128,15 +93,8 @@ export class PendingLeaveRequestsComponent implements OnInit {
       return;
     }
 
-    const currentUserId = this.getCurrentUserId();
-    if (!currentUserId) {
-      alert('Failed to get current user ID. Please try logging in again.');
-      return;
-    }
-
     this.isProcessing = true;
     const rejectionRequest: LeaveApprovalRequest = {
-      reviewerUserId: currentUserId,
       adminNotes: this.adminNotes
     };
 

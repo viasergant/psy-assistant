@@ -120,9 +120,9 @@ export interface LeaveRequest {
 
 /**
  * Request to approve/reject leave
+ * The reviewer user ID is automatically extracted from the authenticated user's JWT token.
  */
 export interface LeaveApprovalRequest {
-  reviewerUserId: string; // UUID of admin/staff approving/rejecting
   adminNotes?: string; // Optional notes from admin
 }
 

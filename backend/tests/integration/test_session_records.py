@@ -39,7 +39,7 @@ def session_setup(admin_client, reference_data, created_resources):
     convert_response = admin_client.post(
         f"/api/v1/leads/{lead_id}/convert",
         json={"fullName": lead_data["fullName"], "contactMethods": lead_data["contactMethods"]},
-        expected_status=200
+        expected_status=201
     )
     client_id = convert_response.json()["clientId"]
     created_resources["clients"].append(client_id)

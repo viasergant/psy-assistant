@@ -33,7 +33,7 @@ def test_create_therapist_with_account(admin_client, reference_data, created_res
 
     # Validate therapist profile
     assert therapist_profile["id"], "Profile should have ID"
-    assert therapist_profile["fullName"] == "Dr. Jane Smith"
+    assert therapist_profile["name"] == "Dr. Jane Smith"
     assert therapist_profile["email"] == payload["email"]
     assert therapist_profile["employmentStatus"] == "ACTIVE"
 
@@ -146,7 +146,7 @@ def test_get_therapist_by_id(admin_client, reference_data, created_resources):
     data = get_response.json()
 
     assert data["id"] == therapist_id
-    assert data["fullName"] == "Dr. Lookup Test"
+    assert data["name"] == "Dr. Lookup Test"
     assert data["email"] == create_payload["email"]
 
 
@@ -216,7 +216,7 @@ def test_update_therapist_profile(admin_client, reference_data, created_resource
 
     # Update profile
     update_payload = {
-        "fullName": "Dr. Updated Name",
+        "name": "Dr. Updated Name",
         "phone": "+380991234567"
     }
 
@@ -228,7 +228,7 @@ def test_update_therapist_profile(admin_client, reference_data, created_resource
 
     updated_data = update_response.json()
 
-    assert updated_data["fullName"] == "Dr. Updated Name"
+    assert updated_data["name"] == "Dr. Updated Name"
     assert updated_data["phone"] == "+380991234567"
 
 

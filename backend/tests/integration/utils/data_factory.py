@@ -5,7 +5,7 @@ Uses Faker library to create random but valid test data.
 from faker import Faker
 from typing import Dict, Any, List, Optional
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 
 
 # Initialize Faker with multiple locales for realistic test data
@@ -242,7 +242,7 @@ class DataFactory:
             Appointment creation request body
         """
         if not start_time:
-            tomorrow_2pm = datetime.now() + timedelta(days=1)
+            tomorrow_2pm = datetime.now(dt_timezone.utc) + timedelta(days=1)
             tomorrow_2pm = tomorrow_2pm.replace(hour=14, minute=0, second=0, microsecond=0)
             start_time = tomorrow_2pm.isoformat()
 

@@ -73,7 +73,6 @@ def test_admin_approves_leave_request(admin_client, therapist_for_leave, test_co
 
     # Approve leave (using admin endpoint)
     approval_payload = {
-        "reviewerUserId": "00000000-0000-0000-0000-000000000000",  # Will be set by backend from JWT
         "adminNotes": "Approved for medical reasons"
     }
 
@@ -106,7 +105,6 @@ def test_admin_rejects_leave_request(admin_client, therapist_for_leave, created_
 
     # Reject leave
     rejection_payload = {
-        "reviewerUserId": "00000000-0000-0000-0000-000000000000",
         "adminNotes": "Insufficient notice period"
     }
 
@@ -225,7 +223,6 @@ def test_approve_nonexistent_leave_returns_404(admin_client):
     fake_uuid = "00000000-0000-0000-0000-000000000000"
 
     approval_payload = {
-        "reviewerUserId": "00000000-0000-0000-0000-000000000001",
         "adminNotes": "Test"
     }
 

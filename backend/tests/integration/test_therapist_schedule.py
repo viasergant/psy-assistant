@@ -197,16 +197,16 @@ def test_get_schedule_summary(admin_client, therapist_with_schedule, created_res
     data = summary_response.json()
 
     # Validate structure
-    assert "recurring" in data, "Summary should contain recurring schedules"
+    assert "recurringSchedule" in data, "Summary should contain recurring schedules"
     assert "overrides" in data, "Summary should contain overrides"
-    assert "leave" in data, "Summary should contain leave entries"
+    assert "leavePeriods" in data, "Summary should contain leave entries"
 
-    assert isinstance(data["recurring"], list)
+    assert isinstance(data["recurringSchedule"], list)
     assert isinstance(data["overrides"], list)
-    assert isinstance(data["leave"], list)
+    assert isinstance(data["leavePeriods"], list)
 
     # Should have at least the ones we created
-    assert len(data["recurring"]) >= 1
+    assert len(data["recurringSchedule"]) >= 1
     assert len(data["overrides"]) >= 1
 
 
@@ -225,9 +225,9 @@ def test_get_schedule_summary_with_date_range(admin_client, therapist_with_sched
 
     data = response.json()
 
-    assert "recurring" in data
+    assert "recurringSchedule" in data
     assert "overrides" in data
-    assert "leave" in data
+    assert "leavePeriods" in data
 
 
 def test_create_schedule_with_invalid_time_range_returns_400(admin_client, therapist_with_schedule):

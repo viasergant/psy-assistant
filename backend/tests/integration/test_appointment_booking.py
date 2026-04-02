@@ -3,7 +3,7 @@ Appointment booking and management integration tests.
 Tests appointment creation, conflicts, rescheduling, and cancellation.
 """
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from .utils.data_factory import DataFactory
 
 
@@ -55,7 +55,7 @@ def appointment_setup(admin_client, reference_data, created_resources):
     convert_response = admin_client.post(
         f"/api/v1/leads/{lead_id}/convert",
         json={"fullName": lead_data["fullName"], "contactMethods": lead_data["contactMethods"]},
-        expected_status=200
+        expected_status=201
     )
     client_id = convert_response.json()["clientId"]
     created_resources["clients"].append(client_id)
@@ -89,7 +89,7 @@ def test_create_appointment(admin_client, appointment_setup, created_resources):
     assert data["id"], "Appointment should have ID"
     assert data["therapistProfileId"] == setup["therapist_id"]
     assert data["clientId"] == setup["client_id"]
-    assert data["sessionTypeId"] == setup["session_type_id"]
+    assert data["sessionType"]["id"] == setup["session_type_id"]
     assert data["status"] in ["SCHEDULED", "CONFIRMED"]
 
     created_resources["appointments"].append(data["id"])
@@ -100,7 +100,7 @@ def test_check_appointment_conflicts(admin_client, appointment_setup, created_re
     setup = appointment_setup
 
     # Create first appointment
-    appointment_time = (datetime.now() + timedelta(days=1)).replace(hour=14, minute=0, second=0).isoformat()
+    appointment_time = (datetime.now(timezone.utc) + timedelta(days=1)).replace(hour=14, minute=0, second=0, microsecond=0).isoformat()
 
     appointment1 = DataFactory.appointment(
         therapist_profile_id=setup["therapist_id"],
@@ -121,8 +121,7 @@ def test_check_appointment_conflicts(admin_client, appointment_setup, created_re
     conflict_check = {
         "therapistProfileId": setup["therapist_id"],
         "startTime": appointment_time,
-        "durationMinutes": 60,
-        "excludeAppointmentId": None
+        "durationMinutes": 60
     }
 
     check_response = admin_client.post(
@@ -156,7 +155,7 @@ def test_reschedule_appointment(admin_client, appointment_setup, created_resourc
     created_resources["appointments"].append(appointment_id)
 
     # Reschedule to different time
-    new_time = (datetime.now() + timedelta(days=2)).replace(hour=10, minute=0, second=0).isoformat()
+    new_time = (datetime.now(timezone.utc) + timedelta(days=2)).replace(hour=10, minute=0, second=0, microsecond=0).isoformat()
 
     reschedule_payload = {
         "newStartTime": new_time,
@@ -170,7 +169,8 @@ def test_reschedule_appointment(admin_client, appointment_setup, created_resourc
     )
 
     updated_data = reschedule_response.json()
-    assert updated_data["startTime"] == new_time
+    # Compare start times (backend may return 'Z' format instead of '+00:00')
+    assert updated_data["startTime"].replace('Z', '+00:00') == new_time
 
 
 def test_cancel_appointment(admin_client, appointment_setup, created_resources):
@@ -195,8 +195,8 @@ def test_cancel_appointment(admin_client, appointment_setup, created_resources):
 
     # Cancel appointment
     cancel_payload = {
-        "reason": "Client no longer needs appointment",
-        "cancellationType": "CLIENT_CANCELLED"
+        "cancellationType": "CLIENT_INITIATED",
+        "reason": "Client no longer needs appointment"
     }
 
     cancel_response = admin_client.put(

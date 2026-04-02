@@ -90,19 +90,57 @@ def test_invalid_email_format_returns_400(admin_client, reference_data):
     assert response.status_code == 400, "Should return 400 for invalid email"
 
 
-def test_invalid_enum_value_returns_400(admin_client, reference_data):
+def test_invalid_enum_value_returns_400(admin_client, reference_data, created_resources):
     """Test that invalid enum values are rejected."""
+    # Create therapist and client first
     specialization = reference_data["specializations"][0]
-
-    invalid_payload = DataFactory.therapist_with_account(
-        email=DataFactory.unique_email("test"),
+    therapist_payload = DataFactory.therapist_with_account(
+        email=DataFactory.unique_email("therapist"),
         specialization_id=specialization["id"]
     )
-    invalid_payload["employmentStatus"] = "INVALID_STATUS"
+    therapist_response = admin_client.post("/api/v1/therapists/with-account", json=therapist_payload, expected_status=201)
+    therapist_id = therapist_response.json()["therapistProfile"]["id"]
+    created_resources["therapists"].append(therapist_id)
 
-    response = admin_client.post(
-        "/api/v1/therapists/with-account",
-        json=invalid_payload,
+    # Create client via lead conversion
+    lead_payload = DataFactory.lead(email=DataFactory.unique_email("client"))
+    lead_response = admin_client.post("/api/v1/leads", json=lead_payload, expected_status=201)
+    lead_id = lead_response.json()["id"]
+    created_resources["leads"].append(lead_id)
+
+    admin_client.patch(f"/api/v1/leads/{lead_id}/status", json={"status": "CONTACTED"}, expected_status=200)
+    admin_client.patch(f"/api/v1/leads/{lead_id}/status", json={"status": "QUALIFIED"}, expected_status=200)
+
+    lead_data = admin_client.get(f"/api/v1/leads/{lead_id}").json()
+    convert_response = admin_client.post(
+        f"/api/v1/leads/{lead_id}/convert",
+        json={"fullName": lead_data["fullName"], "contactMethods": lead_data["contactMethods"]},
+        expected_status=201
+    )
+    client_id = convert_response.json()["clientId"]
+    created_resources["clients"].append(client_id)
+
+    session_type = reference_data["session_types"][0]
+
+    # Create appointment
+    appointment_payload = DataFactory.appointment(
+        therapist_profile_id=therapist_id,
+        client_id=client_id,
+        session_type_id=session_type["id"]
+    )
+    appointment_response = admin_client.post("/api/v1/appointments", json=appointment_payload, expected_status=201)
+    appointment_id = appointment_response.json()["id"]
+    created_resources["appointments"].append(appointment_id)
+
+    # Now try to cancel with invalid enum value for cancellationType
+    invalid_cancel_payload = {
+        "cancellationType": "INVALID_CANCELLATION_TYPE",
+        "reason": "Testing invalid enum validation"
+    }
+
+    response = admin_client.put(
+        f"/api/v1/appointments/{appointment_id}/cancel",
+        json=invalid_cancel_payload,
         allow_error=True
     )
 
@@ -204,8 +242,8 @@ def test_xss_attempt_sanitized(admin_client, reference_data):
         get_response = admin_client.get(f"/api/v1/therapists/{therapist_id}")
 
         # Script tags should be escaped or removed
-        full_name = get_response.json()["fullName"]
-        assert "<script>" not in full_name, "XSS payload should be sanitized"
+        name = get_response.json()["name"]
+        assert "<script>" not in name, "XSS payload should be sanitized"
 
 
 def test_concurrent_appointment_booking_conflict_detection(admin_client, reference_data, created_resources):
@@ -234,7 +272,7 @@ def test_concurrent_appointment_booking_conflict_detection(admin_client, referen
     lead1_data = admin_client.get(f"/api/v1/leads/{lead1_id}").json()
     convert1 = admin_client.post(f"/api/v1/leads/{lead1_id}/convert",
                                    json={"fullName": lead1_data["fullName"], "contactMethods": lead1_data["contactMethods"]},
-                                   expected_status=200)
+                                   expected_status=201)
     client1_id = convert1.json()["clientId"]
     created_resources["clients"].append(client1_id)
 
@@ -245,13 +283,13 @@ def test_concurrent_appointment_booking_conflict_detection(admin_client, referen
     lead2_data = admin_client.get(f"/api/v1/leads/{lead2_id}").json()
     convert2 = admin_client.post(f"/api/v1/leads/{lead2_id}/convert",
                                    json={"fullName": lead2_data["fullName"], "contactMethods": lead2_data["contactMethods"]},
-                                   expected_status=200)
+                                   expected_status=201)
     client2_id = convert2.json()["clientId"]
     created_resources["clients"].append(client2_id)
 
     # Try to book overlapping appointments
-    from datetime import datetime, timedelta
-    appointment_time = (datetime.now() + timedelta(days=1)).replace(hour=14, minute=0, second=0).isoformat()
+    from datetime import datetime, timedelta, timezone
+    appointment_time = (datetime.now(timezone.utc) + timedelta(days=1)).replace(hour=14, minute=0, second=0, microsecond=0).isoformat()
 
     appointment1 = DataFactory.appointment(
         therapist_profile_id=therapist_id,

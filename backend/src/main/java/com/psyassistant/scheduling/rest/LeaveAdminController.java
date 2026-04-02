@@ -3,6 +3,7 @@ package com.psyassistant.scheduling.rest;
 import com.psyassistant.scheduling.domain.TherapistLeave;
 import com.psyassistant.scheduling.dto.LeaveApprovalRequest;
 import com.psyassistant.scheduling.service.TherapistLeaveService;
+import com.psyassistant.users.UserManagementService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -70,9 +71,14 @@ public class LeaveAdminController {
         @PathVariable final UUID leaveId,
         @Valid @RequestBody final LeaveApprovalRequest request
     ) {
+        final UUID reviewerId = UserManagementService.currentPrincipalId();
+        if (reviewerId == null) {
+            throw new IllegalStateException("Unable to determine reviewer from authentication context");
+        }
+
         final var approved = leaveService.approveLeaveRequest(
             leaveId,
-            request.reviewerUserId(),
+            reviewerId,
             request.adminNotes()
         );
 
@@ -94,9 +100,14 @@ public class LeaveAdminController {
         @PathVariable final UUID leaveId,
         @Valid @RequestBody final LeaveApprovalRequest request
     ) {
+        final UUID reviewerId = UserManagementService.currentPrincipalId();
+        if (reviewerId == null) {
+            throw new IllegalStateException("Unable to determine reviewer from authentication context");
+        }
+
         final var rejected = leaveService.rejectLeaveRequest(
             leaveId,
-            request.reviewerUserId(),
+            reviewerId,
             request.adminNotes()
         );
 

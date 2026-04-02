@@ -24,5 +24,7 @@ application-secrets.yml
 Thumbs.db
 
 ### Spring Boot ###
-*.log
+logs/*.log
+logs/*.log.*
+logs/*.gz
 spring.log

@@ -5,7 +5,7 @@
     <springProperty name="LOG_LEVEL" source="logging.level.root" defaultValue="INFO"/>
 
     <!-- ================================================================
-         Local / Test profile: human-readable console output
+         Local / Test profile: human-readable console output + file
          ================================================================ -->
     <springProfile name="local,test">
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -14,8 +14,22 @@
             </encoder>
         </appender>
 
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>logs/psy-assistant.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <!-- Daily rollover; keep 7 days for local/test -->
+                <fileNamePattern>logs/psy-assistant.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>1GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{requestId}] %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
         <root level="${LOG_LEVEL}">
             <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
         </root>
     </springProfile>
 

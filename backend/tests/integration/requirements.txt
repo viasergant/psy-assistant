@@ -1,0 +1,23 @@
+# Python Integration Test Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core testing framework
+pytest==8.1.1
+pytest-xdist==3.5.0          # Parallel test execution
+pytest-html==4.1.1           # HTML report generation
+pytest-timeout==2.2.0        # Test timeout management
+
+# HTTP client
+requests==2.31.0
+
+# Test data generation
+faker==24.3.0
+
+# Environment configuration
+python-dotenv==1.0.1
+
+# JSON manipulation
+jsonschema==4.21.1           # API contract validation
+
+# Utilities
+freezegun==1.4.0             # Time mocking for date-sensitive tests

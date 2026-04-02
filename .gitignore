@@ -1,3 +1,4 @@
 /.codemie/
 .mcp.json
 .vscode/mcp.json
+.env

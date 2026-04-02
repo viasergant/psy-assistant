@@ -6,6 +6,7 @@
 	- backend: Spring Boot 3.4.x, Java 21, Maven, PostgreSQL, Flyway
 	- frontend: Angular 20 standalone architecture, PrimeNG, Transloco
 - Use this root guidance for cross-repo tasks. When a task is app-specific, follow the app README first.
+- Add/modify corresponding integration tests when changing backend logic
 
 ## Build And Test
 
@@ -14,6 +15,7 @@
 	- Start DB: cd backend && docker compose up -d
 	- Run app (local profile): cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 	- Validate build, tests, and style checks: cd backend && ./mvnw verify
+	- Integration tests (Python, requires running backend): ./scripts/integration-test.sh (see backend/tests/integration/README.md)
 - Frontend setup and local run:
 	- Install deps: cd frontend && npm install
 	- Start dev server: cd frontend && npm start

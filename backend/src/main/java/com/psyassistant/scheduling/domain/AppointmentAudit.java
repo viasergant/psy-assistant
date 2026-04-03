@@ -106,6 +106,26 @@ public class AppointmentAudit {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    // ========== Recurring Series Fields (PA-33) ==========
+
+    /**
+     * Scope of the edit operation (SINGLE / FUTURE_SERIES / ENTIRE_SERIES).
+     *
+     * <p>Null for non-series audit entries.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "edit_scope", length = 20)
+    private EditScope editScope;
+
+    /**
+     * Parent series ID when this audit entry relates to a recurring appointment.
+     *
+     * <p>Intentionally NOT a foreign key — audit trail must survive series deletion.
+     * Null for non-series audit entries.
+     */
+    @Column(name = "series_id")
+    private Long seriesId;
+
     /**
      * Additional structured context as JSON.
      *
@@ -190,6 +210,16 @@ public class AppointmentAudit {
             return this;
         }
 
+        public Builder editScope(final EditScope editScope) {
+            audit.editScope = editScope;
+            return this;
+        }
+
+        public Builder seriesId(final Long seriesId) {
+            audit.seriesId = seriesId;
+            return this;
+        }
+
         public AppointmentAudit build() {
             return audit;
         }
@@ -251,5 +281,13 @@ public class AppointmentAudit {
 
     public String getMetadata() {
         return metadata;
+    }
+
+    public EditScope getEditScope() {
+        return editScope;
+    }
+
+    public Long getSeriesId() {
+        return seriesId;
     }
 }

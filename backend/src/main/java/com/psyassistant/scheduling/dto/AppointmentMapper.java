@@ -29,6 +29,8 @@ public class AppointmentMapper {
                 appointment.getSessionType().getDescription()
         );
 
+        final Long seriesId = appointment.getSeries() != null ? appointment.getSeries().getId() : null;
+
         return new AppointmentResponse(
                 appointment.getId(),
                 appointment.getTherapistProfileId(),
@@ -52,7 +54,10 @@ public class AppointmentMapper {
                 appointment.getVersion(),
                 appointment.getCreatedAt(),
                 appointment.getUpdatedAt(),
-                appointment.getCreatedBy()
+                appointment.getCreatedBy(),
+                seriesId,
+                appointment.getRecurrenceIndex(),
+                appointment.isModified()
         );
     }
 

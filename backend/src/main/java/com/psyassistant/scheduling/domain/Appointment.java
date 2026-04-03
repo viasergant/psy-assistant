@@ -116,6 +116,33 @@ public class Appointment extends BaseEntity {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    // ========== Recurring Series Fields (PA-33) ==========
+
+    /**
+     * Parent series for this occurrence.
+     *
+     * <p>Null for one-off (non-recurring) appointments.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "series_id")
+    private AppointmentSeries series;
+
+    /**
+     * Zero-based position of this occurrence within its series.
+     *
+     * <p>Null for one-off appointments.
+     */
+    @Column(name = "recurrence_index")
+    private Integer recurrenceIndex;
+
+    /**
+     * True if this occurrence was individually edited after series creation.
+     *
+     * <p>Triggers a "modified" visual indicator in the calendar UI.
+     */
+    @Column(name = "is_modified", nullable = false)
+    private boolean isModified = false;
+
     // ========== Optimistic Locking ==========
 
     /**
@@ -351,5 +378,31 @@ public class Appointment extends BaseEntity {
 
     public void setVersion(final Long version) {
         this.version = version;
+    }
+
+    // ========== Recurring Series Getters/Setters (PA-33) ==========
+
+    public AppointmentSeries getSeries() {
+        return series;
+    }
+
+    public void setSeries(final AppointmentSeries series) {
+        this.series = series;
+    }
+
+    public Integer getRecurrenceIndex() {
+        return recurrenceIndex;
+    }
+
+    public void setRecurrenceIndex(final Integer recurrenceIndex) {
+        this.recurrenceIndex = recurrenceIndex;
+    }
+
+    public boolean isModified() {
+        return isModified;
+    }
+
+    public void setModified(final boolean modified) {
+        this.isModified = modified;
     }
 }

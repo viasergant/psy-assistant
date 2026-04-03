@@ -7,7 +7,8 @@ import {
   getDayLabel,
   AvailabilitySlot,
   getDayOfWeek,
-  Appointment
+  Appointment,
+  CreateRecurringSeriesResponse
 } from '../../models/schedule.model';
 import { AvailabilityService } from '../../services/availability.service';
 import { AppointmentApiService } from '../../services/appointment-api.service';
@@ -41,6 +42,7 @@ interface CalendarCell {
   leaveStatus?: 'PENDING' | 'APPROVED';
   isBooked: boolean;
   clientName?: string; // Client name for booked appointments
+  isModified?: boolean; // True when appointment is a modified recurring occurrence (PA-33)
 }
 
 @Component({
@@ -197,13 +199,15 @@ export class ScheduleCalendarComponent implements OnInit {
         // Check if this time slot has an appointment
         const isBooked = this.isSlotBooked(day.date, timeSlot.hour, timeSlot.minute);
         
-        // Get client name for booked slots
+        // Get client name and isModified flag for booked slots
         let clientName: string | undefined;
+        let isModified: boolean | undefined;
         if (isBooked) {
           const appointment = this.getAppointmentForSlot(day.date, timeSlot.hour, timeSlot.minute);
           if (appointment) {
             const client = this.clients.find(c => c.id === appointment.clientId);
             clientName = client?.name;
+            isModified = appointment.isModified === true;
           }
         }
 
@@ -215,7 +219,8 @@ export class ScheduleCalendarComponent implements OnInit {
           isLeave,
           leaveStatus: leaveStatus || undefined,
           isBooked,
-          clientName
+          clientName,
+          isModified
         });
       }
 
@@ -467,6 +472,17 @@ export class ScheduleCalendarComponent implements OnInit {
     // Reload calendar to show new appointment
     this.loadAvailability();
     // TODO: Emit event to parent component
+  }
+
+  /**
+   * Handle recurring series creation (PA-33)
+   */
+  onSeriesCreated(response: CreateRecurringSeriesResponse): void {
+    this.showBookingDialog = false;
+    this.selectedDateTime = null;
+    console.log(`Recurring series created: id=${response.seriesId}, saved=${response.savedOccurrences}, skipped=${response.skippedOccurrences}`);
+    // Reload calendar to show all new recurring occurrences
+    this.loadAvailability();
   }
 
   /**

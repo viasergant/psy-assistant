@@ -70,7 +70,7 @@
   }
 
   .char-count {
-    color: var(--text-color-secondary);
+    color: var(--gray-600);
     font-size: 0.875rem;
   }
 }
@@ -84,5 +84,10 @@
 ::ng-deep .p-dialog {
   .p-dialog-content {
     padding: 1.5rem;
+  }
+
+  .p-dialog-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--surface-200, #e5e7eb);
   }
 }

@@ -5,7 +5,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
-import { Dialog } from 'primeng/dialog';
+import { DialogModule } from 'primeng/dialog';
 import { Textarea } from 'primeng/textarea';
 import { Subject, takeUntil } from 'rxjs';
 import { CompleteSessionRequest, SessionRecord } from '../../models/session.model';
@@ -21,7 +21,7 @@ import { SessionService } from '../../services/session.service';
     CommonModule,
     ReactiveFormsModule,
     TranslocoPipe,
-    Dialog,
+    DialogModule,
     Button,
     Textarea,
     DatePicker,
@@ -33,7 +33,7 @@ export class CompleteSessionDialogComponent implements OnInit, OnDestroy {
   @Input() session!: SessionRecord;
   @Input() visible = false;
   @Output() completed = new EventEmitter<void>();
-  @Output() cancelled = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
 
   completeForm: FormGroup;
   loading = false;
@@ -104,8 +104,8 @@ export class CompleteSessionDialogComponent implements OnInit, OnDestroy {
       });
   }
 
-  cancel(): void {
-    this.cancelled.emit();
+  close(): void {
+    this.closed.emit();
   }
 
   isInvalid(controlName: string): boolean {

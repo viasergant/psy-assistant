@@ -676,6 +676,7 @@
       "sessionNotes": "Session Notes",
       "sessionNotesPlaceholder": "Enter session notes...",
       "actualEndTime": "Actual End Time (optional)",
+      "complete": "Complete Session",
       "save": "Complete Session",
       "cancel": "Cancel",
       "cancelTitle": "Cancel Session",

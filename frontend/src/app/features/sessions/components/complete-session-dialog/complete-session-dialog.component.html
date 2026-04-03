@@ -4,7 +4,7 @@
   [closable]="true"
   [style]="{ width: '600px' }"
   [header]="'sessions.dialog.completeTitle' | transloco"
-  (onHide)="cancel()"
+  (onHide)="close()"
 >
   <form [formGroup]="completeForm" (ngSubmit)="submit()" novalidate>
     <!-- Session Details Card -->
@@ -82,11 +82,11 @@
         [label]="'common.actions.cancel' | transloco"
         severity="secondary"
         [outlined]="true"
-        (onClick)="cancel()"
+        (onClick)="close()"
         [disabled]="loading"
       />
       <p-button
-        [label]="'sessions.dialog.save' | transloco"
+        [label]="'sessions.dialog.complete' | transloco"
         severity="primary"
         (onClick)="submit()"
         [loading]="loading"

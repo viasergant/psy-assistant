@@ -41,6 +41,7 @@
 - Frontend uses standalone Angular patterns (no NgModules); route and provider changes should align with src/app/app.routes.ts and src/app/app.config.ts.
 - **Always use i18n for UI text**: Never hardcode user-facing strings in templates or components. All labels, messages, buttons, headings, placeholders, and error text must use Transloco (e.g., `{{ 't.someKey' | transloco }}`). Add new keys to frontend/src/assets/i18n/*.json following the structure in docs/i18n-key-structure.md. Use frontend/scripts/validate-i18n-*.js to validate i18n compliance before committing.
 - Frontend i18n strings belong in frontend/src/assets/i18n/*.json and are loaded via Transloco.
+- **Use shared styles module for UI components**: Frontend uses a shared styles system at `frontend/src/styles/`. Use existing dialog, form, button, badge, and table classes instead of creating component-specific CSS for common patterns. Reference spacing tokens (`var(--spacing-lg)`) and design system colors (`var(--color-accent)`) instead of hardcoding values. See [frontend/src/styles/README.md](frontend/src/styles/README.md) for available classes and usage examples.
 - Do not log personal or sensitive client information. Log opaque identifiers only.
 
 ## Pitfalls
@@ -49,6 +50,7 @@
 - Outside local development, JWT_SECRET must be provided explicitly.
 - Keep Logback config in logback-spring.xml so profile-based logging works correctly.
 - JPA DDL auto-create is not the workflow here; Flyway is the source of truth for schema evolution.
+- **Do not create new dialog/form/button styles in components**: Reuse shared classes from `frontend/src/styles/` module. Before creating new styles, check [frontend/src/styles/README.md](frontend/src/styles/README.md) for available patterns. Use design tokens (`--spacing-*`, `--color-*`, `--radius-*`) instead of hardcoded values to maintain consistency.
 
 ## Documentation
 

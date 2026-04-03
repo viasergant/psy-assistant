@@ -1,0 +1,18 @@
+// ── Shared Styles Module Index ──────────────────────────────────────────────
+// Central import file for shared styles, components, and utilities
+// Use this file in src/styles.scss after CSS variables declaration
+
+// Base - Animations and foundational styles
+@forward 'base/animations';
+
+// Components - Reusable UI component patterns
+@forward 'components/dialogs';
+@forward 'components/forms';
+@forward 'components/buttons';
+@forward 'components/badges';
+@forward 'components/tables';
+
+// Utilities - Helper classes for layout, spacing, typography
+@forward 'utilities/layout';
+@forward 'utilities/spacing';
+@forward 'utilities/typography';

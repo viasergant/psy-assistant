@@ -1,0 +1,186 @@
+// ── Table Components ─────────────────────────────────────────────────────────
+// Shared table styling for data tables across features
+
+// Table wrapper/container
+.table-wrapper {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--color-border);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+}
+
+// Table header
+thead {
+  background: #F8FAFC;
+  border-bottom: 1.5px solid var(--color-border);
+}
+
+th {
+  text-align: left;
+  padding: 0.875rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+
+  &:first-child {
+    padding-left: 1.25rem;
+  }
+
+  &:last-child {
+    padding-right: 1.25rem;
+  }
+}
+
+// Table body
+tbody {
+  tr {
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 0.15s ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+td {
+  padding: 1rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-primary);
+
+  &:first-child {
+    padding-left: 1.25rem;
+  }
+
+  &:last-child {
+    padding-right: 1.25rem;
+  }
+}
+
+// Row hover mixin
+@mixin table-row-hover {
+  tbody tr {
+    cursor: pointer;
+
+    &:hover {
+      background: #F8FAFC;
+    }
+  }
+}
+
+// Hoverable rows
+.table-hoverable {
+  @include table-row-hover;
+}
+
+// Striped rows
+.table-striped {
+  tbody tr:nth-child(even) {
+    background: #FAFBFC;
+  }
+}
+
+// Compact table
+.table-compact {
+  th {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.75rem;
+  }
+
+  td {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.875rem;
+  }
+}
+
+// Centered table cells
+.table-center {
+  th,
+  td {
+    text-align: center;
+  }
+}
+
+// Actions column (typically last column)
+.table-actions {
+  text-align: right;
+  white-space: nowrap;
+
+  &.table-actions-left {
+    text-align: left;
+  }
+}
+
+// Empty state for tables
+.table-empty {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+
+  .empty-icon {
+    font-size: 2.5rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .empty-message {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .empty-hint {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+}
+
+// Loading overlay for tables
+.table-loading {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// Responsive table (horizontal scroll on small screens)
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  table {
+    min-width: 600px;
+  }
+}
+
+// Cell utilities
+.table-cell-nowrap {
+  white-space: nowrap;
+}
+
+.table-cell-truncate {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-cell-numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

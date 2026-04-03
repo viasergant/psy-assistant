@@ -1,0 +1,121 @@
+// ── Badge Components ─────────────────────────────────────────────────────────
+// Status badges and labels
+
+// Base badge
+.badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+// Badge variant mixin
+@mixin badge-variant($bg, $color) {
+  background: $bg;
+  color: $color;
+}
+
+// Success/Active badge (green)
+.badge-success,
+.badge-active {
+  @include badge-variant(#DCFCE7, #166534);
+}
+
+// Info badge (blue)
+.badge-info,
+.badge-primary {
+  @include badge-variant(#DBEAFE, #1E40AF);
+}
+
+// Warning badge (amber/orange)
+.badge-warning {
+  @include badge-variant(#FEF3C7, #92400E);
+}
+
+// Error/Danger badge (red)
+.badge-error,
+.badge-danger {
+  @include badge-variant(#FEE2E2, #991B1B);
+}
+
+// Inactive/Neutral badge (gray)
+.badge-inactive,
+.badge-neutral {
+  @include badge-variant(#F3F4F6, #6B7280);
+}
+
+// Secondary badge (lighter gray)
+.badge-secondary {
+  @include badge-variant(#E5E7EB, #374151);
+}
+
+// Accent badge (teal - matches app accent)
+.badge-accent {
+  @include badge-variant(#CCFBF1, #0F766E);
+}
+
+// Small badge variant
+.badge-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+// Large badge variant
+.badge-lg {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+// Dot badge (with status indicator)
+.badge-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+}
+
+// Pill badge (more rounded)
+.badge-pill {
+  border-radius: 999px;
+}
+
+// Outline badges (no fill, just border)
+.badge-outline {
+  background: transparent;
+  border: 1.5px solid currentColor;
+  
+  &.badge-success,
+  &.badge-active {
+    color: #166534;
+  }
+  
+  &.badge-info,
+  &.badge-primary {
+    color: #1E40AF;
+  }
+  
+  &.badge-warning {
+    color: #92400E;
+  }
+  
+  &.badge-error,
+  &.badge-danger {
+    color: #991B1B;
+  }
+  
+  &.badge-inactive,
+  &.badge-neutral {
+    color: #6B7280;
+  }
+}

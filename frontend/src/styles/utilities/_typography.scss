@@ -1,0 +1,256 @@
+// ── Typography Utilities ─────────────────────────────────────────────────────
+// Text size, weight, color, and alignment utilities
+
+// ── Text Sizes ───────────────────────────────────────────────────────────────
+
+.text-xs {
+  font-size: 0.75rem;     // 12px
+  line-height: 1rem;
+}
+
+.text-sm {
+  font-size: 0.8125rem;   // 13px
+  line-height: 1.25rem;
+}
+
+.text-base {
+  font-size: 0.9375rem;   // 15px (app default)
+  line-height: 1.5rem;
+}
+
+.text-lg {
+  font-size: 1rem;        // 16px
+  line-height: 1.5rem;
+}
+
+.text-xl {
+  font-size: 1.125rem;    // 18px
+  line-height: 1.75rem;
+}
+
+.text-2xl {
+  font-size: 1.25rem;     // 20px
+  line-height: 1.75rem;
+}
+
+.text-3xl {
+  font-size: 1.5rem;      // 24px
+  line-height: 2rem;
+}
+
+.text-4xl {
+  font-size: 2rem;        // 32px
+  line-height: 2.5rem;
+}
+
+// ── Font Weights ─────────────────────────────────────────────────────────────
+
+.font-normal {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+// ── Text Colors ──────────────────────────────────────────────────────────────
+
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-accent {
+  color: var(--color-accent);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+.text-white {
+  color: #FFFFFF;
+}
+
+.text-black {
+  color: #000000;
+}
+
+// ── Text Alignment ───────────────────────────────────────────────────────────
+
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-justify {
+  text-align: justify;
+}
+
+// ── Text Transform ───────────────────────────────────────────────────────────
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.lowercase {
+  text-transform: lowercase;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+.normal-case {
+  text-transform: none;
+}
+
+// ── Text Decoration ──────────────────────────────────────────────────────────
+
+.underline {
+  text-decoration: underline;
+}
+
+.line-through {
+  text-decoration: line-through;
+}
+
+.no-underline {
+  text-decoration: none;
+}
+
+// ── Text Overflow ────────────────────────────────────────────────────────────
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-ellipsis {
+  text-overflow: ellipsis;
+}
+
+.text-clip {
+  text-overflow: clip;
+}
+
+// ── White Space ──────────────────────────────────────────────────────────────
+
+.whitespace-normal {
+  white-space: normal;
+}
+
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+.whitespace-pre {
+  white-space: pre;
+}
+
+.whitespace-pre-line {
+  white-space: pre-line;
+}
+
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
+// ── Line Height ──────────────────────────────────────────────────────────────
+
+.leading-none {
+  line-height: 1;
+}
+
+.leading-tight {
+  line-height: 1.25;
+}
+
+.leading-snug {
+  line-height: 1.375;
+}
+
+.leading-normal {
+  line-height: 1.5;
+}
+
+.leading-relaxed {
+  line-height: 1.625;
+}
+
+.leading-loose {
+  line-height: 2;
+}
+
+// ── Letter Spacing ───────────────────────────────────────────────────────────
+
+.tracking-tighter {
+  letter-spacing: -0.05em;
+}
+
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+
+.tracking-normal {
+  letter-spacing: 0;
+}
+
+.tracking-wide {
+  letter-spacing: 0.025em;
+}
+
+.tracking-wider {
+  letter-spacing: 0.05em;
+}
+
+.tracking-widest {
+  letter-spacing: 0.1em;
+}
+
+// ── Font Style ───────────────────────────────────────────────────────────────
+
+.italic {
+  font-style: italic;
+}
+
+.not-italic {
+  font-style: normal;
+}
+
+// ── List Styles ──────────────────────────────────────────────────────────────
+
+.list-none {
+  list-style-type: none;
+}
+
+.list-disc {
+  list-style-type: disc;
+}
+
+.list-decimal {
+  list-style-type: decimal;
+}

@@ -1,0 +1,97 @@
+// ── Dialog Components ────────────────────────────────────────────────────────
+// Shared dialog/modal overlay and container styles
+
+// Dialog overlay with backdrop
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--dialog-overlay-bg);
+  backdrop-filter: blur(var(--dialog-backdrop-blur));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--dialog-z-index);
+  animation: fadeIn 0.2s ease;
+}
+
+// Base dialog container
+.dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  width: var(--dialog-width-md);
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.25s ease;
+}
+
+// Dialog header
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+
+  h2, h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+}
+
+// Dialog close button
+.dialog-close {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+  }
+}
+
+// Dialog content area
+.dialog-content {
+  margin-bottom: var(--spacing-lg);
+}
+
+// Dialog actions/footer
+.dialog-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
+  margin-top: var(--spacing-xl);
+}
+
+// Mixin for custom dialog widths
+@mixin dialog-base($width: var(--dialog-width-md), $max-height: 90vh) {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  width: $width;
+  max-width: 95vw;
+  max-height: $max-height;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.25s ease;
+}
+
+// Dialog size variants
+.dialog-sm {
+  @include dialog-base(var(--dialog-width-sm));
+}
+
+.dialog-lg {
+  @include dialog-base(var(--dialog-width-lg));
+}

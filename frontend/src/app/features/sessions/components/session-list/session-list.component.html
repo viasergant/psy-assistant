@@ -132,12 +132,12 @@
           </td>
 
           <!-- Type -->
-          <td>{{ 'sessions.types.' + session.sessionType | transloco }}</td>
+          <td>{{ 'sessions.types.' + session.sessionType.code | transloco }}</td>
 
           <!-- Status -->
           <td>
             <p-tag
-              [value]="'sessions.status.' + session.status.toLowerCase() | transloco"
+              [value]="'sessions.status.' + getStatusKey(session.status) | transloco"
               [severity]="getStatusSeverity(session.status)"
               [styleClass]="'status-badge status-' + session.status.toLowerCase()"
             />

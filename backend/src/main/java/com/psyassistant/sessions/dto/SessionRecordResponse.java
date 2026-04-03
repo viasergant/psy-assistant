@@ -24,6 +24,8 @@ public record SessionRecordResponse(
         Duration plannedDuration,
         SessionStatus status,
         String cancellationReason,
+        String sessionNotes,
+        LocalTime actualEndTime,
         Instant createdAt,
         Instant updatedAt,
         String createdBy

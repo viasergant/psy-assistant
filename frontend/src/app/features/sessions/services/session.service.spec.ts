@@ -4,7 +4,6 @@ import { SessionService } from './session.service';
 import {
   SessionRecord,
   SessionStatus,
-  SessionType,
   CompleteSessionRequest,
   SessionFilters,
 } from '../models/session.model';
@@ -21,7 +20,12 @@ describe('SessionService', () => {
     therapistId: 301,
     sessionDate: '2026-04-15',
     scheduledStartTime: '10:00:00',
-    sessionType: SessionType.FOLLOW_UP,
+      sessionType: {
+        id: 'uuid-1',
+        code: 'FOLLOW_UP',
+        name: 'Follow-Up Session',
+        description: 'Regular therapeutic session'
+      },
     plannedDuration: 60,
     status: SessionStatus.PENDING,
     createdAt: '2026-04-01T08:00:00Z',

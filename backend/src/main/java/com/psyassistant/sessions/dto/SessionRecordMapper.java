@@ -60,6 +60,8 @@ public class SessionRecordMapper {
                 sessionRecord.getPlannedDuration(),
                 sessionRecord.getStatus(),
                 sessionRecord.getCancellationReason(),
+                sessionRecord.getSessionNotes(),
+                sessionRecord.getActualEndTime(),
                 sessionRecord.getCreatedAt(),
                 sessionRecord.getUpdatedAt(),
                 sessionRecord.getCreatedBy()

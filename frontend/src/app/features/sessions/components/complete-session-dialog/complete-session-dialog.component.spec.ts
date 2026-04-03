@@ -6,7 +6,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { of, throwError } from 'rxjs';
 import { CompleteSessionDialogComponent } from './complete-session-dialog.component';
 import { SessionService } from '../../services/session.service';
-import { SessionRecord, SessionStatus, SessionType } from '../../models/session.model';
+import { SessionRecord, SessionStatus } from '../../models/session.model';
 
 describe('CompleteSessionDialogComponent', () => {
   let component: CompleteSessionDialogComponent;
@@ -22,7 +22,12 @@ describe('CompleteSessionDialogComponent', () => {
     therapistId: 301,
     sessionDate: '2026-04-15',
     scheduledStartTime: '10:00:00',
-    sessionType: SessionType.FOLLOW_UP,
+    sessionType: {
+      id: 'uuid-1',
+      code: 'FOLLOW_UP',
+      name: 'Follow-Up Session',
+      description: 'Regular therapeutic session'
+    },
     plannedDuration: 60,
     status: SessionStatus.IN_PROGRESS,
     createdAt: '2026-04-01T08:00:00Z',

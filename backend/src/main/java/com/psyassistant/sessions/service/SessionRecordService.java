@@ -6,6 +6,8 @@ import com.psyassistant.scheduling.event.AppointmentStatusChangedEvent;
 import com.psyassistant.scheduling.repository.AppointmentRepository;
 import com.psyassistant.sessions.domain.SessionRecord;
 import com.psyassistant.sessions.domain.SessionStatus;
+import com.psyassistant.sessions.dto.CancelSessionRequest;
+import com.psyassistant.sessions.dto.CompleteSessionRequest;
 import com.psyassistant.sessions.repository.SessionRecordRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Duration;
@@ -277,5 +279,69 @@ public class SessionRecordService {
                 therapistId, startDate, endDate, status);
 
         return sessionRecordRepository.findSessions(therapistId, startDate, endDate, status);
+    }
+
+    /**
+     * Completes an in-progress session with clinical notes and optional actual end time.
+     *
+     * <p>Updates the session status to COMPLETED and populates session notes and actual end time.
+     * Only sessions with status IN_PROGRESS can be completed.
+     *
+     * @param sessionId session UUID
+     * @param request completion request with notes and optional end time
+     * @return updated session record
+     * @throws EntityNotFoundException if session not found
+     * @throws IllegalStateException if session is not IN_PROGRESS
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public SessionRecord completeSession(final UUID sessionId,
+                                          final CompleteSessionRequest request) {
+        final SessionRecord session = sessionRecordRepository.findById(sessionId)
+                .orElseThrow(() -> new EntityNotFoundException("Session not found: " + sessionId));
+
+        if (session.getStatus() != SessionStatus.IN_PROGRESS) {
+            throw new IllegalStateException(
+                    "Only IN_PROGRESS sessions can be completed. Current status: " + session.getStatus());
+        }
+
+        session.complete(request.sessionNotes(), request.actualEndTime());
+        final SessionRecord saved = sessionRecordRepository.save(session);
+
+        LOG.info("Session completed: id={}, appointmentId={}", saved.getId(), saved.getAppointmentId());
+
+        return saved;
+    }
+
+    /**
+     * Cancels a pending or in-progress session with a required reason.
+     *
+     * <p>Updates the session status to CANCELLED and records the cancellation reason.
+     * Only sessions with status PENDING or IN_PROGRESS can be cancelled.
+     *
+     * @param sessionId session UUID
+     * @param request cancellation request with reason
+     * @return updated session record
+     * @throws EntityNotFoundException if session not found
+     * @throws IllegalStateException if session is not PENDING or IN_PROGRESS
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public SessionRecord cancelSession(final UUID sessionId,
+                                        final CancelSessionRequest request) {
+        final SessionRecord session = sessionRecordRepository.findById(sessionId)
+                .orElseThrow(() -> new EntityNotFoundException("Session not found: " + sessionId));
+
+        if (session.getStatus() != SessionStatus.PENDING
+                && session.getStatus() != SessionStatus.IN_PROGRESS) {
+            throw new IllegalStateException(
+                    "Only PENDING or IN_PROGRESS sessions can be cancelled. Current status: " + session.getStatus());
+        }
+
+        session.cancel(request.reason());
+        final SessionRecord saved = sessionRecordRepository.save(session);
+
+        LOG.info("Session cancelled: id={}, appointmentId={}, reason={}",
+                saved.getId(), saved.getAppointmentId(), request.reason());
+
+        return saved;
     }
 }

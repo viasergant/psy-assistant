@@ -92,6 +92,14 @@ public class SessionRecord extends BaseEntity {
     @Column(name = "cancellation_reason", length = 1000)
     private String cancellationReason;
 
+    /** Clinical notes entered by therapist when completing the session (required for COMPLETED status). */
+    @Column(name = "session_notes", columnDefinition = "TEXT")
+    private String sessionNotes;
+
+    /** Actual end time if different from scheduled (optional, populated when session is completed). */
+    @Column(name = "actual_end_time")
+    private LocalTime actualEndTime;
+
     /**
      * Default constructor for JPA.
      */
@@ -138,6 +146,21 @@ public class SessionRecord extends BaseEntity {
     public void cancel(final String reason) {
         this.status = SessionStatus.CANCELLED;
         this.cancellationReason = reason;
+    }
+
+    /**
+     * Completes the session with required clinical notes and optional actual end time.
+     *
+     * @param sessionNotes clinical notes (required)
+     * @param actualEndTime actual end time (optional, may be null)
+     */
+    public void complete(final String sessionNotes, final LocalTime actualEndTime) {
+        if (sessionNotes == null || sessionNotes.trim().isEmpty()) {
+            throw new IllegalArgumentException("Session notes are required to complete a session");
+        }
+        this.status = SessionStatus.COMPLETED;
+        this.sessionNotes = sessionNotes.trim();
+        this.actualEndTime = actualEndTime;
     }
 
     /**
@@ -197,5 +220,21 @@ public class SessionRecord extends BaseEntity {
 
     public void setCancellationReason(final String cancellationReason) {
         this.cancellationReason = cancellationReason;
+    }
+
+    public String getSessionNotes() {
+        return sessionNotes;
+    }
+
+    public void setSessionNotes(final String sessionNotes) {
+        this.sessionNotes = sessionNotes;
+    }
+
+    public LocalTime getActualEndTime() {
+        return actualEndTime;
+    }
+
+    public void setActualEndTime(final LocalTime actualEndTime) {
+        this.actualEndTime = actualEndTime;
     }
 }

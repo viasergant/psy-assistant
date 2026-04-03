@@ -2,6 +2,8 @@ package com.psyassistant.sessions.rest;
 
 import com.psyassistant.sessions.domain.SessionRecord;
 import com.psyassistant.sessions.domain.SessionStatus;
+import com.psyassistant.sessions.dto.CancelSessionRequest;
+import com.psyassistant.sessions.dto.CompleteSessionRequest;
 import com.psyassistant.sessions.dto.SessionRecordMapper;
 import com.psyassistant.sessions.dto.SessionRecordResponse;
 import com.psyassistant.sessions.dto.StartSessionRequest;
@@ -176,5 +178,78 @@ public class SessionRecordController {
         final SessionRecordResponse response = sessionRecordMapper.toResponse(session);
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Completes an in-progress session with clinical notes and optional actual end time.
+     *
+     * <p>POST /api/sessions/{sessionId}/complete
+     *
+     * @param sessionId session UUID
+     * @param request completion request with notes and optional end time
+     * @param principal authenticated principal
+     * @return 200 OK with updated session record
+     * @throws ResponseStatusException 400 Bad Request if session is not IN_PROGRESS,
+     *                                 404 Not Found if session does not exist
+     */
+    @PostMapping("/{sessionId}/complete")
+    @PreAuthorize("hasAnyRole('THERAPIST', 'RECEPTION_ADMIN_STAFF', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<SessionRecordResponse> completeSession(
+            @PathVariable final UUID sessionId,
+            @Valid @RequestBody final CompleteSessionRequest request,
+            final Principal principal) {
+
+        final String principalName = principal.getName();
+
+        try {
+            final SessionRecord session = sessionRecordService.completeSession(sessionId, request);
+            final SessionRecordResponse response = sessionRecordMapper.toResponse(session);
+
+            LOG.info("Session completed via API: sessionId={}, actor={}", sessionId, principalName);
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalStateException e) {
+            LOG.warn("Invalid session completion attempt: sessionId={}, actor={}, error={}",
+                    sessionId, principalName, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Cancels a pending or in-progress session with a required reason.
+     *
+     * <p>POST /api/sessions/{sessionId}/cancel
+     *
+     * @param sessionId session UUID
+     * @param request cancellation request with reason
+     * @param principal authenticated principal
+     * @return 200 OK with updated session record
+     * @throws ResponseStatusException 400 Bad Request if session is not PENDING or IN_PROGRESS,
+     *                                 404 Not Found if session does not exist
+     */
+    @PostMapping("/{sessionId}/cancel")
+    @PreAuthorize("hasAnyRole('THERAPIST', 'RECEPTION_ADMIN_STAFF', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<SessionRecordResponse> cancelSession(
+            @PathVariable final UUID sessionId,
+            @Valid @RequestBody final CancelSessionRequest request,
+            final Principal principal) {
+
+        final String principalName = principal.getName();
+
+        try {
+            final SessionRecord session = sessionRecordService.cancelSession(sessionId, request);
+            final SessionRecordResponse response = sessionRecordMapper.toResponse(session);
+
+            LOG.info("Session cancelled via API: sessionId={}, actor={}, reason={}",
+                    sessionId, principalName, request.reason());
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalStateException e) {
+            LOG.warn("Invalid session cancellation attempt: sessionId={}, actor={}, error={}",
+                    sessionId, principalName, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
     }
 }

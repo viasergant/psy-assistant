@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import {
   CompleteSessionRequest,
   SessionFilters,
@@ -29,7 +29,7 @@ export class SessionService {
 
     if (filters) {
       if (filters.clientId !== undefined) {
-        params = params.set('clientId', filters.clientId.toString());
+        params = params.set('clientId', filters.clientId);
       }
       if (filters.startDate) {
         params = params.set('startDate', filters.startDate);
@@ -42,41 +42,78 @@ export class SessionService {
       }
     }
 
-    return this.http.get<SessionRecord[]>(this.base, { params });
+    return this.http.get<any[]>(this.base, { params }).pipe(
+      map(sessions => sessions.map(s => this.transformSessionRecord(s)))
+    );
   }
 
   /**
    * Starts a pending session, transitioning it to IN_PROGRESS status.
    *
-   * @param sessionId Session record ID
+   * @param sessionId Session record UUID
    * @returns Observable of updated session record
    */
-  startSession(sessionId: number): Observable<SessionRecord> {
-    return this.http.post<SessionRecord>(`${this.base}/${sessionId}/start`, {});
+  startSession(sessionId: string): Observable<SessionRecord> {
+    return this.http.post<any>(`${this.base}/${sessionId}/start`, {}).pipe(
+      map(s => this.transformSessionRecord(s))
+    );
   }
 
   /**
    * Completes an in-progress session with notes and optional actual end time.
    *
-   * @param sessionId Session record ID
+   * @param sessionId Session record UUID
    * @param request Session notes and optional actual end time
    * @returns Observable of updated session record
    */
   completeSession(
-    sessionId: number,
+    sessionId: string,
     request: CompleteSessionRequest
   ): Observable<SessionRecord> {
-    return this.http.post<SessionRecord>(`${this.base}/${sessionId}/complete`, request);
+    return this.http.post<any>(`${this.base}/${sessionId}/complete`, request).pipe(
+      map(s => this.transformSessionRecord(s))
+    );
   }
 
   /**
    * Cancels a session with a required cancellation reason.
    *
-   * @param sessionId Session record ID
+   * @param sessionId Session record UUID
    * @param reason Cancellation reason
    * @returns Observable of updated session record
    */
-  cancelSession(sessionId: number, reason: string): Observable<SessionRecord> {
-    return this.http.post<SessionRecord>(`${this.base}/${sessionId}/cancel`, { reason });
+  cancelSession(sessionId: string, reason: string): Observable<SessionRecord> {
+    return this.http.post<any>(`${this.base}/${sessionId}/cancel`, { reason }).pipe(
+      map(s => this.transformSessionRecord(s))
+    );
+  }
+
+  /**
+   * Transforms backend session record response to frontend model.
+   * Converts ISO 8601 duration (PT1H30M) to minutes.
+   */
+  private transformSessionRecord(record: any): SessionRecord {
+    return {
+      ...record,
+      plannedDuration: this.parseDurationToMinutes(record.plannedDuration),
+    };
+  }
+
+  /**
+   * Parses ISO 8601 duration string (e.g., 'PT1H30M', 'PT45M') to minutes.
+   */
+  private parseDurationToMinutes(duration: string): number {
+    if (!duration) return 0;
+
+    const regex = /PT(?:(\d+)H)?(?:(\d+)M)?/;
+    const matches = duration.match(regex);
+
+    if (!matches) return 0;
+
+    const hours = parseInt(matches[1] || '0', 10);
+    const minutes = parseInt(matches[2] || '0', 10);
+
+    return hours * 60 + minutes;
   }
 }
+

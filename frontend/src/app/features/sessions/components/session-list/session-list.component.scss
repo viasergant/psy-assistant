@@ -100,25 +100,27 @@
   font-weight: 600;
   font-size: 0.875rem;
   text-transform: uppercase;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
 
   &.status-pending {
-    background: var(--gray-200, #e5e7eb) !important;
-    color: var(--gray-700, #374151) !important;
+    background: var(--surface-100, #f3f4f6) !important;
+    color: var(--surface-700, #374151) !important;
   }
 
   &.status-in_progress {
-    background: var(--green-100, #dcfce7) !important;
-    color: var(--green-700, #15803d) !important;
+    background: var(--green-500, #22c55e) !important;
+    color: var(--surface-0, #ffffff) !important;
   }
 
   &.status-completed {
-    background: var(--blue-100, #dbeafe) !important;
-    color: var(--blue-700, #1d4ed8) !important;
+    background: var(--blue-500, #3b82f6) !important;
+    color: var(--surface-0, #ffffff) !important;
   }
 
   &.status-cancelled {
-    background: var(--red-100, #fee2e2) !important;
-    color: var(--red-700, #b91c1c) !important;
+    background: var(--red-500, #ef4444) !important;
+    color: var(--surface-0, #ffffff) !important;
   }
 }
 

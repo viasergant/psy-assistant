@@ -652,10 +652,11 @@
       "customRange": "Custom Range"
     },
     "types": {
-      "INITIAL_CONSULTATION": "Initial Consultation",
+      "IN_PERSON": "In-Person Session",
+      "ONLINE": "Online Session",
+      "INTAKE": "Initial Intake Session",
       "FOLLOW_UP": "Follow-Up Session",
-      "CHECK_IN": "Check-In",
-      "CRISIS_INTERVENTION": "Crisis Intervention"
+      "GROUP": "Group Therapy Session"
     },
     "status": {
       "pending": "Pending",

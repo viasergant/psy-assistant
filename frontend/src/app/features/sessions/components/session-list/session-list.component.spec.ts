@@ -6,7 +6,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { of, throwError } from 'rxjs';
 import { SessionListComponent } from './session-list.component';
 import { SessionService } from '../../services/session.service';
-import { SessionRecord, SessionStatus, SessionType } from '../../models/session.model';
+import { SessionRecord, SessionStatus, SessionTypeInfo } from '../../models/session.model';
 
 describe('SessionListComponent', () => {
   let component: SessionListComponent;
@@ -23,7 +23,12 @@ describe('SessionListComponent', () => {
       therapistId: 301,
       sessionDate: '2026-04-15',
       scheduledStartTime: '10:00:00',
-      sessionType: SessionType.FOLLOW_UP,
+      sessionType: {
+        id: 'uuid-1',
+        code: 'FOLLOW_UP',
+        name: 'Follow-Up Session',
+        description: 'Regular therapeutic session'
+      },
       plannedDuration: 60,
       status: SessionStatus.PENDING,
       createdAt: '2026-04-01T08:00:00Z',
@@ -37,7 +42,12 @@ describe('SessionListComponent', () => {
       therapistId: 301,
       sessionDate: '2026-04-16',
       scheduledStartTime: '14:00:00',
-      sessionType: SessionType.INITIAL_CONSULTATION,
+      sessionType: {
+        id: 'uuid-2',
+        code: 'INTAKE',
+        name: 'Initial Intake Session',
+        description: 'First diagnostic session with new client'
+      },
       plannedDuration: 90,
       status: SessionStatus.IN_PROGRESS,
       createdAt: '2026-04-01T09:00:00Z',

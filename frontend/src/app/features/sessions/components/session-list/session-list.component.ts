@@ -269,6 +269,15 @@ export class SessionListComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Converts enum status to camelCase translation key
+   * IN_PROGRESS -> inProgress
+   * PENDING -> pending
+   */
+  getStatusKey(status: SessionStatus): string {
+    return status.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+  }
+
   canStartSession(session: SessionRecord): boolean {
     return session.status === SessionStatus.PENDING;
   }

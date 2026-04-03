@@ -1,30 +1,32 @@
 /**
- * Session record entity
+ * Session type information from backend
  */
-export interface SessionRecord {
-  id: number;
-  appointmentId: number;
-  clientId: number;
-  clientName: string;
-  therapistId: number;
-  sessionDate: string; // ISO date (YYYY-MM-DD)
-  scheduledStartTime: string; // ISO time (HH:mm:ss)
-  sessionType: SessionType;
-  plannedDuration: number; // minutes
-  status: SessionStatus;
-  cancellationReason?: string;
-  createdAt: string;
-  updatedAt: string;
+export interface SessionTypeInfo {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
 }
 
 /**
- * Session type enumeration
+ * Session record entity
  */
-export enum SessionType {
-  INITIAL_CONSULTATION = 'INITIAL_CONSULTATION',
-  FOLLOW_UP = 'FOLLOW_UP',
-  CHECK_IN = 'CHECK_IN',
-  CRISIS_INTERVENTION = 'CRISIS_INTERVENTION'
+export interface SessionRecord {
+  id: string; // UUID
+  appointmentId: string; // UUID
+  clientId: string; // UUID
+  clientName: string;
+  therapistId: string; // UUID
+  sessionDate: string; // ISO date (YYYY-MM-DD)
+  scheduledStartTime: string; // ISO time (HH:mm:ss)
+  sessionType: SessionTypeInfo;
+  plannedDuration: number; // minutes (converted from ISO 8601 duration)
+  status: SessionStatus;
+  cancellationReason?: string;
+  sessionNotes?: string;
+  actualEndTime?: string; // ISO time (HH:mm:ss)
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -49,7 +51,7 @@ export interface CompleteSessionRequest {
  * Filters for querying session records
  */
 export interface SessionFilters {
-  clientId?: number;
+  clientId?: string; // UUID
   startDate?: string; // ISO date
   endDate?: string; // ISO date
   status?: SessionStatus[];

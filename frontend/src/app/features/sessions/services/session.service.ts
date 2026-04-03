@@ -93,22 +93,49 @@ export class SessionService {
    * Converts ISO 8601 duration (PT1H30M) to minutes.
    */
   private transformSessionRecord(record: any): SessionRecord {
-    return {
-      ...record,
-      plannedDuration: this.parseDurationToMinutes(record.plannedDuration),
-    };
+    try {
+      const plannedDuration = this.parseDurationToMinutes(record.plannedDuration);
+      console.log('Transforming session record:', {
+        id: record.id,
+        rawDuration: record.plannedDuration,
+        parsedDuration: plannedDuration
+      });
+      return {
+        ...record,
+        plannedDuration,
+      };
+    } catch (error) {
+      console.error('Error transforming session record:', error, record);
+      throw error;
+    }
   }
 
   /**
    * Parses ISO 8601 duration string (e.g., 'PT1H30M', 'PT45M') to minutes.
    */
-  private parseDurationToMinutes(duration: string): number {
-    if (!duration) return 0;
+  private parseDurationToMinutes(duration: string | any): number {
+    if (!duration) {
+      console.warn('No duration provided');
+      return 0;
+    }
 
-    const regex = /PT(?:(\d+)H)?(?:(\d+)M)?/;
+    // Handle if duration is already a number or object
+    if (typeof duration === 'number') {
+      return duration;
+    }
+
+    if (typeof duration !== 'string') {
+      console.warn('Duration is not a string:', duration);
+      return 0;
+    }
+
+    const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?/;
     const matches = duration.match(regex);
 
-    if (!matches) return 0;
+    if (!matches) {
+      console.warn('Duration does not match expected format:', duration);
+      return 0;
+    }
 
     const hours = parseInt(matches[1] || '0', 10);
     const minutes = parseInt(matches[2] || '0', 10);

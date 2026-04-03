@@ -413,6 +413,10 @@
         "duringLeaveWarning": "Therapist on Leave",
         "duringLeaveMessage": "The therapist has approved leave during this time. Are you sure you want to proceed?",
         "confirmOverrideLabel": "I confirm this appointment should be created despite the warning",
+        "recurringLabel": "Recurring",
+        "recurrenceTypeLabel": "Recurrence type",
+        "occurrencesLabel": "Number of occurrences",
+        "previewConflictsButton": "Preview conflicts",
         "bookButton": "Book Appointment",
         "bookingInProgress": "Booking..."
       },
@@ -504,6 +508,21 @@
         "conflictDetectionFailed": "Failed to check for conflicts. Please try again.",
         "alreadyCancelled": "This appointment has already been cancelled"
       }
+    },
+    "recurringConflict": {
+      "title": "Recurring Appointments Review",
+      "cleanSlots": "Available slots",
+      "conflictingSlots": "Conflicting slots",
+      "columnDate": "Date",
+      "columnStatus": "Status",
+      "columnConflict": "Conflict",
+      "statusConflict": "Conflict",
+      "statusClean": "Available",
+      "unknownClient": "Unknown client",
+      "noConflicts": "No conflicts detected. All slots are available for booking.",
+      "skipConflictsButton": "Skip conflicts",
+      "conflictsBlockConfirm": "Has conflicts",
+      "confirmButton": "Confirm booking"
     },
     "validation": {
       "startBeforeEnd": "Start time must be before end time",

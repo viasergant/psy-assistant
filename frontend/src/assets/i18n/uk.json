@@ -412,6 +412,10 @@
         "duringLeaveWarning": "Терапевт у відпустці",
         "duringLeaveMessage": "Терапевт має затверджену відпустку в цей час. Ви впевнені, що хочете продовжити?",
         "confirmOverrideLabel": "Я підтверджую, що цей прийом має бути створений незважаючи на попередження",
+        "recurringLabel": "Повторювана",
+        "recurrenceTypeLabel": "Тип повторення",
+        "occurrencesLabel": "Кількість повторень",
+        "previewConflictsButton": "Попередній перегляд конфліктів",
         "bookButton": "Записати на прийом",
         "bookingInProgress": "Запис..."
       },
@@ -503,6 +507,21 @@
         "conflictDetectionFailed": "Не вдалося перевірити конфлікти. Будь ласка, спробуйте ще раз.",
         "alreadyCancelled": "Цей прийом вже скасовано"
       }
+    },
+    "recurringConflict": {
+      "title": "Перегляд повторюваних прийомів",
+      "cleanSlots": "Доступні слоти",
+      "conflictingSlots": "Конфліктні слоти",
+      "columnDate": "Дата",
+      "columnStatus": "Статус",
+      "columnConflict": "Конфлікт",
+      "statusConflict": "Конфлікт",
+      "statusClean": "Доступний",
+      "unknownClient": "Невідомий клієнт",
+      "noConflicts": "Конфліктів не виявлено. Всі слоти доступні для запису.",
+      "skipConflictsButton": "Пропустити конфлікти",
+      "conflictsBlockConfirm": "Є конфлікти",
+      "confirmButton": "Підтвердити запис"
     },
     "validation": {
       "startBeforeEnd": "Час початку повинен бути раніше часу завершення",

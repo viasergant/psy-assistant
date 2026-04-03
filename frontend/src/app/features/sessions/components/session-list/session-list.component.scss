@@ -1,26 +1,26 @@
 .session-list-container {
-  padding: 1.5rem;
+  padding: var(--spacing-xl);
   max-width: 1400px;
   margin: 0 auto;
 }
 
 .page-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-2xl);
 
   h1 {
     font-size: 2rem;
     font-weight: 600;
-    color: var(--text-color);
+    color: var(--color-text-primary);
     margin: 0;
   }
 }
 
 .filters-section {
-  background: var(--surface-card);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
 
   ::ng-deep {
     .p-select,
@@ -30,12 +30,49 @@
       width: 100%;
     }
 
-    .p-select .p-select-label,
-    .p-multiselect .p-multiselect-label {
-      padding: 0.75rem;
+    // Select dropdown background
+    .p-select {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      
+      .p-select-label {
+        padding: 0.75rem;
+        background: var(--color-surface);
+        color: var(--color-text-primary);
+      }
     }
 
-    .p-datepicker input {
+    // MultiSelect dropdown background
+    .p-multiselect {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      
+      .p-multiselect-label {
+        padding: 0.75rem;
+        background: var(--color-surface);
+        color: var(--color-text-primary);
+      }
+    }
+
+    // Datepicker input background
+    .p-datepicker {
+      input {
+        padding: 0.75rem;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        color: var(--color-text-primary);
+      }
+    }
+
+    // Text input background
+    .p-inputtext {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-text-primary);
       padding: 0.75rem;
     }
   }
@@ -44,19 +81,19 @@
 .filters-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: var(--spacing-md);
   align-items: end;
 }
 
 .filter-field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 
   label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--text-color);
+    color: var(--color-text-primary);
   }
 }
 
@@ -66,85 +103,138 @@
 }
 
 .loading-container {
-  padding: 2rem;
+  padding: var(--spacing-2xl);
 }
 
 .error-container {
   text-align: center;
-  padding: 3rem 2rem;
-  background: var(--red-50, #fef2f2);
-  border-radius: 8px;
-  border: 1px solid var(--red-200, #fecaca);
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  background: #fef2f2;
+  border-radius: var(--radius-md);
+  border: 1px solid #fecaca;
 
   .error-message {
-    color: var(--red-700, #b91c1c);
-    margin-bottom: 1rem;
+    color: var(--color-error);
+    margin-bottom: var(--spacing-md);
     font-size: 1rem;
   }
 }
 
 .table-container {
-  background: var(--surface-card);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
+
+  ::ng-deep {
+    // Table background and cell styling
+    .p-datatable {
+      background: var(--color-surface);
+      
+      .p-datatable-thead > tr > th {
+        background: var(--color-surface);
+        color: var(--color-text-primary);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .p-datatable-tbody > tr {
+        background: var(--color-surface);
+        
+        &:hover {
+          background: #f9fafb;
+        }
+
+        > td {
+          background: transparent;
+          color: var(--color-text-primary);
+          border-bottom: 1px solid var(--color-border);
+        }
+      }
+
+      // Paginator styling
+      .p-paginator {
+        background: var(--color-surface);
+        border-top: 1px solid var(--color-border);
+        color: var(--color-text-primary);
+
+        .p-paginator-pages .p-paginator-page {
+          color: var(--color-text-primary);
+
+          &.p-highlight {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+            color: white;
+          }
+        }
+
+        .p-dropdown {
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          color: var(--color-text-primary);
+        }
+      }
+    }
+  }
 }
 
 .duration-badge {
-  color: var(--text-color-secondary);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
-  margin-left: 0.5rem;
+  margin-left: var(--spacing-sm);
 }
 
-.status-badge {
+// Status badge styling using PrimeNG tags
+::ng-deep .status-badge {
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-
+  
   &.status-pending {
-    background: var(--surface-100, #f3f4f6) !important;
-    color: var(--surface-700, #374151) !important;
+    background: #f3f4f6 !important;
+    color: #374151 !important;
   }
 
   &.status-in_progress {
-    background: var(--green-500, #22c55e) !important;
-    color: var(--surface-0, #ffffff) !important;
+    background: #22c55e !important;
+    color: #ffffff !important;
   }
 
   &.status-completed {
-    background: var(--blue-500, #3b82f6) !important;
-    color: var(--surface-0, #ffffff) !important;
+    background: #3b82f6 !important;
+    color: #ffffff !important;
   }
 
   &.status-cancelled {
-    background: var(--red-500, #ef4444) !important;
-    color: var(--surface-0, #ffffff) !important;
+    background: var(--color-error) !important;
+    color: #ffffff !important;
   }
 }
 
 .actions-cell {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   flex-wrap: wrap;
 }
 
 .empty-state {
   .empty-content {
     text-align: center;
-    padding: 3rem 2rem;
+    padding: var(--spacing-2xl) var(--spacing-xl);
 
     .empty-message {
-      color: var(--text-color-secondary);
+      color: var(--color-text-secondary);
       font-size: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: var(--spacing-md);
     }
   }
 }
 
 // Responsive adjustments
 @media (max-width: 768px) {
+  .session-list-container {
+    padding: var(--spacing-lg);
+  }
+
   .filters-row {
     grid-template-columns: 1fr;
   }
@@ -154,6 +244,114 @@
     
     ::ng-deep p-button {
       width: 100%;
+    }
+  }
+}
+
+// Global PrimeNG dropdown overlays styling
+::ng-deep {
+  // Select dropdown panel
+  .p-select-overlay {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+
+    .p-select-list {
+      background: var(--color-surface);
+      
+      .p-select-option {
+        background: var(--color-surface);
+        color: var(--color-text-primary);
+
+        &:hover, &.p-focus {
+          background: #f3f4f6;
+        }
+
+        &.p-select-option-selected {
+          background: var(--color-accent);
+          color: white;
+        }
+      }
+    }
+  }
+
+  // MultiSelect dropdown panel
+  .p-multiselect-overlay {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+
+    .p-multiselect-header {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+
+      .p-multiselect-filter-container {
+        input {
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          color: var(--color-text-primary);
+        }
+      }
+    }
+
+    .p-multiselect-list {
+      background: var(--color-surface);
+      
+      .p-multiselect-option {
+        background: var(--color-surface);
+        color: var(--color-text-primary);
+
+        &:hover, &.p-focus {
+          background: #f3f4f6;
+        }
+
+        &.p-multiselect-option-selected {
+          background: rgba(14, 165, 160, 0.1);
+          color: var(--color-text-primary);
+        }
+
+        .p-checkbox .p-checkbox-box {
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+
+          &.p-checkbox-checked {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+          }
+        }
+      }
+    }
+  }
+
+  // Datepicker overlay
+  .p-datepicker {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+
+    .p-datepicker-header {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+    }
+
+    .p-datepicker-calendar {
+      td {
+        > span {
+          color: var(--color-text-primary);
+
+          &:hover {
+            background: #f3f4f6;
+          }
+
+          &.p-datepicker-today > span {
+            background: rgba(14, 165, 160, 0.1);
+            color: var(--color-accent);
+          }
+        }
+      }
     }
   }
 }

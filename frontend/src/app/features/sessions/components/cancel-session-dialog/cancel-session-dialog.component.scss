@@ -1,16 +1,16 @@
 .session-summary {
-  background: var(--surface-0, #ffffff);
-  border: 1px solid var(--surface-200, #e5e7eb);
-  border-radius: 8px;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
   padding: 0.625rem 0;
-  border-bottom: 1px solid var(--surface-100, #f3f4f6);
+  border-bottom: 1px solid #f3f4f6;
 
   &:last-child {
     border-bottom: none;
@@ -19,13 +19,13 @@
 
   .summary-label {
     font-weight: 500;
-    color: var(--gray-600, #6b7280);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
     line-height: 1.5;
   }
 
   .summary-value {
-    color: var(--text-color);
+    color: var(--color-text-primary);
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.5;
@@ -35,146 +35,122 @@
 .warning-message {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
-  background: var(--orange-50, #fff7ed);
-  border: 1px solid var(--orange-200, #fed7aa);
-  border-left: 4px solid var(--orange-500, #f97316);
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-left: 4px solid #f97316;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-xl);
 
   svg {
     flex-shrink: 0;
-    color: var(--orange-600, #ea580c);
+    color: #ea580c;
     margin-top: 0.125rem;
   }
 
   p {
     margin: 0;
-    color: var(--orange-900, #7c2d12);
+    color: #7c2d12;
     font-size: 0.875rem;
     line-height: 1.5;
     font-weight: 500;
   }
 }
 
-.field {
-  margin-bottom: 1.5rem;
+// Using shared .field class from global styles
 
-  label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-color);
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.01em;
-
-    .required {
-      color: var(--red-500, #ef4444);
-      margin-left: 0.25rem;
-    }
-  }
-}
-
+// Component-specific field footer for error + char count layout
 .field-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 0.5rem;
-
-  .error-msg {
-    color: var(--red-500, #ef4444);
-    font-size: 0.8125rem;
-    font-weight: 500;
-  }
-
-  .char-count {
-    color: var(--gray-500, #9ca3af);
-    font-size: 0.8125rem;
-  }
+  margin-top: var(--spacing-sm);
+  gap: var(--spacing-sm);
 }
 
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
+// Character counter (field-footer child)
+.char-count {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  flex-shrink: 0;
 }
 
 ::ng-deep .p-dialog {
-  border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
 
   .p-dialog-header {
-    padding: 1.5rem 1.5rem 1rem;
-    border-bottom: 1px solid var(--surface-100, #f3f4f6);
+    padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
 
     .p-dialog-title {
       font-size: 1.125rem;
       font-weight: 600;
-      color: var(--text-color);
+      color: var(--color-text-primary);
       letter-spacing: -0.01em;
     }
   }
 
   .p-dialog-content {
-    padding: 1.5rem;
+    padding: var(--spacing-xl);
   }
 
   .p-dialog-footer {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--surface-100, #f3f4f6);
-    background: var(--surface-0, #ffffff);
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
   }
 
   // Enhanced textarea styling
   textarea.p-inputtextarea {
-    border: 1px solid var(--surface-300, #d1d5db);
-    border-radius: 6px;
-    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
     font-size: 0.875rem;
     line-height: 1.5;
     transition: all 0.2s ease;
 
     &::placeholder {
-      color: var(--gray-400, #c0c6ce);
+      color: var(--color-text-muted);
       font-style: italic;
     }
 
     &:hover {
-      border-color: var(--surface-400, #9ca3af);
+      border-color: var(--color-text-secondary);
     }
 
     &:focus {
-      border-color: var(--primary-500, #3b82f6);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(14, 165, 160, 0.1);
       outline: none;
     }
   }
 
   // Enhanced button styling
   .p-button {
-    padding: 0.625rem 1.25rem;
+    padding: 0.625rem var(--spacing-lg);
     font-size: 0.875rem;
     font-weight: 500;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     transition: all 0.2s ease;
     letter-spacing: -0.01em;
 
     &:focus {
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      box-shadow: 0 0 0 3px rgba(14, 165, 160, 0.2);
     }
 
     &.p-button-outlined {
       background: transparent;
 
       &:hover {
-        background: var(--surface-50, #f9fafb);
+        background: #f9fafb;
       }
     }
 
     &.p-button-danger {
       &:focus {
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
       }
     }
   }

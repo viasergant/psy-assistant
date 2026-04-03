@@ -3,6 +3,7 @@ Leave management integration tests.
 Tests leave request submission, approval/rejection workflow, and authorization.
 """
 import pytest
+from datetime import datetime, timedelta
 from .utils.data_factory import DataFactory
 
 
@@ -124,17 +125,22 @@ def test_get_pending_leave_requests(admin_client, therapist_for_leave, created_r
     """Test admin retrieving list of pending leave requests."""
     therapist_id = therapist_for_leave
 
-    # Submit multiple leave requests
+    # Submit multiple leave requests with non-overlapping date ranges
+    leave1_start = (datetime.now() + timedelta(days=20)).strftime('%Y-%m-%d')
+    leave1_end = (datetime.now() + timedelta(days=22)).strftime('%Y-%m-%d')
+    leave2_start = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
+    leave2_end = (datetime.now() + timedelta(days=32)).strftime('%Y-%m-%d')
+
     leave1 = admin_client.post(
         f"/api/v1/therapists/{therapist_id}/leave",
-        json=DataFactory.leave_request(leave_type="ANNUAL"),
+        json=DataFactory.leave_request(leave_type="ANNUAL", start_date=leave1_start, end_date=leave1_end),
         expected_status=201
     )
     created_resources["leaves"].append(leave1.json()["id"])
 
     leave2 = admin_client.post(
         f"/api/v1/therapists/{therapist_id}/leave",
-        json=DataFactory.leave_request(leave_type="SICK"),
+        json=DataFactory.leave_request(leave_type="SICK", start_date=leave2_start, end_date=leave2_end),
         expected_status=201
     )
     created_resources["leaves"].append(leave2.json()["id"])

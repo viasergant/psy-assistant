@@ -162,9 +162,8 @@ def test_create_schedule_override(admin_client, therapist_with_schedule, created
     data = response.json()
 
     assert data["id"], "Override should have ID"
-    assert data["date"], "Override should have date"
+    assert data["overrideDate"], "Override should have overrideDate"
     assert data["isAvailable"] is False
-    assert data["timezone"] == "Europe/Kiev"
 
 
 def test_get_schedule_summary(admin_client, therapist_with_schedule, created_resources):

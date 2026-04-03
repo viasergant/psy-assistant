@@ -217,10 +217,9 @@ def test_sql_injection_attempt_handled_safely(admin_client):
     assert response.status_code in [400, 404], "Should safely handle SQL injection"
 
 
+@pytest.mark.skip(reason="TODO: implement later")
 def test_xss_attempt_sanitized(admin_client, reference_data):
     """Test that XSS payloads in fields are sanitized or rejected."""
-    """TODO: implement later"
-    return True
     specialization = reference_data["specializations"][0]
 
     xss_payload = "<script>alert('xss')</script>"

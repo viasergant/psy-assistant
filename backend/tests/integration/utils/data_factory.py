@@ -150,8 +150,7 @@ class DataFactory:
         date: Optional[str] = None,
         start_time: Optional[str] = "10:00:00",
         end_time: Optional[str] = "14:00:00",
-        is_available: bool = True,
-        timezone: str = "Europe/Kiev"
+        is_available: bool = True
     ) -> Dict[str, Any]:
         """
         Generate schedule override payload.
@@ -161,7 +160,6 @@ class DataFactory:
             start_time: Start time (None for all-day unavailability)
             end_time: End time (None for all-day unavailability)
             is_available: Whether this override marks availability or unavailability
-            timezone: IANA timezone identifier
 
         Returns:
             Schedule override request body
@@ -169,9 +167,8 @@ class DataFactory:
         override_date = date or (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
 
         payload = {
-            "date": override_date,
-            "isAvailable": is_available,
-            "timezone": timezone
+            "overrideDate": override_date,
+            "isAvailable": is_available
         }
 
         if start_time:

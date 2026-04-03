@@ -207,7 +207,9 @@ public class TherapistProfileService {
         profile.setActive(true);
         profile.getSpecializations().add(primarySpec);
 
-        TherapistProfile savedProfile = profileRepository.save(profile);
+        // Use saveAndFlush to ensure the INSERT is immediately flushed to the DB
+        // so that the @Version field in the returned entity reflects the committed value.
+        TherapistProfile savedProfile = profileRepository.saveAndFlush(profile);
 
         // Record creation audit
         String actorName = getCurrentUsername();
@@ -230,9 +232,13 @@ public class TherapistProfileService {
             null
         );
 
+        // Re-fetch the profile after all operations to ensure the version in the response
+        // matches what is committed in the DB (guards against any version increment during flush).
+        TherapistProfile freshProfile = getProfile(savedProfile.getId());
+
         return new TherapistWithAccountResponseDto(
             userResponse,
-            TherapistProfileAdminDto.fromAdmin(savedProfile)
+            TherapistProfileAdminDto.fromAdmin(freshProfile)
         );
     }
 

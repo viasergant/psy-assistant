@@ -6,6 +6,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -140,4 +141,73 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
      * @return count
      */
     long countByTherapistProfileIdAndStatus(UUID therapistProfileId, AppointmentStatus status);
+
+    // ========== Recurring Series Queries (PA-33) ==========
+
+    /**
+     * Finds all appointments in a series starting from a given recurrence index,
+     * excluding appointments already in the given status.
+     *
+     * <p>Used by bulk-edit and bulk-cancel operations.
+     *
+     * @param seriesId parent series ID
+     * @param fromIndex minimum recurrence index (inclusive)
+     * @param excludeStatus appointments in this status are excluded
+     * @return ordered list of matching appointments
+     */
+    @Query("""
+        SELECT a FROM Appointment a
+        WHERE a.series.id = :seriesId
+        AND a.recurrenceIndex >= :fromIndex
+        AND a.status != :excludeStatus
+        ORDER BY a.recurrenceIndex ASC
+        """)
+    List<Appointment> findBySeriesIdFromIndex(
+            @Param("seriesId") Long seriesId,
+            @Param("fromIndex") int fromIndex,
+            @Param("excludeStatus") AppointmentStatus excludeStatus
+    );
+
+    /**
+     * Finds all appointments in a series, ordered by recurrence index.
+     *
+     * @param seriesId parent series ID
+     * @return all appointments belonging to the series
+     */
+    @Query("""
+        SELECT a FROM Appointment a
+        WHERE a.series.id = :seriesId
+        ORDER BY a.recurrenceIndex ASC
+        """)
+    List<Appointment> findAllBySeriesId(@Param("seriesId") Long seriesId);
+
+    /**
+     * Atomically cancels all non-cancelled appointments in a series from a given index.
+     *
+     * <p>Runs as a single bulk UPDATE to satisfy the atomicity requirement for
+     * bulk cancellation (PA-33 non-functional requirement).
+     *
+     * @param seriesId parent series ID
+     * @param fromIndex minimum recurrence index (inclusive)
+     * @param reason human-readable cancellation reason
+     * @param cancellationType cancellation type string value
+     * @return number of rows updated
+     */
+    @Modifying
+    @Query(value = """
+        UPDATE appointment
+        SET status = 'CANCELLED',
+            cancellation_reason = :reason,
+            cancellation_type   = :cancellationType,
+            cancelled_at        = NOW()
+        WHERE series_id = :seriesId
+          AND recurrence_index >= :fromIndex
+          AND status != 'CANCELLED'
+        """, nativeQuery = true)
+    int bulkCancelFromIndex(
+            @Param("seriesId") Long seriesId,
+            @Param("fromIndex") int fromIndex,
+            @Param("reason") String reason,
+            @Param("cancellationType") String cancellationType
+    );
 }

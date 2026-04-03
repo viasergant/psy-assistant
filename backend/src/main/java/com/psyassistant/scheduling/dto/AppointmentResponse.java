@@ -10,6 +10,8 @@ import java.util.UUID;
  * Response DTO for appointment details.
  *
  * <p>Includes full appointment information for display and editing.
+ * Fields {@code seriesId}, {@code recurrenceIndex}, and {@code isModified}
+ * are non-null only for appointments that belong to a recurring series (PA-33).
  */
 public record AppointmentResponse(
         UUID id,
@@ -34,7 +36,11 @@ public record AppointmentResponse(
         Long version,
         Instant createdAt,
         Instant updatedAt,
-        String createdBy
+        String createdBy,
+        // ===== Recurring series fields (PA-33) =====
+        Long seriesId,
+        Integer recurrenceIndex,
+        boolean isModified
 ) {
     /**
      * Nested session type information.

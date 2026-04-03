@@ -61,6 +61,7 @@
               <span *ngIf="cell.isLeave && cell.leaveStatus === 'APPROVED'" class="cell-label">{{ 'schedule.legend.leave' | transloco }}</span>
               <span *ngIf="cell.hasOverride" class="cell-label">{{ 'schedule.legend.override' | transloco }}</span>
               <span *ngIf="cell.isBooked" class="cell-label">{{ cell.clientName || ('schedule.legend.booked' | transloco) }}</span>
+              <span *ngIf="cell.isModified" class="modified-chip" aria-label="Modified occurrence">mod</span>
               <span *ngIf="cell.available && !cell.isBooked && !cell.isLeave && !cell.hasOverride" class="cell-time-range">{{ getTimeRange(cell) }}</span>
             </div>
           </div>
@@ -135,6 +136,7 @@
     [initialDateTime]="selectedDateTime || undefined"
     [schedule]="schedule"
     (submitted)="onBookingSubmitted($event)"
+    (seriesCreated)="onSeriesCreated($event)"
     (cancelled)="onBookingCancelled()"
   ></app-appointment-booking-dialog>
 

@@ -35,5 +35,27 @@ public enum AuditActionType {
     /**
      * Appointment was created despite a detected conflict (requires override permission).
      */
-    CONFLICT_OVERRIDE
+    CONFLICT_OVERRIDE,
+
+    // ========== Recurring Series Actions (PA-33) ==========
+
+    /**
+     * A new recurring appointment series was created with one or more occurrences.
+     */
+    SERIES_CREATED,
+
+    /**
+     * All (remaining) occurrences of a series were cancelled atomically.
+     */
+    SERIES_CANCELLED,
+
+    /**
+     * A single occurrence within a series was edited (isModified flagged).
+     */
+    SERIES_OCCURRENCE_EDITED,
+
+    /**
+     * This occurrence and all future occurrences in the series were edited.
+     */
+    SERIES_FUTURE_EDITED
 }

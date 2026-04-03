@@ -290,6 +290,21 @@
   white-space: nowrap;
 }
 
+// PA-33: Visual indicator for modified recurring occurrences
+.modified-chip {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 5px;
+  background: #DBEAFE;
+  color: #1D4ED8;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+
 // Legend
 .calendar-legend {
   display: flex;

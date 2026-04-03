@@ -1,14 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, EventEmitter, Input, OnInit, Output, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslocoService, TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
 import { Subject, takeUntil } from 'rxjs';
 import {
   Appointment,
   CancelAppointmentRequest,
-  CancellationType
+  CancelRecurringOccurrenceRequest,
+  CancellationType,
+  EditScope
 } from '../../models/schedule.model';
 import { AppointmentApiService } from '../../services/appointment-api.service';
 
@@ -66,6 +68,33 @@ import { AppointmentApiService } from '../../services/appointment-api.service';
               <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
             </svg>
             <p>{{ 'schedule.appointment.cancel.confirmationMessage' | transloco }}</p>
+          </div>
+
+          <!-- Cancel Scope (only for recurring appointments) -->
+          <div class="field" *ngIf="appointment.seriesId">
+            <label id="cancel-scope-label">
+              {{ 'schedule.appointment.cancel.scopeLabel' | transloco }}
+              <span class="required" aria-hidden="true">*</span>
+            </label>
+            <div
+              class="radio-group"
+              role="radiogroup"
+              aria-labelledby="cancel-scope-label"
+            >
+              <label class="radio-option" *ngFor="let scope of cancelScopes">
+                <input
+                  type="radio"
+                  formControlName="cancelScope"
+                  [value]="scope.value"
+                  [attr.aria-label]="scope.label"
+                />
+                <span>
+                  <strong>{{ scope.label }}</strong>
+                  <br />
+                  <small class="scope-description">{{ scope.description }}</small>
+                </span>
+              </label>
+            </div>
           </div>
 
           <!-- Cancellation Type -->
@@ -470,6 +499,7 @@ export class AppointmentCancelDialogComponent implements OnInit, OnDestroy {
 
   form!: FormGroup;
   cancellationTypes: Array<{value: CancellationType; label: string}> = [];
+  cancelScopes: Array<{value: EditScope; label: string; description: string}> = [];
   saving = false;
   serverError: string | null = null;
 
@@ -483,6 +513,7 @@ export class AppointmentCancelDialogComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initializeCancellationTypes();
+    this.initializeCancelScopes();
     this.initializeForm();
   }
 
@@ -508,10 +539,31 @@ export class AppointmentCancelDialogComponent implements OnInit, OnDestroy {
     ];
   }
 
+  private initializeCancelScopes(): void {
+    this.cancelScopes = [
+      {
+        value: 'SINGLE',
+        label: 'This occurrence only',
+        description: 'Only this appointment will be cancelled. All other occurrences remain unchanged.'
+      },
+      {
+        value: 'FUTURE_SERIES',
+        label: 'This and all future occurrences',
+        description: 'This appointment and all upcoming occurrences in the series will be cancelled. Past occurrences are unaffected.'
+      },
+      {
+        value: 'ENTIRE_SERIES',
+        label: 'All occurrences in the series',
+        description: 'Every occurrence — past, present, and future — will be cancelled.'
+      }
+    ];
+  }
+
   private initializeForm(): void {
     this.form = this.fb.group({
       cancellationType: ['', Validators.required],
-      reason: ['', [Validators.required, Validators.maxLength(1000)]]
+      reason: ['', [Validators.required, Validators.maxLength(1000)]],
+      cancelScope: [this.appointment?.seriesId ? 'SINGLE' : null]
     });
   }
 
@@ -541,6 +593,32 @@ export class AppointmentCancelDialogComponent implements OnInit, OnDestroy {
     this.saving = true;
     this.serverError = null;
 
+    // Route to recurring cancellation if this appointment belongs to a series
+    if (this.appointment.seriesId) {
+      const recurringRequest: CancelRecurringOccurrenceRequest = {
+        cancelScope: this.form.value.cancelScope as EditScope,
+        cancellationReason: this.form.value.reason,
+        cancellationType: this.form.value.cancellationType
+      };
+
+      this.appointmentService
+        .cancelRecurringOccurrence(this.appointment.seriesId, this.appointment.id, recurringRequest)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.saving = false;
+            // Emit the appointment with CANCELLED status for local refresh
+            this.submitted.emit({ ...this.appointment, status: 'CANCELLED' as any });
+          },
+          error: (err: HttpErrorResponse) => {
+            this.saving = false;
+            this.serverError = err.error?.message || 'Failed to cancel occurrence(s). Please try again.';
+          }
+        });
+      return;
+    }
+
+    // Regular single appointment cancellation
     const request: CancelAppointmentRequest = {
       cancellationType: this.form.value.cancellationType,
       reason: this.form.value.reason

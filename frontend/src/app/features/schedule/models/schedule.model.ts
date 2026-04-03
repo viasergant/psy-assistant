@@ -261,6 +261,10 @@ export interface Appointment {
   createdAt: string;
   updatedAt: string;
   createdBy?: string;
+  // Recurring series fields (PA-33)
+  seriesId?: number;
+  recurrenceIndex?: number;
+  isModified?: boolean;
 }
 
 /**
@@ -323,8 +327,141 @@ export interface CancelAppointmentRequest {
   reason: string; // 10-1000 characters
 }
 
+// ========== Recurring Series Models (PA-33) ==========
+
 /**
- * Helper to get day of week from JS Date
+ * How often recurring occurrences repeat
+ */
+export type RecurrenceType = 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
+
+/**
+ * Status of a recurring appointment series
+ */
+export type SeriesStatus = 'ACTIVE' | 'PARTIALLY_CANCELLED' | 'CANCELLED';
+
+/**
+ * Scope of an edit or cancellation on a recurring series
+ */
+export type EditScope = 'SINGLE' | 'FUTURE_SERIES' | 'ENTIRE_SERIES';
+
+/**
+ * How to handle conflicting slots during series creation/edit
+ */
+export type ConflictResolution = 'SKIP_CONFLICTS' | 'ABORT';
+
+/**
+ * Details of a conflicting appointment for recurring slot display
+ */
+export interface RecurringConflictDetail {
+  appointmentId: string;
+  clientName?: string;
+  startTime: string;
+}
+
+/**
+ * Result for a single generated slot in a recurring conflict check
+ */
+export interface RecurringSlotCheckResult {
+  index: number;
+  startTime: string;
+  hasConflict: boolean;
+  conflictDetails?: RecurringConflictDetail;
+}
+
+/**
+ * Response from the recurring conflict pre-flight check
+ */
+export interface RecurringConflictCheckResponse {
+  generatedSlots: RecurringSlotCheckResult[];
+  conflictCount: number;
+  cleanSlotCount: number;
+}
+
+/**
+ * Request for the recurring conflict pre-flight check
+ */
+export interface CheckRecurringConflictsRequest {
+  therapistProfileId: string;
+  clientId: string;
+  sessionTypeId: string;
+  startTime: string;
+  durationMinutes: number;
+  timezone: string;
+  recurrenceType: RecurrenceType;
+  occurrences: number;
+}
+
+/**
+ * Request to create a new recurring appointment series
+ */
+export interface CreateRecurringSeriesRequest {
+  therapistProfileId: string;
+  clientId: string;
+  sessionTypeId: string;
+  startTime: string;
+  durationMinutes: number;
+  timezone: string;
+  recurrenceType: RecurrenceType;
+  occurrences: number;
+  notes?: string;
+  conflictResolution: ConflictResolution;
+}
+
+/**
+ * Response from creating a recurring series
+ */
+export interface CreateRecurringSeriesResponse {
+  seriesId: number;
+  requestedOccurrences: number;
+  savedOccurrences: number;
+  skippedOccurrences: number;
+  appointments: Appointment[];
+  waitlistEntryIds: number[];
+}
+
+/**
+ * Request to edit a single occurrence or all future occurrences
+ */
+export interface EditRecurringOccurrenceRequest {
+  editScope: EditScope;
+  startTime?: string;
+  durationMinutes?: number;
+  notes?: string;
+  conflictResolution?: ConflictResolution;
+}
+
+/**
+ * Request to cancel one or more occurrences in a series
+ */
+export interface CancelRecurringOccurrenceRequest {
+  cancelScope: EditScope;
+  cancellationReason: string;
+  cancellationType: CancellationType;
+}
+
+/**
+ * Full recurring series including all occurrences
+ */
+export interface AppointmentSeries {
+  seriesId: number;
+  recurrenceType: RecurrenceType;
+  startDate: string;
+  totalOccurrences: number;
+  generatedOccurrences: number;
+  therapistProfileId: string;
+  clientId: string;
+  sessionType: SessionType;
+  durationMinutes: number;
+  timezone: string;
+  status: SeriesStatus;
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+  appointments: Appointment[];
+}
+
+/**
+ * Helper to get display label for day of week from JS Date
  */
 export function getDayOfWeek(date: Date): DayOfWeek {
   const day = date.getDay();

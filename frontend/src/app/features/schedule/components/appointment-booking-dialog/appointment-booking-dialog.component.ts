@@ -1,6 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, EventEmitter, Input, OnInit, Output, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  SimpleChanges
+} from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { DatePicker } from 'primeng/datepicker';
@@ -8,13 +17,22 @@ import { Select } from 'primeng/select';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import {
   Appointment,
-  CreateAppointmentRequest,
-  SessionType,
-  ConflictingAppointment,
+  CheckRecurringConflictsRequest,
   ConflictCheckResponse,
-  ScheduleSummary
+  ConflictingAppointment,
+  ConflictResolution,
+  CreateAppointmentRequest,
+  CreateRecurringSeriesRequest,
+  CreateRecurringSeriesResponse,
+  RecurrenceType,
+  RecurringConflictCheckResponse,
+  ScheduleSummary,
+  SessionType
 } from '../../models/schedule.model';
 import { AppointmentApiService } from '../../services/appointment-api.service';
+import {
+  RecurringConflictReviewDialogComponent
+} from '../recurring-conflict-review-dialog/recurring-conflict-review-dialog.component';
 
 interface ClientOption {
   id: string;
@@ -27,7 +45,14 @@ interface ClientOption {
 @Component({
   selector: 'app-appointment-booking-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, DatePicker, Select],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TranslocoPipe,
+    DatePicker,
+    Select,
+    RecurringConflictReviewDialogComponent
+  ],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" [attr.aria-labelledby]="'booking-title'">
       <div class="dialog">
@@ -167,6 +192,91 @@ interface ClientOption {
               [placeholder]="'schedule.appointment.booking.notesPlaceholder' | transloco"
             ></textarea>
           </div>
+
+          <!-- Recurring Appointment Toggle -->
+          <div class="recurrence-section">
+            <div class="recurrence-toggle">
+              <input
+                type="checkbox"
+                id="isRecurring"
+                formControlName="isRecurring"
+                aria-label="Book as recurring appointment series"
+              />
+              <label for="isRecurring" class="toggle-label">
+                {{ 'schedule.appointment.booking.recurringLabel' | transloco }}
+              </label>
+            </div>
+
+            <div *ngIf="form.value.isRecurring" class="recurrence-options" role="group" aria-label="Recurrence options">
+              <!-- Recurrence Type -->
+              <div class="field recurrence-field">
+                <label>
+                  {{ 'schedule.appointment.booking.recurrenceTypeLabel' | transloco }}
+                  <span class="required" aria-hidden="true">*</span>
+                </label>
+                <div class="radio-group" role="radiogroup" aria-label="Recurrence type">
+                  <label class="radio-option" *ngFor="let type of recurrenceTypes">
+                    <input
+                      type="radio"
+                      formControlName="recurrenceType"
+                      [value]="type.value"
+                      [attr.aria-label]="type.label"
+                    />
+                    {{ type.label }}
+                  </label>
+                </div>
+              </div>
+
+              <!-- Occurrences Slider -->
+              <div class="field recurrence-field">
+                <label for="occurrences">
+                  {{ 'schedule.appointment.booking.occurrencesLabel' | transloco }}
+                  ({{ form.value.occurrences }})
+                  <span class="required" aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="occurrences"
+                  type="range"
+                  formControlName="occurrences"
+                  min="1"
+                  max="20"
+                  step="1"
+                  class="slider"
+                  aria-label="Number of occurrences"
+                  aria-valuemin="1"
+                  aria-valuemax="20"
+                  [attr.aria-valuenow]="form.value.occurrences"
+                />
+                <div class="slider-labels">
+                  <span>1</span>
+                  <span>10</span>
+                  <span>20</span>
+                </div>
+              </div>
+
+              <!-- Preview & Check Conflicts Button -->
+              <button
+                type="button"
+                class="btn-preview"
+                (click)="previewRecurringConflicts()"
+                [disabled]="checkingRecurringConflicts || !canPreviewConflicts()"
+                aria-label="Preview recurring slots and check for conflicts"
+              >
+                <span *ngIf="!checkingRecurringConflicts">
+                  {{ 'schedule.appointment.booking.previewConflictsButton' | transloco }}
+                </span>
+                <span *ngIf="checkingRecurringConflicts" class="spinner-inline"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Recurring Conflict Review Dialog (inline) -->
+          <app-recurring-conflict-review-dialog
+            *ngIf="showConflictReview && recurringConflictResponse"
+            [response]="recurringConflictResponse"
+            (resolved)="onConflictResolved($event)"
+            (cancelled)="onConflictReviewCancelled()"
+          ></app-recurring-conflict-review-dialog>
 
           <!-- Conflict Warning -->
           <div *ngIf="checkingConflicts" class="conflict-status checking" role="status">
@@ -621,6 +731,143 @@ interface ClientOption {
       transform: none !important;
     }
 
+    /* Recurrence section */
+    .recurrence-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .recurrence-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background: #F8FAFC;
+      border: 1.5px solid var(--color-border, #E2E8F0);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .recurrence-toggle input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--color-accent, #0EA5A0);
+    }
+
+    .toggle-label {
+      font-weight: 600;
+      font-size: 0.9375rem;
+      color: var(--color-text-primary, #0F172A);
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .recurrence-options {
+      margin-top: 1rem;
+      padding: 1.25rem;
+      background: #F8FAFC;
+      border: 1.5px solid var(--color-border, #E2E8F0);
+      border-radius: 8px;
+      animation: slideIn 0.2s ease;
+    }
+
+    .recurrence-field {
+      margin-bottom: 1rem;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      font-size: 0.9375rem;
+      color: var(--color-text-primary, #0F172A);
+      cursor: pointer;
+    }
+
+    .radio-option input[type="radio"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--color-accent, #0EA5A0);
+      cursor: pointer;
+    }
+
+    .slider {
+      width: 100%;
+      appearance: none;
+      height: 6px;
+      background: #E2E8F0;
+      border-radius: 9999px;
+      outline: none;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--color-accent, #0EA5A0);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(14, 165, 160, 0.4);
+      transition: box-shadow 0.2s;
+    }
+
+    .slider::-webkit-slider-thumb:hover {
+      box-shadow: 0 2px 12px rgba(14, 165, 160, 0.5);
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--color-text-secondary, #64748B);
+      margin-top: 0.25rem;
+    }
+
+    .btn-preview {
+      padding: 0.625rem 1.25rem;
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1.5px solid #BFDBFE;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-preview:hover:not(:disabled) {
+      background: #DBEAFE;
+      border-color: #93C5FD;
+    }
+
+    .btn-preview:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .spinner-inline {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #BFDBFE;
+      border-top-color: #1D4ED8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
     /* PrimeNG overrides */
     :host ::ng-deep {
       .p-dropdown,
@@ -656,6 +903,7 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
   @Input() initialDateTime?: Date;
   @Input() schedule?: ScheduleSummary; // Schedule data for working hours and leave checks
   @Output() submitted = new EventEmitter<Appointment>();
+  @Output() seriesCreated = new EventEmitter<CreateRecurringSeriesResponse>();
   @Output() cancelled = new EventEmitter<void>();
 
   form!: FormGroup;
@@ -669,6 +917,18 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
   // Working hours and leave warnings
   isOutsideWorkingHours = false;
   isDuringLeave = false;
+
+  // Recurring series state (PA-33)
+  checkingRecurringConflicts = false;
+  recurringConflictResponse: RecurringConflictCheckResponse | null = null;
+  showConflictReview = false;
+  pendingConflictResolution: ConflictResolution | null = null;
+
+  readonly recurrenceTypes: Array<{ value: RecurrenceType; label: string }> = [
+    { value: 'WEEKLY', label: 'Weekly' },
+    { value: 'BIWEEKLY', label: 'Biweekly' },
+    { value: 'MONTHLY', label: 'Monthly' }
+  ];
 
   private destroy$ = new Subject<void>();
 
@@ -705,7 +965,11 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
       durationMinutes: [60, [Validators.required, Validators.min(15), Validators.max(480)]],
       notes: [''],
       allowConflictOverride: [false],
-      confirmOutsideHours: [false] // Confirmation for outside hours/leave
+      confirmOutsideHours: [false], // Confirmation for outside hours/leave
+      // Recurring series fields (PA-33)
+      isRecurring: [false],
+      recurrenceType: ['WEEKLY'],
+      occurrences: [4]
     });
   }
 
@@ -888,11 +1152,120 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
     return !!(field?.invalid && (field?.dirty || field?.touched));
   }
 
+  // ========== Recurring Series Methods (PA-33) ==========
+
+  canPreviewConflicts(): boolean {
+    const { startTime, durationMinutes, clientId, sessionTypeId } = this.form.value;
+    return !!(startTime && durationMinutes && clientId && sessionTypeId
+              && this.form.get('startTime')?.valid);
+  }
+
+  previewRecurringConflicts(): void {
+    if (!this.canPreviewConflicts()) {
+      return;
+    }
+    this.checkingRecurringConflicts = true;
+    this.recurringConflictResponse = null;
+    this.showConflictReview = false;
+
+    const { startTime, durationMinutes, clientId, sessionTypeId, recurrenceType, occurrences } =
+      this.form.value;
+
+    const request: CheckRecurringConflictsRequest = {
+      therapistProfileId: this.therapistProfileId,
+      clientId,
+      sessionTypeId,
+      startTime: new Date(startTime).toISOString(),
+      durationMinutes,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      recurrenceType,
+      occurrences
+    };
+
+    this.appointmentService.checkRecurringConflicts(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.checkingRecurringConflicts = false;
+          this.recurringConflictResponse = response;
+          this.showConflictReview = true;
+        },
+        error: () => {
+          this.checkingRecurringConflicts = false;
+          this.serverError = 'Failed to check recurring conflicts. Please try again.';
+        }
+      });
+  }
+
+  onConflictResolved(resolution: ConflictResolution): void {
+    this.showConflictReview = false;
+    this.pendingConflictResolution = resolution;
+    // Immediately submit with this resolution
+    this.submitRecurringSeries(resolution);
+  }
+
+  onConflictReviewCancelled(): void {
+    this.showConflictReview = false;
+    this.recurringConflictResponse = null;
+    this.pendingConflictResolution = null;
+  }
+
+  private submitRecurringSeries(resolution: ConflictResolution): void {
+    this.saving = true;
+    this.serverError = null;
+
+    const { startTime, durationMinutes, clientId, sessionTypeId, recurrenceType, occurrences, notes } =
+      this.form.value;
+
+    const request: CreateRecurringSeriesRequest = {
+      therapistProfileId: this.therapistProfileId,
+      clientId,
+      sessionTypeId,
+      startTime: new Date(startTime).toISOString(),
+      durationMinutes,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      recurrenceType,
+      occurrences,
+      notes: notes || undefined,
+      conflictResolution: resolution
+    };
+
+    this.appointmentService.createRecurringSeries(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.saving = false;
+          this.pendingConflictResolution = null;
+          this.seriesCreated.emit(response);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.saving = false;
+          this.serverError = err.error?.message || 'Failed to create recurring series. Please try again.';
+        }
+      });
+  }
+
   submit(): void {
     if (this.form.invalid || this.saving) {
       Object.keys(this.form.controls).forEach(key => {
         this.form.get(key)?.markAsTouched();
       });
+      return;
+    }
+
+    // Route to recurring series flow if toggle is on
+    if (this.form.value.isRecurring) {
+      // Must run conflict preview first
+      if (!this.recurringConflictResponse) {
+        this.serverError = 'Please click "Preview & Check Conflicts" before booking.';
+        return;
+      }
+      if (this.recurringConflictResponse.conflictCount === 0) {
+        // No conflicts — proceed directly with ABORT (clean path)
+        this.submitRecurringSeries('ABORT');
+      } else {
+        this.showConflictReview = true;
+      }
       return;
     }
 

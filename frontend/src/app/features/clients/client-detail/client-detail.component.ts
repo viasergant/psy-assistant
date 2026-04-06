@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import {
@@ -10,6 +10,11 @@ import {
 } from '../models/client.model';
 import { ClientService } from '../services/client.service';
 import { ClientTimelineComponent } from '../components/timeline/client-timeline.component';
+import { AuthService } from '../../../core/auth/auth.service';
+import { getCurrentTherapistProfileId, getCurrentUserRole } from '../../schedule/guards/schedule.guard';
+import { AppointmentBookingDialogComponent } from '../../schedule/components/appointment-booking-dialog/appointment-booking-dialog.component';
+import { TherapistManagementService } from '../../admin/therapists/services/therapist-management.service';
+import { TherapistProfile } from '../../admin/therapists/models/therapist.model';
 
 /**
  * Client profile page for PA-23 slice-one read and update flow.
@@ -17,7 +22,7 @@ import { ClientTimelineComponent } from '../components/timeline/client-timeline.
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, TranslocoModule, ClientTimelineComponent],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ClientTimelineComponent, AppointmentBookingDialogComponent],
   template: `
     <div class="page">
       <a class="back-link" routerLink="/leads">&larr; Back to leads</a>
@@ -36,12 +41,28 @@ import { ClientTimelineComponent } from '../components/timeline/client-timeline.
         </header>
 
         <div class="toolbar">
-          <button *ngIf="client.canEditProfile && !editing"
-                  type="button"
-                  class="btn-primary"
-                  (click)="startEdit()">
-            {{ 'clients.detail.editProfile' | transloco }}
-          </button>
+          <div *ngIf="!editing" class="edit-actions">
+            <ng-container *ngIf="needsTherapistPicker">
+              <select class="therapist-select"
+                      [(ngModel)]="selectedAdminTherapistId"
+                      [attr.aria-label]="'clients.detail.selectTherapist' | transloco">
+                <option value="">{{ 'clients.detail.selectTherapistPlaceholder' | transloco }}</option>
+                <option *ngFor="let t of availableTherapists" [value]="t.id">{{ t.name }}</option>
+              </select>
+            </ng-container>
+            <button *ngIf="canBook"
+                    type="button"
+                    class="btn-ghost"
+                    (click)="openBookingDialog()">
+              {{ 'clients.detail.bookAppointment' | transloco }}
+            </button>
+            <button *ngIf="client.canEditProfile"
+                    type="button"
+                    class="btn-primary"
+                    (click)="startEdit()">
+              {{ 'clients.detail.editProfile' | transloco }}
+            </button>
+          </div>
 
           <div *ngIf="editing" class="edit-actions">
             <button type="button" class="btn-ghost" (click)="cancelEdit()">{{ 'clients.detail.cancel' | transloco }}</button>
@@ -311,6 +332,14 @@ import { ClientTimelineComponent } from '../components/timeline/client-timeline.
         </div>
       </div>
     </div>
+
+    <app-appointment-booking-dialog
+      *ngIf="showBookingDialog && effectiveTherapistId"
+      [therapistProfileId]="effectiveTherapistId!"
+      [clients]="bookingClientList"
+      (submitted)="onBookingSubmitted()"
+      (cancelled)="onBookingCancelled()"
+    />
   `,
   styles: [`
     .page { padding: 2rem; max-width: 980px; margin: 0 auto; }
@@ -351,7 +380,11 @@ import { ClientTimelineComponent } from '../components/timeline/client-timeline.
     .toolbar {
       display: flex; justify-content: flex-end; margin-bottom: 1rem;
     }
-    .edit-actions { display: inline-flex; gap: .5rem; }
+    .edit-actions { display: inline-flex; gap: .5rem; align-items: center; }
+    .therapist-select {
+      border: 1px solid #CBD5E1; border-radius: 8px; padding: .45rem .65rem;
+      font: inherit; background: #fff; color: #1E293B; cursor: pointer;
+    }
     .btn-primary, .btn-ghost {
       border-radius: 8px; padding: .5rem .85rem; border: 1px solid transparent;
       font-weight: 600; cursor: pointer;
@@ -438,6 +471,11 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   photoError: string | null = null;
   loadError: string | null = null;
   saveError: string | null = null;
+  showBookingDialog = false;
+  therapistProfileId: string | null = null;
+  availableTherapists: TherapistProfile[] = [];
+  selectedAdminTherapistId = '';
+  private _userRole: string | null = null;
   private photoObjectUrl: string | null = null;
 
   profileForm: FormGroup;
@@ -445,7 +483,9 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private clientService: ClientService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private therapistManagementService: TherapistManagementService
   ) {
     this.profileForm = this.fb.group({
       fullName: ['', [Validators.required]],
@@ -481,7 +521,16 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.therapistProfileId = getCurrentTherapistProfileId(this.authService);
+    this._userRole = getCurrentUserRole(this.authService);
     this.recentTagHints = this.loadRecentTagHints();
+
+    if (this.needsTherapistPicker) {
+      this.therapistManagementService.getTherapists(0, 100, undefined, true).subscribe({
+        next: (page) => { this.availableTherapists = page.content; },
+        error: () => { /* non-critical, picker stays empty */ }
+      });
+    }
 
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
@@ -519,6 +568,39 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
     if (this.client) {
       this.patchForm(this.client);
     }
+  }
+
+  get needsTherapistPicker(): boolean {
+    const role = this._userRole;
+    return !this.therapistProfileId &&
+      (role === 'SYSTEM_ADMINISTRATOR' || role === 'RECEPTION_ADMIN_STAFF');
+  }
+
+  get effectiveTherapistId(): string | null {
+    if (this.therapistProfileId) return this.therapistProfileId;
+    if (this.needsTherapistPicker) return this.selectedAdminTherapistId || null;
+    return this.client?.assignedTherapistId || null;
+  }
+
+  get canBook(): boolean {
+    return !!this.effectiveTherapistId;
+  }
+
+  get bookingClientList(): Array<{id: string; name: string}> {
+    if (!this.client) return [];
+    return [{ id: this.client.id, name: this.client.fullName }];
+  }
+
+  openBookingDialog(): void {
+    this.showBookingDialog = true;
+  }
+
+  onBookingSubmitted(): void {
+    this.showBookingDialog = false;
+  }
+
+  onBookingCancelled(): void {
+    this.showBookingDialog = false;
   }
 
   save(): void {

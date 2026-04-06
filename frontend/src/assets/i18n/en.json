@@ -156,6 +156,9 @@
     "detail": {
       "badge": "Client",
       "editProfile": "Edit profile",
+      "bookAppointment": "Book appointment",
+      "selectTherapist": "Select therapist",
+      "selectTherapistPlaceholder": "— Select therapist —",
       "cancel": "Cancel",
       "saveChanges": "Save changes",
       "saving": "Saving...",

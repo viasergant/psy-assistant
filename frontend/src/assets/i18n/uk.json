@@ -156,6 +156,9 @@
     "detail": {
       "badge": "Клієнт",
       "editProfile": "Редагувати профіль",
+      "bookAppointment": "Записати на прийом",
+      "selectTherapist": "Оберіть терапевта",
+      "selectTherapistPlaceholder": "— Оберіть терапевта —",
       "cancel": "Скасувати",
       "saveChanges": "Зберегти зміни",
       "saving": "Збереження...",

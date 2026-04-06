@@ -110,12 +110,17 @@ public class CalendarService {
         // Build therapist info map for UI display
         final Map<UUID, TherapistInfo> therapistInfoMap = new HashMap<>();
         for (final TherapistProfile therapist : therapistMap.values()) {
+            // Get primary specialization (first in set) or "General" if none
+            final String specialization = therapist.getSpecializations().isEmpty()
+                    ? "General"
+                    : therapist.getSpecializations().iterator().next().getName();
+            
             therapistInfoMap.put(
                     therapist.getId(),
                     new TherapistInfo(
                             therapist.getId(),
-                            therapist.getFullName(),
-                            therapist.getSpecialization()
+                            therapist.getName(),
+                            specialization
                     )
             );
         }

@@ -25,7 +25,7 @@ public class CalendarMapper {
         return new CalendarAppointmentBlock(
                 appointment.getId(),
                 appointment.getTherapistProfileId(),
-                therapist != null ? therapist.getFullName() : "Unknown",
+                therapist != null ? therapist.getName() : "Unknown",
                 appointment.getClientId(),
                 client != null ? client.getFullName() : "Unknown",
                 appointment.getSessionType().getCode(),

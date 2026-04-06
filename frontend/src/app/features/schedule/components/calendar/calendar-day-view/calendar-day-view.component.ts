@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AppointmentBlockComponent } from '../appointment-block/appointment-block.component';
 import { CalendarAppointmentBlock } from '../../../models/calendar.model';
+import { Leave, LeaveStatus } from '../../../models/schedule.model';
 
 /**
  * Day view calendar component showing hourly time slots for multiple therapists side-by-side.
@@ -19,6 +20,14 @@ import { CalendarAppointmentBlock } from '../../../models/calendar.model';
   imports: [CommonModule, TranslocoPipe, AppointmentBlockComponent],
   template: `
     <div class="day-view">
+      <!-- Leave Banner -->
+      <div *ngIf="getDayLeaveStatus() === 'APPROVED'" class="leave-banner leave-banner-approved">
+        {{ 'schedule.legend.leave' | transloco }}
+      </div>
+      <div *ngIf="getDayLeaveStatus() === 'PENDING'" class="leave-banner leave-banner-pending">
+        {{ 'schedule.leaveStatus.pending' | transloco }}
+      </div>
+
       <div class="time-grid-container">
         <!-- Time Column -->
         <div class="time-column">
@@ -175,12 +184,36 @@ import { CalendarAppointmentBlock } from '../../../models/calendar.model';
       color: var(--color-text-muted, #94A3B8);
       font-size: 0.9375rem;
     }
+
+    .leave-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .leave-banner-approved {
+      background: rgba(239, 68, 68, 0.12);
+      color: #dc2626;
+      border-bottom: 2px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .leave-banner-pending {
+      background: rgba(245, 158, 11, 0.12);
+      color: #d97706;
+      border-bottom: 2px solid rgba(245, 158, 11, 0.3);
+    }
   `]
 })
 export class CalendarDayViewComponent {
   @Input() dayDate!: Date;
   @Input() appointments: CalendarAppointmentBlock[] = [];
   @Input() therapists: Array<{id: string; name: string; specialization: string}> = [];
+  @Input() leavePeriods: Leave[] = [];
   @Output() appointmentClicked = new EventEmitter<CalendarAppointmentBlock>();
 
   // Time slots from 8 AM to 8 PM (12 hours)
@@ -190,6 +223,21 @@ export class CalendarDayViewComponent {
     const period = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour > 12 ? hour - 12 : hour;
     return `${displayHour}:00 ${period}`;
+  }
+
+  getDayLeaveStatus(): 'PENDING' | 'APPROVED' | null {
+    if (!this.dayDate) return null;
+    for (const leave of this.leavePeriods) {
+      if (leave.status !== LeaveStatus.PENDING && leave.status !== LeaveStatus.APPROVED) {
+        continue;
+      }
+      const start = new Date(leave.startDate + 'T00:00:00');
+      const end = new Date(leave.endDate + 'T23:59:59');
+      if (this.dayDate >= start && this.dayDate <= end) {
+        return leave.status === LeaveStatus.APPROVED ? 'APPROVED' : 'PENDING';
+      }
+    }
+    return null;
   }
 
   getTherapistAppointments(therapistId: string): CalendarAppointmentBlock[] {

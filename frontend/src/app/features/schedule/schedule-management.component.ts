@@ -4,11 +4,16 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { ScheduleConfigPanelComponent } from './components/schedule-config-panel/schedule-config-panel.component';
 import { LeaveRequestDialogComponent } from './components/leave-request-dialog/leave-request-dialog.component';
+import { AppointmentBookingDialogComponent } from './components/appointment-booking-dialog/appointment-booking-dialog.component';
+import { AppointmentRescheduleDialogComponent } from './components/appointment-reschedule-dialog/appointment-reschedule-dialog.component';
+import { AppointmentCancelDialogComponent } from './components/appointment-cancel-dialog/appointment-cancel-dialog.component';
+import { AppointmentEditDialogComponent } from './components/appointment-edit-dialog/appointment-edit-dialog.component';
 import { CalendarWeekViewComponent } from './components/calendar/calendar-week-view/calendar-week-view.component';
 import { CalendarDayViewComponent } from './components/calendar/calendar-day-view/calendar-day-view.component';
 import { CalendarMonthViewComponent } from './components/calendar/calendar-month-view/calendar-month-view.component';
 import { CalendarFacadeService } from './services/calendar-facade.service';
 import { ScheduleApiService } from './services/schedule-api.service';
+import { AppointmentApiService } from './services/appointment-api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TherapistManagementService } from '../admin/therapists/services/therapist-management.service';
@@ -19,7 +24,7 @@ import {
   isSystemAdmin,
   canEditSchedule
 } from './guards/schedule.guard';
-import { ScheduleSummary, Leave } from './models/schedule.model';
+import { ScheduleSummary, Leave, Appointment, CreateRecurringSeriesResponse } from './models/schedule.model';
 import { TherapistProfile } from '../admin/therapists/models/therapist.model';
 import { CalendarWeekViewResponse, CalendarAppointmentBlock, CalendarViewMode } from './models/calendar.model';
 
@@ -37,6 +42,10 @@ interface ClientOption {
     TranslocoPipe,
     ScheduleConfigPanelComponent,
     LeaveRequestDialogComponent,
+    AppointmentBookingDialogComponent,
+    AppointmentRescheduleDialogComponent,
+    AppointmentCancelDialogComponent,
+    AppointmentEditDialogComponent,
     CalendarWeekViewComponent,
     CalendarDayViewComponent,
     CalendarMonthViewComponent
@@ -69,6 +78,14 @@ interface ClientOption {
             (click)="openConfigPanel()"
           >
             Configure Schedule
+          </button>
+          <button
+            *ngIf="canEdit && therapistProfileId"
+            type="button"
+            class="btn-primary"
+            (click)="openBookingDialog()"
+          >
+            + {{ 'schedule.appointment.booking.title' | transloco }}
           </button>
           <button
             type="button"
@@ -133,7 +150,7 @@ interface ClientOption {
       </div>
 
       <!-- Calendar View Container -->
-      <div class="calendar-view-container">
+      <div class="calendar-view-container" (click)="captureClickPosition($event)">
         <div *ngIf="calendarLoading" class="loading-state">
           <div class="spinner"></div>
           <p>{{ 'schedule.calendar.loading' | transloco }}</p>
@@ -151,12 +168,14 @@ interface ClientOption {
           [dayDate]="currentDate"
           [appointments]="getAllAppointments()"
           [therapists]="getTherapistsList()"
+          [leavePeriods]="schedule?.leavePeriods || []"
           (appointmentClicked)="onAppointmentClick($event)"
         ></app-calendar-day-view>
 
         <app-calendar-week-view
           *ngIf="!calendarLoading && !calendarError && viewMode === 'week'"
           [weekData]="weekData"
+          [leavePeriods]="schedule?.leavePeriods || []"
           (appointmentClicked)="onAppointmentClick($event)"
         ></app-calendar-week-view>
 
@@ -164,6 +183,7 @@ interface ClientOption {
           *ngIf="!calendarLoading && !calendarError && viewMode === 'month'"
           [monthDate]="currentDate"
           [appointments]="getAllAppointments()"
+          [leavePeriods]="schedule?.leavePeriods || []"
           (dayClicked)="onMonthDayClick($event)"
         ></app-calendar-month-view>
       </div>
@@ -178,6 +198,41 @@ interface ClientOption {
         <button type="button" class="btn-secondary" (click)="loadSchedule()">
           Retry
         </button>
+      </div>
+
+      <!-- Appointment Context Menu -->
+      <div *ngIf="showAppointmentMenu" class="appointment-menu-overlay" (click)="closeAppointmentMenu()">
+        <div
+          class="appointment-menu"
+          [style.left.px]="appointmentMenuPosition.x"
+          [style.top.px]="appointmentMenuPosition.y"
+          (click)="$event.stopPropagation()"
+        >
+          <div *ngIf="appointmentActionLoading" class="menu-loading">
+            <div class="spinner-sm"></div>
+          </div>
+          <ng-container *ngIf="!appointmentActionLoading">
+            <button type="button" class="menu-item" (click)="onEditMenuAction()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11.333 2A2.121 2.121 0 0 1 14 4.667L5.333 13.333H2v-3.333L10.667 1.333a.5.5 0 0 1 .666.667z" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span>{{ 'schedule.appointment.actions.edit' | transloco }}</span>
+            </button>
+            <button type="button" class="menu-item" (click)="onRescheduleMenuAction()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 1v6l3 3" stroke-linecap="round" />
+                <circle cx="8" cy="8" r="6" />
+              </svg>
+              <span>{{ 'schedule.appointment.actions.reschedule' | transloco }}</span>
+            </button>
+            <button type="button" class="menu-item menu-item-danger" (click)="onCancelMenuAction()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 4L4 12M4 4l8 8" stroke-linecap="round" />
+              </svg>
+              <span>{{ 'schedule.appointment.actions.cancel' | transloco }}</span>
+            </button>
+          </ng-container>
+        </div>
       </div>
 
       <!-- Configuration Panel -->
@@ -196,6 +251,43 @@ interface ClientOption {
         (submitted)="onLeaveRequestSubmitted($event)"
         (cancelled)="closeLeaveRequestModal()"
       ></app-leave-request-dialog>
+
+      <!-- Appointment Booking Dialog -->
+      <app-appointment-booking-dialog
+        *ngIf="showBookingDialog && therapistProfileId"
+        [therapistProfileId]="therapistProfileId"
+        [clients]="clients"
+        [initialDateTime]="selectedDateTime || undefined"
+        [schedule]="schedule || undefined"
+        (submitted)="onBookingSubmitted($event)"
+        (seriesCreated)="onSeriesCreated($event)"
+        (cancelled)="onBookingCancelled()"
+      ></app-appointment-booking-dialog>
+
+      <!-- Appointment Reschedule Dialog -->
+      <app-appointment-reschedule-dialog
+        *ngIf="showRescheduleDialog && selectedAppointment"
+        [appointment]="selectedAppointment"
+        [schedule]="schedule || undefined"
+        (submitted)="onRescheduleSubmitted($event)"
+        (cancelled)="onRescheduleCancelled()"
+      ></app-appointment-reschedule-dialog>
+
+      <!-- Appointment Cancel Dialog -->
+      <app-appointment-cancel-dialog
+        *ngIf="showCancelDialog && selectedAppointment"
+        [appointment]="selectedAppointment"
+        (submitted)="onCancelSubmitted($event)"
+        (cancelled)="onCancelDialogCancelled()"
+      ></app-appointment-cancel-dialog>
+
+      <!-- Appointment Edit Dialog -->
+      <app-appointment-edit-dialog
+        *ngIf="showEditDialog && selectedAppointment"
+        [appointment]="selectedAppointment"
+        (submitted)="onEditSubmitted($event)"
+        (cancelled)="onEditCancelled()"
+      ></app-appointment-edit-dialog>
     </div>
   `,
   styles: [
@@ -503,6 +595,62 @@ interface ClientOption {
       .management-error {
         padding: 1rem 2rem;
       }
+
+      /* Appointment Context Menu */
+      .appointment-menu-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+      }
+
+      .appointment-menu {
+        position: fixed;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md, 8px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        min-width: 180px;
+        z-index: 1001;
+        overflow: hidden;
+      }
+
+      .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-size: 0.875rem;
+        color: var(--color-text-primary);
+        text-align: left;
+        transition: background 0.15s ease;
+
+        &:hover {
+          background: var(--color-bg);
+        }
+      }
+
+      .menu-item-danger {
+        color: var(--color-error, #dc3545);
+      }
+
+      .menu-loading {
+        display: flex;
+        justify-content: center;
+        padding: 1rem;
+      }
+
+      .spinner-sm {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--color-border);
+        border-top-color: var(--color-accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
     `
   ]
 })
@@ -529,12 +677,27 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
   calendarLoading = false;
   calendarError: string | null = null;
 
+  // Appointment dialog state
+  showBookingDialog = false;
+  showRescheduleDialog = false;
+  showEditDialog = false;
+  showCancelDialog = false;
+  selectedAppointment: Appointment | null = null;
+  selectedDateTime: Date | null = null;
+
+  // Appointment context menu state
+  showAppointmentMenu = false;
+  appointmentMenuPosition = { x: 0, y: 0 };
+  appointmentActionLoading = false;
+  private pendingMenuAppointment: CalendarAppointmentBlock | null = null;
+
   constructor(
     private scheduleApiService: ScheduleApiService,
     private therapistManagementService: TherapistManagementService,
     private clientService: ClientService,
     private authService: AuthService,
-    private readonly calendarFacade: CalendarFacadeService
+    private readonly calendarFacade: CalendarFacadeService,
+    private readonly appointmentApiService: AppointmentApiService
   ) {}
 
   ngOnInit(): void {
@@ -617,7 +780,121 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
   }
 
   onAppointmentClick(appointment: CalendarAppointmentBlock): void {
-    console.log('Appointment clicked:', appointment);
+    this.pendingMenuAppointment = appointment;
+    this.showAppointmentMenu = true;
+  }
+
+  captureClickPosition(event: MouseEvent): void {
+    this.appointmentMenuPosition = { x: event.clientX, y: event.clientY };
+  }
+
+  closeAppointmentMenu(): void {
+    this.showAppointmentMenu = false;
+    this.pendingMenuAppointment = null;
+    this.appointmentActionLoading = false;
+  }
+
+  private fetchAndOpenDialog(action: 'edit' | 'reschedule' | 'cancel'): void {
+    if (!this.pendingMenuAppointment) return;
+    this.appointmentActionLoading = true;
+    this.appointmentApiService.getAppointment(this.pendingMenuAppointment.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: appointment => {
+          this.selectedAppointment = appointment;
+          this.appointmentActionLoading = false;
+          this.showAppointmentMenu = false;
+          this.pendingMenuAppointment = null;
+          if (action === 'edit') this.showEditDialog = true;
+          else if (action === 'reschedule') this.showRescheduleDialog = true;
+          else this.showCancelDialog = true;
+        },
+        error: err => {
+          console.error('Failed to load appointment details:', err);
+          this.appointmentActionLoading = false;
+          this.showAppointmentMenu = false;
+        }
+      });
+  }
+
+  onEditMenuAction(): void {
+    this.fetchAndOpenDialog('edit');
+  }
+
+  onRescheduleMenuAction(): void {
+    this.fetchAndOpenDialog('reschedule');
+  }
+
+  onCancelMenuAction(): void {
+    this.fetchAndOpenDialog('cancel');
+  }
+
+  // ========== Booking Dialog ==========
+
+  openBookingDialog(dateTime?: Date): void {
+    this.selectedDateTime = dateTime || null;
+    this.showBookingDialog = true;
+  }
+
+  onBookingSubmitted(appointment: Appointment): void {
+    this.showBookingDialog = false;
+    this.selectedDateTime = null;
+    console.log('Appointment booked:', appointment);
+    this.loadCalendarData();
+  }
+
+  onSeriesCreated(response: CreateRecurringSeriesResponse): void {
+    this.showBookingDialog = false;
+    this.selectedDateTime = null;
+    console.log(`Recurring series created: id=${response.seriesId}`);
+    this.loadCalendarData();
+  }
+
+  onBookingCancelled(): void {
+    this.showBookingDialog = false;
+    this.selectedDateTime = null;
+  }
+
+  // ========== Reschedule Dialog ==========
+
+  onRescheduleSubmitted(appointment: Appointment): void {
+    this.showRescheduleDialog = false;
+    this.selectedAppointment = null;
+    console.log('Appointment rescheduled:', appointment);
+    this.loadCalendarData();
+  }
+
+  onRescheduleCancelled(): void {
+    this.showRescheduleDialog = false;
+    this.selectedAppointment = null;
+  }
+
+  // ========== Cancel Dialog ==========
+
+  onCancelSubmitted(appointment: Appointment): void {
+    this.showCancelDialog = false;
+    this.selectedAppointment = null;
+    console.log('Appointment cancelled:', appointment);
+    this.loadCalendarData();
+  }
+
+  onCancelDialogCancelled(): void {
+    this.showCancelDialog = false;
+    this.selectedAppointment = null;
+  }
+
+  // ========== Edit Dialog ==========
+
+  onEditSubmitted(appointment: Appointment): void {
+    this.showEditDialog = false;
+    this.selectedAppointment = null;
+    console.log('Appointment updated:', appointment);
+    this.loadCalendarData();
+  }
+
+  onEditCancelled(): void {
+    this.showEditDialog = false;
+    this.selectedAppointment = null;
   }
 
   onMonthDayClick(date: Date): void {

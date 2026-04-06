@@ -1,6 +1,8 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { CalendarAppointmentBlock } from '../../../models/calendar.model';
+import { Leave, LeaveStatus } from '../../../models/schedule.model';
 
 /**
  * Month view calendar component showing appointment counts per day.
@@ -14,7 +16,7 @@ import { CalendarAppointmentBlock } from '../../../models/calendar.model';
 @Component({
   selector: 'app-calendar-month-view',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslocoPipe],
   template: `
     <div class="month-view">
       <!-- Month Grid -->
@@ -31,6 +33,8 @@ import { CalendarAppointmentBlock } from '../../../models/calendar.model';
           [class.other-month]="day.isOtherMonth"
           [class.today]="day.isToday"
           [class.has-appointments]="day.appointmentCount > 0"
+          [class.leave-approved]="day.leaveStatus === 'APPROVED'"
+          [class.leave-pending]="day.leaveStatus === 'PENDING'"
           (click)="onDayClick(day.date)"
         >
           <div class="day-number">{{ day.dayNumber }}</div>
@@ -49,6 +53,14 @@ import { CalendarAppointmentBlock } from '../../../models/calendar.model';
               [class]="'status-' + status.toLowerCase()"
               [title]="status"
             ></span>
+          </div>
+
+          <!-- Leave Indicator -->
+          <div *ngIf="day.leaveStatus === 'APPROVED'" class="leave-chip leave-chip-approved">
+            {{ 'schedule.legend.leave' | transloco }}
+          </div>
+          <div *ngIf="day.leaveStatus === 'PENDING'" class="leave-chip leave-chip-pending">
+            {{ 'schedule.leaveStatus.pending' | transloco }}
           </div>
         </div>
       </div>
@@ -208,11 +220,41 @@ import { CalendarAppointmentBlock } from '../../../models/calendar.model';
       font-size: 0.875rem;
       margin: 0;
     }
+
+    .calendar-day.leave-approved {
+      background: rgba(239, 68, 68, 0.06);
+    }
+
+    .calendar-day.leave-pending {
+      background: rgba(245, 158, 11, 0.06);
+    }
+
+    .leave-chip {
+      margin-top: auto;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      align-self: flex-start;
+    }
+
+    .leave-chip-approved {
+      background: rgba(239, 68, 68, 0.15);
+      color: #dc2626;
+    }
+
+    .leave-chip-pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: #d97706;
+    }
   `]
 })
 export class CalendarMonthViewComponent implements OnChanges {
   @Input() monthDate!: Date;
   @Input() appointments: CalendarAppointmentBlock[] = [];
+  @Input() leavePeriods: Leave[] = [];
   @Output() dayClicked = new EventEmitter<Date>();
 
   dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -223,10 +265,11 @@ export class CalendarMonthViewComponent implements OnChanges {
     isToday: boolean;
     appointmentCount: number;
     statusCounts: string[];
+    leaveStatus: 'PENDING' | 'APPROVED' | null;
   }> = [];
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['monthDate'] || changes['appointments']) {
+    if (changes['monthDate'] || changes['appointments'] || changes['leavePeriods']) {
       this.buildCalendarDays();
     }
   }
@@ -266,7 +309,8 @@ export class CalendarMonthViewComponent implements OnChanges {
         isOtherMonth,
         isToday,
         appointmentCount: dayAppointments.length,
-        statusCounts
+        statusCounts,
+        leaveStatus: this.getLeaveStatusForDate(dayDate)
       });
 
       current.setDate(current.getDate() + 1);
@@ -279,6 +323,20 @@ export class CalendarMonthViewComponent implements OnChanges {
       const aptDate = new Date(apt.startTime).toISOString().split('T')[0];
       return aptDate === dateStr;
     });
+  }
+
+  private getLeaveStatusForDate(date: Date): 'PENDING' | 'APPROVED' | null {
+    for (const leave of this.leavePeriods) {
+      if (leave.status !== LeaveStatus.PENDING && leave.status !== LeaveStatus.APPROVED) {
+        continue;
+      }
+      const start = new Date(leave.startDate + 'T00:00:00');
+      const end = new Date(leave.endDate + 'T23:59:59');
+      if (date >= start && date <= end) {
+        return leave.status === LeaveStatus.APPROVED ? 'APPROVED' : 'PENDING';
+      }
+    }
+    return null;
   }
 
   onDayClick(date: Date): void {

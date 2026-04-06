@@ -7,6 +7,7 @@ import {
   CalendarAppointmentBlock,
   TherapistInfo
 } from '../../../models/calendar.model';
+import { Leave, LeaveStatus } from '../../../models/schedule.model';
 
 interface WeekDay {
   date: Date;
@@ -51,9 +52,17 @@ interface CellAppointments {
             *ngFor="let day of weekDays" 
             class="day-header"
             [class.today]="day.isToday"
+            [class.leave-approved]="getLeaveStatus(day.date) === 'APPROVED'"
+            [class.leave-pending]="getLeaveStatus(day.date) === 'PENDING'"
           >
             <div class="day-name">{{ day.dayName }}</div>
             <div class="day-number">{{ day.dayNumber }}</div>
+            <div *ngIf="getLeaveStatus(day.date) === 'APPROVED'" class="leave-badge leave-badge-approved">
+              {{ 'schedule.legend.leave' | transloco }}
+            </div>
+            <div *ngIf="getLeaveStatus(day.date) === 'PENDING'" class="leave-badge leave-badge-pending">
+              {{ 'schedule.leaveStatus.pending' | transloco }}
+            </div>
           </div>
         </div>
 
@@ -203,10 +212,39 @@ interface CellAppointments {
       height: 400px;
       color: var(--color-text-secondary);
     }
+
+    .day-header.leave-approved {
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    .day-header.leave-pending {
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    .leave-badge {
+      margin-top: 4px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .leave-badge-approved {
+      background: rgba(239, 68, 68, 0.15);
+      color: #dc2626;
+    }
+
+    .leave-badge-pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: #d97706;
+    }
   `]
 })
 export class CalendarWeekViewComponent implements OnChanges {
   @Input() weekData: CalendarWeekViewResponse | null = null;
+  @Input() leavePeriods: Leave[] = [];
   @Output() appointmentClicked = new EventEmitter<CalendarAppointmentBlock>();
 
   weekDays: WeekDay[] = [];
@@ -310,5 +348,19 @@ export class CalendarWeekViewComponent implements OnChanges {
 
   onAppointmentClick(appointment: CalendarAppointmentBlock): void {
     this.appointmentClicked.emit(appointment);
+  }
+
+  getLeaveStatus(date: Date): 'PENDING' | 'APPROVED' | null {
+    for (const leave of this.leavePeriods) {
+      if (leave.status !== LeaveStatus.PENDING && leave.status !== LeaveStatus.APPROVED) {
+        continue;
+      }
+      const start = new Date(leave.startDate + 'T00:00:00');
+      const end = new Date(leave.endDate + 'T23:59:59');
+      if (date >= start && date <= end) {
+        return leave.status === LeaveStatus.APPROVED ? 'APPROVED' : 'PENDING';
+      }
+    }
+    return null;
   }
 }

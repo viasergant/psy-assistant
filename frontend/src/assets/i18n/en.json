@@ -681,7 +681,15 @@
       "cancel": "Cancel",
       "cancelTitle": "Cancel Session",
       "cancellationReason": "Cancellation Reason",
-      "cancellationReasonPlaceholder": "Why is this session being cancelled?"
+      "cancellationReasonPlaceholder": "Why is this session being cancelled?",
+      "detailTitle": "Session Details",
+      "sessionInfo": "Session Information",
+      "recordInfo": "Record Information",
+      "plannedDuration": "Planned Duration",
+      "minutes": "minutes",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "noNotesYet": "No notes available for this session yet."
     },
     "messages": {
       "sessionStarted": "Session started successfully",
@@ -690,7 +698,8 @@
       "loadError": "Failed to load sessions. Please try again.",
       "startError": "Failed to start session",
       "completeError": "Failed to complete session",
-      "cancelError": "Failed to cancel session"
+      "cancelError": "Failed to cancel session",
+      "viewSessionInfo": "View session details"
     },
     "emptyState": {
       "noSessions": "No sessions found for the selected filters",

@@ -7,7 +7,7 @@
   <div class="filters-section" [formGroup]="filterForm">
     <div class="filters-row">
       <!-- Date Range Filter -->
-      <div class="filter-field">
+      <div class="field">
         <label for="dateRange">{{ 'sessions.list.filterDateRange' | transloco }}</label>
         <p-select
           inputId="dateRange"
@@ -20,7 +20,7 @@
       </div>
 
       <!-- Custom Date Range -->
-      <div class="filter-field" *ngIf="isCustomDateRange">
+      <div class="field" *ngIf="isCustomDateRange">
         <label for="customStartDate">{{ 'schedule.leave.startDate' | transloco }}</label>
         <p-datepicker
           inputId="customStartDate"
@@ -31,7 +31,7 @@
         />
       </div>
 
-      <div class="filter-field" *ngIf="isCustomDateRange">
+      <div class="field" *ngIf="isCustomDateRange">
         <label for="customEndDate">{{ 'schedule.leave.endDate' | transloco }}</label>
         <p-datepicker
           inputId="customEndDate"
@@ -43,7 +43,7 @@
       </div>
 
       <!-- Client Search -->
-      <div class="filter-field">
+      <div class="field">
         <label for="clientSearch">{{ 'sessions.list.filterClient' | transloco }}</label>
         <input
           type="text"
@@ -56,7 +56,7 @@
       </div>
 
       <!-- Status Filter -->
-      <div class="filter-field">
+      <div class="field">
         <label for="statusFilter">{{ 'sessions.list.filterStatus' | transloco }}</label>
         <p-multiselect
           inputId="statusFilter"
@@ -173,6 +173,7 @@
               severity="secondary"
               [outlined]="true"
               size="small"
+              (onClick)="viewSession(session)"
             />
           </td>
         </tr>
@@ -217,5 +218,13 @@
     [visible]="showCancelDialog"
     (cancelled)="onSessionCancelled()"
     (closed)="onDialogClose()"
+  />
+
+  <!-- Session Detail Dialog -->
+  <app-session-detail-dialog
+    *ngIf="showDetailDialog && selectedSession"
+    [session]="selectedSession"
+    [visible]="showDetailDialog"
+    (visibleChange)="onDetailDialogClose()"
   />
 </div>

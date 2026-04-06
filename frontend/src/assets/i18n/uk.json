@@ -680,7 +680,15 @@
       "cancel": "Скасувати",
       "cancelTitle": "Скасувати сесію",
       "cancellationReason": "Причина скасування",
-      "cancellationReasonPlaceholder": "Чому ця сесія скасовується?"
+      "cancellationReasonPlaceholder": "Чому ця сесія скасовується?",
+      "detailTitle": "Деталі сесії",
+      "sessionInfo": "Інформація про сесію",
+      "recordInfo": "Інформація про запис",
+      "plannedDuration": "Заплановна тривалість",
+      "minutes": "хвилин",
+      "createdAt": "Створено",
+      "updatedAt": "Оновлено",
+      "noNotesYet": "Нотаток для цієї сесії ще немає."
     },
     "messages": {
       "sessionStarted": "Сесію успішно розпочато",
@@ -689,7 +697,8 @@
       "loadError": "Не вдалося завантажити сесії. Спробуйте ще раз.",
       "startError": "Не вдалося розпочати сесію",
       "completeError": "Не вдалося завершити сесію",
-      "cancelError": "Не вдалося скасувати сесію"
+      "cancelError": "Не вдалося скасувати сесію",
+      "viewSessionInfo": "Перегляд інформації про сесію"
     },
     "emptyState": {
       "noSessions": "Не знайдено сесій для вибраних фільтрів",

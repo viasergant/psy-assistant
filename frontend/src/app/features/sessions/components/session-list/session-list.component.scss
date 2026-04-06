@@ -30,50 +30,73 @@
       width: 100%;
     }
 
-    // Select dropdown background
+    // Select dropdown background and height
     .p-select {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
+      min-height: 42px;
       
       .p-select-label {
-        padding: 0.75rem;
+        padding: 0.625rem 0.75rem;
         background: var(--color-surface);
         color: var(--color-text-primary);
       }
+
+      .p-select-dropdown {
+        background: var(--color-surface);
+      }
     }
 
-    // MultiSelect dropdown background
+    // MultiSelect dropdown background and height
     .p-multiselect {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
+      min-height: 42px;
       
       .p-multiselect-label {
-        padding: 0.75rem;
+        padding: 0.625rem 0.75rem;
         background: var(--color-surface);
         color: var(--color-text-primary);
       }
+
+      .p-multiselect-dropdown {
+        background: var(--color-surface);
+      }
     }
 
-    // Datepicker input background
+    // Datepicker input background and height
     .p-datepicker {
       input {
-        padding: 0.75rem;
+        padding: 0.625rem 0.75rem;
         background: var(--color-surface);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-md);
         color: var(--color-text-primary);
+        min-height: 42px;
       }
     }
 
-    // Text input background
+    // Text input background and height - matching other inputs
     .p-inputtext {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       color: var(--color-text-primary);
-      padding: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      min-height: 42px;
+      font-size: 0.875rem;
+
+      &::placeholder {
+        color: var(--color-text-muted);
+      }
+
+      &:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 2px rgba(14, 165, 160, 0.1);
+      }
     }
   }
 }
@@ -83,17 +106,10 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--spacing-md);
   align-items: end;
-}
 
-.filter-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-
-  label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--color-text-primary);
+  // Override shared field bottom margin in filter context
+  .field {
+    margin-bottom: 0;
   }
 }
 
@@ -156,9 +172,20 @@
         background: var(--color-surface);
         border-top: 1px solid var(--color-border);
         color: var(--color-text-primary);
+        padding: var(--spacing-md);
 
         .p-paginator-pages .p-paginator-page {
           color: var(--color-text-primary);
+          background: transparent;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          min-width: 2.5rem;
+          height: 2.5rem;
+
+          &:hover {
+            background: var(--color-bg);
+            border-color: var(--color-accent);
+          }
 
           &.p-highlight {
             background: var(--color-accent);
@@ -167,10 +194,62 @@
           }
         }
 
+        .p-paginator-first,
+        .p-paginator-prev,
+        .p-paginator-next,
+        .p-paginator-last {
+          color: var(--color-text-primary);
+          background: transparent;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          min-width: 2.5rem;
+          height: 2.5rem;
+
+          &:enabled:hover {
+            background: var(--color-bg);
+            border-color: var(--color-accent);
+          }
+
+          &:disabled {
+            opacity: 0.4;
+          }
+        }
+
+        // Rows per page dropdown
         .p-dropdown {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           color: var(--color-text-primary);
+          border-radius: var(--radius-md);
+          height: 2.5rem;
+          min-width: 4rem;
+
+          .p-dropdown-label {
+            background: var(--color-surface);
+            color: var(--color-text-primary);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+          }
+
+          .p-dropdown-trigger {
+            background: var(--color-surface);
+            color: var(--color-text-primary);
+          }
+
+          &:hover {
+            border-color: var(--color-accent);
+          }
+
+          &:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 2px rgba(14, 165, 160, 0.1);
+          }
+        }
+
+        .p-paginator-current {
+          color: var(--color-text-secondary);
+          font-size: 0.875rem;
         }
       }
     }

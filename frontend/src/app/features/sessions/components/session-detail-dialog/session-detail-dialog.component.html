@@ -1,0 +1,93 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [closable]="true"
+  [style]="{ width: '600px' }"
+  [header]="'sessions.dialog.detailTitle' | transloco"
+  (onHide)="close()"
+>
+  <div class="session-detail-content" *ngIf="session">
+    <!-- Client and Status Header -->
+    <div class="detail-header">
+      <h3 class="client-name">{{ session.clientName }}</h3>
+      <p-tag
+        [value]="'sessions.status.' + getStatusKey(session.status) | transloco"
+        [severity]="getStatusSeverity(session.status)"
+        [styleClass]="'status-badge status-' + session.status.toLowerCase()"
+      />
+    </div>
+
+    <!-- Session Information -->
+    <div class="session-details-card">
+      <h4 class="section-title">{{ 'sessions.dialog.sessionInfo' | transloco }}</h4>
+      
+      <div class="detail-row">
+        <span class="detail-label">{{ 'sessions.list.dateTime' | transloco }}</span>
+        <span class="detail-value">{{ session.sessionDate }} {{ session.scheduledStartTime }}</span>
+      </div>
+      
+      <div class="detail-row">
+        <span class="detail-label">{{ 'sessions.list.type' | transloco }}</span>
+        <span class="detail-value">{{ 'sessions.types.' + session.sessionType.code | transloco }}</span>
+      </div>
+      
+      <div class="detail-row">
+        <span class="detail-label">{{ 'sessions.dialog.plannedDuration' | transloco }}</span>
+        <span class="detail-value">
+          {{ session.plannedDuration }} {{ 'sessions.dialog.minutes' | transloco }}
+        </span>
+      </div>
+      
+      <div class="detail-row" *ngIf="session.actualEndTime">
+        <span class="detail-label">{{ 'sessions.dialog.actualEndTime' | transloco }}</span>
+        <span class="detail-value">{{ session.actualEndTime }}</span>
+      </div>
+    </div>
+
+    <!-- Record Metadata -->
+    <div class="session-details-card">
+      <h4 class="section-title">{{ 'sessions.dialog.recordInfo' | transloco }}</h4>
+      
+      <div class="detail-row">
+        <span class="detail-label">{{ 'sessions.dialog.createdAt' | transloco }}</span>
+        <span class="detail-value">{{ session.createdAt | date: 'medium' }}</span>
+      </div>
+      
+      <div class="detail-row">
+        <span class="detail-label">{{ 'sessions.dialog.updatedAt' | transloco }}</span>
+        <span class="detail-value">{{ session.updatedAt | date: 'medium' }}</span>
+      </div>
+    </div>
+
+    <!-- Session Notes (for completed sessions) -->
+    <div class="notes-section" *ngIf="session.status === SessionStatus.COMPLETED && session.sessionNotes">
+      <h4 class="section-title">{{ 'sessions.dialog.sessionNotes' | transloco }}</h4>
+      <div class="notes-content">
+        <p>{{ session.sessionNotes }}</p>
+      </div>
+    </div>
+
+    <!-- Cancellation Reason (for cancelled sessions) -->
+    <div class="warning-section" *ngIf="session.status === SessionStatus.CANCELLED && session.cancellationReason">
+      <h4 class="section-title">{{ 'sessions.dialog.cancellationReason' | transloco }}</h4>
+      <div class="warning-content">
+        <p>{{ session.cancellationReason }}</p>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="session.status === SessionStatus.PENDING || session.status === SessionStatus.IN_PROGRESS">
+      <p>{{ 'sessions.dialog.noNotesYet' | transloco }}</p>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        [label]="'common.actions.close' | transloco"
+        severity="secondary"
+        (onClick)="close()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

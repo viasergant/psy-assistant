@@ -284,3 +284,70 @@ button {
   backdrop-filter: blur(var(--dialog-backdrop-blur)) !important;
 }
 
+// ── PrimeNG Dropdown panels ──────────────────────────────────────────────────
+// Global styling for all dropdown overlays (select, multiselect, paginator)
+.p-dropdown-panel {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+
+  .p-dropdown-items {
+    background: var(--color-surface);
+    
+    .p-dropdown-item {
+      background: var(--color-surface) !important;
+      color: var(--color-text-primary) !important;
+      padding: 0.5rem 0.75rem !important;
+      font-size: 0.875rem !important;
+
+      &:hover {
+        background: var(--color-bg) !important;
+      }
+
+      &.p-highlight {
+        background: var(--color-accent) !important;
+        color: white !important;
+      }
+
+      &:focus {
+        outline: none !important;
+        background: var(--color-bg) !important;
+      }
+    }
+  }
+}
+
+// MultiSelect panel styling
+.p-multiselect-panel {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+
+  .p-multiselect-items {
+    background: var(--color-surface);
+    
+    .p-multiselect-item {
+      background: var(--color-surface) !important;
+      color: var(--color-text-primary) !important;
+      padding: 0.5rem 0.75rem !important;
+      font-size: 0.875rem !important;
+
+      &:hover {
+        background: var(--color-bg) !important;
+      }
+
+      &.p-highlight {
+        background: var(--color-accent) !important;
+        color: white !important;
+      }
+
+      &:focus {
+        outline: none !important;
+        background: var(--color-bg) !important;
+      }
+    }
+  }
+}
+

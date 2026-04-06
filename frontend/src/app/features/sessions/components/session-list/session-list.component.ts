@@ -15,6 +15,7 @@ import { SessionRecord, SessionFilters, SessionStatus } from '../../models/sessi
 import { SessionService } from '../../services/session.service';
 import { CancelSessionDialogComponent } from '../cancel-session-dialog/cancel-session-dialog.component';
 import { CompleteSessionDialogComponent } from '../complete-session-dialog/complete-session-dialog.component';
+import { SessionDetailDialogComponent } from '../session-detail-dialog/session-detail-dialog.component';
 
 interface StatusOption {
   label: string;
@@ -45,6 +46,7 @@ interface DateRangeOption {
     Skeleton,
     CompleteSessionDialogComponent,
     CancelSessionDialogComponent,
+    SessionDetailDialogComponent,
   ],
   templateUrl: './session-list.component.html',
   styleUrls: ['./session-list.component.scss'],
@@ -61,6 +63,7 @@ export class SessionListComponent implements OnInit, OnDestroy {
 
   // Dialog state
   showCompleteDialog = false;
+  showDetailDialog = false;
   showCancelDialog = false;
   selectedSession: SessionRecord | null = null;
 
@@ -339,6 +342,16 @@ export class SessionListComponent implements OnInit, OnDestroy {
   onDialogClose(): void {
     this.showCompleteDialog = false;
     this.showCancelDialog = false;
+    this.selectedSession = null;
+  }
+
+  viewSession(session: SessionRecord): void {
+    this.selectedSession = session;
+    this.showDetailDialog = true;
+  }
+
+  onDetailDialogClose(): void {
+    this.showDetailDialog = false;
     this.selectedSession = null;
   }
 

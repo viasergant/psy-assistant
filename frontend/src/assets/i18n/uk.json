@@ -88,7 +88,8 @@
       "newPasswordLabel": "Новий пароль",
       "newPasswordPlaceholder": "Введіть ваш новий пароль",
       "newPasswordHint": "Мінімум 10 символів з великими, малими літерами, цифрою та спеціальним символом",
-      "newPasswordRequired": "Пароль повинен містити щонайменше 10 символів", "confirmPasswordLabel": "Підтвердіть новий пароль",
+      "newPasswordRequired": "Пароль повинен містити щонайменше 10 символів",
+      "confirmPasswordLabel": "Підтвердіть новий пароль",
       "confirmPasswordPlaceholder": "Повторно введіть ваш новий пароль",
       "confirmPasswordRequired": "Будь ласка, підтвердіть ваш пароль",
       "passwordMismatch": "Паролі не збігаються",
@@ -344,7 +345,8 @@
         "CONFIRMED": "Підтверджено",
         "COMPLETED": "Завершено",
         "CANCELLED": "Скасовано",
-        "NO_SHOW": "Не з'явився"
+        "NO_SHOW": "Не з'явився",
+        "IN_PROGRESS": "В процесі"
       }
     },
     "legend": {
@@ -747,6 +749,32 @@
     },
     "validation": {
       "generic": "Будь ласка, перевірте ваші дані та спробуйте знову"
+    }
+  },
+  "calendar": {
+    "time": "Час",
+    "today": "Сьогодні",
+    "previous": "Попередній",
+    "next": "Наступний",
+    "previousWeek": "Попередній тиждень",
+    "nextWeek": "Наступний тиждень",
+    "weekRange": "{{start}} - {{end}}",
+    "weekView": "Тиждень",
+    "dayView": "День",
+    "monthView": "Місяць",
+    "viewMode": "Режим перегляду",
+    "loading": "Завантаження календаря...",
+    "retry": "Повторити",
+    "noData": "Немає записів для відображення",
+    "modifiedOccurrence": "Цей запис було індивідуально змінено з серії повторюваних записів",
+    "title": "Календар",
+    "status": {
+      "SCHEDULED": "Заплановано",
+      "CONFIRMED": "Підтверджено",
+      "COMPLETED": "Завершено",
+      "CANCELLED": "Скасовано",
+      "NO_SHOW": "Не з'явився",
+      "IN_PROGRESS": "В процесі"
     }
   }
 }

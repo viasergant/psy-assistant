@@ -100,6 +100,11 @@ import { CalendarAppointmentBlock, STATUS_COLORS, SESSION_TYPE_COLORS } from '..
       font-weight: 600;
     }
 
+    .appointment-status-badge.in_progress {
+      background: #CCE5FF;
+      color: #004085;
+    }
+
     .appointment-status-badge.scheduled {
       background: #FFF3CD;
       color: #856404;
@@ -153,19 +158,16 @@ export class AppointmentBlockComponent {
   }
 
   getBackgroundColor(): string {
-    // Use a light tint of the status color
-    const statusColor = STATUS_COLORS[this.appointment.status];
+    const statusColor = STATUS_COLORS[this.appointment.status] ?? '#9E9E9E';
     return this.lightenColor(statusColor, 0.9);
   }
 
   getBorderColor(): string {
-    // Use session type color for the border
     const typeColor = SESSION_TYPE_COLORS[this.appointment.sessionTypeCode];
-    return typeColor || SESSION_TYPE_COLORS['INDIVIDUAL'];
+    return typeColor || SESSION_TYPE_COLORS['INDIVIDUAL'] || '#9E9E9E';
   }
 
   private lightenColor(color: string, amount: number): string {
-    // Simple color lightening (converts hex to rgba with low opacity)
     const hex = color.replace('#', '');
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);

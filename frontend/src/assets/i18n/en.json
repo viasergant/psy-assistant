@@ -345,7 +345,8 @@
         "CONFIRMED": "Confirmed",
         "COMPLETED": "Completed",
         "CANCELLED": "Cancelled",
-        "NO_SHOW": "No Show"
+        "NO_SHOW": "No Show",
+        "IN_PROGRESS": "In Progress"
       }
     },
     "legend": {
@@ -748,6 +749,32 @@
     },
     "validation": {
       "generic": "Please check your input and try again"
+    }
+  },
+  "calendar": {
+    "time": "Time",
+    "today": "Today",
+    "previous": "Previous",
+    "next": "Next",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "weekRange": "{{start}} - {{end}}",
+    "weekView": "Week",
+    "dayView": "Day",
+    "monthView": "Month",
+    "viewMode": "View mode",
+    "loading": "Loading calendar...",
+    "retry": "Retry",
+    "noData": "No appointments to display",
+    "modifiedOccurrence": "This appointment was individually modified from its recurring series",
+    "title": "Calendar",
+    "status": {
+      "SCHEDULED": "Scheduled",
+      "CONFIRMED": "Confirmed",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "NO_SHOW": "No Show",
+      "IN_PROGRESS": "In Progress"
     }
   }
 }

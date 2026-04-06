@@ -35,6 +35,7 @@ export interface TherapistInfo {
 export type AppointmentStatus =
   | 'SCHEDULED'
   | 'CONFIRMED'
+  | 'IN_PROGRESS'
   | 'COMPLETED'
   | 'CANCELLED'
   | 'NO_SHOW';
@@ -59,9 +60,10 @@ export const SESSION_TYPE_COLORS: Record<string, string> = {
 
 // Status color mapping for legend
 export const STATUS_COLORS: Record<AppointmentStatus, string> = {
-  SCHEDULED: '#FFC107', // Amber
-  CONFIRMED: '#4CAF50', // Green
-  COMPLETED: '#9E9E9E', // Grey
-  CANCELLED: '#F44336', // Red
-  NO_SHOW: '#FF5722' // Deep Orange
+  SCHEDULED: '#FFC107',   // Amber
+  CONFIRMED: '#4CAF50',   // Green
+  IN_PROGRESS: '#2196F3', // Blue
+  COMPLETED: '#9E9E9E',   // Grey
+  CANCELLED: '#F44336',   // Red
+  NO_SHOW: '#FF5722'      // Deep Orange
 };

@@ -83,8 +83,8 @@ export class CalendarFacadeService {
 
     return this.http.get<CalendarWeekViewResponse>(`${this.baseUrl}/week`, { params }).pipe(
       tap(response => {
-        this.weekDataSubject.next(response);
         this.loadingSignal.set(false);
+        this.weekDataSubject.next(response);
       }),
       catchError(error => {
         console.error('Failed to fetch week view:', error);

@@ -11,11 +11,9 @@ export default [
       )
   },
   {
+    // Redirect legacy /schedule/calendar to /schedule (calendar is now integrated)
     path: 'calendar',
-    canActivate: [scheduleGuard],
-    loadComponent: () =>
-      import('./components/calendar/calendar-shell/calendar-shell.component').then(
-        m => m.CalendarShellComponent
-      )
+    redirectTo: '',
+    pathMatch: 'full'
   }
 ] satisfies Routes;

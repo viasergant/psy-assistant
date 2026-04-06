@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Subject, takeUntil } from 'rxjs';
 import { CalendarWeekViewComponent } from '../calendar-week-view/calendar-week-view.component';
+import { CalendarDayViewComponent } from '../calendar-day-view/calendar-day-view.component';
+import { CalendarMonthViewComponent } from '../calendar-month-view/calendar-month-view.component';
 import { CalendarFacadeService } from '../../../services/calendar-facade.service';
 import {
   CalendarWeekViewResponse,
@@ -31,7 +33,9 @@ import {
     CommonModule,
     FormsModule,
     TranslocoPipe,
-    CalendarWeekViewComponent
+    CalendarWeekViewComponent,
+    CalendarDayViewComponent,
+    CalendarMonthViewComponent
   ],
   template: `
     <div class="calendar-shell">
@@ -78,18 +82,8 @@ import {
         </div>
 
         <div class="header-right">
-          <!-- View Mode Selector (Phase 1: week only) -->
+          <!-- View Mode Selector -->
           <div class="view-mode-selector" role="group" [attr.aria-label]="'calendar.viewMode' | transloco">
-            <button
-              type="button"
-              class="view-button"
-              [class.active]="viewMode === 'week'"
-              (click)="setViewMode('week')"
-            >
-              {{ 'calendar.weekView' | transloco }}
-            </button>
-            <!-- Phase 2: Enable day and month views -->
-            <!--
             <button
               type="button"
               class="view-button"
@@ -101,12 +95,19 @@ import {
             <button
               type="button"
               class="view-button"
+              [class.active]="viewMode === 'week'"
+              (click)="setViewMode('week')"
+            >
+              {{ 'calendar.weekView' | transloco }}
+            </button>
+            <button
+              type="button"
+              class="view-button"
               [class.active]="viewMode === 'month'"
               (click)="setViewMode('month')"
             >
               {{ 'calendar.monthView' | transloco }}
             </button>
-            -->
           </div>
         </div>
       </header>
@@ -127,6 +128,15 @@ import {
           </button>
         </div>
 
+        <!-- Day View -->
+        <app-calendar-day-view
+          *ngIf="!loading && !error && viewMode === 'day'"
+          [dayDate]="currentDate"
+          [appointments]="getAllAppointments()"
+          [therapists]="getTherapistsList()"
+          (appointmentClicked)="onAppointmentClick($event)"
+        ></app-calendar-day-view>
+
         <!-- Week View -->
         <app-calendar-week-view
           *ngIf="!loading && !error && viewMode === 'week'"
@@ -134,9 +144,13 @@ import {
           (appointmentClicked)="onAppointmentClick($event)"
         ></app-calendar-week-view>
 
-        <!-- Phase 2: Day and Month Views -->
-        <!-- <app-calendar-day-view *ngIf="viewMode === 'day'"></app-calendar-day-view> -->
-        <!-- <app-calendar-month-view *ngIf="viewMode === 'month'"></app-calendar-month-view> -->
+        <!-- Month View -->
+        <app-calendar-month-view
+          *ngIf="!loading && !error && viewMode === 'month'"
+          [monthDate]="currentDate"
+          [appointments]="getAllAppointments()"
+          (dayClicked)="onMonthDayClick($event)"
+        ></app-calendar-month-view>
       </main>
     </div>
   `,
@@ -278,6 +292,7 @@ export class CalendarShellComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   viewMode: CalendarViewMode = 'week';
+  currentDate = new Date();
   weekData: CalendarWeekViewResponse | null = null;
   loading = false;
   error: string | null = null;
@@ -365,5 +380,25 @@ export class CalendarShellComponent implements OnInit, OnDestroy {
     // Phase 1: Just log; Phase 2: Open detail panel
     console.log('Appointment clicked:', appointment);
     // TODO: Open appointment detail dialog
+  }
+
+  onMonthDayClick(date: Date): void {
+    // When day clicked in month view, switch to day view for that date
+    this.currentDate = date;
+    this.setViewMode('day');
+  }
+
+  getAllAppointments(): CalendarAppointmentBlock[] {
+    return this.weekData?.appointments || [];
+  }
+
+  getTherapistsList(): Array<{id: string; name: string; specialization: string}> {
+    if (!this.weekData?.therapists) return [];
+    
+    return Object.values(this.weekData.therapists).map(t => ({
+      id: t.id,
+      name: t.name,
+      specialization: t.specialization
+    }));
   }
 }

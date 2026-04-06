@@ -1,0 +1,63 @@
+h2 {
+  margin: 0 0 var(--spacing-xl);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  margin: calc(-1 * var(--spacing-md)) 0 var(--spacing-lg);
+}
+
+// Info banner (blue — no design token exists for informational blue)
+.info-box {
+  display: flex;
+  gap: 0.875rem;
+  padding: var(--spacing-md);
+  background: #EFF6FF;
+  border: 1.5px solid #BFDBFE;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+  color: #1E40AF;
+
+  svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: #3B82F6;
+  }
+
+  strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.9375rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+}
+
+.alert-error {
+  padding: 0.875rem 1.125rem;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  margin-bottom: var(--spacing-lg);
+  font-size: 0.875rem;
+}
+
+// aria-invalid error state for inputs (supplement to shared .field.has-error)
+input[aria-invalid='true'],
+select[aria-invalid='true'] {
+  border-color: var(--color-error);
+
+  &:focus {
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+  }
+}

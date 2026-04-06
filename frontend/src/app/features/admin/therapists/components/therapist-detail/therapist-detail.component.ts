@@ -19,6 +19,7 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
   selector: 'app-therapist-detail',
   standalone: true,
   imports: [CommonModule, TranslocoPipe],
+  styleUrl: './therapist-detail.component.scss',
   template: `
     <div class="page">
       <div *ngIf="loading" class="state-msg" aria-live="polite">Loading profile…</div>
@@ -119,87 +120,8 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
       </div>
     </div>
   `,
-  styles: [`
-    .page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-    .state-msg { color: #64748B; padding: 2rem 0; text-align: center; }
-    .alert-error {
-      padding: .75rem 1rem; background: #FEF2F2;
-      border: 1px solid #FECACA; border-radius: 8px;
-      color: #DC2626; margin-bottom: 1rem; font-size: .875rem;
-    }
-    
-    .profile-container { display: flex; flex-direction: column; gap: 2rem; }
-    
-    .profile-header {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      padding-bottom: 1.5rem; border-bottom: 2px solid #E2E8F0;
-    }
-    .header-content { display: flex; align-items: center; gap: 1rem; }
-    .header-content h1 { margin: 0; font-size: 1.875rem; }
-    .header-actions { display: flex; gap: 0.75rem; }
-    
-    .btn-primary, .btn-secondary {
-      padding: .5rem 1.25rem; border: none; border-radius: 8px; 
-      cursor: pointer; font-size: .9375rem; font-weight: 600;
-      transition: all 0.15s ease;
-    }
-    .btn-primary {
-      background: #0EA5A0; color: #fff;
-    }
-    .btn-primary:hover { background: #0C9490; box-shadow: 0 4px 12px rgba(14,165,160,.28); }
-    .btn-primary:active { background: #0A8480; }
-    
-    .btn-secondary {
-      background: #F1F5F9; color: #334155;
-    }
-    .btn-secondary:hover { background: #E2E8F0; }
-    .btn-secondary:active { background: #CBD5E1; }
-    
-    .profile-section {
-      background: #fff; padding: 1.5rem; border-radius: 12px;
-      border: 1px solid #E2E8F0;
-    }
-    .profile-section h2 {
-      margin: 0 0 1rem 0; font-size: 1.125rem; font-weight: 600;
-      color: #1E293B;
-    }
-    
-    .info-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-    }
-    .info-item label {
-      display: block; font-size: .8125rem; font-weight: 600;
-      color: #64748B; margin-bottom: .25rem;
-    }
-    .info-item p { margin: 0; color: #1E293B; }
-    
-    .bio-text {
-      margin: 0; line-height: 1.6; color: #334155;
-      white-space: pre-wrap;
-    }
-    
-    .chips-container {
-      display: flex; flex-wrap: wrap; gap: 0.5rem;
-    }
-    .chip {
-      display: inline-block; padding: .375rem .875rem;
-      background: #F1F5F9; color: #334155;
-      border-radius: 16px; font-size: .875rem; font-weight: 500;
-    }
-    
-    .badge {
-      display: inline-block; padding: .25rem .75rem;
-      border-radius: 12px; font-size: .8125rem; font-weight: 600;
-    }
-    .badge-active { background: #D1FAE5; color: #065F46; }
-    .badge-inactive { background: #FEE2E2; color: #991B1B; }
-    
-    .text-muted { color: #94A3B8; margin: 0; }
-    
-    .metadata { background: #FAFBFC; }
-  `]
 })
+
 export class TherapistDetailComponent implements OnInit {
   therapist: TherapistProfile | null = null;
   loading = false;

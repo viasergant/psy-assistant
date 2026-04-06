@@ -160,7 +160,7 @@
 }
 
 .time-select {
-  font-family: 'Work Sans', sans-serif;
+  font-family: var(--font-family);
   font-size: 0.875rem;
   padding: 0.5rem 0.75rem;
   border: 1px solid #D1D5DB;
@@ -173,12 +173,12 @@
   flex: 1;
 
   &:hover:not(:disabled) {
-    border-color: #2C5F4F;
+    border-color: var(--color-accent);
   }
 
   &:focus {
-    border-color: #2C5F4F;
-    box-shadow: 0 0 0 3px rgba(44, 95, 79, 0.1);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(14, 165, 160, 0.1);
   }
 
   &:disabled {

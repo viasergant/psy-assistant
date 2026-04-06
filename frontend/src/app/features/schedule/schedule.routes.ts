@@ -9,5 +9,13 @@ export default [
       import('./schedule-management.component').then(
         m => m.ScheduleManagementComponent
       )
+  },
+  {
+    path: 'calendar',
+    canActivate: [scheduleGuard],
+    loadComponent: () =>
+      import('./components/calendar/calendar-shell/calendar-shell.component').then(
+        m => m.CalendarShellComponent
+      )
   }
 ] satisfies Routes;

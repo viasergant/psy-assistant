@@ -210,4 +210,32 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
             @Param("reason") String reason,
             @Param("cancellationType") String cancellationType
     );
+
+    // ========== Calendar Queries (PA-32) ==========
+
+    /**
+     * Finds all appointments within a date range, optionally filtering by therapist IDs.
+     *
+     * <p>Used by calendar views (day/week/month) to fetch appointments for display.
+     * Fetches SessionType eagerly to avoid N+1 queries when building response DTOs.
+     *
+     * @param startDate start of range (inclusive)
+     * @param endDate end of range (exclusive)
+     * @param therapistIds optional list of therapist profile IDs to filter (null = all therapists)
+     * @return list of appointments ordered by start time
+     */
+    @Query("""
+        SELECT a FROM Appointment a
+        LEFT JOIN FETCH a.sessionType
+        WHERE a.startTime >= :startDate
+        AND a.startTime < :endDate
+        AND a.status != 'CANCELLED'
+        AND (:therapistIds IS NULL OR a.therapistProfileId IN :therapistIds)
+        ORDER BY a.startTime ASC
+        """)
+    List<Appointment> findByDateRangeAndTherapists(
+            @Param("startDate") ZonedDateTime startDate,
+            @Param("endDate") ZonedDateTime endDate,
+            @Param("therapistIds") List<UUID> therapistIds
+    );
 }

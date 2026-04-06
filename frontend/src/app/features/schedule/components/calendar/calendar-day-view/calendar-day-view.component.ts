@@ -76,6 +76,12 @@ import { Leave, LeaveStatus } from '../../../models/schedule.model';
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      height: 100%;
+      min-height: 0;
+    }
+
     .day-view {
       height: 100%;
       overflow: auto;

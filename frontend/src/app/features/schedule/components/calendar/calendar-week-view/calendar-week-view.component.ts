@@ -43,45 +43,44 @@ interface CellAppointments {
   imports: [CommonModule, TranslocoPipe, AppointmentBlockComponent],
   template: `
     <div class="week-view-container">
-      <!-- Time column header (empty cell) -->
-      <div class="calendar-grid">
-        <!-- Header row: Time + Therapist columns -->
-        <div class="grid-header">
-          <div class="time-header">{{ 'calendar.time' | transloco }}</div>
-          <div 
-            *ngFor="let day of weekDays" 
-            class="day-header"
-            [class.today]="day.isToday"
-            [class.leave-approved]="getLeaveStatus(day.date) === 'APPROVED'"
-            [class.leave-pending]="getLeaveStatus(day.date) === 'PENDING'"
-          >
-            <div class="day-name">{{ day.dayName }}</div>
-            <div class="day-number">{{ day.dayNumber }}</div>
-            <div *ngIf="getLeaveStatus(day.date) === 'APPROVED'" class="leave-badge leave-badge-approved">
-              {{ 'schedule.legend.leave' | transloco }}
-            </div>
-            <div *ngIf="getLeaveStatus(day.date) === 'PENDING'" class="leave-badge leave-badge-pending">
-              {{ 'schedule.leaveStatus.pending' | transloco }}
-            </div>
+      <!-- Fixed header row: Time + Day columns (never scrolls) -->
+      <div class="grid-header">
+        <div class="time-header">{{ 'calendar.time' | transloco }}</div>
+        <div
+          *ngFor="let day of weekDays"
+          class="day-header"
+          [class.today]="day.isToday"
+          [class.leave-approved]="getLeaveStatus(day.date) === 'APPROVED'"
+          [class.leave-pending]="getLeaveStatus(day.date) === 'PENDING'"
+        >
+          <div class="day-name">{{ day.dayName }}</div>
+          <div class="day-number">{{ day.dayNumber }}</div>
+          <div *ngIf="getLeaveStatus(day.date) === 'APPROVED'" class="leave-badge leave-badge-approved">
+            {{ 'schedule.legend.leave' | transloco }}
+          </div>
+          <div *ngIf="getLeaveStatus(day.date) === 'PENDING'" class="leave-badge leave-badge-pending">
+            {{ 'schedule.leaveStatus.pending' | transloco }}
           </div>
         </div>
+      </div>
 
-        <!-- Time slots grid -->
+      <!-- Scrollable time slots body -->
+      <div class="grid-scroll-body">
         <div class="grid-body">
           <div *ngFor="let timeSlot of timeSlots" class="time-row">
             <!-- Time label column -->
             <div class="time-label">{{ timeSlot.displayTime }}</div>
 
             <!-- Day cells -->
-            <div 
-              *ngFor="let day of weekDays; let dayIndex = index" 
+            <div
+              *ngFor="let day of weekDays; let dayIndex = index"
               class="day-cell"
               [class.current-hour]="isCurrentHour(day.date, timeSlot.hour)"
             >
               <!-- Therapist columns within each day cell -->
               <div class="therapist-columns">
-                <div 
-                  *ngFor="let therapist of therapistsArray" 
+                <div
+                  *ngFor="let therapist of therapistsArray"
                   class="therapist-column"
                   [style.width.%]="100 / therapistsArray.length"
                 >
@@ -105,15 +104,18 @@ interface CellAppointments {
     </div>
   `,
   styles: [`
-    .week-view-container {
+    :host {
+      display: block;
       height: 100%;
-      overflow: auto;
+      min-height: 0;
     }
 
-    .calendar-grid {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      min-width: 1024px;
+    .week-view-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      overflow-x: auto; /* horizontal scroll here syncs header + body together */
     }
 
     .grid-header {
@@ -121,9 +123,14 @@ interface CellAppointments {
       grid-template-columns: 80px repeat(7, 1fr);
       background: var(--color-surface);
       border-bottom: 2px solid var(--color-border);
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      flex-shrink: 0;
+      min-width: 1024px;
+    }
+
+    .grid-scroll-body {
+      flex: 1;
+      overflow-y: auto; /* only vertical scroll — horizontal handled by parent */
+      min-height: 0;
     }
 
     .time-header {
@@ -160,6 +167,7 @@ interface CellAppointments {
     .grid-body {
       display: flex;
       flex-direction: column;
+      min-width: 1024px;
     }
 
     .time-row {

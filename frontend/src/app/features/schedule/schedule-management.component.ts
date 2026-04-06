@@ -292,6 +292,12 @@ interface ClientOption {
   `,
   styles: [
     `
+      :host {
+        display: block;
+        height: 100%;
+        min-height: 0;
+      }
+
       .schedule-management {
         display: flex;
         flex-direction: column;
@@ -585,10 +591,11 @@ interface ClientOption {
 
       .calendar-view-container {
         flex: 1;
-        overflow: hidden;
+        overflow: hidden; /* clips vertical; horizontal handled by each view */
         position: relative;
         display: flex;
         flex-direction: column;
+        min-height: 0;
       }
 
       .management-loading,

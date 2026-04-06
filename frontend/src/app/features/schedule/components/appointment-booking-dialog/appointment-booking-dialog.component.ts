@@ -870,25 +870,31 @@ interface ClientOption {
 
     /* PrimeNG overrides */
     :host ::ng-deep {
+      .p-select,
       .p-dropdown,
       .p-calendar {
         width: 100%;
       }
 
+      .p-select .p-select-label,
       .p-dropdown .p-inputtext,
       .p-calendar .p-inputtext {
         padding: 0.75rem 1rem;
         border: 1.5px solid var(--color-border, #E2E8F0);
         border-radius: 8px;
         font-size: 0.9375rem;
+        background: var(--color-surface, #FFFFFF);
+        color: var(--color-text-primary, #0F172A);
         transition: all 0.2s ease;
       }
 
+      .p-select:not(.p-disabled):hover .p-select-label,
       .p-dropdown:not(.p-disabled):hover .p-inputtext,
       .p-calendar:not(.p-disabled):hover .p-inputtext {
         border-color: #CBD5E1;
       }
 
+      .p-select:not(.p-disabled).p-focus .p-select-label,
       .p-dropdown:not(.p-disabled).p-focus .p-inputtext,
       .p-calendar:not(.p-disabled).p-focus .p-inputtext {
         border-color: var(--color-accent, #0EA5A0);

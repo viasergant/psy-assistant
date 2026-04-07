@@ -1827,3 +1827,30 @@ These TODOs indicate tests for those behaviors should be written but may be expe
 - `/Users/Serhiy_Piddubchak/Documents/prj/psy-assistant/backend/tests/integration/utils/auth_helper.py`
 - `/Users/Serhiy_Piddubchak/Documents/prj/psy-assistant/backend/src/main/java/com/psyassistant/scheduling/rest/AppointmentController.java`
 - `/Users/Serhiy_Piddubchak/Documents/prj/psy-assistant/backend/src/main/java/com/psyassistant/crm/clients/ClientController.java`
+
+---
+
+## Care Plans (PA-43)
+
+### Happy Path
+1. THERAPIST creates a care plan for their assigned client with at least one goal → HTTP 201, plan returned in ACTIVE status
+2. THERAPIST lists care plans for client → returns plan in list
+3. THERAPIST retrieves care plan detail → goals, interventions, milestones nested in response
+4. THERAPIST updates goal status to IN_PROGRESS → goal status updated
+5. THERAPIST marks milestone as achieved → milestone shows achievedAt timestamp
+6. THERAPIST closes an ACTIVE plan → status changes to CLOSED
+7. THERAPIST archives a CLOSED plan → status changes to ARCHIVED
+8. GET care plan audit log → returns audit entries for all mutations
+9. GET /api/v1/config/care-plan-intervention-types → returns configured intervention types list
+
+### Authorization
+10. RECEPTION_ADMIN_STAFF can read care plans (READ_CARE_PLANS) but cannot create/update/close/archive (MANAGE_CARE_PLANS)
+11. THERAPIST cannot read care plans of clients assigned to other therapists (assignment-based access)
+12. SYSTEM_ADMINISTRATOR can read and manage all care plans
+13. Unauthenticated request → 401
+
+### Business Rules
+14. Creating a 4th active care plan for a client when max is 3 → 409 MaxActivePlansExceeded
+15. Attempting to close/archive an already CLOSED or ARCHIVED plan → 409 CarePlanNotActive
+16. Adding an intervention with an invalid interventionType → 400 validation error
+17. Creating a care plan with no goals → 400 validation error

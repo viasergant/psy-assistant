@@ -40,6 +40,17 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     issuer: psy-assistant
+  care-plans:
+    max-active-per-client: 3
+    intervention-types:
+      - CBT
+      - DBT
+      - EMDR
+      - PSYCHODYNAMIC
+      - MINDFULNESS
+      - BEHAVIORAL_ACTIVATION
+      - EXPOSURE_THERAPY
+      - SOLUTION_FOCUSED
   security:
     token-ttl:
       admin:

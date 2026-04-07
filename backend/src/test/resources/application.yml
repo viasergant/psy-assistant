@@ -43,6 +43,11 @@ app:
         user: 5
   cors:
     allowed-origins: http://localhost:4200
+  care-plans:
+    max-active-per-client: 3
+    intervention-types:
+      - CBT
+      - DBT
 
 session:
   notes:

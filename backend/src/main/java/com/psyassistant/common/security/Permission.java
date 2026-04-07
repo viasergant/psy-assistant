@@ -52,6 +52,9 @@ public enum Permission {
     /** Read care plan documents. */
     READ_CARE_PLANS,
 
+    /** Create and update care plan documents including goals, interventions, milestones. */
+    MANAGE_CARE_PLANS,
+
     // ---- Finance ---------------------------------------------------------
     /** Create, update, and void invoices. */
     MANAGE_INVOICES,

@@ -15,5 +15,10 @@ export default [
       import('./client-detail/client-detail.component').then(
         m => m.ClientDetailComponent
       )
+  },
+  {
+    path: ':clientId/care-plans',
+    loadChildren: () =>
+      import('./care-plans/care-plans.routes').then(m => m.default)
   }
 ] satisfies Routes;

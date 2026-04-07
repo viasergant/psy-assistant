@@ -13,6 +13,7 @@ import com.psyassistant.scheduling.event.AppointmentStatusChangedEvent;
 import com.psyassistant.scheduling.repository.AppointmentRepository;
 import com.psyassistant.sessions.domain.SessionRecord;
 import com.psyassistant.sessions.domain.SessionStatus;
+import com.psyassistant.sessions.dto.CompleteSessionRequest;
 import com.psyassistant.sessions.repository.SessionRecordRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.ZonedDateTime;
@@ -326,5 +327,71 @@ class SessionRecordServiceTest {
         assertThatThrownBy(() -> sessionRecordService.getSessionByAppointmentId(appointmentId))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("No session found for appointment");
+    }
+
+    @Test
+    @DisplayName("completeSession - marks session COMPLETED and updates appointment to COMPLETED")
+    void completeSessionUpdatesAppointmentStatus() {
+        // Given
+        final UUID sessionId = UUID.randomUUID();
+        final SessionRecord session = new SessionRecord(
+                appointmentId,
+                clientId,
+                therapistId,
+                appointment.getStartTime().toLocalDate(),
+                appointment.getStartTime().toLocalTime(),
+                sessionType,
+                java.time.Duration.ofMinutes(60),
+                SessionStatus.IN_PROGRESS
+        );
+
+        appointment.setStatus(AppointmentStatus.IN_PROGRESS);
+
+        when(sessionRecordRepository.findById(sessionId)).thenReturn(Optional.of(session));
+        when(sessionRecordRepository.save(any(SessionRecord.class))).thenAnswer(i -> i.getArgument(0));
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(i -> i.getArgument(0));
+
+        final CompleteSessionRequest request = new CompleteSessionRequest(
+                "Session completed successfully with notes.", null);
+
+        // When
+        final SessionRecord result = sessionRecordService.completeSession(sessionId, request);
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo(SessionStatus.COMPLETED);
+
+        final ArgumentCaptor<Appointment> appointmentCaptor = ArgumentCaptor.forClass(Appointment.class);
+        verify(appointmentRepository).save(appointmentCaptor.capture());
+        assertThat(appointmentCaptor.getValue().getStatus()).isEqualTo(AppointmentStatus.COMPLETED);
+    }
+
+    @Test
+    @DisplayName("completeSession - throws IllegalStateException if session is not IN_PROGRESS")
+    void completeSessionThrowsIfNotInProgress() {
+        // Given
+        final UUID sessionId = UUID.randomUUID();
+        final SessionRecord session = new SessionRecord(
+                appointmentId,
+                clientId,
+                therapistId,
+                appointment.getStartTime().toLocalDate(),
+                appointment.getStartTime().toLocalTime(),
+                sessionType,
+                java.time.Duration.ofMinutes(60),
+                SessionStatus.PENDING
+        );
+
+        when(sessionRecordRepository.findById(sessionId)).thenReturn(Optional.of(session));
+
+        final CompleteSessionRequest request = new CompleteSessionRequest(
+                "Session completed successfully with notes.", null);
+
+        // When/Then
+        assertThatThrownBy(() -> sessionRecordService.completeSession(sessionId, request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Only IN_PROGRESS sessions can be completed");
+
+        verify(appointmentRepository, never()).save(any());
     }
 }

@@ -307,6 +307,16 @@ public class SessionRecordService {
         session.complete(request.sessionNotes(), request.actualEndTime());
         final SessionRecord saved = sessionRecordRepository.save(session);
 
+        // Sync appointment status to COMPLETED
+        appointmentRepository.findById(saved.getAppointmentId()).ifPresent(appointment -> {
+            if (appointment.getStatus() == AppointmentStatus.IN_PROGRESS) {
+                appointment.setStatus(AppointmentStatus.COMPLETED);
+                appointmentRepository.save(appointment);
+                LOG.info("Appointment marked COMPLETED after session completion: appointmentId={}",
+                        appointment.getId());
+            }
+        });
+
         LOG.info("Session completed: id={}, appointmentId={}", saved.getId(), saved.getAppointmentId());
 
         return saved;

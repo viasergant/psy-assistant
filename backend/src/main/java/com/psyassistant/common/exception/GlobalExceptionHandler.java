@@ -1,6 +1,8 @@
 package com.psyassistant.common.exception;
 
 import com.psyassistant.auth.service.AuthException;
+import com.psyassistant.careplans.exception.CarePlanNotActiveException;
+import com.psyassistant.careplans.exception.MaxActivePlansExceededException;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.crm.leads.InvalidStatusTransitionException;
@@ -208,6 +210,36 @@ public class GlobalExceptionHandler {
      * @param request the current HTTP request
      * @return 422 Unprocessable Entity with machine-readable code
      */
+    @ExceptionHandler(CarePlanNotActiveException.class)
+    public ResponseEntity<ErrorResponse> handleCarePlanNotActive(
+            final CarePlanNotActiveException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage(),
+                        "CARE_PLAN_NOT_ACTIVE",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    @ExceptionHandler(MaxActivePlansExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxActivePlans(
+            final MaxActivePlansExceededException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage(),
+                        "MAX_ACTIVE_CARE_PLANS_EXCEEDED",
+                        request.getRequestURI()
+                )
+        );
+    }
+
     @ExceptionHandler(InvalidStatusTransitionException.class)
     public ResponseEntity<ErrorResponse> handleInvalidStatusTransition(
             final InvalidStatusTransitionException ex,

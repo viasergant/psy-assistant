@@ -817,5 +817,74 @@
       "NO_SHOW": "No Show",
       "IN_PROGRESS": "In Progress"
     }
+  },
+  "carePlans": {
+    "title": "Care Plans",
+    "status": {
+      "active": "Active",
+      "closed": "Closed",
+      "archived": "Archived"
+    },
+    "goalStatus": {
+      "pending": "Pending",
+      "in_progress": "In Progress",
+      "achieved": "Achieved",
+      "abandoned": "Abandoned"
+    },
+    "interventionStatus": {
+      "active": "Active",
+      "completed": "Completed",
+      "discontinued": "Discontinued"
+    },
+    "list": {
+      "loading": "Loading care plans…",
+      "loadError": "Failed to load care plans.",
+      "empty": "No care plans found.",
+      "newPlan": "New Plan",
+      "filterByStatus": "Filter by status",
+      "allStatuses": "All statuses",
+      "goals": "{{ count }} goal(s)"
+    },
+    "detail": {
+      "loading": "Loading care plan…",
+      "loadError": "Failed to load care plan.",
+      "updateError": "Failed to update. Please try again.",
+      "backToPlans": "Back to care plans",
+      "goals": "Goals",
+      "noGoals": "No goals have been added to this plan.",
+      "targetDate": "Target date",
+      "goalStatus": "Goal status",
+      "interventions": "Interventions",
+      "milestones": "Milestones",
+      "markAchieved": "Mark achieved",
+      "close": "Close plan",
+      "archive": "Archive plan"
+    },
+    "form": {
+      "title": "New Care Plan",
+      "planTitle": "Plan title",
+      "planTitlePlaceholder": "e.g. Anxiety management plan",
+      "titleRequired": "Title is required.",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief overview of the care plan",
+      "goals": "Goals",
+      "addGoal": "Add goal",
+      "noGoals": "Add at least one goal to create the plan.",
+      "goal": "Goal",
+      "goalDescription": "Goal description",
+      "goalDescriptionPlaceholder": "Describe the therapeutic goal",
+      "priority": "Priority",
+      "targetDate": "Target date",
+      "interventions": "Interventions",
+      "addIntervention": "Add intervention",
+      "selectType": "— Select type —",
+      "interventionDesc": "Description",
+      "frequency": "Frequency",
+      "milestones": "Milestones",
+      "addMilestone": "Add milestone",
+      "milestoneDesc": "Milestone description",
+      "create": "Create plan",
+      "saveError": "Failed to create care plan. Please try again."
+    }
   }
 }

@@ -119,9 +119,9 @@ export class SessionService {
       return 0;
     }
 
-    // Handle if duration is already a number or object
+    // Handle if duration is already a number (backend sends seconds as a plain number)
     if (typeof duration === 'number') {
-      return duration;
+      return Math.round(duration / 60);
     }
 
     if (typeof duration !== 'string') {
@@ -139,8 +139,9 @@ export class SessionService {
 
     const hours = parseInt(matches[1] || '0', 10);
     const minutes = parseInt(matches[2] || '0', 10);
+    const seconds = parseFloat(matches[3] || '0');
 
-    return hours * 60 + minutes;
+    return hours * 60 + minutes + Math.round(seconds / 60);
   }
 }
 

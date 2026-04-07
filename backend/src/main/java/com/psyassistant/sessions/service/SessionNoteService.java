@@ -402,9 +402,17 @@ public class SessionNoteService {
         if (authorId == null) {
             return "Unknown";
         }
-        return userRepository.findByEmail(authorId)
-                .map(u -> u.getFullName() != null ? u.getFullName() : u.getEmail())
-                .orElse(authorId);
+        try {
+            final UUID userId = UUID.fromString(authorId);
+            return userRepository.findById(userId)
+                    .map(u -> u.getFullName() != null ? u.getFullName() : u.getEmail())
+                    .orElse(authorId);
+        } catch (IllegalArgumentException e) {
+            // authorId is not a UUID — try by email as fallback
+            return userRepository.findByEmail(authorId)
+                    .map(u -> u.getFullName() != null ? u.getFullName() : u.getEmail())
+                    .orElse(authorId);
+        }
     }
 
     private NoteResponse toResponse(final SessionNote note, final boolean hasVersionHistory) {

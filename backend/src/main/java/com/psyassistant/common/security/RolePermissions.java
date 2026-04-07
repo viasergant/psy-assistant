@@ -30,7 +30,8 @@ import java.util.Set;
  * WRITE_SESSION_NOTE       |     |  Y  |     |     |  Y
  * READ_OWN_SESSION_NOTES   |     |  Y  |     |     |  Y
  * READ_ALL_SESSION_NOTES   |     |     |  Y  |     |  Y
- * READ_CARE_PLANS          |     |  Y  |  Y  |     |  Y
+ * READ_CARE_PLANS          |  Y  |  Y  |  Y  |     |  Y
+ * MANAGE_CARE_PLANS        |     |  Y  |     |     |  Y
  * MANAGE_INVOICES          |     |     |     |  Y  |  Y
  * MANAGE_PAYMENTS          |     |     |     |  Y  |  Y
  * READ_FINANCIAL_REPORTS   |     |     |     |  Y  |  Y
@@ -58,7 +59,8 @@ public final class RolePermissions {
         map.put(UserRole.RECEPTION_ADMIN_STAFF, Collections.unmodifiableSet(EnumSet.of(
                 Permission.MANAGE_CLIENTS,
                 Permission.MANAGE_APPOINTMENTS,
-                Permission.MANAGE_LEADS
+                Permission.MANAGE_LEADS,
+                Permission.READ_CARE_PLANS
         )));
 
         map.put(UserRole.THERAPIST, Collections.unmodifiableSet(EnumSet.of(
@@ -66,7 +68,8 @@ public final class RolePermissions {
                 Permission.READ_OWN_SESSIONS,
                 Permission.WRITE_SESSION_NOTE,
                 Permission.READ_OWN_SESSION_NOTES,
-                Permission.READ_CARE_PLANS
+                Permission.READ_CARE_PLANS,
+                Permission.MANAGE_CARE_PLANS
         )));
 
         map.put(UserRole.SUPERVISOR, Collections.unmodifiableSet(EnumSet.of(
@@ -96,6 +99,7 @@ public final class RolePermissions {
                 Permission.READ_OWN_SESSION_NOTES,
                 Permission.READ_ALL_SESSION_NOTES,
                 Permission.READ_CARE_PLANS,
+                Permission.MANAGE_CARE_PLANS,
                 Permission.MANAGE_INVOICES,
                 Permission.MANAGE_PAYMENTS,
                 Permission.READ_FINANCIAL_REPORTS,

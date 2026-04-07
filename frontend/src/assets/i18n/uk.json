@@ -817,5 +817,74 @@
       "NO_SHOW": "Не з'явився",
       "IN_PROGRESS": "В процесі"
     }
+  },
+  "carePlans": {
+    "title": "Плани лікування",
+    "status": {
+      "active": "Активний",
+      "closed": "Закритий",
+      "archived": "Архівований"
+    },
+    "goalStatus": {
+      "pending": "Очікує",
+      "in_progress": "Виконується",
+      "achieved": "Досягнуто",
+      "abandoned": "Скасовано"
+    },
+    "interventionStatus": {
+      "active": "Активна",
+      "completed": "Завершена",
+      "discontinued": "Припинена"
+    },
+    "list": {
+      "loading": "Завантаження планів лікування…",
+      "loadError": "Не вдалося завантажити плани лікування.",
+      "empty": "Плани лікування не знайдені.",
+      "newPlan": "Новий план",
+      "filterByStatus": "Фільтр за статусом",
+      "allStatuses": "Усі статуси",
+      "goals": "{{ count }} ціль(і)"
+    },
+    "detail": {
+      "loading": "Завантаження плану лікування…",
+      "loadError": "Не вдалося завантажити план лікування.",
+      "updateError": "Помилка оновлення. Спробуйте ще раз.",
+      "backToPlans": "Назад до планів лікування",
+      "goals": "Цілі",
+      "noGoals": "До цього плану ще не додано жодної цілі.",
+      "targetDate": "Цільова дата",
+      "goalStatus": "Статус цілі",
+      "interventions": "Інтервенції",
+      "milestones": "Етапи",
+      "markAchieved": "Позначити як досягнуте",
+      "close": "Закрити план",
+      "archive": "Архівувати план"
+    },
+    "form": {
+      "title": "Новий план лікування",
+      "planTitle": "Назва плану",
+      "planTitlePlaceholder": "напр. План управління тривогою",
+      "titleRequired": "Назва обов'язкова.",
+      "description": "Опис",
+      "descriptionPlaceholder": "Короткий огляд плану лікування",
+      "goals": "Цілі",
+      "addGoal": "Додати ціль",
+      "noGoals": "Додайте принаймні одну ціль для створення плану.",
+      "goal": "Ціль",
+      "goalDescription": "Опис цілі",
+      "goalDescriptionPlaceholder": "Опишіть терапевтичну ціль",
+      "priority": "Пріоритет",
+      "targetDate": "Цільова дата",
+      "interventions": "Інтервенції",
+      "addIntervention": "Додати інтервенцію",
+      "selectType": "— Оберіть тип —",
+      "interventionDesc": "Опис",
+      "frequency": "Частота",
+      "milestones": "Етапи",
+      "addMilestone": "Додати етап",
+      "milestoneDesc": "Опис етапу",
+      "create": "Створити план",
+      "saveError": "Не вдалося створити план лікування. Спробуйте ще раз."
+    }
   }
 }

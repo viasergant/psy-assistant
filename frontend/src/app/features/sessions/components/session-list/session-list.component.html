@@ -168,7 +168,7 @@
               (onClick)="openCancelDialog(session)"
             />
             <p-button
-              *ngIf="session.status === SessionStatus.COMPLETED || session.status === SessionStatus.CANCELLED"
+              *ngIf="session.status === SessionStatus.IN_PROGRESS || session.status === SessionStatus.COMPLETED || session.status === SessionStatus.CANCELLED"
               [label]="'sessions.actions.view' | transloco"
               severity="secondary"
               [outlined]="true"

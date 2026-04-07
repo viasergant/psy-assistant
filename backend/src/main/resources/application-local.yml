@@ -1,6 +1,7 @@
 spring:
   flyway:
     clean-disabled: false   # required for LocalFlywayConfig; clean() is blocked by default in Flyway 9+
+    locations: classpath:db/migration,classpath:db/local-seed
   datasource:
     url: ${DB_URL:jdbc:postgresql://192.168.10.146:5432/psyassistant}
     username: ${DB_USERNAME:psyassistant}
@@ -13,6 +14,11 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET:local-dev-jwt-secret-change-me-32-bytes-minimum}
+
+session:
+  notes:
+    # Local dev key: base64-encoded 32-byte AES-256 key (DO NOT use in production)
+    encryption-key: ${SESSION_NOTES_ENCRYPTION_KEY:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
 
 springdoc:
   api-docs:

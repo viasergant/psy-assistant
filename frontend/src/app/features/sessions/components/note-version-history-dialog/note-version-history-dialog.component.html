@@ -1,0 +1,60 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [closable]="true"
+  appendTo="body"
+  [style]="{ width: '620px', 'max-height': '100vh' }"
+  [header]="'notes.history.title' | transloco"
+  (onHide)="close()"
+>
+  <div class="history-content" *ngIf="visible">
+    <!-- Loading -->
+    <div class="history-loading" *ngIf="loading">
+      <p-progressSpinner [style]="{ width: '32px', height: '32px' }" />
+    </div>
+
+    <!-- Empty -->
+    <div class="history-empty" *ngIf="!loading && versions.length === 0">
+      <p>{{ 'notes.history.empty' | transloco }}</p>
+    </div>
+
+    <!-- Version list -->
+    <div class="version-list" *ngIf="!loading && versions.length > 0">
+      <div class="version-entry" *ngFor="let version of versions">
+        <div class="version-header">
+          <span class="version-number">
+            {{ 'notes.history.version' | transloco }} {{ version.versionNumber }}
+          </span>
+          <span class="version-meta">
+            {{ version.authorName }} · {{ version.createdAt | date: 'dd MMM yyyy, HH:mm' }}
+          </span>
+        </div>
+
+        <!-- Free-form content snapshot -->
+        <div
+          class="version-content"
+          *ngIf="version.content"
+          [innerHTML]="version.content"
+        ></div>
+
+        <!-- Structured fields snapshot -->
+        <div class="version-structured" *ngIf="version.structuredFields">
+          <div class="structured-field" *ngFor="let entry of version.structuredFields | keyvalue">
+            <span class="structured-label">{{ 'notes.structuredFields.' + entry.key | transloco }}</span>
+            <p class="structured-value">{{ entry.value }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="history-footer">
+      <p-button
+        [label]="'common.actions.close' | transloco"
+        severity="secondary"
+        (onClick)="close()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

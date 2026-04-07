@@ -2,6 +2,8 @@
 
 .session-detail-content {
   padding: 0;
+  max-height: calc(90vh - 130px);
+  overflow-y: auto;
 }
 
 // Header with client name and status

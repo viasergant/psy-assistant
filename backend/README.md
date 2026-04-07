@@ -54,6 +54,7 @@ backend/
 | `DB_USERNAME` | `psyassistant`                           | Database username        |
 | `DB_PASSWORD` | `psyassistant`                           | Database password        |
 | `JWT_SECRET`  | local profile only: built-in dev fallback | JWT signing secret (required outside local dev unless overridden in config) |
+| `SESSION_NOTES_ENCRYPTION_KEY` | local profile only: built-in dev fallback | AES-256-GCM key for session note encryption. Must be a base64-encoded 32-byte value. Generate with: `openssl rand -base64 32` |
 
 For local development, the defaults provided by `application.yml` and
 `application-local.yml` match the Docker Compose service configuration, and the

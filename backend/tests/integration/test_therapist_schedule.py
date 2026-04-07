@@ -165,7 +165,6 @@ def test_create_schedule_override(admin_client, therapist_with_schedule, created
     assert data["overrideDate"], "Override should have overrideDate"
     assert data["isAvailable"] is False
 
-
 def test_get_schedule_summary(admin_client, therapist_with_schedule, created_resources):
     """Test retrieving complete schedule summary with all components."""
     therapist_id = therapist_with_schedule

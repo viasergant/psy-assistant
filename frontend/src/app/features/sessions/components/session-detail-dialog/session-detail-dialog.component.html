@@ -2,7 +2,7 @@
   [(visible)]="visible"
   [modal]="true"
   [closable]="true"
-  [style]="{ width: '600px' }"
+  [style]="{ width: '600px', 'max-height': '90vh' }"
   [header]="'sessions.dialog.detailTitle' | transloco"
   (onHide)="close()"
 >
@@ -59,12 +59,14 @@
       </div>
     </div>
 
-    <!-- Session Notes (for completed sessions) -->
-    <div class="notes-section" *ngIf="session.status === SessionStatus.COMPLETED && session.sessionNotes">
+    <!-- Clinical Notes -->
+    <div class="session-details-card">
       <h4 class="section-title">{{ 'sessions.dialog.sessionNotes' | transloco }}</h4>
-      <div class="notes-content">
-        <p>{{ session.sessionNotes }}</p>
-      </div>
+      <app-session-notes-panel
+        [sessionId]="session.id"
+        [active]="visible"
+        [readonly]="session.status !== SessionStatus.IN_PROGRESS"
+      />
     </div>
 
     <!-- Cancellation Reason (for cancelled sessions) -->
@@ -75,10 +77,6 @@
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="session.status === SessionStatus.PENDING || session.status === SessionStatus.IN_PROGRESS">
-      <p>{{ 'sessions.dialog.noNotesYet' | transloco }}</p>
-    </div>
   </div>
 
   <ng-template pTemplate="footer">

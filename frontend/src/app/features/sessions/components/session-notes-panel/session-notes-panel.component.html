@@ -1,0 +1,90 @@
+<div class="notes-panel">
+  <!-- Add Note toolbar — always visible for write-mode sessions -->
+  <div class="notes-toolbar" *ngIf="!readonly">
+    <p-button
+      [label]="'notes.addNote' | transloco"
+      icon="pi pi-plus"
+      size="small"
+      (onClick)="openCreateEditor()"
+    />
+  </div>
+
+  <!-- Loading state -->
+  <div class="notes-loading" *ngIf="loading">
+    <p-progressSpinner [style]="{ width: '32px', height: '32px' }" />
+    <span>{{ 'notes.loading' | transloco }}</span>
+  </div>
+
+  <!-- Forbidden state -->
+  <div class="notes-forbidden" *ngIf="!loading && forbidden">
+    <span class="pi pi-lock notes-forbidden-icon"></span>
+    <p>{{ 'notes.accessDenied' | transloco }}</p>
+  </div>
+
+  <!-- Notes list -->
+  <ng-container *ngIf="!loading && !forbidden">
+    <div class="notes-empty" *ngIf="notes.length === 0">
+      <p>{{ 'notes.empty' | transloco }}</p>
+    </div>
+
+    <div class="note-card" *ngFor="let note of notes">
+      <div class="note-card-header">
+        <div class="note-card-meta">
+          <span class="note-author">{{ note.authorName }}</span>
+          <span class="note-date">{{ note.createdAt | date: 'dd MMM yyyy, HH:mm' }}</span>
+          <p-tag
+            [value]="getVisibilityKey(note.visibility) | transloco"
+            [severity]="getVisibilitySeverity(note.visibility)"
+            styleClass="note-visibility-badge"
+          />
+        </div>
+        <div class="note-card-actions">
+          <p-button
+            *ngIf="note.hasVersionHistory"
+            icon="pi pi-history"
+            [text]="true"
+            size="small"
+            (onClick)="openVersionHistory(note)"
+          />
+          <p-button
+            *ngIf="!readonly"
+            icon="pi pi-pencil"
+            [text]="true"
+            size="small"
+            (onClick)="openEditEditor(note)"
+          />
+        </div>
+      </div>
+
+      <!-- Free-form content -->
+      <div
+        class="note-content"
+        *ngIf="note.noteType === 'FREE_FORM' && note.content"
+        [innerHTML]="note.content"
+      ></div>
+
+      <!-- Structured fields -->
+      <div class="note-structured" *ngIf="note.noteType === 'STRUCTURED' && note.structuredFields">
+        <div class="structured-field" *ngFor="let entry of note.structuredFields | keyvalue">
+          <span class="structured-label">{{ 'notes.structuredFields.' + entry.key | transloco }}</span>
+          <p class="structured-value">{{ entry.value }}</p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<app-note-editor-dialog
+  [visible]="editorVisible"
+  [sessionId]="sessionId"
+  [existingNote]="editingNote"
+  (visibleChange)="editorVisible = $event"
+  (noteSaved)="onNoteSaved($event)"
+/>
+
+<app-note-version-history-dialog
+  [visible]="historyVisible"
+  [sessionId]="sessionId"
+  [note]="historyNote"
+  (visibleChange)="historyVisible = $event"
+/>

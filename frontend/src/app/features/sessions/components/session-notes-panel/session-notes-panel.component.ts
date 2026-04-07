@@ -3,7 +3,6 @@ import {
   Component,
   Input,
   OnChanges,
-  OnInit,
   SimpleChanges,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -36,7 +35,7 @@ import { NoteVersionHistoryDialogComponent } from '../note-version-history-dialo
   templateUrl: './session-notes-panel.component.html',
   styleUrls: ['./session-notes-panel.component.scss'],
 })
-export class SessionNotesPanelComponent implements OnInit, OnChanges {
+export class SessionNotesPanelComponent implements OnChanges {
   @Input() sessionId!: string;
   @Input() active = false;
   @Input() readonly = false;
@@ -51,18 +50,10 @@ export class SessionNotesPanelComponent implements OnInit, OnChanges {
   historyVisible = false;
   historyNote: SessionNote | null = null;
 
-  private loaded = false;
-
   constructor(private noteService: SessionNoteService) {}
 
-  ngOnInit(): void {
-    if (this.active) {
-      this.loadNotes();
-    }
-  }
-
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['active'] && this.active && !this.loaded) {
+    if (changes['active'] && this.active) {
       this.loadNotes();
     }
   }
@@ -74,11 +65,9 @@ export class SessionNotesPanelComponent implements OnInit, OnChanges {
       next: notes => {
         this.notes = notes;
         this.loading = false;
-        this.loaded = true;
       },
       error: err => {
         this.loading = false;
-        this.loaded = true;
         if (this.noteService.isForbiddenError(err)) {
           this.forbidden = true;
         }

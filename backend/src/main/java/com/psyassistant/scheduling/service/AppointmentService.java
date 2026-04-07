@@ -490,11 +490,11 @@ public class AppointmentService {
         if (durationMinutes == null || durationMinutes <= 0) {
             throw new IllegalArgumentException("Duration must be positive: " + durationMinutes);
         }
-        if (durationMinutes % 15 != 0) {
-            throw new IllegalArgumentException("Duration must be multiple of 15 minutes: " + durationMinutes);
-        }
         if (durationMinutes > 480) {
             throw new IllegalArgumentException("Duration cannot exceed 8 hours: " + durationMinutes);
+        }
+        if (durationMinutes % 15 != 0) {
+            throw new IllegalArgumentException("Duration must be multiple of 15 minutes: " + durationMinutes);
         }
     }
 

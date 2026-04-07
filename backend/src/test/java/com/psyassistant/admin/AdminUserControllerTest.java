@@ -19,6 +19,7 @@ import com.psyassistant.users.UserManagementService;
 import com.psyassistant.users.UserRole;
 import com.psyassistant.users.dto.CreateUserRequest;
 import com.psyassistant.users.dto.PatchUserRequest;
+import com.psyassistant.users.dto.UserCreationResponseDto;
 import com.psyassistant.users.dto.UserPageResponse;
 import com.psyassistant.users.dto.UserSummaryDto;
 import jakarta.persistence.EntityNotFoundException;
@@ -113,10 +114,9 @@ class AdminUserControllerTest {
 
     @Test
     void createUserReturns201OnSuccess() throws Exception {
-        UserSummaryDto dto = new UserSummaryDto(
-                USER_ID, "new@example.com", "Alice", UserRole.THERAPIST, true,
-                Instant.now(), Instant.now());
-        when(userManagementService.createUser(any(), any())).thenReturn(dto);
+        UserCreationResponseDto dto = new UserCreationResponseDto(
+                USER_ID, "new@example.com", "Alice", UserRole.THERAPIST, "tmp-pass-123");
+        when(userManagementService.createUserWithTemporaryPassword(any(), any())).thenReturn(dto);
 
         mockMvc.perform(post(BASE)
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
@@ -126,7 +126,7 @@ class AdminUserControllerTest {
                                 new CreateUserRequest("new@example.com", "Alice", UserRole.THERAPIST))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("new@example.com"))
-                .andExpect(jsonPath("$.active").value(true));
+                .andExpect(jsonPath("$.active").doesNotExist());
     }
 
     @Test
@@ -143,7 +143,7 @@ class AdminUserControllerTest {
 
     @Test
     void createUserReturns409OnDuplicateEmail() throws Exception {
-        when(userManagementService.createUser(any(), any()))
+        when(userManagementService.createUserWithTemporaryPassword(any(), any()))
                 .thenThrow(new DuplicateEmailException("dup@example.com"));
 
         mockMvc.perform(post(BASE)

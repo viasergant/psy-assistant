@@ -736,6 +736,44 @@
       "actualEndTime": "Залиште порожнім для використання поточного часу"
     }
   },
+  "notes": {
+    "addNote": "Додати нотатку",
+    "edit": "Редагувати",
+    "viewHistory": "Переглянути історію",
+    "loading": "Завантаження нотаток...",
+    "empty": "Клінічних нотаток для цієї сесії ще не додано.",
+    "accessDenied": "Ви не маєте прав для перегляду клінічних нотаток.",
+    "visibility": {
+      "private": "Приватна",
+      "supervisorVisible": "Видима супервізору"
+    },
+    "types": {
+      "freeForm": "Вільна форма",
+      "structured": "Структурований шаблон"
+    },
+    "editor": {
+      "createTitle": "Додати клінічну нотатку",
+      "editTitle": "Редагувати клінічну нотатку",
+      "noteType": "Тип нотатки",
+      "content": "Зміст нотатки",
+      "visibleToSupervisor": "Видима моєму супервізору"
+    },
+    "structuredFields": {
+      "presentingProblem": "Представлена проблема",
+      "presentingProblemPlaceholder": "Опишіть представлену проблему клієнта...",
+      "interventionsUsed": "Використані інтервенції",
+      "interventionsUsedPlaceholder": "Опишіть інтервенції, використані на цій сесії...",
+      "clientResponse": "Реакція клієнта",
+      "clientResponsePlaceholder": "Опишіть реакцію клієнта на інтервенції...",
+      "planForNextSession": "План на наступну сесію",
+      "planForNextSessionPlaceholder": "Опишіть план на наступну сесію..."
+    },
+    "history": {
+      "title": "Історія версій нотатки",
+      "version": "Версія",
+      "empty": "Попередніх версій немає."
+    }
+  },
   "billing": {
     "title": "Виставлення рахунків"
   },

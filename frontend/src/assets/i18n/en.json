@@ -736,6 +736,44 @@
       "actualEndTime": "Leave blank to use current time"
     }
   },
+  "notes": {
+    "addNote": "Add Note",
+    "edit": "Edit",
+    "viewHistory": "View History",
+    "loading": "Loading notes...",
+    "empty": "No clinical notes have been added for this session yet.",
+    "accessDenied": "You do not have permission to view clinical notes.",
+    "visibility": {
+      "private": "Private",
+      "supervisorVisible": "Visible to Supervisor"
+    },
+    "types": {
+      "freeForm": "Free-form",
+      "structured": "Structured Template"
+    },
+    "editor": {
+      "createTitle": "Add Clinical Note",
+      "editTitle": "Edit Clinical Note",
+      "noteType": "Note Type",
+      "content": "Note Content",
+      "visibleToSupervisor": "Visible to my supervisor"
+    },
+    "structuredFields": {
+      "presentingProblem": "Presenting Problem",
+      "presentingProblemPlaceholder": "Describe the client's presenting problem...",
+      "interventionsUsed": "Interventions Used",
+      "interventionsUsedPlaceholder": "Describe the interventions used in this session...",
+      "clientResponse": "Client Response",
+      "clientResponsePlaceholder": "Describe how the client responded to the interventions...",
+      "planForNextSession": "Plan for Next Session",
+      "planForNextSessionPlaceholder": "Describe the plan for the next session..."
+    },
+    "history": {
+      "title": "Note Version History",
+      "version": "Version",
+      "empty": "No previous versions available."
+    }
+  },
   "billing": {
     "title": "Billing"
   },

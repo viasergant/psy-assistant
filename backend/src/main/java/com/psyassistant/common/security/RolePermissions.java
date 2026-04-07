@@ -27,8 +27,8 @@ import java.util.Set;
  * MANAGE_LEADS             |  Y  |     |     |     |  Y
  * READ_OWN_SESSIONS        |     |  Y  |     |     |
  * READ_ALL_SESSIONS        |     |     |  Y  |     |  Y
- * WRITE_SESSION_NOTE       |     |  Y  |     |     |
- * READ_OWN_SESSION_NOTES   |     |  Y  |     |     |
+ * WRITE_SESSION_NOTE       |     |  Y  |     |     |  Y
+ * READ_OWN_SESSION_NOTES   |     |  Y  |     |     |  Y
  * READ_ALL_SESSION_NOTES   |     |     |  Y  |     |  Y
  * READ_CARE_PLANS          |     |  Y  |  Y  |     |  Y
  * MANAGE_INVOICES          |     |     |     |  Y  |  Y
@@ -90,7 +90,10 @@ public final class RolePermissions {
                 Permission.READ_CLIENTS_ALL,
                 Permission.MANAGE_APPOINTMENTS,
                 Permission.MANAGE_LEADS,
+                Permission.READ_OWN_SESSIONS,
                 Permission.READ_ALL_SESSIONS,
+                Permission.WRITE_SESSION_NOTE,
+                Permission.READ_OWN_SESSION_NOTES,
                 Permission.READ_ALL_SESSION_NOTES,
                 Permission.READ_CARE_PLANS,
                 Permission.MANAGE_INVOICES,

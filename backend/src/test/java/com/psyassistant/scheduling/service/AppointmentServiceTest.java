@@ -29,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -59,6 +60,9 @@ class AppointmentServiceTest {
 
     @Mock
     private AppointmentAuditService auditService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private AppointmentService appointmentService;
@@ -200,9 +204,6 @@ class AppointmentServiceTest {
     @Test
     @DisplayName("Create appointment with invalid duration throws IllegalArgumentException")
     void testCreateAppointmentInvalidDurationThrowsException() {
-        // Arrange
-        when(sessionTypeRepository.findById(sessionTypeId)).thenReturn(Optional.of(sessionType));
-
         // Act & Assert - Duration not multiple of 15
         assertThatThrownBy(() -> appointmentService.createAppointment(
                 therapistId,
@@ -225,9 +226,6 @@ class AppointmentServiceTest {
     @Test
     @DisplayName("Create appointment with duration exceeding 8 hours throws IllegalArgumentException")
     void testCreateAppointmentDurationTooLongThrowsException() {
-        // Arrange
-        when(sessionTypeRepository.findById(sessionTypeId)).thenReturn(Optional.of(sessionType));
-
         // Act & Assert
         assertThatThrownBy(() -> appointmentService.createAppointment(
                 therapistId,

@@ -5,6 +5,7 @@ import { DialogModule } from 'primeng/dialog';
 import { Button } from 'primeng/button';
 import { Tag } from 'primeng/tag';
 import { SessionRecord, SessionStatus } from '../../models/session.model';
+import { SessionNotesPanelComponent } from '../session-notes-panel/session-notes-panel.component';
 
 /**
  * Session detail dialog component for viewing complete session information
@@ -13,7 +14,7 @@ import { SessionRecord, SessionStatus } from '../../models/session.model';
 @Component({
   selector: 'app-session-detail-dialog',
   standalone: true,
-  imports: [CommonModule, TranslocoPipe, DialogModule, Button, Tag],
+  imports: [CommonModule, TranslocoPipe, DialogModule, Button, Tag, SessionNotesPanelComponent],
   templateUrl: './session-detail-dialog.component.html',
   styleUrls: ['./session-detail-dialog.component.scss'],
 })

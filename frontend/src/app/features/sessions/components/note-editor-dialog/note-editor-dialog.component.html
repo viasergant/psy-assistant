@@ -1,0 +1,85 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [closable]="true"
+  [style]="{ width: '680px' }"
+  [contentStyle]="{ 'max-height': '80vh', 'overflow-y': 'auto' }"
+  appendTo="body"
+  [header]="(isEdit ? 'notes.editor.editTitle' : 'notes.editor.createTitle') | transloco"
+  (onHide)="close()"
+>
+  <div class="editor-form" *ngIf="visible">
+    <!-- Note type selector (create only) -->
+    <div class="field" *ngIf="!isEdit">
+      <label>{{ 'notes.editor.noteType' | transloco }}</label>
+      <p-select
+        [(ngModel)]="noteType"
+        [options]="noteTypeOptions"
+        [optionLabel]="'label'"
+        [optionValue]="'value'"
+        (onChange)="onNoteTypeChange()"
+        styleClass="w-full"
+      >
+        <ng-template let-item pTemplate="selectedItem">
+          {{ item.label | transloco }}
+        </ng-template>
+        <ng-template let-item pTemplate="item">
+          {{ item.label | transloco }}
+        </ng-template>
+      </p-select>
+    </div>
+
+    <!-- FREE_FORM: rich text editor -->
+    <div class="field" *ngIf="noteType === 'FREE_FORM'">
+      <label>{{ 'notes.editor.content' | transloco }}</label>
+      <p-editor [(ngModel)]="content" [style]="{ height: '260px' }" />
+    </div>
+
+    <!-- STRUCTURED: per-field textareas -->
+    <div *ngIf="noteType === 'STRUCTURED' && selectedTemplate">
+      <div class="field" *ngFor="let field of selectedTemplate.fields">
+        <label>
+          {{ 'notes.structuredFields.' + field.key | transloco }}
+          <span class="required" *ngIf="field.required">*</span>
+        </label>
+        <textarea
+          pTextarea
+          [(ngModel)]="structuredFieldValues[field.key]"
+          [rows]="3"
+          [autoResize]="true"
+          [placeholder]="('notes.structuredFields.' + field.key + 'Placeholder') | transloco"
+          class="w-full"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Visibility toggle -->
+    <div class="field visibility-field">
+      <p-checkbox
+        [(ngModel)]="supervisorVisible"
+        [binary]="true"
+        inputId="supervisorVisible"
+      />
+      <label for="supervisorVisible" class="checkbox-label">
+        {{ 'notes.editor.visibleToSupervisor' | transloco }}
+      </label>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="dialog-footer">
+      <p-button
+        [label]="'common.actions.cancel' | transloco"
+        severity="secondary"
+        [disabled]="saving"
+        (onClick)="close()"
+      />
+      <p-button
+        [label]="'common.actions.save' | transloco"
+        [loading]="saving"
+        [disabled]="!canSave || saving"
+        (onClick)="save()"
+      />
+    </div>
+  </div>
+
+</p-dialog>

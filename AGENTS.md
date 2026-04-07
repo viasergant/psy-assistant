@@ -43,6 +43,7 @@
 - Frontend i18n strings belong in frontend/src/assets/i18n/*.json and are loaded via Transloco.
 - **Use shared styles module for UI components**: Frontend uses a shared styles system at `frontend/src/styles/`. Use existing dialog, form, button, badge, and table classes instead of creating component-specific CSS for common patterns. Reference spacing tokens (`var(--spacing-lg)`) and design system colors (`var(--color-accent)`) instead of hardcoding values. See [frontend/src/styles/README.md](frontend/src/styles/README.md) for available classes and usage examples.
 - Do not log personal or sensitive client information. Log opaque identifiers only.
+- Always return error to UI when API fails keeping security. Do not share sensitive information.
 
 ## Pitfalls
 

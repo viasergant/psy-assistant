@@ -55,6 +55,9 @@ class ClientControllerTest {
     private ClientProfileService clientProfileService;
 
     @MockitoBean
+    private TimelineService timelineService;
+
+    @MockitoBean
     private AuditLogService auditLogService;
 
     @Test

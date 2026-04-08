@@ -798,7 +798,91 @@
     }
   },
   "billing": {
-    "title": "Billing"
+    "title": "Billing",
+    "invoices": {
+      "title": "Invoices",
+      "actions": {
+        "create": "New Invoice",
+        "createDraft": "Save as Draft",
+        "issue": "Issue Invoice",
+        "cancel": "Cancel Invoice",
+        "addLineItem": "Add Line Item",
+        "removeLineItem": "Remove line item",
+        "downloadPdf": "Download PDF",
+        "backToList": "Back to Invoices"
+      },
+      "status": {
+        "DRAFT": "Draft",
+        "ISSUED": "Issued",
+        "OVERDUE": "Overdue",
+        "PAID": "Paid",
+        "CANCELLED": "Cancelled"
+      },
+      "source": {
+        "SESSION": "Session",
+        "PACKAGE": "Package",
+        "MANUAL": "Manual"
+      },
+      "filters": {
+        "status": "Filter by status",
+        "allStatuses": "All Statuses"
+      },
+      "list": {
+        "loading": "Loading invoices...",
+        "empty": "No invoices found."
+      },
+      "table": {
+        "number": "Invoice #",
+        "client": "Client",
+        "source": "Source",
+        "status": "Status",
+        "issuedDate": "Issued",
+        "dueDate": "Due",
+        "total": "Total",
+        "actions": "Actions",
+        "description": "Description",
+        "qty": "Qty",
+        "unitPrice": "Unit Price",
+        "lineTotal": "Line Total"
+      },
+      "detail": {
+        "title": "Invoice",
+        "loading": "Loading invoice...",
+        "lineItems": "Line Items",
+        "subtotal": "Subtotal",
+        "discount": "Discount",
+        "total": "Total",
+        "notes": "Notes",
+        "cancellationReason": "Cancellation Reason",
+        "createdAt": "Created",
+        "issuedDate": "Issued",
+        "dueDate": "Due"
+      },
+      "form": {
+        "createManual": "Create Manual Invoice",
+        "clientSection": "Client Information",
+        "clientId": "Client",
+        "clientIdPlaceholder": "Search by name, email or phone",
+        "noClientResults": "No clients found",
+        "therapistId": "Therapist (optional)",
+        "therapistIdPlaceholder": "Search by name",
+        "noTherapistResults": "No therapists found",
+        "notes": "Notes",
+        "notesPlaceholder": "Optional notes for the invoice",
+        "discount": "Discount",
+        "lineItems": "Line Items",
+        "noLineItems": "No line items added yet.",
+        "description": "Description",
+        "quantity": "Qty",
+        "unitPrice": "Unit Price"
+      },
+      "cancel": {
+        "title": "Cancel Invoice",
+        "description": "Please provide a reason for cancelling this invoice. This action cannot be undone.",
+        "reason": "Cancellation reason",
+        "reasonPlaceholder": "Enter cancellation reason..."
+      }
+    }
   },
   "reports": {
     "title": "Reports",

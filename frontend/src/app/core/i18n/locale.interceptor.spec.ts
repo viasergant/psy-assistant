@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpResponse } from '@angular/common/http';
+import { HttpRequest, HttpHandlerFn, HttpResponse } from '@angular/common/http';
 import { TranslocoService } from '@jsverse/transloco';
 import { localeInterceptor } from './locale.interceptor';
 import { of } from 'rxjs';

@@ -3,7 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, of } from 'rxjs';
 import {
   CalendarWeekViewResponse,
-  CalendarAppointmentBlock,
   CalendarViewMode,
   CalendarFilters
 } from '../models/calendar.model';

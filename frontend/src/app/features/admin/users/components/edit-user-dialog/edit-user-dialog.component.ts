@@ -4,7 +4,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { UserManagementService } from '../../services/user-management.service';
-import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserRole, UserSummary } from '../../models/user.model';
+import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserSummary } from '../../models/user.model';
 
 /**
  * Modal dialog for editing an existing user's full name, role, or active status.

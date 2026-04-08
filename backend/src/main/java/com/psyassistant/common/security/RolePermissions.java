@@ -79,11 +79,16 @@ public final class RolePermissions {
                 Permission.READ_CARE_PLANS,
                 Permission.READ_TEAM_WORKLOAD,
                 Permission.READ_REPORTS,
-                Permission.READ_LEADS
+                Permission.READ_LEADS,
+                Permission.READ_INVOICES
         )));
 
         map.put(UserRole.FINANCE, Collections.unmodifiableSet(EnumSet.of(
                 Permission.MANAGE_INVOICES,
+                Permission.CREATE_INVOICES,
+                Permission.ISSUE_INVOICES,
+                Permission.CANCEL_INVOICES,
+                Permission.READ_INVOICES,
                 Permission.MANAGE_PAYMENTS,
                 Permission.READ_FINANCIAL_REPORTS
         )));
@@ -101,6 +106,10 @@ public final class RolePermissions {
                 Permission.READ_CARE_PLANS,
                 Permission.MANAGE_CARE_PLANS,
                 Permission.MANAGE_INVOICES,
+                Permission.CREATE_INVOICES,
+                Permission.ISSUE_INVOICES,
+                Permission.CANCEL_INVOICES,
+                Permission.READ_INVOICES,
                 Permission.MANAGE_PAYMENTS,
                 Permission.READ_FINANCIAL_REPORTS,
                 Permission.READ_TEAM_WORKLOAD,

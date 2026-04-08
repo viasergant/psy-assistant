@@ -3,8 +3,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
   ConflictResolution,
-  RecurringConflictCheckResponse,
-  RecurringSlotCheckResult
+  RecurringConflictCheckResponse
 } from '../../models/schedule.model';
 
 /**

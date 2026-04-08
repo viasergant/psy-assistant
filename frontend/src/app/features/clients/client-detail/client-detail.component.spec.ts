@@ -9,7 +9,6 @@ describe('ClientDetailComponent', () => {
   let fixture: ComponentFixture<ClientDetailComponent>;
   let component: ClientDetailComponent;
   let clientServiceSpy: jasmine.SpyObj<ClientService>;
-  let createObjectUrlSpy: jasmine.Spy;
   let revokeObjectUrlSpy: jasmine.Spy;
 
   const baseClient: ClientDetail = {
@@ -78,7 +77,7 @@ describe('ClientDetailComponent', () => {
     );
     clientServiceSpy.getPhoto.and.returnValue(of(new Blob(['photo'], { type: 'image/png' })));
 
-    createObjectUrlSpy = spyOn(URL, 'createObjectURL').and.returnValue('blob:test-photo');
+    spyOn(URL, 'createObjectURL').and.returnValue('blob:test-photo');
     revokeObjectUrlSpy = spyOn(URL, 'revokeObjectURL').and.stub();
 
     await TestBed.configureTestingModule({

@@ -56,8 +56,7 @@
         .totals td { padding: 4pt 8pt; font-size: 10pt; }
         .totals .label { color: #555; }
         .totals .value { text-align: right; }
-        .totals .total-row td { border-top: 2px solid #2c5f9e; font-weight: bold; font-size: 12pt;
-            padding-top: 6pt; }
+        .totals .total-row td { font-weight: bold; font-size: 12pt; padding-top: 6pt; }
 
         /* Footer */
         .footer { margin-top: 40pt; padding-top: 10pt; border-top: 1px solid #ccc;
@@ -111,7 +110,7 @@
     <!-- ===== BILLING TO ===== -->
     <div class="billing-to">
         <div class="section-title">Bill To</div>
-        <div class="client-name" th:text="${invoice.clientId}">Client</div>
+        <div class="client-name" th:text="${clientName}">Client</div>
     </div>
 
     <!-- ===== LINE ITEMS ===== -->

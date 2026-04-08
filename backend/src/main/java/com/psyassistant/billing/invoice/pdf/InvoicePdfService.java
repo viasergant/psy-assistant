@@ -3,6 +3,7 @@ package com.psyassistant.billing.invoice.pdf;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.psyassistant.billing.invoice.Invoice;
 import com.psyassistant.billing.invoice.config.InvoiceProperties;
+import com.psyassistant.crm.clients.ClientRepository;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -35,9 +37,11 @@ public class InvoicePdfService {
 
     private final InvoiceProperties properties;
     private final SpringTemplateEngine templateEngine;
+    private final ClientRepository clientRepository;
 
-    public InvoicePdfService(final InvoiceProperties properties) {
+    public InvoicePdfService(final InvoiceProperties properties, final ClientRepository clientRepository) {
         this.properties = properties;
+        this.clientRepository = clientRepository;
         this.templateEngine = buildTemplateEngine();
     }
 
@@ -99,6 +103,11 @@ public class InvoicePdfService {
     private Map<String, Object> buildModel(final Invoice invoice) {
         Map<String, Object> model = new HashMap<>();
         model.put("invoice", invoice);
+        UUID clientId = invoice.getClientId();
+        String clientName = clientId != null
+                ? clientRepository.findById(clientId).map(c -> c.getFullName()).orElse(clientId.toString())
+                : "";
+        model.put("clientName", clientName);
         return model;
     }
 

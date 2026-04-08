@@ -57,7 +57,7 @@ app:
     job-cron: "0 0 2 * * *"
   invoices:
     payment-terms-days: 14
-    pdf-storage-path: ${INVOICE_PDF_STORAGE_PATH:/var/psy/invoices/pdf}
+    pdf-storage-path: ${INVOICE_PDF_STORAGE_PATH:invoices/pdf}
   security:
     token-ttl:
       admin:

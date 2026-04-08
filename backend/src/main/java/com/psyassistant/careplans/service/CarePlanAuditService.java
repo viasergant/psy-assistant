@@ -116,6 +116,18 @@ public class CarePlanAuditService {
                 actorId, actorName, null, null, null);
     }
 
+    public void recordGoalProgressNoteAdded(final UUID carePlanId, final UUID goalId,
+                                             final UUID actorId, final String actorName) {
+        save(carePlanId, ENTITY_GOAL, goalId, AuditActionType.GOAL_PROGRESS_NOTE_ADDED,
+                actorId, actorName, null, null, null);
+    }
+
+    public void recordOutcomeMeasureRecorded(final UUID carePlanId, final UUID entryId,
+                                              final UUID actorId, final String actorName) {
+        save(carePlanId, "OUTCOME_MEASURE", entryId, AuditActionType.OUTCOME_MEASURE_RECORDED,
+                actorId, actorName, null, null, null);
+    }
+
     // ---- helpers ----
 
     private void save(final UUID carePlanId, final String entityType, final UUID entityId,

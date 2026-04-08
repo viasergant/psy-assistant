@@ -1,5 +1,6 @@
 export type CarePlanStatus = 'ACTIVE' | 'CLOSED' | 'ARCHIVED';
-export type GoalStatus = 'PENDING' | 'IN_PROGRESS' | 'ACHIEVED' | 'ABANDONED';
+export type GoalStatus = 'PENDING' | 'IN_PROGRESS' | 'ACHIEVED' | 'ABANDONED' | 'PAUSED';
+export type AlertSeverity = 'WARNING' | 'ALERT';
 export type InterventionStatus = 'ACTIVE' | 'COMPLETED' | 'DISCONTINUED';
 
 export interface InterventionResponse {
@@ -111,3 +112,80 @@ export interface UpdateCarePlanRequest {
 export interface UpdateGoalStatusRequest {
   status: GoalStatus;
 }
+
+// ---- Progress notes ----
+
+export interface GoalProgressNote {
+  id: string;
+  goalId: string;
+  noteText: string;
+  authorName: string;
+  createdAt: string;
+}
+
+export interface CreateProgressNoteRequest {
+  noteText: string;
+}
+
+export interface StatusChangeEvent {
+  timestamp: string;
+  fromStatus: string;
+  toStatus: string;
+  actorName: string;
+}
+
+export interface GoalProgressHistory {
+  goalId: string;
+  statusHistory: StatusChangeEvent[];
+  progressNotes: GoalProgressNote[];
+}
+
+// ---- Outcome measures ----
+
+export interface OutcomeMeasureDefinition {
+  id: string;
+  code: string;
+  displayName: string;
+  description?: string;
+  minScore: number;
+  maxScore: number;
+  alertThreshold?: number;
+  alertLabel?: string;
+  alertSeverity?: AlertSeverity;
+  sortOrder: number;
+}
+
+export interface OutcomeMeasureEntry {
+  id: string;
+  measureCode: string;
+  measureDisplayName: string;
+  score: number;
+  assessmentDate: string;
+  notes?: string;
+  thresholdBreached: boolean;
+  alertLabel?: string;
+  alertSeverity?: AlertSeverity;
+  recordedByName: string;
+  createdAt: string;
+}
+
+export interface RecordOutcomeMeasureRequest {
+  measureDefinitionId: string;
+  score: number;
+  assessmentDate: string;
+  notes?: string;
+}
+
+export interface OutcomeMeasureChartDataPoint {
+  date: string;
+  score: number;
+  thresholdBreached: boolean;
+}
+
+export interface OutcomeMeasureChartData {
+  measureCode: string;
+  displayName: string;
+  alertThreshold?: number;
+  series: OutcomeMeasureChartDataPoint[];
+}
+

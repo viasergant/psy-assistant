@@ -4,6 +4,8 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { jwtDecode } from 'jwt-decode';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { GoalProgressPanelComponent } from '../progress/goal-progress-panel/goal-progress-panel.component';
+import { OutcomeMeasureListComponent } from '../outcome-measures/outcome-measure-list/outcome-measure-list.component';
 import { CarePlanDetail, GoalResponse, GoalStatus } from '../models/care-plan.model';
 import { CarePlanService } from '../services/care-plan.service';
 
@@ -14,7 +16,7 @@ interface JwtPayload {
 @Component({
   selector: 'app-care-plan-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslocoModule],
+  imports: [CommonModule, RouterModule, TranslocoModule, GoalProgressPanelComponent, OutcomeMeasureListComponent],
   template: `
     <div class="page">
       <a class="back-link" [routerLink]="['../']">&larr; {{ 'carePlans.detail.backToPlans' | transloco }}</a>
@@ -51,6 +53,20 @@ interface JwtPayload {
         </div>
 
         <section class="section">
+          <!-- Tab navigation -->
+          <nav class="tab-nav" aria-label="{{ 'carePlans.detail.tabsLabel' | transloco }}">
+            <button
+              *ngFor="let tab of tabs; let i = index"
+              type="button"
+              class="tab-btn"
+              [class.tab-active]="activeTab === i"
+              [attr.aria-selected]="activeTab === i"
+              (click)="activeTab = i"
+            >{{ tab | transloco }}</button>
+          </nav>
+
+          <!-- Tab 0: Goals -->
+          <div *ngIf="activeTab === 0">
           <h2 class="section-title">{{ 'carePlans.detail.goals' | transloco }}</h2>
 
           <div *ngIf="plan.goals.length === 0" class="empty-state">
@@ -119,6 +135,41 @@ interface JwtPayload {
               </div>
             </div>
           </div>
+          </div><!-- end tab 0: Goals -->
+
+          <!-- Tab 1: Progress -->
+          <div *ngIf="activeTab === 1">
+            <div *ngIf="plan.goals.length === 0" class="empty-state">
+              {{ 'carePlans.detail.noGoals' | transloco }}
+            </div>
+            <div *ngFor="let goal of plan.goals" class="goal-card" style="margin-bottom: var(--spacing-md);">
+              <div class="goal-header" style="cursor:default">
+                <span class="goal-priority">{{ goal.priority }}.</span>
+                <span class="goal-description">{{ goal.description }}</span>
+                <span class="badge-status" [ngClass]="goalStatusClass(goal.status)">
+                  {{ 'carePlans.goalStatus.' + goal.status.toLowerCase() | transloco }}
+                </span>
+              </div>
+              <div class="goal-body">
+                <app-goal-progress-panel
+                  [planId]="planId"
+                  [goalId]="goal.id"
+                  [canManage]="canManage"
+                  [isActive]="plan.status === 'ACTIVE'"
+                ></app-goal-progress-panel>
+              </div>
+            </div>
+          </div><!-- end tab 1: Progress -->
+
+          <!-- Tab 2: Outcome Measures -->
+          <div *ngIf="activeTab === 2">
+            <app-outcome-measure-list
+              [planId]="planId"
+              [canManage]="canManage"
+              [isActive]="plan.status === 'ACTIVE'"
+            ></app-outcome-measure-list>
+          </div><!-- end tab 2: Outcome Measures -->
+
         </section>
       </div>
     </div>
@@ -171,6 +222,10 @@ interface JwtPayload {
     .empty-state { text-align: center; padding: var(--spacing-xl); color: var(--color-text-muted); }
     .state-msg { padding: var(--spacing-md); color: var(--color-text-muted); }
     .alert-error { padding: var(--spacing-sm) var(--spacing-md); background: #fee2e2; color: #991b1b; border-radius: var(--radius-sm); margin-bottom: var(--spacing-md); }
+    .tab-nav { display: flex; gap: 4px; border-bottom: 2px solid var(--color-border); margin-bottom: var(--spacing-lg); }
+    .tab-btn { padding: 8px 18px; border: none; background: none; cursor: pointer; font-size: 0.9rem; color: var(--color-text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .tab-btn:hover { color: var(--color-accent); }
+    .tab-active { color: var(--color-accent) !important; border-bottom-color: var(--color-accent) !important; font-weight: 600; }
   `]
 })
 export class CarePlanDetailComponent implements OnInit {
@@ -181,8 +236,14 @@ export class CarePlanDetailComponent implements OnInit {
   planId!: string;
   expandedGoals = new Set<number>();
   canManage = false;
+  activeTab = 0;
+  readonly tabs = [
+    'carePlans.detail.tabs.goals',
+    'carePlans.detail.tabs.progress',
+    'carePlans.detail.tabs.outcomeMeasures'
+  ];
 
-  readonly goalStatuses: GoalStatus[] = ['PENDING', 'IN_PROGRESS', 'ACHIEVED', 'ABANDONED'];
+  readonly goalStatuses: GoalStatus[] = ['PENDING', 'IN_PROGRESS', 'ACHIEVED', 'PAUSED', 'ABANDONED'];
 
   constructor(
     private route: ActivatedRoute,

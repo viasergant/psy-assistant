@@ -90,48 +90,58 @@ import { CancelInvoiceRequest } from '../../models/invoice.model';
                 </td>
               </tr>
             </tbody>
+            <tfoot>
+              <!-- Totals -->
+              <tr class="totals-tr">
+                <td colspan="2" class="totals-spacer"></td>
+                <td colspan="2" class="totals-cell">
+                  <div class="totals-line">
+                    <span>{{ 'billing.invoices.detail.subtotal' | transloco }}</span>
+                    <span>{{ invoice.subtotal | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="totals-line" *ngIf="invoice.discount > 0">
+                    <span>{{ 'billing.invoices.detail.discount' | transloco }}</span>
+                    <span>- {{ invoice.discount | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="totals-line total">
+                    <span>{{ 'billing.invoices.detail.total' | transloco }}</span>
+                    <span>{{ invoice.total | number:'1.2-2' }}</span>
+                  </div>
+                </td>
+                <td *ngIf="invoice.status === 'DRAFT'"></td>
+              </tr>
+              <!-- Add line item (draft only) -->
+              <tr *ngIf="invoice.status === 'DRAFT'" class="add-line-header-tr">
+                <td colspan="5" class="add-line-label">{{ 'billing.invoices.actions.addLineItem' | transloco }}</td>
+              </tr>
+              <tr *ngIf="invoice.status === 'DRAFT'" class="add-line-inputs-tr">
+                <td>
+                  <input type="text" class="table-input"
+                         [(ngModel)]="newItem.description"
+                         [placeholder]="'billing.invoices.form.description' | transloco" />
+                </td>
+                <td>
+                  <input type="number" class="table-input table-input-right"
+                         [(ngModel)]="newItem.quantity"
+                         min="0.01"
+                         [placeholder]="'billing.invoices.form.quantity' | transloco" />
+                </td>
+                <td>
+                  <input type="number" class="table-input table-input-right"
+                         [(ngModel)]="newItem.unitPrice"
+                         min="0"
+                         [placeholder]="'billing.invoices.form.unitPrice' | transloco" />
+                </td>
+                <td colspan="2">
+                  <button type="button" class="btn-primary table-add-btn"
+                          [disabled]="!newItem.description || !newItem.quantity || newItem.unitPrice === undefined"
+                          (click)="addLineItem()">
+                    {{ 'billing.invoices.actions.addLineItem' | transloco }}
+                  </button>
+                </td>
+              </tr>
+            </tfoot>
           </table>
-
-          <!-- Totals -->
-          <div class="totals-row">
-            <div class="totals-block">
-              <div class="totals-line">
-                <span>{{ 'billing.invoices.detail.subtotal' | transloco }}</span>
-                <span>{{ invoice.subtotal | number:'1.2-2' }}</span>
-              </div>
-              <div class="totals-line" *ngIf="invoice.discount > 0">
-                <span>{{ 'billing.invoices.detail.discount' | transloco }}</span>
-                <span>- {{ invoice.discount | number:'1.2-2' }}</span>
-              </div>
-              <div class="totals-line total">
-                <span>{{ 'billing.invoices.detail.total' | transloco }}</span>
-                <span>{{ invoice.total | number:'1.2-2' }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add line item form (draft only) -->
-          <div *ngIf="invoice.status === 'DRAFT'" class="add-line-item">
-            <h3 class="form-subtitle">{{ 'billing.invoices.actions.addLineItem' | transloco }}</h3>
-            <div class="form-row">
-              <input type="text" class="form-input"
-                     [(ngModel)]="newItem.description"
-                     [placeholder]="'billing.invoices.form.description' | transloco" />
-              <input type="number" class="form-input form-input-sm"
-                     [(ngModel)]="newItem.quantity"
-                     min="0.01"
-                     [placeholder]="'billing.invoices.form.quantity' | transloco" />
-              <input type="number" class="form-input form-input-sm"
-                     [(ngModel)]="newItem.unitPrice"
-                     min="0"
-                     [placeholder]="'billing.invoices.form.unitPrice' | transloco" />
-              <button type="button" class="btn-primary"
-                      [disabled]="!newItem.description || !newItem.quantity || newItem.unitPrice === undefined"
-                      (click)="addLineItem()">
-                {{ 'billing.invoices.actions.addLineItem' | transloco }}
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- Notes -->
@@ -198,19 +208,19 @@ import { CancelInvoiceRequest } from '../../models/invoice.model';
       text-align: left; font-weight: 600; border-bottom: 2px solid var(--color-border); }
     .data-table td { padding: 8px 10px; border-bottom: 1px solid var(--color-border); }
     .col-right { text-align: right; }
-    .totals-row { display: flex; justify-content: flex-end; margin-top: var(--spacing-md); }
-    .totals-block { min-width: 200px; }
-    .totals-line { display: flex; justify-content: space-between; padding: 4px 0;
+    .totals-line { display: flex; justify-content: space-between; gap: var(--spacing-sm); padding: 4px 0;
       font-size: 0.9rem; }
     .totals-line.total { font-weight: 700; font-size: 1rem; border-top: 2px solid var(--color-border);
       margin-top: 4px; padding-top: 8px; }
-    .add-line-item { margin-top: var(--spacing-md); padding-top: var(--spacing-md);
-      border-top: 1px solid var(--color-border); }
-    .form-subtitle { font-size: 0.875rem; font-weight: 600; margin-bottom: var(--spacing-sm); }
-    .form-row { display: flex; gap: var(--spacing-sm); align-items: flex-end; }
-    .form-input { padding: 8px 10px; border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm); font-size: 0.875rem; flex: 1; }
-    .form-input-sm { flex: 0 0 100px; }
+    .data-table tfoot td { border-bottom: none; }
+    .totals-tr td { border-top: 2px solid var(--color-border); padding-top: var(--spacing-sm); }
+    .add-line-header-tr td { padding-top: var(--spacing-md); border-top: 1px solid var(--color-border);
+      font-size: 0.875rem; font-weight: 600; }
+    .add-line-inputs-tr td { padding-top: 4px; padding-bottom: var(--spacing-sm); }
+    .table-input { width: 100%; padding: 6px 8px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm); font-size: 0.875rem; box-sizing: border-box; }
+    .table-input-right { text-align: right; }
+    .table-add-btn { width: 100%; }
     .btn-icon-danger { background: none; border: none; color: #ef4444; cursor: pointer;
       font-size: 1rem; padding: 4px 6px; border-radius: var(--radius-sm); line-height: 1; }
     .btn-icon-danger:hover { background: #fee2e2; }

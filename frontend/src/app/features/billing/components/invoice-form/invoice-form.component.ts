@@ -1,14 +1,20 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnDestroy } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormArray, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
+import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
+import { Subject, takeUntil } from 'rxjs';
 import { InvoiceService } from '../../services/invoice.service';
+import { ClientService } from '../../../clients/services/client.service';
+import { ClientSearchResult } from '../../../clients/models/client.model';
+import { TherapistManagementService } from '../../../admin/therapists/services/therapist-management.service';
+import { TherapistProfile } from '../../../admin/therapists/models/therapist.model';
 
 @Component({
   selector: 'app-invoice-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, TranslocoModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, TranslocoModule, AutoCompleteModule],
   template: `
     <div class="page-container">
       <a [routerLink]="['/billing/invoices']" class="back-link">
@@ -23,12 +29,38 @@ import { InvoiceService } from '../../services/invoice.service';
           <h2 class="card-title">{{ 'billing.invoices.form.clientSection' | transloco }}</h2>
 
           <div class="form-group">
-            <label class="form-label" for="clientId">
+            <label class="form-label" for="clientSearch">
               {{ 'billing.invoices.form.clientId' | transloco }} *
             </label>
-            <input id="clientId" type="text" class="form-input"
-                   formControlName="clientId"
-                   [placeholder]="'billing.invoices.form.clientIdPlaceholder' | transloco" />
+            <p-autoComplete
+              inputId="clientSearch"
+              [ngModel]="clientQuery"
+              (ngModelChange)="clientQuery = $event?.name ?? $event ?? ''"
+              [ngModelOptions]="{standalone: true}"
+              [suggestions]="clientSuggestions"
+              (completeMethod)="searchClients($event)"
+              (onSelect)="onClientSelect($event)"
+              (onClear)="onClientClear()"
+              field="name"
+              [minLength]="2"
+              [delay]="300"
+              [showClear]="true"
+              [showEmptyMessage]="true"
+              [emptyMessage]="'billing.invoices.form.noClientResults' | transloco"
+              [placeholder]="'billing.invoices.form.clientIdPlaceholder' | transloco"
+              styleClass="w-full"
+              [appendTo]="'body'">
+              <ng-template let-client pTemplate="item">
+                <div class="autocomplete-item">
+                  <div class="autocomplete-item-name">{{ client.name }}</div>
+                  <div class="autocomplete-item-meta">
+                    <span *ngIf="client.clientCode">{{ client.clientCode }}</span>
+                    <span *ngIf="client.email">{{ client.email }}</span>
+                    <span *ngIf="client.phone">{{ client.phone }}</span>
+                  </div>
+                </div>
+              </ng-template>
+            </p-autoComplete>
             <div *ngIf="form.get('clientId')?.invalid && form.get('clientId')?.touched"
                  class="field-error">
               {{ 'common.validation.required' | transloco }}
@@ -36,12 +68,36 @@ import { InvoiceService } from '../../services/invoice.service';
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="therapistId">
+            <label class="form-label" for="therapistSearch">
               {{ 'billing.invoices.form.therapistId' | transloco }}
             </label>
-            <input id="therapistId" type="text" class="form-input"
-                   formControlName="therapistId"
-                   [placeholder]="'billing.invoices.form.therapistIdPlaceholder' | transloco" />
+            <p-autoComplete
+              inputId="therapistSearch"
+              [ngModel]="therapistQuery"
+              (ngModelChange)="therapistQuery = $event?.name ?? $event?.email ?? $event ?? ''"
+              [ngModelOptions]="{standalone: true}"
+              [suggestions]="therapistSuggestions"
+              (completeMethod)="searchTherapists($event)"
+              (onSelect)="onTherapistSelect($event)"
+              (onClear)="onTherapistClear()"
+              field="name"
+              [minLength]="1"
+              [delay]="200"
+              [showClear]="true"
+              [showEmptyMessage]="true"
+              [emptyMessage]="'billing.invoices.form.noTherapistResults' | transloco"
+              [placeholder]="'billing.invoices.form.therapistIdPlaceholder' | transloco"
+              styleClass="w-full"
+              [appendTo]="'body'">
+              <ng-template let-therapist pTemplate="item">
+                <div class="autocomplete-item">
+                  <div class="autocomplete-item-name">{{ therapist.name }}</div>
+                  <div class="autocomplete-item-meta">
+                    <span *ngIf="therapist.email">{{ therapist.email }}</span>
+                  </div>
+                </div>
+              </ng-template>
+            </p-autoComplete>
           </div>
 
           <div class="form-group">
@@ -164,12 +220,20 @@ import { InvoiceService } from '../../services/invoice.service';
     .total-label { color: var(--color-text-muted); }
     .total-value { font-weight: 700; }
     .form-actions { display: flex; justify-content: flex-end; gap: var(--spacing-sm); }
+    ::ng-deep .w-full { width: 100%; }
+    ::ng-deep .w-full .p-autocomplete-input { width: 100%; }
+    .autocomplete-item { padding: 2px 0; }
+    .autocomplete-item-name { font-weight: 500; }
+    .autocomplete-item-meta { font-size: 0.75rem; color: var(--color-text-muted); display: flex; gap: 0.75rem; margin-top: 1px; }
   `]
 })
-export class InvoiceFormComponent {
+export class InvoiceFormComponent implements OnDestroy {
   private fb = inject(FormBuilder);
   private invoiceService = inject(InvoiceService);
   private router = inject(Router);
+  private clientService = inject(ClientService);
+  private therapistService = inject(TherapistManagementService);
+  private destroy$ = new Subject<void>();
 
   form = this.fb.group({
     clientId: ['', Validators.required],
@@ -181,6 +245,24 @@ export class InvoiceFormComponent {
 
   submitting = false;
   error: string | null = null;
+
+  clientQuery = '';
+  clientSuggestions: ClientSearchResult[] = [];
+
+  therapistQuery = '';
+  therapistSuggestions: TherapistProfile[] = [];
+  private allTherapists: TherapistProfile[] = [];
+
+  constructor() {
+    this.therapistService.getTherapists(0, 200, undefined, true)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: (page) => { this.allTherapists = page.content; }, error: () => {} });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   get lineItems() {
     return this.form.get('lineItems') as FormArray;
@@ -195,6 +277,42 @@ export class InvoiceFormComponent {
     });
     const discount = Number(this.form.get('discount')?.value) || 0;
     return subtotal - discount;
+  }
+
+  searchClients(event: { query: string }): void {
+    const query = event.query?.trim();
+    if (!query || query.length < 2) { this.clientSuggestions = []; return; }
+    this.clientService.searchClients(query, 10)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: (r) => { this.clientSuggestions = r; }, error: () => { this.clientSuggestions = []; } });
+  }
+
+  onClientSelect(event: AutoCompleteSelectEvent): void {
+    const client = event.value as ClientSearchResult;
+    this.form.get('clientId')!.setValue(client.id);
+    this.form.get('clientId')!.markAsTouched();
+  }
+
+  onClientClear(): void {
+    this.form.get('clientId')!.setValue('');
+    this.form.get('clientId')!.markAsTouched();
+  }
+
+  searchTherapists(event: { query: string }): void {
+    const query = event.query?.trim().toLowerCase();
+    if (!query) { this.therapistSuggestions = this.allTherapists.slice(0, 10); return; }
+    this.therapistSuggestions = this.allTherapists
+      .filter(t => t.name.toLowerCase().includes(query) || t.email.toLowerCase().includes(query))
+      .slice(0, 10);
+  }
+
+  onTherapistSelect(event: AutoCompleteSelectEvent): void {
+    const therapist = event.value as TherapistProfile;
+    this.form.get('therapistId')!.setValue(therapist.id);
+  }
+
+  onTherapistClear(): void {
+    this.form.get('therapistId')!.setValue('');
   }
 
   addItem(): void {

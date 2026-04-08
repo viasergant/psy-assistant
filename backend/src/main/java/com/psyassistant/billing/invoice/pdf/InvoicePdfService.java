@@ -14,8 +14,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 /**
@@ -34,7 +34,7 @@ public class InvoicePdfService {
     private static final String TEMPLATE_NAME = "invoice-pdf";
 
     private final InvoiceProperties properties;
-    private final TemplateEngine templateEngine;
+    private final SpringTemplateEngine templateEngine;
 
     public InvoicePdfService(final InvoiceProperties properties) {
         this.properties = properties;
@@ -102,7 +102,7 @@ public class InvoicePdfService {
         return model;
     }
 
-    private static TemplateEngine buildTemplateEngine() {
+    private static SpringTemplateEngine buildTemplateEngine() {
         ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
         resolver.setPrefix("templates/");
         resolver.setSuffix(".html");
@@ -110,7 +110,7 @@ public class InvoicePdfService {
         resolver.setCharacterEncoding("UTF-8");
         resolver.setCacheable(true);
 
-        TemplateEngine engine = new TemplateEngine();
+        SpringTemplateEngine engine = new SpringTemplateEngine();
         engine.setTemplateResolver(resolver);
         return engine;
     }

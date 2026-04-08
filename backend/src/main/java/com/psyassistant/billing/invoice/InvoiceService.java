@@ -10,13 +10,18 @@ import com.psyassistant.billing.invoice.dto.InvoiceResponse;
 import com.psyassistant.billing.invoice.pdf.InvoicePdfService;
 import com.psyassistant.sessions.domain.SessionRecord;
 import com.psyassistant.sessions.domain.SessionStatus;
+import com.psyassistant.sessions.event.SessionCompletedEvent;
 import com.psyassistant.sessions.repository.SessionRecordRepository;
+import com.psyassistant.therapists.domain.TherapistPricingRule;
+import com.psyassistant.therapists.repository.TherapistPricingRuleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,18 +49,86 @@ public class InvoiceService {
     private final SessionRecordRepository sessionRecordRepository;
     private final InvoicePdfService pdfService;
     private final InvoiceProperties properties;
+    private final TherapistPricingRuleRepository pricingRuleRepository;
 
     public InvoiceService(
             final InvoiceRepository invoiceRepository,
             final InvoiceNumberSeqRepository seqRepository,
             final SessionRecordRepository sessionRecordRepository,
             final InvoicePdfService pdfService,
-            final InvoiceProperties properties) {
+            final InvoiceProperties properties,
+            final TherapistPricingRuleRepository pricingRuleRepository) {
         this.invoiceRepository = invoiceRepository;
         this.seqRepository = seqRepository;
         this.sessionRecordRepository = sessionRecordRepository;
         this.pdfService = pdfService;
         this.properties = properties;
+        this.pricingRuleRepository = pricingRuleRepository;
+    }
+
+    // =========================================================================
+    // Automatic invoice generation
+    // =========================================================================
+
+    /**
+     * Automatically creates a DRAFT invoice when a session is completed.
+     *
+     * <p>Looks up the therapist's most recent pricing rule whose service type name
+     * matches the session type name. Falls back to {@link BigDecimal#ZERO} when no
+     * matching rule exists so that a DRAFT is still created for manual review.
+     *
+     * <p>Idempotent: skips creation when an invoice for the session already exists.
+     *
+     * @param event the session-completed event
+     */
+    @EventListener
+    @Transactional
+    public void handleSessionCompleted(final SessionCompletedEvent event) {
+        if (invoiceRepository.existsBySessionId(event.sessionId())) {
+            LOG.debug("Invoice already exists for session {}, skipping auto-generation", event.sessionId());
+            return;
+        }
+
+        String sessionTypeName = event.sessionType() != null ? event.sessionType().getName() : null;
+        BigDecimal unitPrice = resolveUnitPrice(event.therapistId(), sessionTypeName);
+
+        Invoice invoice = new Invoice(event.clientId(), event.therapistId(), InvoiceSource.SESSION);
+        invoice.setSessionId(event.sessionId());
+
+        String lineItemDesc = sessionTypeName != null
+                ? sessionTypeName + " — " + event.sessionDate()
+                : "Session — " + event.sessionDate();
+        invoice.addLineItem(new InvoiceLineItem(lineItemDesc, BigDecimal.ONE, unitPrice, 0));
+
+        assignInvoiceNumber(invoice);
+        Invoice saved = invoiceRepository.save(invoice);
+        LOG.info("Auto-generated invoice {} for session {}", saved.getInvoiceNumber(), event.sessionId());
+    }
+
+    /**
+     * Resolves the unit price for auto-invoice generation.
+     *
+     * <p>Finds the most recent pricing rule for the therapist whose service type name
+     * matches the given session type name (case-insensitive). Returns {@link BigDecimal#ZERO}
+     * if no matching rule is found.
+     */
+    private BigDecimal resolveUnitPrice(final UUID therapistId, final String sessionTypeName) {
+        if (therapistId == null) {
+            return BigDecimal.ZERO;
+        }
+        List<TherapistPricingRule> rules =
+                pricingRuleRepository.findByTherapistProfileIdOrderByEffectiveFromDesc(therapistId);
+        if (rules.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        if (sessionTypeName != null) {
+            return rules.stream()
+                    .filter(r -> sessionTypeName.equalsIgnoreCase(r.getServiceType().getName()))
+                    .map(TherapistPricingRule::getRate)
+                    .findFirst()
+                    .orElseGet(() -> rules.get(0).getRate());
+        }
+        return rules.get(0).getRate();
     }
 
     // =========================================================================

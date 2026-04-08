@@ -8,6 +8,7 @@ import com.psyassistant.sessions.domain.SessionRecord;
 import com.psyassistant.sessions.domain.SessionStatus;
 import com.psyassistant.sessions.dto.CancelSessionRequest;
 import com.psyassistant.sessions.dto.CompleteSessionRequest;
+import com.psyassistant.sessions.event.SessionCompletedEvent;
 import com.psyassistant.sessions.repository.SessionRecordRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Duration;
@@ -306,6 +307,14 @@ public class SessionRecordService {
 
         session.complete(request.sessionNotes(), request.actualEndTime());
         final SessionRecord saved = sessionRecordRepository.save(session);
+
+        eventPublisher.publishEvent(new SessionCompletedEvent(
+                saved.getId(),
+                saved.getClientId(),
+                saved.getTherapistId(),
+                saved.getSessionDate(),
+                saved.getSessionType()
+        ));
 
         // Sync appointment status to COMPLETED
         appointmentRepository.findById(saved.getAppointmentId()).ifPresent(appointment -> {

@@ -54,4 +54,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
              AND i.dueDate < CURRENT_DATE
            """)
     List<Invoice> findOverdueIssuedInvoices();
+
+    /** Returns {@code true} if an invoice already exists for the given session. */
+    boolean existsBySessionId(UUID sessionId);
 }

@@ -11,6 +11,7 @@ import com.psyassistant.billing.invoice.dto.CancelInvoiceRequest;
 import com.psyassistant.billing.invoice.dto.CreateManualInvoiceRequest;
 import com.psyassistant.billing.invoice.dto.InvoiceResponse;
 import com.psyassistant.billing.invoice.pdf.InvoicePdfService;
+import com.psyassistant.therapists.repository.TherapistPricingRuleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -45,6 +46,9 @@ class InvoiceServiceTest {
     @Mock
     private InvoicePdfService pdfService;
 
+    @Mock
+    private TherapistPricingRuleRepository pricingRuleRepository;
+
     private InvoiceService service;
 
     private static final UUID CLIENT_ID = UUID.randomUUID();
@@ -54,7 +58,8 @@ class InvoiceServiceTest {
     @BeforeEach
     void setUp() {
         InvoiceProperties props = new InvoiceProperties(14, "/tmp/invoices");
-        service = new InvoiceService(invoiceRepository, seqRepository, sessionRecordRepository, pdfService, props);
+        service = new InvoiceService(invoiceRepository, seqRepository, sessionRecordRepository, pdfService, props,
+                pricingRuleRepository);
     }
 
     // ---- createManual -------------------------------------------------------

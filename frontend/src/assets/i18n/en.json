@@ -816,6 +816,7 @@
         "ISSUED": "Issued",
         "OVERDUE": "Overdue",
         "PAID": "Paid",
+        "PARTIALLY_PAID": "Partially Paid",
         "CANCELLED": "Cancelled"
       },
       "source": {
@@ -881,6 +882,61 @@
         "description": "Please provide a reason for cancelling this invoice. This action cannot be undone.",
         "reason": "Cancellation reason",
         "reasonPlaceholder": "Enter cancellation reason..."
+      }
+    },
+    "payment": {
+      "registerPayment": "Register Payment",
+      "registerRefund": "Issue Refund",
+      "paymentHistory": "Payment History",
+      "refunds": "Refunds",
+      "noPayments": "No payments recorded",
+      "method": "Payment Method",
+      "methods": {
+        "CASH": "Cash",
+        "BANK_TRANSFER": "Bank Transfer",
+        "CARD": "Card"
+      },
+      "date": "Payment Date",
+      "amount": "Amount",
+      "reference": "Reference",
+      "referencePlaceholder": "Optional bank reference or transaction number",
+      "notes": "Notes",
+      "totalPaid": "Total Paid",
+      "outstanding": "Outstanding Balance",
+      "refundReason": "Refund Reason",
+      "relatedPayment": "Related Payment",
+      "noRelatedPayment": "None",
+      "validation": {
+        "amountRequired": "Amount is required",
+        "amountPositive": "Amount must be greater than zero",
+        "amountExceedsOutstanding": "Amount exceeds the outstanding balance",
+        "dateRequired": "Payment date is required",
+        "methodRequired": "Payment method is required",
+        "reasonRequired": "Refund reason is required",
+        "referenceMaxLength": "Reference must not exceed 255 characters"
+      },
+      "success": {
+        "registered": "Payment registered successfully",
+        "refundRegistered": "Refund issued successfully"
+      },
+      "error": {
+        "registerFailed": "Failed to register payment",
+        "refundFailed": "Failed to issue refund"
+      }
+    },
+    "dashboard": {
+      "title": "Finance Dashboard",
+      "totalOutstanding": "Total Outstanding",
+      "totalOverdue": "Total Overdue",
+      "collectedThisMonth": "Collected This Month",
+      "loadError": "Failed to load dashboard data",
+      "asOf": "As of {{time}}",
+      "aging": {
+        "title": "Receivables Aging",
+        "current030": "0 – 30 days",
+        "past3160": "31 – 60 days",
+        "past60plus": "60+ days",
+        "amount": "Amount"
       }
     }
   },

@@ -1,4 +1,4 @@
-export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'CANCELLED';
+export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'PARTIALLY_PAID' | 'CANCELLED';
 export type InvoiceSource = 'SESSION' | 'PACKAGE' | 'MANUAL';
 
 export interface InvoiceLineItem {
@@ -26,6 +26,8 @@ export interface Invoice {
   subtotal: number;
   discount: number;
   total: number;
+  paidAmount: number;
+  outstandingBalance: number;
   notes: string | null;
   pdfPath: string | null;
   lineItems: InvoiceLineItem[];

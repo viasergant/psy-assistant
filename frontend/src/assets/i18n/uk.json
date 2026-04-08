@@ -816,6 +816,7 @@
         "ISSUED": "Виставлений",
         "OVERDUE": "Прострочений",
         "PAID": "Оплачений",
+        "PARTIALLY_PAID": "Частково оплачений",
         "CANCELLED": "Скасований"
       },
       "source": {
@@ -881,6 +882,61 @@
         "description": "Вкажіть причину скасування цього рахунку. Цю дію неможливо скасувати.",
         "reason": "Причина скасування",
         "reasonPlaceholder": "Введіть причину скасування..."
+      }
+    },
+    "payment": {
+      "registerPayment": "Зареєструвати оплату",
+      "registerRefund": "Оформити повернення",
+      "paymentHistory": "Історія платежів",
+      "refunds": "Повернення",
+      "noPayments": "Платежів не зареєстровано",
+      "method": "Спосіб оплати",
+      "methods": {
+        "CASH": "Готівка",
+        "BANK_TRANSFER": "Банківський переказ",
+        "CARD": "Картка"
+      },
+      "date": "Дата платежу",
+      "amount": "Сума",
+      "reference": "Референс",
+      "referencePlaceholder": "Необов'язковий референс або номер транзакції",
+      "notes": "Примітки",
+      "totalPaid": "Всього оплачено",
+      "outstanding": "Залишок до оплати",
+      "refundReason": "Причина повернення",
+      "relatedPayment": "Пов'язаний платіж",
+      "noRelatedPayment": "Відсутній",
+      "validation": {
+        "amountRequired": "Сума є обов'язковою",
+        "amountPositive": "Сума повинна бути більше нуля",
+        "amountExceedsOutstanding": "Сума перевищує залишок до оплати",
+        "dateRequired": "Дата платежу є обов'язковою",
+        "methodRequired": "Спосіб оплати є обов'язковим",
+        "reasonRequired": "Причина повернення є обов'язковою",
+        "referenceMaxLength": "Референс не повинен перевищувати 255 символів"
+      },
+      "success": {
+        "registered": "Платіж успішно зареєстровано",
+        "refundRegistered": "Повернення успішно оформлено"
+      },
+      "error": {
+        "registerFailed": "Не вдалося зареєструвати платіж",
+        "refundFailed": "Не вдалося оформити повернення"
+      }
+    },
+    "dashboard": {
+      "title": "Фінансова панель",
+      "totalOutstanding": "Загальна заборгованість",
+      "totalOverdue": "Прострочена заборгованість",
+      "collectedThisMonth": "Зібрано цього місяця",
+      "loadError": "Не вдалося завантажити дані панелі",
+      "asOf": "Станом на {{time}}",
+      "aging": {
+        "title": "Старіння дебіторської заборгованості",
+        "current030": "0 – 30 днів",
+        "past3160": "31 – 60 днів",
+        "past60plus": "60+ днів",
+        "amount": "Сума"
       }
     }
   },

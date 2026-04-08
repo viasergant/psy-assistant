@@ -801,7 +801,40 @@
     "title": "Виставлення рахунків"
   },
   "reports": {
-    "title": "Звіти"
+    "title": "Звіти",
+    "caseload": {
+      "title": "Навантаження команди",
+      "filter": {
+        "specializations": "Спеціалізації",
+        "allSpecializations": "Усі спеціалізації",
+        "snapshotDate": "Дата знімка"
+      },
+      "table": {
+        "therapist": "Терапевт",
+        "activeClients": "Активні клієнти",
+        "sessionsWeek": "Сесії (тиждень)",
+        "sessionsMonth": "Сесії (місяць)",
+        "hoursWeek": "Запл. годин (тиждень)",
+        "contractedHours": "Договір. год/тижд.",
+        "utilization": "Завантаженість",
+        "viewClients": "Переглянути клієнтів",
+        "empty": "Даних про навантаження немає."
+      },
+      "drilldown": {
+        "title": "Список клієнтів",
+        "clientName": "Клієнт",
+        "completedSessions": "Завершені сесії",
+        "nextSession": "Наступна сесія",
+        "status": "Статус",
+        "noSession": "Не заплановано",
+        "empty": "Клієнтів не знайдено."
+      },
+      "clientStatus": {
+        "ACTIVE": "Активний",
+        "INACTIVE": "Неактивний",
+        "DISCHARGED": "Виписаний"
+      }
+    }
   },
   "errors": {
     "http": {

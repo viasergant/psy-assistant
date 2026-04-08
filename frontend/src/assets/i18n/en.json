@@ -801,7 +801,40 @@
     "title": "Billing"
   },
   "reports": {
-    "title": "Reports"
+    "title": "Reports",
+    "caseload": {
+      "title": "Team Caseload Overview",
+      "filter": {
+        "specializations": "Specializations",
+        "allSpecializations": "All Specializations",
+        "snapshotDate": "Snapshot Date"
+      },
+      "table": {
+        "therapist": "Therapist",
+        "activeClients": "Active Clients",
+        "sessionsWeek": "Sessions (Week)",
+        "sessionsMonth": "Sessions (Month)",
+        "hoursWeek": "Sched. Hours (Week)",
+        "contractedHours": "Contracted Hrs/Week",
+        "utilization": "Utilization",
+        "viewClients": "View Clients",
+        "empty": "No caseload data available."
+      },
+      "drilldown": {
+        "title": "Client List",
+        "clientName": "Client",
+        "completedSessions": "Completed Sessions",
+        "nextSession": "Next Session",
+        "status": "Status",
+        "noSession": "None scheduled",
+        "empty": "No clients found."
+      },
+      "clientStatus": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive",
+        "DISCHARGED": "Discharged"
+      }
+    }
   },
   "errors": {
     "http": {

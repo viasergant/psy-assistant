@@ -1,0 +1,101 @@
+<div class="caseload-container">
+  <div class="page-header">
+    <h1>{{ 'reports.caseload.title' | transloco }}</h1>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section" [formGroup]="filterForm">
+    <div class="filters-row">
+      <div class="field">
+        <label>{{ 'reports.caseload.filter.specializations' | transloco }}</label>
+        <p-multiselect
+          formControlName="specializations"
+          [options]="specializationOptions"
+          optionLabel="label"
+          optionValue="value"
+          [placeholder]="'reports.caseload.filter.allSpecializations' | transloco"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label>{{ 'reports.caseload.filter.snapshotDate' | transloco }}</label>
+        <p-datepicker
+          formControlName="snapshotDate"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [showClear]="true"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper table-hoverable">
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="pageSize"
+      [first]="first"
+      [totalRecords]="totalRecords"
+      [loading]="loading"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      [rowHover]="true"
+      (onLazyLoad)="onLazyLoad($event)"
+      styleClass="p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ 'reports.caseload.table.therapist' | transloco }}</th>
+          <th class="text-right">{{ 'reports.caseload.table.activeClients' | transloco }}</th>
+          <th class="text-right">{{ 'reports.caseload.table.sessionsWeek' | transloco }}</th>
+          <th class="text-right">{{ 'reports.caseload.table.sessionsMonth' | transloco }}</th>
+          <th class="text-right">{{ 'reports.caseload.table.hoursWeek' | transloco }}</th>
+          <th class="text-right">{{ 'reports.caseload.table.contractedHours' | transloco }}</th>
+          <th class="text-right">{{ 'reports.caseload.table.utilization' | transloco }}</th>
+          <th></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>{{ row.therapistName }}</td>
+          <td class="text-right">{{ row.activeClientCount }}</td>
+          <td class="text-right">{{ row.sessionsThisWeek }}</td>
+          <td class="text-right">{{ row.sessionsThisMonth }}</td>
+          <td class="text-right">{{ row.scheduledHoursThisWeek != null ? (row.scheduledHoursThisWeek | number: '1.1-1') : '—' }}</td>
+          <td class="text-right">{{ row.contractedHoursPerWeek != null ? (row.contractedHoursPerWeek | number: '1.1-1') : '—' }}</td>
+          <td class="text-right">
+            <span *ngIf="row.utilizationRate != null" class="badge"
+              [ngClass]="{
+                'badge-active': row.utilizationRate <= 1,
+                'badge-warning': row.utilizationRate > 1
+              }">
+              {{ formatUtilization(row.utilizationRate) }}
+            </span>
+            <span *ngIf="row.utilizationRate == null">—</span>
+          </td>
+          <td class="table-actions">
+            <button class="btn-ghost btn-sm" (click)="openDrilldown(row)" [title]="'reports.caseload.table.viewClients' | transloco">
+              {{ 'reports.caseload.table.viewClients' | transloco }}
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="text-center">{{ 'reports.caseload.table.empty' | transloco }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Drilldown Dialog -->
+  <app-caseload-drilldown
+    [(visible)]="drilldownVisible"
+    [therapistProfileId]="selectedTherapistId"
+    [therapistName]="selectedTherapistName"
+  />
+</div>

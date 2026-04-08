@@ -1,0 +1,25 @@
+.caseload-container {
+  padding: var(--spacing-xl);
+
+  .filters-row {
+    display: flex;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+
+    .field {
+      min-width: 220px;
+      flex: 1;
+    }
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  .text-center {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--color-text-secondary);
+  }
+}

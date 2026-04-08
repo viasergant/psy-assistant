@@ -48,6 +48,10 @@ app:
     intervention-types:
       - CBT
       - DBT
+  caseload:
+    active-client-days: 90
+    job-enabled: false
+    job-cron: "0 0 2 * * *"
 
 session:
   notes:

@@ -1,11 +1,13 @@
 package com.psyassistant;
 
 import com.psyassistant.careplans.config.CarePlanProperties;
+import com.psyassistant.reporting.caseload.CaseloadProperties;
 import java.util.TimeZone;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Entry point for the Psychological Assistance CRM backend application.
@@ -16,7 +18,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @SpringBootApplication
 @EnableAsync
-@EnableConfigurationProperties(CarePlanProperties.class)
+@EnableScheduling
+@EnableConfigurationProperties({CarePlanProperties.class, CaseloadProperties.class})
 public class PsyAssistantApplication {
 
     private static final String LEGACY_KYIV_TIME_ZONE = "Europe/Kiev";

@@ -165,6 +165,10 @@ public class Client extends BaseEntity {
     @Column(name = "photo_updated_at")
     private OffsetDateTime photoUpdatedAt;
 
+    /** Treatment status for caseload visibility (ACTIVE, ON_HOLD, DISCHARGED). */
+    @Column(name = "treatment_status", nullable = false, length = 20)
+    private String treatmentStatus = "ACTIVE";
+
     /**
      * UUID of the lead this client was converted from.
      * Carries a UNIQUE constraint enforced at the database level.
@@ -532,6 +536,16 @@ public class Client extends BaseEntity {
     /** Sets the originating lead UUID. */
     public void setSourceLeadId(final UUID sourceLeadId) {
         this.sourceLeadId = sourceLeadId;
+    }
+
+    /** Returns the treatment status (ACTIVE, ON_HOLD, DISCHARGED). */
+    public String getTreatmentStatus() {
+        return treatmentStatus;
+    }
+
+    /** Sets the treatment status. */
+    public void setTreatmentStatus(final String treatmentStatus) {
+        this.treatmentStatus = treatmentStatus;
     }
 
     /**

@@ -2170,3 +2170,31 @@ These TODOs indicate tests for those behaviors should be written but may be expe
 15. Attempting to close/archive an already CLOSED or ARCHIVED plan → 409 CarePlanNotActive
 16. Adding an intervention with an invalid interventionType → 400 validation error
 17. Creating a care plan with no goals → 400 validation error
+
+## PA-30 Therapist Caseload Overview
+
+### Authorization
+1. SYSTEM_ADMINISTRATOR calls GET /api/v1/caseload → 200 with full team list
+2. SUPERVISOR calls GET /api/v1/caseload → 200 with only their team members
+3. THERAPIST calls GET /api/v1/caseload → 403 Forbidden
+4. Unauthenticated GET /api/v1/caseload → 401
+
+### Caseload List
+5. Response is a paginated Page with content, totalElements, totalPages, size, number
+6. Each row contains: therapistProfileId, therapistName, activeClientCount, sessionsThisWeek, sessionsThisMonth, scheduledHoursThisWeek, contractedHoursPerWeek, utilizationRate
+7. utilizationRate is null when contractedHoursPerWeek is null or zero
+8. snapshotDate query parameter filters to that specific snapshot (defaults to latest)
+9. specializations query parameter (comma-separated) filters rows to matching therapists
+
+### Drilldown
+10. SYSTEM_ADMINISTRATOR calls GET /api/v1/caseload/{therapistProfileId}/clients → 200 with client list
+11. SUPERVISOR calls GET /api/v1/caseload/{therapistProfileId}/clients for a member of their team → 200
+12. SUPERVISOR calls GET /api/v1/caseload/{therapistProfileId}/clients for a therapist NOT in their team → 403
+13. Client rows contain: clientId, clientName, completedSessionCount, nextScheduledSession, clientStatus
+14. Drilldown result is paginated with page and size params
+15. Unauthenticated GET /api/v1/caseload/{id}/clients → 401
+
+### Snapshot Job
+16. CaseloadSnapshotJob is disabled in test profile (job-enabled: false)
+17. Job upserts rows with ON CONFLICT DO UPDATE so re-runs are idempotent
+18. utilizationRate = scheduledHoursThisWeek / contractedHoursPerWeek, null-guarded

@@ -14,8 +14,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Represents a therapist's professional profile, including personal information,
@@ -64,6 +66,14 @@ public class TherapistProfile extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "profile_completion_status", nullable = false, length = 20)
     private ProfileCompletionStatus profileCompletionStatus = ProfileCompletionStatus.INCOMPLETE;
+
+    /** UUID of the linked user account (populated by V40 backfill). */
+    @Column(name = "user_id")
+    private UUID userId;
+
+    /** Contracted working hours per week used for utilization rate calculation. */
+    @Column(name = "contracted_hours_per_week", precision = 5, scale = 2)
+    private BigDecimal contractedHoursPerWeek;
 
     /** Optimistic locking version for profile updates. */
     @Version
@@ -236,6 +246,26 @@ public class TherapistProfile extends BaseEntity {
 
     public ProfileCompletionStatus getProfileCompletionStatus() {
         return profileCompletionStatus;
+    }
+
+    /** Returns the linked user account UUID (may be null for legacy profiles). */
+    public UUID getUserId() {
+        return userId;
+    }
+
+    /** Sets the linked user account UUID. */
+    public void setUserId(final UUID userId) {
+        this.userId = userId;
+    }
+
+    /** Returns contracted working hours per week (may be null if not set). */
+    public BigDecimal getContractedHoursPerWeek() {
+        return contractedHoursPerWeek;
+    }
+
+    /** Sets contracted working hours per week. */
+    public void setContractedHoursPerWeek(final BigDecimal contractedHoursPerWeek) {
+        this.contractedHoursPerWeek = contractedHoursPerWeek;
     }
 
     public void setProfileCompletionStatus(ProfileCompletionStatus profileCompletionStatus) {

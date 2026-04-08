@@ -1,0 +1,49 @@
+<p-dialog
+  [header]="therapistName ?? ('reports.caseload.drilldown.title' | transloco)"
+  [visible]="visible"
+  [modal]="true"
+  [style]="{ width: '780px' }"
+  [draggable]="false"
+  (visibleChange)="visibleChange.emit($event)"
+>
+  <p-table
+    [value]="clients"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="10"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [rowsPerPageOptions]="[10, 20]"
+    (onLazyLoad)="onLazyLoad($event)"
+    styleClass="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'reports.caseload.drilldown.clientName' | transloco }}</th>
+        <th>{{ 'reports.caseload.drilldown.completedSessions' | transloco }}</th>
+        <th>{{ 'reports.caseload.drilldown.nextSession' | transloco }}</th>
+        <th>{{ 'reports.caseload.drilldown.status' | transloco }}</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td>{{ row.clientName }}</td>
+        <td>{{ row.completedSessionCount }}</td>
+        <td>{{ row.nextScheduledSession ? (row.nextScheduledSession | date: 'dd MMM yyyy HH:mm') : ('reports.caseload.drilldown.noSession' | transloco) }}</td>
+        <td>
+          <span class="badge" [ngClass]="{
+            'badge-active': row.clientStatus === 'ACTIVE',
+            'badge-inactive': row.clientStatus !== 'ACTIVE'
+          }">
+            {{ 'reports.caseload.clientStatus.' + row.clientStatus | transloco }}
+          </span>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" class="text-center">{{ 'reports.caseload.drilldown.empty' | transloco }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>

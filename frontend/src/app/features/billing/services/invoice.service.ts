@@ -64,7 +64,7 @@ export class InvoiceService {
     return this.http.post<Invoice>(`${this.base}/${invoiceId}/cancel`, request);
   }
 
-  getPdfUrl(invoiceId: string): string {
-    return `${this.base}/${invoiceId}/pdf`;
+  downloadPdf(invoiceId: string): Observable<Blob> {
+    return this.http.get(`${this.base}/${invoiceId}/pdf`, { responseType: 'blob' });
   }
 }

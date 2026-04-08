@@ -56,12 +56,13 @@ import { PaymentHistoryComponent } from '../payment-history/payment-history.comp
                   (click)="showCancelDialog = true">
             {{ 'billing.invoices.actions.cancel' | transloco }}
           </button>
-          <a *ngIf="invoice.pdfPath"
-             [href]="getPdfUrl()"
-             target="_blank"
-             class="btn-secondary">
+          <button *ngIf="invoice.pdfPath"
+                  type="button"
+                  class="btn-secondary"
+                  [disabled]="pdfLoading"
+                  (click)="downloadPdf()">
             {{ 'billing.invoices.actions.downloadPdf' | transloco }}
-          </a>
+          </button>
         </div>
 
         <!-- Line items -->
@@ -257,6 +258,7 @@ export class InvoiceDetailComponent implements OnInit {
   loading = false;
   error: string | null = null;
   actionLoading = false;
+  pdfLoading = false;
 
   showCancelDialog = false;
   cancelReason = '';
@@ -354,7 +356,23 @@ export class InvoiceDetailComponent implements OnInit {
     });
   }
 
-  getPdfUrl(): string {
-    return this.invoice ? this.invoiceService.getPdfUrl(this.invoice.id) : '#';
+  downloadPdf(): void {
+    if (!this.invoice) { return; }
+    this.pdfLoading = true;
+    this.invoiceService.downloadPdf(this.invoice.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${this.invoice!.invoiceNumber}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.pdfLoading = false;
+      },
+      error: (err) => {
+        this.error = err?.error?.message || 'Failed to download PDF';
+        this.pdfLoading = false;
+      }
+    });
   }
 }

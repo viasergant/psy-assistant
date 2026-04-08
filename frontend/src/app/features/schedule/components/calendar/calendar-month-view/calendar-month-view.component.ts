@@ -280,10 +280,9 @@ export class CalendarMonthViewComponent implements OnChanges {
     const year = this.monthDate.getFullYear();
     const month = this.monthDate.getMonth();
     
-    // First day of month and last day of month
+    // First day of month
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    
+
     // Start from the Sunday before or on the first day
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - startDate.getDay());

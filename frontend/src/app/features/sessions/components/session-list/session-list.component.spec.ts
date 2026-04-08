@@ -6,7 +6,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { of, throwError } from 'rxjs';
 import { SessionListComponent } from './session-list.component';
 import { SessionService } from '../../services/session.service';
-import { SessionRecord, SessionStatus, SessionTypeInfo } from '../../models/session.model';
+import { SessionRecord, SessionStatus } from '../../models/session.model';
 
 describe('SessionListComponent', () => {
   let component: SessionListComponent;

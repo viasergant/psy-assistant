@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { MultiSelect } from 'primeng/multiselect';
 import { DatePicker } from 'primeng/datepicker';
-import { Button } from 'primeng/button';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { Subject, debounceTime, distinctUntilChanged, finalize, takeUntil } from 'rxjs';
 import { CaseloadRow } from '../models/caseload.model';
@@ -25,7 +24,6 @@ interface SpecializationOption {
     TranslocoPipe,
     MultiSelect,
     DatePicker,
-    Button,
     TableModule,
     CaseloadDrilldownComponent,
   ],

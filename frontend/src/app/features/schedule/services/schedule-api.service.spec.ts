@@ -6,8 +6,7 @@ import {
   RecurringScheduleRequest,
   ScheduleOverride,
   ScheduleOverrideRequest,
-  ScheduleSummary,
-  DayOfWeek
+  ScheduleSummary
 } from '../models/schedule.model';
 
 describe('ScheduleApiService', () => {

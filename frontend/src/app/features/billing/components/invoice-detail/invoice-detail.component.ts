@@ -165,7 +165,7 @@ import { CancelInvoiceRequest } from '../../models/invoice.model';
               {{ 'common.actions.cancel' | transloco }}
             </button>
             <button type="button" class="btn-danger"
-                    [disabled]="!cancelReason?.trim()"
+                    [disabled]="!cancelReason.trim()"
                     (click)="confirmCancel()">
               {{ 'billing.invoices.actions.cancel' | transloco }}
             </button>

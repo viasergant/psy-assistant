@@ -21,13 +21,6 @@ interface TimeSlot {
   displayTime: string;
 }
 
-interface CellAppointments {
-  therapistId: string;
-  dayIndex: number;
-  hour: number;
-  appointments: CalendarAppointmentBlock[];
-}
-
 /**
  * Week calendar view component with multi-therapist column display (PA-32).
  *

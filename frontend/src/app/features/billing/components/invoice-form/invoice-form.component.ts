@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormArray, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -167,6 +167,10 @@ import { InvoiceService } from '../../services/invoice.service';
   `]
 })
 export class InvoiceFormComponent {
+  private fb = inject(FormBuilder);
+  private invoiceService = inject(InvoiceService);
+  private router = inject(Router);
+
   form = this.fb.group({
     clientId: ['', Validators.required],
     therapistId: [''],
@@ -177,12 +181,6 @@ export class InvoiceFormComponent {
 
   submitting = false;
   error: string | null = null;
-
-  constructor(
-    private fb: FormBuilder,
-    private invoiceService: InvoiceService,
-    private router: Router
-  ) {}
 
   get lineItems() {
     return this.form.get('lineItems') as FormArray;

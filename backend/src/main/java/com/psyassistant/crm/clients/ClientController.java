@@ -2,6 +2,7 @@ package com.psyassistant.crm.clients;
 
 import com.psyassistant.common.exception.ErrorResponse;
 import com.psyassistant.crm.clients.dto.ClientDetailDto;
+import com.psyassistant.crm.clients.dto.ClientPageResponse;
 import com.psyassistant.crm.clients.dto.ClientSummaryDto;
 import com.psyassistant.crm.clients.dto.UpdateClientProfileRequest;
 import com.psyassistant.crm.clients.dto.UpdateClientTagsRequest;
@@ -81,6 +82,59 @@ public class ClientController {
             + "or hasAuthority('READ_ASSIGNED_CLIENTS')")
     public ResponseEntity<List<ClientSummaryDto>> getAllClients() {
         return ResponseEntity.ok(clientProfileService.getAllClients());
+    }
+
+    /**
+     * Returns a paginated, filterable client list for the /clients UI.
+     *
+     * @param page         zero-based page index (default 0)
+     * @param size         page size between 1 and 100 (default 20)
+     * @param sort         sort field: fullName | createdAt (default fullName)
+     * @param dir          sort direction: asc | desc (default asc)
+     * @param q            optional text filter
+     * @param tags         optional tag filter (OR semantics, repeatable)
+     * @param therapistId  optional assigned therapist UUID filter
+     * @return 200 with a {@link ClientPageResponse}
+     */
+    @Operation(summary = "List clients (paginated)",
+            description = "Paginated list with text search, tag filter, and therapist filter")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Client page",
+            content = @Content(schema = @Schema(implementation = ClientPageResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/list")
+    @PreAuthorize("hasAuthority('MANAGE_CLIENTS') "
+            + "or hasAuthority('READ_CLIENTS_ALL') "
+            + "or hasAuthority('READ_ASSIGNED_CLIENTS')")
+    public ResponseEntity<ClientPageResponse> listClients(
+            @RequestParam(value = "page", defaultValue = "0") final int page,
+            @RequestParam(value = "size", defaultValue = "20") final int size,
+            @RequestParam(value = "sort", defaultValue = "fullName") final String sort,
+            @RequestParam(value = "dir", defaultValue = "asc") final String dir,
+            @RequestParam(value = "q", required = false) final String q,
+            @RequestParam(value = "tags", required = false) final List<String> tags,
+            @RequestParam(value = "therapistId", required = false) final UUID therapistId) {
+        return ResponseEntity.ok(
+                clientProfileService.listClients(page, size, sort, dir, q, tags, therapistId));
+    }
+
+    /**
+     * Returns all distinct tag values across all clients, sorted alphabetically.
+     * Used to populate the tag filter dropdown on the client list page.
+     *
+     * @return 200 with sorted list of tag strings
+     */
+    @Operation(summary = "Get all client tags",
+            description = "Returns distinct tag values for populating the tag filter")
+    @ApiResponse(responseCode = "200", description = "Sorted distinct tags")
+    @GetMapping("/tags")
+    @PreAuthorize("hasAuthority('MANAGE_CLIENTS') "
+            + "or hasAuthority('READ_CLIENTS_ALL') "
+            + "or hasAuthority('READ_ASSIGNED_CLIENTS')")
+    public ResponseEntity<List<String>> getAllTags() {
+        return ResponseEntity.ok(clientProfileService.getAllTags());
     }
 
     /**

@@ -207,6 +207,29 @@
         "savingTags": "Збереження тегів...",
         "suggestions": "Пропозиції:"
       }
+    },
+    "list": {
+      "searchPlaceholder": "Шукати за іменем, поштою, телефоном або кодом...",
+      "tagFilterPlaceholder": "Фільтрувати за тегами...",
+      "tagFilterLabel": "Теги",
+      "therapistFilterLabel": "Терапевт",
+      "therapistAll": "Усі терапевти",
+      "noClients": "Клієнтів за поточними фільтрами не знайдено.",
+      "loading": "Завантаження клієнтів...",
+      "error": "Не вдалося завантажити клієнтів. Спробуйте ще раз.",
+      "ariaFilters": "Фільтри списку клієнтів",
+      "ariaList": "Список клієнтів",
+      "ariaPagination": "Навігація по списку клієнтів",
+      "tableHeaders": {
+        "name": "Ім'я",
+        "code": "Код",
+        "contact": "Контакт",
+        "city": "Місто",
+        "therapist": "Терапевт",
+        "tags": "Теги",
+        "created": "Створено",
+        "actions": "Дії"
+      }
     }
   },
   "search": {

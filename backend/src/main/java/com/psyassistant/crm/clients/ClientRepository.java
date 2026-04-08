@@ -3,6 +3,8 @@ package com.psyassistant.crm.clients;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,6 +32,52 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
      * @param limit maximum number of results to return
      * @return list of matching clients ordered by relevance
      */
+    /**
+     * Returns a paginated, filtered list of clients.
+     * All parameters are optional — null values are ignored.
+     * Tag filter is OR-based: client must have at least one of the provided tags.
+     * Therapist filter is a direct UUID equality check on assigned_therapist_id.
+     *
+     * @param q              optional text filter (ILIKE on name, email, phone, code, tags)
+     * @param tags           optional list of tags (OR semantics); pass null or empty to skip
+     * @param therapistId    optional therapist UUID; pass null to skip
+     * @param pageable       pagination and sort
+     * @return page of matching clients
+     */
+    @Query(
+        value = """
+            SELECT DISTINCT c FROM Client c
+            LEFT JOIN ClientTag ct ON ct.client.id = c.id
+            WHERE (:q IS NULL OR :q = ''
+                OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(c.email) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(c.phone) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(c.clientCode) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(ct.tag) LIKE LOWER(CONCAT('%', :q, '%')))
+            AND (:#{#tags == null || #tags.isEmpty()} = true
+                OR ct.tag IN :tags)
+            AND (:therapistId IS NULL OR c.assignedTherapistId = :therapistId)
+            """,
+        countQuery = """
+            SELECT COUNT(DISTINCT c) FROM Client c
+            LEFT JOIN ClientTag ct ON ct.client.id = c.id
+            WHERE (:q IS NULL OR :q = ''
+                OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(c.email) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(c.phone) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(c.clientCode) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(ct.tag) LIKE LOWER(CONCAT('%', :q, '%')))
+            AND (:#{#tags == null || #tags.isEmpty()} = true
+                OR ct.tag IN :tags)
+            AND (:therapistId IS NULL OR c.assignedTherapistId = :therapistId)
+            """
+    )
+    Page<Client> findByFilter(
+            @Param("q") String q,
+            @Param("tags") List<String> tags,
+            @Param("therapistId") UUID therapistId,
+            Pageable pageable);
+
     @Query(value = """
         SELECT c.*
         FROM clients c

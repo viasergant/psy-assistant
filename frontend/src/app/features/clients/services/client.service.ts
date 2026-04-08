@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   ClientDetail,
+  ClientPageResponse,
   ClientSearchResult,
   TimelineEvent,
   UpdateClientProfilePayload,
@@ -98,5 +99,51 @@ export class ClientService {
     }
 
     return this.http.get<TimelineEvent[]>(`${this.base}/${clientId}/timeline`, { params });
+  }
+
+  /**
+   * Returns a paginated, filterable client list for the /clients list page.
+   *
+   * @param page         zero-based page index
+   * @param size         page size (1–100)
+   * @param sort         sort field: fullName | createdAt
+   * @param dir          sort direction: asc | desc
+   * @param q            optional text filter
+   * @param tags         optional tag filter (OR semantics)
+   * @param therapistId  optional assigned therapist UUID
+   */
+  listClients(
+    page: number = 0,
+    size: number = 20,
+    sort: string = 'fullName',
+    dir: string = 'asc',
+    q?: string,
+    tags?: string[],
+    therapistId?: string
+  ): Observable<ClientPageResponse> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sort', sort)
+      .set('dir', dir);
+
+    if (q) {
+      params = params.set('q', q);
+    }
+    if (tags && tags.length > 0) {
+      tags.forEach(tag => {
+        params = params.append('tags', tag);
+      });
+    }
+    if (therapistId) {
+      params = params.set('therapistId', therapistId);
+    }
+
+    return this.http.get<ClientPageResponse>(`${this.base}/list`, { params });
+  }
+
+  /** Returns all distinct tag values across all clients, sorted alphabetically. */
+  getAllTags(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/tags`);
   }
 }

@@ -207,6 +207,29 @@
         "savingTags": "Saving tags...",
         "suggestions": "Suggestions:"
       }
+    },
+    "list": {
+      "searchPlaceholder": "Search by name, email, phone, or code...",
+      "tagFilterPlaceholder": "Filter by tags...",
+      "tagFilterLabel": "Tags",
+      "therapistFilterLabel": "Therapist",
+      "therapistAll": "All Therapists",
+      "noClients": "No clients match the current filters.",
+      "loading": "Loading clients...",
+      "error": "Failed to load clients. Please try again.",
+      "ariaFilters": "Client list filters",
+      "ariaList": "Client list",
+      "ariaPagination": "Client list pagination",
+      "tableHeaders": {
+        "name": "Name",
+        "code": "Code",
+        "contact": "Contact",
+        "city": "City",
+        "therapist": "Therapist",
+        "tags": "Tags",
+        "created": "Created",
+        "actions": "Actions"
+      }
     }
   },
   "search": {

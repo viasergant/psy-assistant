@@ -43,6 +43,28 @@ export interface ClientDetail {
   createdBy: string | null;
 }
 
+/** Lightweight client row for the paginated list view. */
+export interface ClientListItem {
+  id: string;
+  fullName: string;
+  clientCode: string | null;
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  assignedTherapistId: string | null;
+  tags: string[];
+  createdAt: string;
+}
+
+/** Paginated response for the client list endpoint. */
+export interface ClientPageResponse {
+  content: ClientListItem[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
+}
+
 /** Search result for client autocomplete. */
 export interface ClientSearchResult {
   id: string;

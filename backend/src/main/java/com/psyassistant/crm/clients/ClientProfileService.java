@@ -2,6 +2,8 @@ package com.psyassistant.crm.clients;
 
 import com.psyassistant.crm.clients.audit.ClientProfileAuditRecorder;
 import com.psyassistant.crm.clients.dto.ClientDetailDto;
+import com.psyassistant.crm.clients.dto.ClientListDto;
+import com.psyassistant.crm.clients.dto.ClientPageResponse;
 import com.psyassistant.crm.clients.dto.ClientSummaryDto;
 import com.psyassistant.crm.clients.dto.UpdateClientProfileRequest;
 import com.psyassistant.crm.clients.dto.UpdateClientTagsRequest;
@@ -12,12 +14,16 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
@@ -106,6 +112,88 @@ public class ClientProfileService {
                 .map(ClientSummaryDto::from)
                 .sorted((a, b) -> a.name().compareToIgnoreCase(b.name()))
                 .toList();
+    }
+
+    /**
+     * Returns a paginated, optionally filtered list of clients for the list view.
+     * Supports text search across name, email, phone, code, and tags;
+     * tag multi-filter (OR semantics); and therapist filter.
+     *
+     * @param page         zero-based page index
+     * @param size         page size (max 100)
+     * @param sortField    sort field — fullName | createdAt (defaults to fullName)
+     * @param sortDir      asc or desc (defaults to asc)
+     * @param q            optional text query
+     * @param tags         optional tag filter (OR semantics)
+     * @param therapistId  optional assigned therapist UUID filter
+     * @return paginated client list
+     */
+    @Transactional(readOnly = true)
+    public ClientPageResponse listClients(
+            final int page,
+            final int size,
+            final String sortField,
+            final String sortDir,
+            final String q,
+            final List<String> tags,
+            final UUID therapistId) {
+        boolean canManageClients = hasAuthority("MANAGE_CLIENTS");
+        boolean canReadAll = hasAuthority("READ_CLIENTS_ALL");
+        boolean canReadAssigned = hasAuthority("READ_ASSIGNED_CLIENTS");
+
+        if (!canManageClients && !canReadAll && !canReadAssigned) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        int effectiveSize = Math.min(Math.max(size, 1), 100);
+        String field = Set.of("fullName", "createdAt").contains(sortField) ? sortField : "fullName";
+        Sort sort = "desc".equalsIgnoreCase(sortDir)
+                ? Sort.by(field).descending()
+                : Sort.by(field).ascending();
+
+        String qParam = (q == null || q.trim().isEmpty()) ? null : q.trim();
+        List<String> tagsParam = (tags == null || tags.isEmpty()) ? null : tags;
+
+        Page<Client> clientPage = clientRepository.findByFilter(
+                qParam, tagsParam, therapistId, PageRequest.of(page, effectiveSize, sort));
+
+        // Batch-load tags for all clients on this page
+        List<UUID> clientIds = clientPage.getContent().stream()
+                .map(Client::getId)
+                .toList();
+        Map<UUID, List<String>> tagsByClientId = clientIds.stream()
+                .collect(Collectors.toMap(
+                        id -> id,
+                        id -> getSortedTags(id)
+                ));
+
+        List<ClientListDto> rows = clientPage.getContent().stream()
+                .map(c -> ClientListDto.from(c, tagsByClientId.getOrDefault(c.getId(), List.of())))
+                .toList();
+
+        return new ClientPageResponse(
+                rows,
+                clientPage.getTotalElements(),
+                clientPage.getTotalPages(),
+                page,
+                effectiveSize
+        );
+    }
+
+    /**
+     * Returns all distinct tag values across all clients, sorted alphabetically.
+     */
+    @Transactional(readOnly = true)
+    public List<String> getAllTags() {
+        boolean canManageClients = hasAuthority("MANAGE_CLIENTS");
+        boolean canReadAll = hasAuthority("READ_CLIENTS_ALL");
+        boolean canReadAssigned = hasAuthority("READ_ASSIGNED_CLIENTS");
+
+        if (!canManageClients && !canReadAll && !canReadAssigned) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        return clientTagRepository.findAllDistinctTags();
     }
 
     /**

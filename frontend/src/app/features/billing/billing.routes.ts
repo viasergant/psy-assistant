@@ -1,12 +1,28 @@
 import { Routes } from '@angular/router';
-import { Component } from '@angular/core';
-
-@Component({
-  standalone: true,
-  template: `<h1>Billing — coming soon</h1>`
-})
-export class BillingPlaceholderComponent {}
 
 export default [
-  { path: '', component: BillingPlaceholderComponent }
+  {
+    path: '',
+    redirectTo: 'invoices',
+    pathMatch: 'full'
+  },
+  {
+    path: 'invoices',
+    loadComponent: () =>
+      import('./components/invoice-list/invoice-list.component')
+        .then(m => m.InvoiceListComponent)
+  },
+  {
+    path: 'invoices/new',
+    loadComponent: () =>
+      import('./components/invoice-form/invoice-form.component')
+        .then(m => m.InvoiceFormComponent)
+  },
+  {
+    path: 'invoices/:id',
+    loadComponent: () =>
+      import('./components/invoice-detail/invoice-detail.component')
+        .then(m => m.InvoiceDetailComponent)
+  }
 ] satisfies Routes;
+

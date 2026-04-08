@@ -1,6 +1,7 @@
 package com.psyassistant.common.exception;
 
 import com.psyassistant.auth.service.AuthException;
+import com.psyassistant.billing.invoice.InvoiceStateException;
 import com.psyassistant.careplans.exception.CarePlanNotActiveException;
 import com.psyassistant.careplans.exception.MaxActivePlansExceededException;
 import com.psyassistant.common.audit.AuditLog;
@@ -250,6 +251,24 @@ public class GlobalExceptionHandler {
                         HttpStatus.UNPROCESSABLE_ENTITY.value(),
                         ex.getMessage(),
                         "INVALID_STATUS_TRANSITION",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles invalid invoice state transition attempts (422).
+     */
+    @ExceptionHandler(InvoiceStateException.class)
+    public ResponseEntity<ErrorResponse> handleInvoiceStateException(
+            final InvoiceStateException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.unprocessableEntity().body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                        ex.getMessage(),
+                        "INVOICE_STATE_ERROR",
                         request.getRequestURI()
                 )
         );

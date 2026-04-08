@@ -798,7 +798,89 @@
     }
   },
   "billing": {
-    "title": "Виставлення рахунків"
+    "title": "Виставлення рахунків",
+    "invoices": {
+      "title": "Рахунки-фактури",
+      "actions": {
+        "create": "Новий рахунок",
+        "createDraft": "Зберегти як чернетку",
+        "issue": "Виставити рахунок",
+        "cancel": "Скасувати рахунок",
+        "addLineItem": "Додати позицію",
+        "removeLineItem": "Видалити позицію",
+        "downloadPdf": "Завантажити PDF",
+        "backToList": "Назад до рахунків"
+      },
+      "status": {
+        "DRAFT": "Чернетка",
+        "ISSUED": "Виставлений",
+        "OVERDUE": "Прострочений",
+        "PAID": "Оплачений",
+        "CANCELLED": "Скасований"
+      },
+      "source": {
+        "SESSION": "Сесія",
+        "PACKAGE": "Пакет",
+        "MANUAL": "Вручну"
+      },
+      "filters": {
+        "status": "Фільтр за статусом",
+        "allStatuses": "Усі статуси"
+      },
+      "list": {
+        "loading": "Завантаження рахунків...",
+        "empty": "Рахунки не знайдено."
+      },
+      "table": {
+        "number": "№ рахунку",
+        "client": "Клієнт",
+        "source": "Джерело",
+        "status": "Статус",
+        "issuedDate": "Виставлений",
+        "dueDate": "Термін оплати",
+        "total": "Сума",
+        "actions": "Дії",
+        "description": "Опис",
+        "qty": "Кількість",
+        "unitPrice": "Ціна за одиницю",
+        "lineTotal": "Сума рядка"
+      },
+      "detail": {
+        "title": "Рахунок",
+        "loading": "Завантаження рахунку...",
+        "lineItems": "Позиції рахунку",
+        "subtotal": "Проміжна сума",
+        "discount": "Знижка",
+        "total": "Разом",
+        "notes": "Примітки",
+        "cancellationReason": "Причина скасування",
+        "createdAt": "Створено",
+        "issuedDate": "Виставлено",
+        "dueDate": "Термін оплати"
+      },
+      "form": {
+        "createManual": "Створити рахунок вручну",
+        "clientSection": "Дані клієнта",
+        "clientId": "ID клієнта",
+        "clientIdPlaceholder": "Введіть UUID клієнта",
+        "therapistId": "Терапевт (необов'язково)",
+        "therapistIdPlaceholder": "Введіть UUID терапевта",
+        "notes": "Примітки",
+        "notesPlaceholder": "Необов'язкові примітки до рахунку",
+        "discount": "Знижка",
+        "lineItems": "Позиції рахунку",
+        "noLineItems": "Позиції ще не додано.",
+        "description": "Опис",
+        "quantity": "Кількість",
+        "unitPrice": "Ціна за одиницю"
+      },
+      "cancel": {
+        "title": "Скасування рахунку",
+        "description": "Вкажіть причину скасування цього рахунку. Цю дію неможливо скасувати.",
+        "reason": "Причина скасування",
+        "reasonPlaceholder": "Введіть причину скасування..."
+      }
+    }
   },
   "reports": {
     "title": "Звіти",

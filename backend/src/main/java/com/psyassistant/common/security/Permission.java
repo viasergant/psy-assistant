@@ -59,6 +59,18 @@ public enum Permission {
     /** Create, update, and void invoices. */
     MANAGE_INVOICES,
 
+    /** Create draft invoices from sessions, packages, or manual entries. */
+    CREATE_INVOICES,
+
+    /** Issue (lock and publish) draft invoices. */
+    ISSUE_INVOICES,
+
+    /** Cancel draft or issued invoices. */
+    CANCEL_INVOICES,
+
+    /** Read invoice list and detail views. */
+    READ_INVOICES,
+
     /** Record and reconcile payments and refunds. */
     MANAGE_PAYMENTS,
 

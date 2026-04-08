@@ -55,6 +55,9 @@ app:
     active-client-days: 90
     job-enabled: true
     job-cron: "0 0 2 * * *"
+  invoices:
+    payment-terms-days: 14
+    pdf-storage-path: ${INVOICE_PDF_STORAGE_PATH:/var/psy/invoices/pdf}
   security:
     token-ttl:
       admin:

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="'Invoice ' + ${invoice.invoiceNumber}">Invoice</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #222; }
+
+        .page { padding: 36pt 48pt; }
+
+        /* Header */
+        .header { display: table; width: 100%; margin-bottom: 28pt; }
+        .header-left { display: table-cell; vertical-align: top; width: 50%; }
+        .header-right { display: table-cell; vertical-align: top; width: 50%; text-align: right; }
+        .org-name { font-size: 18pt; font-weight: bold; color: #2c5f9e; margin-bottom: 4pt; }
+        .org-address { font-size: 9pt; color: #555; line-height: 1.4; }
+        .invoice-title { font-size: 26pt; font-weight: bold; color: #2c5f9e; letter-spacing: 1pt; }
+        .invoice-meta { margin-top: 6pt; font-size: 10pt; }
+        .invoice-meta td { padding: 1pt 0; }
+        .invoice-meta .label { color: #777; padding-right: 8pt; }
+        .invoice-meta .value { font-weight: bold; }
+
+        hr.divider { border: none; border-top: 2px solid #2c5f9e; margin: 16pt 0; }
+
+        /* Client block */
+        .billing-to { margin-bottom: 20pt; }
+        .billing-to .section-title { font-size: 9pt; color: #777; text-transform: uppercase;
+            letter-spacing: 0.5pt; margin-bottom: 4pt; }
+        .billing-to .client-name { font-size: 12pt; font-weight: bold; }
+
+        /* Status badge */
+        .status-badge { display: inline-block; padding: 3pt 8pt; border-radius: 3pt;
+            font-size: 9pt; font-weight: bold; letter-spacing: 0.5pt; text-transform: uppercase; }
+        .status-DRAFT { background: #fff3cd; color: #856404; }
+        .status-ISSUED { background: #cce5ff; color: #004085; }
+        .status-OVERDUE { background: #f8d7da; color: #721c24; }
+        .status-PAID { background: #d4edda; color: #155724; }
+        .status-CANCELLED { background: #e2e3e5; color: #383d41; }
+
+        /* Line items table */
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 16pt; }
+        table.items thead th {
+            background: #2c5f9e; color: #fff; font-size: 10pt;
+            padding: 6pt 8pt; text-align: left;
+        }
+        table.items thead th.num { text-align: right; }
+        table.items tbody tr { border-bottom: 1px solid #e0e0e0; }
+        table.items tbody tr:nth-child(even) { background: #f8f9fa; }
+        table.items tbody td { padding: 6pt 8pt; font-size: 10pt; vertical-align: top; }
+        table.items tbody td.num { text-align: right; white-space: nowrap; }
+
+        /* Totals */
+        .totals { float: right; width: 240pt; margin-top: 8pt; }
+        .totals table { width: 100%; border-collapse: collapse; }
+        .totals td { padding: 4pt 8pt; font-size: 10pt; }
+        .totals .label { color: #555; }
+        .totals .value { text-align: right; }
+        .totals .total-row td { border-top: 2px solid #2c5f9e; font-weight: bold; font-size: 12pt;
+            padding-top: 6pt; }
+
+        /* Footer */
+        .footer { margin-top: 40pt; padding-top: 10pt; border-top: 1px solid #ccc;
+            font-size: 9pt; color: #888; text-align: center; }
+
+        .clearfix::after { content: ""; display: table; clear: both; }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+        <div class="header-left">
+            <div class="org-name">Psy Assistant</div>
+            <div class="org-address">
+                Psychology &amp; Counselling Services<br/>
+                123 Wellness Street, Kyiv, Ukraine<br/>
+                info@psyassistant.com
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="invoice-title">INVOICE</div>
+            <table class="invoice-meta">
+                <tr>
+                    <td class="label">Invoice #</td>
+                    <td class="value" th:text="${invoice.invoiceNumber}">2026-0001</td>
+                </tr>
+                <tr>
+                    <td class="label">Status</td>
+                    <td>
+                        <span class="status-badge"
+                              th:classappend="'status-' + ${invoice.status}"
+                              th:text="${invoice.status}">DRAFT</span>
+                    </td>
+                </tr>
+                <tr th:if="${invoice.issuedDate != null}">
+                    <td class="label">Issue Date</td>
+                    <td class="value" th:text="${#temporals.format(invoice.issuedDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                </tr>
+                <tr th:if="${invoice.dueDate != null}">
+                    <td class="label">Due Date</td>
+                    <td class="value" th:text="${#temporals.format(invoice.dueDate, 'dd MMM yyyy')}">15 Jan 2026</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- ===== BILLING TO ===== -->
+    <div class="billing-to">
+        <div class="section-title">Bill To</div>
+        <div class="client-name" th:text="${invoice.clientId}">Client</div>
+    </div>
+
+    <!-- ===== LINE ITEMS ===== -->
+    <table class="items">
+        <thead>
+            <tr>
+                <th style="width: 50%;">Description</th>
+                <th class="num" style="width: 15%;">Qty</th>
+                <th class="num" style="width: 17.5%;">Unit Price</th>
+                <th class="num" style="width: 17.5%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="item : ${invoice.lineItems}">
+                <td th:text="${item.description}">Session</td>
+                <td class="num" th:text="${#numbers.formatDecimal(item.quantity, 1, 2)}">1.00</td>
+                <td class="num" th:text="${#numbers.formatDecimal(item.unitPrice, 1, 2)}">100.00</td>
+                <td class="num" th:text="${#numbers.formatDecimal(item.lineTotal, 1, 2)}">100.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ===== TOTALS ===== -->
+    <div class="clearfix">
+        <div class="totals">
+            <table>
+                <tr>
+                    <td class="label">Subtotal</td>
+                    <td class="value" th:text="${#numbers.formatDecimal(invoice.subtotal, 1, 2)}">100.00</td>
+                </tr>
+                <tr th:if="${invoice.discount != null and invoice.discount.compareTo(T(java.math.BigDecimal).ZERO) != 0}">
+                    <td class="label">Discount</td>
+                    <td class="value" th:text="'− ' + ${#numbers.formatDecimal(invoice.discount, 1, 2)}">0.00</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="label">TOTAL</td>
+                    <td class="value" th:text="${#numbers.formatDecimal(invoice.total, 1, 2)}">100.00</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== NOTES ===== -->
+    <div th:if="${invoice.notes != null and !invoice.notes.isEmpty()}"
+         style="margin-top: 24pt; font-size: 10pt;">
+        <div style="font-weight: bold; margin-bottom: 4pt;">Notes</div>
+        <div th:text="${invoice.notes}" style="color: #555;">Notes</div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <div class="footer">
+        Thank you for your business · Psy Assistant · info@psyassistant.com
+    </div>
+
+</div>
+</body>
+</html>

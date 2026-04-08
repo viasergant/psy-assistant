@@ -15,8 +15,10 @@
 | Leave Management | 20 | LVE-001 – LVE-020 |
 | Appointment Booking | 24 | APPT-001 – APPT-024 |
 | Session Records | 14 | SESS-001 – SESS-014 |
+| Care Plans | 14 | CP-001 – CP-014 |
+| Progress Tracking & Outcome Measures | 16 | PT-001 – PT-016 |
 | Cross-Entity / Business Rules | 12 | XE-001 – XE-012 |
-| **Total** | **189** | |
+| **Total** | **219** | |
 
 ---
 
@@ -1674,7 +1676,321 @@
 
 ---
 
-## 12. Cross-Entity Business Rule Validations
+## 12. Care Plans
+
+> Base path: `/api/v1/care-plans`
+> Write operations require `MANAGE_CARE_PLANS` (THERAPIST, SYS_ADMIN).
+> Read operations require `READ_CARE_PLANS` (all authenticated roles).
+> `READ_CLIENTS_ALL` grants supervisors/admin visibility of plans belonging to any therapist.
+
+### CP-001 — Therapist creates care plan for own client
+
+| Field | Value |
+|---|---|
+| Preconditions | Active client assigned to THERAPIST |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans` `{"clientId":"…","title":"Anxiety management","goals":[{"description":"Reduce avoidance","priority":1}]}` |
+| Expected result | Body contains plan with `status=ACTIVE`, one goal with `status=PENDING` |
+| HTTP status | 201 |
+
+### CP-002 — Therapist cannot create plan for another therapist's client
+
+| Field | Value |
+|---|---|
+| Preconditions | Client assigned to THERAPIST-B |
+| Actor | THERAPIST-A |
+| Action | `POST /api/v1/care-plans` with THERAPIST-B's client ID |
+| Expected result | Error response; plan not created |
+| HTTP status | 403 |
+
+### CP-003 — Admin can create plan for any client
+
+| Field | Value |
+|---|---|
+| Preconditions | Active client |
+| Actor | ADMIN |
+| Action | `POST /api/v1/care-plans` with any client ID |
+| Expected result | Plan created successfully |
+| HTTP status | 201 |
+
+### CP-004 — Therapist updates goal status to IN_PROGRESS
+
+| Field | Value |
+|---|---|
+| Preconditions | Active plan with goal in PENDING status |
+| Actor | THERAPIST (plan owner) |
+| Action | `PUT /api/v1/care-plans/{planId}/goals/{goalId}/status` `{"status":"IN_PROGRESS"}` |
+| Expected result | Goal status updated to `IN_PROGRESS` |
+| HTTP status | 200 |
+
+### CP-005 — Goal status update to PAUSED is accepted
+
+| Field | Value |
+|---|---|
+| Preconditions | Active plan with goal in IN_PROGRESS |
+| Actor | THERAPIST |
+| Action | `PUT /api/v1/care-plans/{planId}/goals/{goalId}/status` `{"status":"PAUSED"}` |
+| Expected result | Goal transitions to `PAUSED` |
+| HTTP status | 200 |
+
+### CP-006 — Goal status update rejected on closed plan
+
+| Field | Value |
+|---|---|
+| Preconditions | Plan with `status=CLOSED` |
+| Actor | THERAPIST |
+| Action | `PUT /api/v1/care-plans/{planId}/goals/{goalId}/status` `{"status":"IN_PROGRESS"}` |
+| Expected result | Error response |
+| HTTP status | 409 |
+
+### CP-007 — Milestone marked as achieved
+
+| Field | Value |
+|---|---|
+| Preconditions | Active plan with an unachieved milestone |
+| Actor | THERAPIST |
+| Action | `PATCH /api/v1/care-plans/{planId}/goals/{goalId}/milestones/{milestoneId}/achieve` |
+| Expected result | Milestone `achievedAt` is populated with current date |
+| HTTP status | 200 |
+
+### CP-008 — Close plan changes status to CLOSED
+
+| Field | Value |
+|---|---|
+| Preconditions | Plan with `status=ACTIVE` |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans/{planId}/close` |
+| Expected result | Plan `status=CLOSED` |
+| HTTP status | 200 |
+
+### CP-009 — Cannot close already-closed plan
+
+| Field | Value |
+|---|---|
+| Preconditions | Plan with `status=CLOSED` |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans/{planId}/close` |
+| Expected result | Error response |
+| HTTP status | 409 |
+
+### CP-010 — Archive plan changes status to ARCHIVED
+
+| Field | Value |
+|---|---|
+| Preconditions | Plan with `status=CLOSED` |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans/{planId}/archive` |
+| Expected result | Plan `status=ARCHIVED` |
+| HTTP status | 200 |
+
+### CP-011 — Cannot archive an active plan
+
+| Field | Value |
+|---|---|
+| Preconditions | Plan with `status=ACTIVE` |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans/{planId}/archive` |
+| Expected result | Error response |
+| HTTP status | 409 |
+
+### CP-012 — Supervisor can read plans for any therapist's clients
+
+| Field | Value |
+|---|---|
+| Preconditions | Plan belonging to THERAPIST-A |
+| Actor | SUPERVISOR |
+| Action | `GET /api/v1/care-plans/{planId}` |
+| Expected result | Full plan details returned |
+| HTTP status | 200 |
+
+### CP-013 — RECEPTION_ADMIN_STAFF cannot create care plans (no MANAGE_CARE_PLANS)
+
+| Field | Value |
+|---|---|
+| Preconditions | Active client |
+| Actor | STAFF |
+| Action | `POST /api/v1/care-plans` |
+| Expected result | Forbidden |
+| HTTP status | 403 |
+
+### CP-014 — Unauthenticated request to care plan endpoint returns 401
+
+| Field | Value |
+|---|---|
+| Actor | ANON |
+| Action | `GET /api/v1/care-plans` |
+| HTTP status | 401 |
+
+---
+
+## 13. Progress Tracking & Outcome Measures
+
+> Goal progress notes: `/api/v1/care-plans/{planId}/goals/{goalId}/progress-notes`
+> Progress history: `/api/v1/care-plans/{planId}/goals/{goalId}/progress-history`
+> Outcome measures: `/api/v1/care-plans/{planId}/outcome-measures`
+> Definitions: `/api/v1/outcome-measure-definitions`
+
+### PT-001 — Therapist adds progress note to own plan's goal
+
+| Field | Value |
+|---|---|
+| Preconditions | Active plan owned by THERAPIST with one goal |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans/{planId}/goals/{goalId}/progress-notes` `{"noteText":"Client shows improved sleep patterns."}` |
+| Expected result | Note created with `authorName` and `createdAt` populated |
+| HTTP status | 201 |
+
+### PT-002 — Non-owner therapist cannot add progress note
+
+| Field | Value |
+|---|---|
+| Preconditions | Active plan owned by THERAPIST-A |
+| Actor | THERAPIST-B |
+| Action | `POST /api/v1/care-plans/{planId}/goals/{goalId}/progress-notes` |
+| Expected result | Forbidden |
+| HTTP status | 403 |
+
+### PT-003 — Progress note rejected on closed plan
+
+| Field | Value |
+|---|---|
+| Preconditions | Plan with `status=CLOSED`, THERAPIST is plan owner |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans/{planId}/goals/{goalId}/progress-notes` |
+| Expected result | Error response |
+| HTTP status | 409 |
+
+### PT-004 — Therapist sees only own notes (no READ_CLIENTS_ALL)
+
+| Field | Value |
+|---|---|
+| Preconditions | Two notes: one by THERAPIST-A, one by THERAPIST-B (via a shared plan scenario or supervisor backdoor). THERAPIST-A has no READ_CLIENTS_ALL authority. |
+| Actor | THERAPIST-A |
+| Action | `GET /api/v1/care-plans/{planId}/goals/{goalId}/progress-notes` |
+| Expected result | Returns only notes authored by THERAPIST-A |
+| HTTP status | 200 |
+
+### PT-005 — Supervisor sees all notes (has READ_CLIENTS_ALL)
+
+| Field | Value |
+|---|---|
+| Preconditions | Two notes on same goal by different authors |
+| Actor | SUPERVISOR |
+| Action | `GET /api/v1/care-plans/{planId}/goals/{goalId}/progress-notes` |
+| Expected result | Both notes returned |
+| HTTP status | 200 |
+
+### PT-006 — Progress history includes status-change events and notes in chronological order
+
+| Field | Value |
+|---|---|
+| Preconditions | Goal has had status changes (PENDING → IN_PROGRESS) and at least one progress note |
+| Actor | THERAPIST |
+| Action | `GET /api/v1/care-plans/{planId}/goals/{goalId}/progress-history` |
+| Expected result | Array contains both status-change events (`type=STATUS_CHANGE`) and notes (`type=PROGRESS_NOTE`), ordered by timestamp ascending |
+| HTTP status | 200 |
+
+### PT-007 — List outcome measure definitions returns active instruments only
+
+| Field | Value |
+|---|---|
+| Preconditions | Seeded instruments (PHQ-9, GAD-7, DASS-21-DEP, DASS-21-ANX, DASS-21-STR, WHODAS, PCL-5); all active |
+| Actor | THERAPIST |
+| Action | `GET /api/v1/outcome-measure-definitions` |
+| Expected result | Returns 7 definitions; each has `code`, `displayName`, `minScore`, `maxScore` |
+| HTTP status | 200 |
+
+### PT-008 — Record PHQ-9 score within range; no threshold breach
+
+| Field | Value |
+|---|---|
+| Preconditions | Active plan |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans/{planId}/outcome-measures` `{"measureCode":"PHQ9","score":8,"assessmentDate":"2026-04-01","notes":""}` |
+| Expected result | Entry created; `thresholdBreached=false` |
+| HTTP status | 201 |
+
+### PT-009 — Record PHQ-9 score at or above alert threshold; thresholdBreached = true
+
+| Field | Value |
+|---|---|
+| Preconditions | Active plan; PHQ-9 alertThreshold = 15 |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans/{planId}/outcome-measures` `{"measureCode":"PHQ9","score":16,"assessmentDate":"2026-04-01"}` |
+| Expected result | Entry created; `thresholdBreached=true`, `alertLabel` and `alertSeverity` populated |
+| HTTP status | 201 |
+
+### PT-010 — Score above maxScore is rejected
+
+| Field | Value |
+|---|---|
+| Preconditions | Active plan; PHQ-9 maxScore = 27 |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans/{planId}/outcome-measures` `{"measureCode":"PHQ9","score":28,"assessmentDate":"2026-04-01"}` |
+| Expected result | Validation error |
+| HTTP status | 400 |
+
+### PT-011 — Future assessment date is rejected
+
+| Field | Value |
+|---|---|
+| Preconditions | Active plan |
+| Actor | THERAPIST |
+| Action | `POST /api/v1/care-plans/{planId}/outcome-measures` `{"measureCode":"PHQ9","score":10,"assessmentDate":"2099-01-01"}` |
+| Expected result | Validation error |
+| HTTP status | 400 |
+
+### PT-012 — Non-owner therapist cannot record outcome measure entry
+
+| Field | Value |
+|---|---|
+| Preconditions | Active plan owned by THERAPIST-A |
+| Actor | THERAPIST-B |
+| Action | `POST /api/v1/care-plans/{planId}/outcome-measures` |
+| Expected result | Forbidden |
+| HTTP status | 403 |
+
+### PT-013 — Outcome measure recording rejected on closed plan
+
+| Field | Value |
+|---|---|
+| Preconditions | Plan with `status=CLOSED` |
+| Actor | THERAPIST (plan owner) |
+| Action | `POST /api/v1/care-plans/{planId}/outcome-measures` |
+| Expected result | Error response |
+| HTTP status | 409 |
+
+### PT-014 — List outcome measure entries returns paginated results
+
+| Field | Value |
+|---|---|
+| Preconditions | 3 PHQ-9 entries recorded on plan |
+| Actor | THERAPIST |
+| Action | `GET /api/v1/care-plans/{planId}/outcome-measures?measureCode=PHQ9&page=0&size=2` |
+| Expected result | Returns 2 entries; `page.totalElements=3` |
+| HTTP status | 200 |
+
+### PT-015 — Chart data returns time-series ordered by assessment date
+
+| Field | Value |
+|---|---|
+| Preconditions | 3 PHQ-9 entries on different dates |
+| Actor | THERAPIST |
+| Action | `GET /api/v1/care-plans/{planId}/outcome-measures/chart-data?measureCode=PHQ9` |
+| Expected result | `dataPoints` array ordered by `assessmentDate` ascending; each point has `date` and `score` |
+| HTTP status | 200 |
+
+### PT-016 — Unauthenticated request to outcome measures endpoint returns 401
+
+| Field | Value |
+|---|---|
+| Actor | ANON |
+| Action | `GET /api/v1/care-plans/{planId}/outcome-measures` |
+| HTTP status | 401 |
+
+---
+
+## 14. Cross-Entity Business Rule Validations
 
 ### XE-001 — Booking appointment during therapist's approved leave period is rejected
 

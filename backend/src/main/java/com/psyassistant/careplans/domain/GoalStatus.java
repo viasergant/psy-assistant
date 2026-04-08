@@ -5,5 +5,6 @@ public enum GoalStatus {
     PENDING,
     IN_PROGRESS,
     ACHIEVED,
-    ABANDONED
+    ABANDONED,
+    PAUSED
 }

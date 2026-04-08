@@ -852,6 +852,7 @@
       "pending": "Pending",
       "in_progress": "In Progress",
       "achieved": "Achieved",
+      "paused": "Paused",
       "abandoned": "Abandoned"
     },
     "interventionStatus": {
@@ -873,6 +874,12 @@
       "loadError": "Failed to load care plan.",
       "updateError": "Failed to update. Please try again.",
       "backToPlans": "Back to care plans",
+      "tabsLabel": "Care plan sections",
+      "tabs": {
+        "goals": "Goals",
+        "progress": "Progress",
+        "outcomeMeasures": "Outcome Measures"
+      },
       "goals": "Goals",
       "noGoals": "No goals have been added to this plan.",
       "targetDate": "Target date",
@@ -882,6 +889,46 @@
       "markAchieved": "Mark achieved",
       "close": "Close plan",
       "archive": "Archive plan"
+    },
+    "progress": {
+      "notes": "Progress Notes",
+      "addNote": "Add Progress Note",
+      "noteText": "Note",
+      "noteTextPlaceholder": "Describe client progress…",
+      "noNotes": "No progress notes yet.",
+      "statusHistory": "Status History",
+      "saveNote": "Save Note",
+      "cancel": "Cancel",
+      "addNoteError": "Failed to save progress note.",
+      "loadError": "Failed to load progress notes."
+    },
+    "outcomeMeasures": {
+      "title": "Outcome Measures",
+      "record": "Record Assessment",
+      "noEntries": "No assessments recorded yet.",
+      "measureName": "Measure",
+      "score": "Score",
+      "assessmentDate": "Date",
+      "recordedBy": "Recorded by",
+      "alertLabel": "Alert",
+      "chart": "Score Over Time",
+      "srTableCaption": "Outcome measure data table",
+      "alertThresholdLabel": "Alert threshold",
+      "loadError": "Failed to load outcome measures.",
+      "form": {
+        "title": "Record Assessment",
+        "selectMeasure": "Select measure",
+        "score": "Score",
+        "assessmentDate": "Assessment date",
+        "notes": "Notes (optional)",
+        "save": "Save",
+        "cancel": "Cancel",
+        "measureRequired": "Please select a measure.",
+        "scoreRequired": "Score is required.",
+        "dateRequired": "Assessment date is required.",
+        "futureDateError": "Assessment date cannot be in the future.",
+        "saveError": "Failed to save assessment."
+      }
     },
     "form": {
       "title": "New Care Plan",

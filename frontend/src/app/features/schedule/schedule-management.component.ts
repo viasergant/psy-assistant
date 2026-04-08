@@ -989,10 +989,11 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
       this.loadSchedule();
       this.loadCalendarData();
     } else {
-      // User selected "Select a therapist..." - clear schedule
+      // User selected "Select a therapist..." - clear schedule and refresh calendar
       this.therapistProfileId = null;
       this.schedule = null;
       this.therapistName = '';
+      this.loadCalendarData();
     }
   }
 

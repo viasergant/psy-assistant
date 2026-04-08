@@ -2,6 +2,7 @@ package com.psyassistant.common.exception;
 
 import com.psyassistant.auth.service.AuthException;
 import com.psyassistant.billing.invoice.InvoiceStateException;
+import com.psyassistant.billing.payment.PaymentValidationException;
 import com.psyassistant.careplans.exception.CarePlanNotActiveException;
 import com.psyassistant.careplans.exception.MaxActivePlansExceededException;
 import com.psyassistant.common.audit.AuditLog;
@@ -251,6 +252,30 @@ public class GlobalExceptionHandler {
                         HttpStatus.UNPROCESSABLE_ENTITY.value(),
                         ex.getMessage(),
                         "INVALID_STATUS_TRANSITION",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles payment amount validation failures (422).
+     *
+     * <p>Thrown when a payment amount exceeds the outstanding invoice balance.
+     *
+     * @param ex      the payment validation exception
+     * @param request the current HTTP request
+     * @return 422 Unprocessable Entity
+     */
+    @ExceptionHandler(PaymentValidationException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentValidation(
+            final PaymentValidationException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.unprocessableEntity().body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                        ex.getMessage(),
+                        "PAYMENT_VALIDATION_ERROR",
                         request.getRequestURI()
                 )
         );

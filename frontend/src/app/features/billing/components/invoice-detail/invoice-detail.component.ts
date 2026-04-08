@@ -6,11 +6,12 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Invoice } from '../../models/invoice.model';
 import { InvoiceService } from '../../services/invoice.service';
 import { CancelInvoiceRequest } from '../../models/invoice.model';
+import { PaymentHistoryComponent } from '../payment-history/payment-history.component';
 
 @Component({
   selector: 'app-invoice-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, TranslocoModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, TranslocoModule, PaymentHistoryComponent],
   template: `
     <div class="page-container">
 
@@ -156,6 +157,11 @@ import { CancelInvoiceRequest } from '../../models/invoice.model';
           <p>{{ invoice.cancellationReason }}</p>
         </div>
 
+        <!-- Payment history (shown for non-draft, non-cancelled invoices) -->
+        <div class="card" *ngIf="invoice.status !== 'DRAFT' && invoice.status !== 'CANCELLED'">
+          <app-payment-history [invoice]="invoice"></app-payment-history>
+        </div>
+
       </ng-container>
 
       <!-- Cancel dialog -->
@@ -232,6 +238,7 @@ import { CancelInvoiceRequest } from '../../models/invoice.model';
     .status-issued { background: #dbeafe; color: #1e40af; }
     .status-overdue { background: #fee2e2; color: #991b1b; }
     .status-paid { background: #dcfce7; color: #166534; }
+    .status-partially_paid { background: #fef9c3; color: #854d0e; }
     .status-cancelled { background: #f3f4f6; color: #6b7280; }
     .dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       display: flex; align-items: center; justify-content: center; z-index: 1000; }

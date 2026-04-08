@@ -1,5 +1,6 @@
 package com.psyassistant.billing.invoice;
 
+import com.psyassistant.billing.payment.PaymentValidationException;
 import com.psyassistant.common.audit.BaseEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -83,6 +84,9 @@ public class Invoice extends BaseEntity {
     @Column(name = "total", nullable = false, precision = 12, scale = 2)
     private BigDecimal total = BigDecimal.ZERO;
 
+    @Column(name = "paid_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal paidAmount = BigDecimal.ZERO;
+
     @Column(name = "pdf_path", length = 500)
     private String pdfPath;
 
@@ -152,6 +156,38 @@ public class Invoice extends BaseEntity {
         if (this.status == InvoiceStatus.ISSUED) {
             this.status = InvoiceStatus.OVERDUE;
         }
+    }
+
+    /**
+     * Validates that this invoice can accept a payment.
+     * Throws {@link InvoiceStateException} if status is DRAFT, PAID, or CANCELLED.
+     */
+    public void canAcceptPayment() {
+        if (this.status == InvoiceStatus.DRAFT
+                || this.status == InvoiceStatus.PAID
+                || this.status == InvoiceStatus.CANCELLED) {
+            throw new InvoiceStateException(
+                    "Invoice in state " + this.status + " cannot accept payments");
+        }
+    }
+
+    /**
+     * Applies a payment amount to this invoice, updating paidAmount and status.
+     *
+     * <p>Throws {@link PaymentValidationException} if amount exceeds outstanding balance.
+     * Must call {@link #canAcceptPayment()} before calling this method.
+     *
+     * @param amount the payment amount to apply (must be positive and ≤ outstanding)
+     */
+    public void applyPayment(final BigDecimal amount) {
+        BigDecimal outstanding = this.total.subtract(this.paidAmount);
+        if (amount.compareTo(outstanding) > 0) {
+            throw new PaymentValidationException(
+                    "Payment amount " + amount + " exceeds outstanding balance " + outstanding);
+        }
+        this.paidAmount = this.paidAmount.add(amount);
+        this.status = this.paidAmount.compareTo(this.total) >= 0
+                ? InvoiceStatus.PAID : InvoiceStatus.PARTIALLY_PAID;
     }
 
     /**
@@ -284,6 +320,14 @@ public class Invoice extends BaseEntity {
 
     public BigDecimal getTotal() {
         return total;
+    }
+
+    public BigDecimal getPaidAmount() {
+        return paidAmount;
+    }
+
+    public BigDecimal getOutstandingBalance() {
+        return this.total.subtract(this.paidAmount);
     }
 
     public String getPdfPath() {

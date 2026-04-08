@@ -7,6 +7,12 @@ export default [
     pathMatch: 'full'
   },
   {
+    path: 'dashboard',
+    loadComponent: () =>
+      import('./components/finance-dashboard/finance-dashboard.component')
+        .then(m => m.FinanceDashboardComponent)
+  },
+  {
     path: 'invoices',
     loadComponent: () =>
       import('./components/invoice-list/invoice-list.component')

@@ -2,3 +2,4 @@
 .mcp.json
 .vscode/mcp.json
 .env
+backend/invoices/

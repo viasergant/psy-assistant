@@ -270,6 +270,8 @@ class InvoiceControllerTest {
                 new BigDecimal("100.00"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.00"),
+                BigDecimal.ZERO,
+                new BigDecimal("100.00"),
                 null,
                 null,
                 Collections.emptyList(),

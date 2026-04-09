@@ -1,6 +1,7 @@
 package com.psyassistant.common.exception;
 
 import com.psyassistant.auth.service.AuthException;
+import com.psyassistant.billing.catalog.DuplicateServiceException;
 import com.psyassistant.billing.invoice.InvoiceStateException;
 import com.psyassistant.billing.payment.PaymentValidationException;
 import com.psyassistant.careplans.exception.CarePlanNotActiveException;
@@ -152,6 +153,28 @@ public class GlobalExceptionHandler {
                         HttpStatus.CONFLICT.value(),
                         ex.getMessage(),
                         "DUPLICATE_EMAIL",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles duplicate service name+category conflicts in the service catalog (409).
+     *
+     * @param ex      the duplicate service exception
+     * @param request the current HTTP request
+     * @return 409 Conflict with machine-readable code
+     */
+    @ExceptionHandler(DuplicateServiceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateService(
+            final DuplicateServiceException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage(),
+                        "DUPLICATE_SERVICE",
                         request.getRequestURI()
                 )
         );

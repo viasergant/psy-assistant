@@ -92,5 +92,12 @@ public enum Permission {
     VIEW_AUDIT_LOG,
 
     /** Read and write system-level configuration settings. */
-    MANAGE_SYSTEM_CONFIG
+    MANAGE_SYSTEM_CONFIG,
+
+    // ---- Service catalog -------------------------------------------------
+    /** Create, update, and deactivate service catalog entries and manage prices. */
+    MANAGE_SERVICE_CATALOG,
+
+    /** Read service catalog entries and price history. */
+    READ_SERVICE_CATALOG
 }

@@ -80,7 +80,8 @@ public final class RolePermissions {
                 Permission.READ_TEAM_WORKLOAD,
                 Permission.READ_REPORTS,
                 Permission.READ_LEADS,
-                Permission.READ_INVOICES
+                Permission.READ_INVOICES,
+                Permission.READ_SERVICE_CATALOG
         )));
 
         map.put(UserRole.FINANCE, Collections.unmodifiableSet(EnumSet.of(
@@ -90,7 +91,9 @@ public final class RolePermissions {
                 Permission.CANCEL_INVOICES,
                 Permission.READ_INVOICES,
                 Permission.MANAGE_PAYMENTS,
-                Permission.READ_FINANCIAL_REPORTS
+                Permission.READ_FINANCIAL_REPORTS,
+                Permission.MANAGE_SERVICE_CATALOG,
+                Permission.READ_SERVICE_CATALOG
         )));
 
         map.put(UserRole.SYSTEM_ADMINISTRATOR, Collections.unmodifiableSet(EnumSet.of(
@@ -116,7 +119,9 @@ public final class RolePermissions {
                 Permission.READ_REPORTS,
                 Permission.MANAGE_USERS,
                 Permission.VIEW_AUDIT_LOG,
-                Permission.MANAGE_SYSTEM_CONFIG
+                Permission.MANAGE_SYSTEM_CONFIG,
+                Permission.MANAGE_SERVICE_CATALOG,
+                Permission.READ_SERVICE_CATALOG
         )));
 
         // Deprecated legacy roles — no permissions; treated as THERAPIST/SYSTEM_ADMINISTRATOR

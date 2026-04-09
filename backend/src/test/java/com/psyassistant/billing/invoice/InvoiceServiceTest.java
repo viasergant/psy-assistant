@@ -5,6 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import com.psyassistant.billing.catalog.ServiceCatalogPriceHistoryRepository;
+import com.psyassistant.billing.catalog.ServiceCatalogRepository;
+import com.psyassistant.billing.catalog.ServiceCatalogTherapistOverrideRepository;
 import com.psyassistant.billing.invoice.config.InvoiceProperties;
 import com.psyassistant.billing.invoice.dto.AddLineItemRequest;
 import com.psyassistant.billing.invoice.dto.CancelInvoiceRequest;
@@ -49,6 +52,15 @@ class InvoiceServiceTest {
     @Mock
     private TherapistPricingRuleRepository pricingRuleRepository;
 
+    @Mock
+    private ServiceCatalogRepository catalogRepository;
+
+    @Mock
+    private ServiceCatalogPriceHistoryRepository priceHistoryRepository;
+
+    @Mock
+    private ServiceCatalogTherapistOverrideRepository overrideRepository;
+
     private InvoiceService service;
 
     private static final UUID CLIENT_ID = UUID.randomUUID();
@@ -59,7 +71,7 @@ class InvoiceServiceTest {
     void setUp() {
         InvoiceProperties props = new InvoiceProperties(14, "/tmp/invoices");
         service = new InvoiceService(invoiceRepository, seqRepository, sessionRecordRepository, pdfService, props,
-                pricingRuleRepository);
+                pricingRuleRepository, catalogRepository, priceHistoryRepository, overrideRepository);
     }
 
     // ---- createManual -------------------------------------------------------

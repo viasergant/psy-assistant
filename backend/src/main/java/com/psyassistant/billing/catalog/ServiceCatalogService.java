@@ -9,6 +9,8 @@ import com.psyassistant.billing.catalog.dto.UpdateDefaultPriceRequest;
 import com.psyassistant.billing.catalog.dto.UpdateServiceRequest;
 import com.psyassistant.billing.catalog.dto.UpdateServiceStatusRequest;
 import com.psyassistant.billing.catalog.dto.UpsertTherapistOverrideRequest;
+import com.psyassistant.scheduling.domain.SessionType;
+import com.psyassistant.scheduling.repository.SessionTypeRepository;
 import com.psyassistant.users.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
@@ -40,16 +42,19 @@ public class ServiceCatalogService {
     private final ServiceCatalogPriceHistoryRepository priceHistoryRepository;
     private final ServiceCatalogTherapistOverrideRepository overrideRepository;
     private final UserRepository userRepository;
+    private final SessionTypeRepository sessionTypeRepository;
 
     public ServiceCatalogService(
             final ServiceCatalogRepository catalogRepository,
             final ServiceCatalogPriceHistoryRepository priceHistoryRepository,
             final ServiceCatalogTherapistOverrideRepository overrideRepository,
-            final UserRepository userRepository) {
+            final UserRepository userRepository,
+            final SessionTypeRepository sessionTypeRepository) {
         this.catalogRepository = catalogRepository;
         this.priceHistoryRepository = priceHistoryRepository;
         this.overrideRepository = overrideRepository;
         this.userRepository = userRepository;
+        this.sessionTypeRepository = sessionTypeRepository;
     }
 
     // =========================================================================
@@ -109,7 +114,7 @@ public class ServiceCatalogService {
         ServiceCatalog service = new ServiceCatalog(
                 request.name(),
                 request.category(),
-                request.serviceType(),
+                resolveSessionType(request.sessionTypeId()),
                 request.durationMin()
         );
         catalogRepository.save(service);
@@ -138,7 +143,7 @@ public class ServiceCatalogService {
 
         service.setName(request.name());
         service.setCategory(request.category());
-        service.setServiceType(request.serviceType());
+        service.setSessionType(resolveSessionType(request.sessionTypeId()));
         service.setDurationMin(request.durationMin());
 
         LOG.info("Service catalog entry updated: id={}", id);
@@ -250,5 +255,14 @@ public class ServiceCatalogService {
     private String currentPrincipalName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null ? auth.getName() : "system";
+    }
+
+    private SessionType resolveSessionType(final UUID sessionTypeId) {
+        SessionType st = sessionTypeRepository.findById(sessionTypeId)
+                .orElseThrow(() -> new EntityNotFoundException("Session type not found: " + sessionTypeId));
+        if (!Boolean.TRUE.equals(st.getIsActive())) {
+            throw new EntityNotFoundException("Session type is inactive: " + sessionTypeId);
+        }
+        return st;
     }
 }

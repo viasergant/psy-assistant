@@ -1,10 +1,14 @@
 package com.psyassistant.billing.catalog;
 
 import com.psyassistant.common.audit.BaseEntity;
+import com.psyassistant.scheduling.domain.SessionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -31,9 +35,9 @@ public class ServiceCatalog extends BaseEntity {
     @Column(name = "category", nullable = false, length = 100)
     private String category;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "service_type", nullable = false, length = 50)
-    private ServiceType serviceType;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "session_type_id", nullable = false)
+    private SessionType sessionType;
 
     @Column(name = "duration_min", nullable = false)
     private int durationMin;
@@ -47,10 +51,10 @@ public class ServiceCatalog extends BaseEntity {
     }
 
     public ServiceCatalog(final String name, final String category,
-                          final ServiceType serviceType, final int durationMin) {
+                          final SessionType sessionType, final int durationMin) {
         this.name = name;
         this.category = category;
-        this.serviceType = serviceType;
+        this.sessionType = sessionType;
         this.durationMin = durationMin;
         this.status = ServiceStatus.ACTIVE;
     }
@@ -71,12 +75,12 @@ public class ServiceCatalog extends BaseEntity {
         this.category = category;
     }
 
-    public ServiceType getServiceType() {
-        return serviceType;
+    public SessionType getSessionType() {
+        return sessionType;
     }
 
-    public void setServiceType(final ServiceType serviceType) {
-        this.serviceType = serviceType;
+    public void setSessionType(final SessionType sessionType) {
+        this.sessionType = sessionType;
     }
 
     public int getDurationMin() {

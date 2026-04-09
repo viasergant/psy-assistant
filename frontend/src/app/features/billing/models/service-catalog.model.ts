@@ -1,16 +1,17 @@
 export type ServiceStatus = 'ACTIVE' | 'INACTIVE';
 
-export type ServiceType =
-  | 'INDIVIDUAL_SESSION'
-  | 'GROUP_SESSION'
-  | 'INTAKE_ASSESSMENT'
-  | 'FOLLOW_UP';
+export interface SessionTypeInfo {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+}
 
 export interface ServiceCatalogItem {
   id: string;
   name: string;
   category: string;
-  serviceType: ServiceType;
+  sessionType: SessionTypeInfo;
   durationMin: number;
   status: ServiceStatus;
   currentPrice: number;
@@ -36,7 +37,7 @@ export interface TherapistOverride {
 export interface CreateServiceRequest {
   name: string;
   category: string;
-  serviceType: ServiceType;
+  sessionTypeId: string;
   durationMin: number;
   defaultPrice: number;
   effectiveFrom: string;
@@ -45,7 +46,7 @@ export interface CreateServiceRequest {
 export interface UpdateServiceRequest {
   name: string;
   category: string;
-  serviceType: ServiceType;
+  sessionTypeId: string;
   durationMin: number;
 }
 

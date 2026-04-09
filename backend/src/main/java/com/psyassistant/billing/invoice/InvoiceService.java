@@ -1,5 +1,9 @@
 package com.psyassistant.billing.invoice;
 
+import com.psyassistant.billing.catalog.ServiceCatalogPriceHistoryRepository;
+import com.psyassistant.billing.catalog.ServiceCatalogRepository;
+import com.psyassistant.billing.catalog.ServiceCatalogTherapistOverrideRepository;
+import com.psyassistant.billing.catalog.ServiceStatus;
 import com.psyassistant.billing.invoice.config.InvoiceProperties;
 import com.psyassistant.billing.invoice.dto.AddLineItemRequest;
 import com.psyassistant.billing.invoice.dto.CancelInvoiceRequest;
@@ -50,6 +54,9 @@ public class InvoiceService {
     private final InvoicePdfService pdfService;
     private final InvoiceProperties properties;
     private final TherapistPricingRuleRepository pricingRuleRepository;
+    private final ServiceCatalogRepository catalogRepository;
+    private final ServiceCatalogPriceHistoryRepository priceHistoryRepository;
+    private final ServiceCatalogTherapistOverrideRepository overrideRepository;
 
     public InvoiceService(
             final InvoiceRepository invoiceRepository,
@@ -57,13 +64,19 @@ public class InvoiceService {
             final SessionRecordRepository sessionRecordRepository,
             final InvoicePdfService pdfService,
             final InvoiceProperties properties,
-            final TherapistPricingRuleRepository pricingRuleRepository) {
+            final TherapistPricingRuleRepository pricingRuleRepository,
+            final ServiceCatalogRepository catalogRepository,
+            final ServiceCatalogPriceHistoryRepository priceHistoryRepository,
+            final ServiceCatalogTherapistOverrideRepository overrideRepository) {
         this.invoiceRepository = invoiceRepository;
         this.seqRepository = seqRepository;
         this.sessionRecordRepository = sessionRecordRepository;
         this.pdfService = pdfService;
         this.properties = properties;
         this.pricingRuleRepository = pricingRuleRepository;
+        this.catalogRepository = catalogRepository;
+        this.priceHistoryRepository = priceHistoryRepository;
+        this.overrideRepository = overrideRepository;
     }
 
     // =========================================================================
@@ -89,8 +102,9 @@ public class InvoiceService {
             return;
         }
 
+        UUID sessionTypeId = event.sessionType() != null ? event.sessionType().getId() : null;
         String sessionTypeName = event.sessionType() != null ? event.sessionType().getName() : null;
-        BigDecimal unitPrice = resolveUnitPrice(event.therapistId(), sessionTypeName);
+        BigDecimal unitPrice = resolveUnitPrice(event.therapistId(), sessionTypeId, event.sessionId());
 
         Invoice invoice = new Invoice(event.clientId(), event.therapistId(), InvoiceSource.SESSION);
         invoice.setSessionId(event.sessionId());
@@ -108,27 +122,51 @@ public class InvoiceService {
     /**
      * Resolves the unit price for auto-invoice generation.
      *
-     * <p>Finds the most recent pricing rule for the therapist whose service type name
-     * matches the given session type name (case-insensitive). Returns {@link BigDecimal#ZERO}
-     * if no matching rule is found.
+     * <p>Price resolution priority:
+     * <ol>
+     *   <li>Therapist-specific override in the service catalog for this session type</li>
+     *   <li>Service catalog base price for this session type</li>
+     *   <li>TherapistPricingRule rate for this session type (legacy)</li>
+     *   <li>Zero (WARN logged)</li>
+     * </ol>
      */
-    private BigDecimal resolveUnitPrice(final UUID therapistId, final String sessionTypeName) {
+    private BigDecimal resolveUnitPrice(final UUID therapistId, final UUID sessionTypeId,
+                                        final UUID sessionId) {
         if (therapistId == null) {
             return BigDecimal.ZERO;
         }
-        List<TherapistPricingRule> rules =
-                pricingRuleRepository.findByTherapistProfileIdOrderByEffectiveFromDesc(therapistId);
-        if (rules.isEmpty()) {
+        if (sessionTypeId == null) {
+            LOG.warn("No session type for session {} therapistId={} — using zero price",
+                    sessionId, therapistId);
             return BigDecimal.ZERO;
         }
-        if (sessionTypeName != null) {
-            return rules.stream()
-                    .filter(r -> sessionTypeName.equalsIgnoreCase(r.getServiceType().getName()))
-                    .map(TherapistPricingRule::getRate)
-                    .findFirst()
-                    .orElseGet(() -> rules.get(0).getRate());
+
+        // 1. Service catalog: therapist override → catalog base price
+        var catalogEntry = catalogRepository.findFirstBySessionTypeIdAndStatus(
+                sessionTypeId, ServiceStatus.ACTIVE);
+        if (catalogEntry.isPresent()) {
+            var override = overrideRepository.findByServiceCatalogIdAndTherapistId(
+                    catalogEntry.get().getId(), therapistId);
+            if (override.isPresent()) {
+                return override.get().getPrice();
+            }
+            var openPrice = priceHistoryRepository.findOpenRecordReadOnly(catalogEntry.get().getId());
+            if (openPrice.isPresent()) {
+                return openPrice.get().getPrice();
+            }
         }
-        return rules.get(0).getRate();
+
+        // 2. TherapistPricingRule (legacy fallback)
+        List<TherapistPricingRule> rules =
+                pricingRuleRepository.findByTherapistProfileIdAndSessionTypeIdOrderByEffectiveFromDesc(
+                        therapistId, sessionTypeId);
+        if (!rules.isEmpty()) {
+            return rules.get(0).getRate();
+        }
+
+        LOG.warn("No price found for sessionTypeId={} therapistId={} sessionId={} — using zero price",
+                sessionTypeId, therapistId, sessionId);
+        return BigDecimal.ZERO;
     }
 
     // =========================================================================

@@ -92,7 +92,7 @@ import { ServiceCatalogFormComponent } from '../service-catalog-form/service-cat
                 </a>
               </td>
               <td>{{ svc.category }}</td>
-              <td>{{ 'billing.catalog.serviceTypes.' + svc.serviceType | transloco }}</td>
+              <td>{{ 'sessions.types.' + svc.sessionType.code | transloco }}</td>
               <td class="col-right">{{ svc.durationMin }} {{ 'billing.catalog.fields.min' | transloco }}</td>
               <td class="col-right price-cell">{{ svc.currentPrice | number:'1.2-2' }}</td>
               <td>

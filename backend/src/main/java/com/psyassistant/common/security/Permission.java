@@ -99,5 +99,12 @@ public enum Permission {
     MANAGE_SERVICE_CATALOG,
 
     /** Read service catalog entries and price history. */
-    READ_SERVICE_CATALOG
+    READ_SERVICE_CATALOG,
+
+    // ---- Pricing rules ---------------------------------------------------
+    /** Create and update per-therapist session-type pricing rules. */
+    MANAGE_PRICING_RULES,
+
+    /** Read per-therapist session-type pricing rules. */
+    READ_PRICING_RULES
 }

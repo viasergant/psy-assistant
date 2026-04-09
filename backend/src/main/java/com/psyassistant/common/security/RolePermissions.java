@@ -69,7 +69,8 @@ public final class RolePermissions {
                 Permission.WRITE_SESSION_NOTE,
                 Permission.READ_OWN_SESSION_NOTES,
                 Permission.READ_CARE_PLANS,
-                Permission.MANAGE_CARE_PLANS
+                Permission.MANAGE_CARE_PLANS,
+                Permission.READ_PRICING_RULES
         )));
 
         map.put(UserRole.SUPERVISOR, Collections.unmodifiableSet(EnumSet.of(
@@ -81,7 +82,8 @@ public final class RolePermissions {
                 Permission.READ_REPORTS,
                 Permission.READ_LEADS,
                 Permission.READ_INVOICES,
-                Permission.READ_SERVICE_CATALOG
+                Permission.READ_SERVICE_CATALOG,
+                Permission.READ_PRICING_RULES
         )));
 
         map.put(UserRole.FINANCE, Collections.unmodifiableSet(EnumSet.of(
@@ -93,7 +95,9 @@ public final class RolePermissions {
                 Permission.MANAGE_PAYMENTS,
                 Permission.READ_FINANCIAL_REPORTS,
                 Permission.MANAGE_SERVICE_CATALOG,
-                Permission.READ_SERVICE_CATALOG
+                Permission.READ_SERVICE_CATALOG,
+                Permission.MANAGE_PRICING_RULES,
+                Permission.READ_PRICING_RULES
         )));
 
         map.put(UserRole.SYSTEM_ADMINISTRATOR, Collections.unmodifiableSet(EnumSet.of(
@@ -121,7 +125,9 @@ public final class RolePermissions {
                 Permission.VIEW_AUDIT_LOG,
                 Permission.MANAGE_SYSTEM_CONFIG,
                 Permission.MANAGE_SERVICE_CATALOG,
-                Permission.READ_SERVICE_CATALOG
+                Permission.READ_SERVICE_CATALOG,
+                Permission.MANAGE_PRICING_RULES,
+                Permission.READ_PRICING_RULES
         )));
 
         // Deprecated legacy roles — no permissions; treated as THERAPIST/SYSTEM_ADMINISTRATOR

@@ -18,16 +18,10 @@ import { TranslocoModule } from '@jsverse/transloco';
 import {
   CreateServiceRequest,
   ServiceCatalogItem,
-  ServiceType,
   UpdateServiceRequest,
 } from '../../models/service-catalog.model';
-
-export const SERVICE_TYPES: ServiceType[] = [
-  'INDIVIDUAL_SESSION',
-  'GROUP_SESSION',
-  'INTAKE_ASSESSMENT',
-  'FOLLOW_UP',
-];
+import { AppointmentApiService } from '../../../schedule/services/appointment-api.service';
+import { SessionType } from '../../../schedule/models/schedule.model';
 
 @Component({
   selector: 'app-service-catalog-form',
@@ -86,14 +80,14 @@ export const SERVICE_TYPES: ServiceType[] = [
               <label for="cf-type">
                 {{ 'billing.catalog.fields.serviceType' | transloco }} <span class="required">*</span>
               </label>
-              <select id="cf-type" formControlName="serviceType"
-                      [class.is-error]="isInvalid('serviceType')">
+              <select id="cf-type" formControlName="sessionTypeId"
+                      [class.is-error]="isInvalid('sessionTypeId')">
                 <option value="" disabled>— {{ 'billing.catalog.fields.serviceTypePlaceholder' | transloco }} —</option>
-                <option *ngFor="let t of serviceTypes" [value]="t">
-                  {{ 'billing.catalog.serviceTypes.' + t | transloco }}
+                <option *ngFor="let t of sessionTypes" [value]="t.id">
+                  {{ 'sessions.types.' + t.code | transloco }}
                 </option>
               </select>
-              <span *ngIf="isInvalid('serviceType')" class="error-msg" role="alert">
+              <span *ngIf="isInvalid('sessionTypeId')" class="error-msg" role="alert">
                 {{ 'common.validation.required' | transloco }}
               </span>
             </div>
@@ -179,12 +173,15 @@ export class ServiceCatalogFormComponent implements OnInit, OnChanges {
   @Output() cancelled = new EventEmitter<void>();
 
   form!: FormGroup;
-  readonly serviceTypes = SERVICE_TYPES;
+  sessionTypes: SessionType[] = [];
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder, private appointmentApi: AppointmentApiService) {}
 
   ngOnInit(): void {
     this.buildForm();
+    this.appointmentApi.getSessionTypes().subscribe(types => {
+      this.sessionTypes = types;
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -200,7 +197,7 @@ export class ServiceCatalogFormComponent implements OnInit, OnChanges {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(200)]],
       category: ['', [Validators.required, Validators.maxLength(100)]],
-      serviceType: ['', Validators.required],
+      sessionTypeId: ['', Validators.required],
       durationMin: [50, [Validators.required, Validators.min(1)]],
       defaultPrice: [null, this.editMode ? [] : [Validators.required, Validators.min(0)]],
       effectiveFrom: [this.todayIso(), this.editMode ? [] : Validators.required],
@@ -231,7 +228,7 @@ export class ServiceCatalogFormComponent implements OnInit, OnChanges {
     this.form.patchValue({
       name: this.service.name,
       category: this.service.category,
-      serviceType: this.service.serviceType,
+      sessionTypeId: this.service.sessionType.id,
       durationMin: this.service.durationMin,
     });
   }
@@ -250,8 +247,8 @@ export class ServiceCatalogFormComponent implements OnInit, OnChanges {
     if (this.form.invalid) { return; }
 
     if (this.editMode) {
-      const { name, category, serviceType, durationMin } = this.form.value;
-      this.submitted.emit({ name, category, serviceType, durationMin } as UpdateServiceRequest);
+      const { name, category, sessionTypeId, durationMin } = this.form.value;
+      this.submitted.emit({ name, category, sessionTypeId, durationMin } as UpdateServiceRequest);
     } else {
       this.submitted.emit(this.form.value as CreateServiceRequest);
     }

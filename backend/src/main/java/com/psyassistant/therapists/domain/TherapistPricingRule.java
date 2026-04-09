@@ -1,6 +1,7 @@
 package com.psyassistant.therapists.domain;
 
 import com.psyassistant.common.audit.BaseEntity;
+import com.psyassistant.scheduling.domain.SessionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,7 +12,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Represents a pricing rule for a specific service type offered by a therapist.
+ * Represents a pricing rule for a specific session type offered by a therapist.
+ *
+ * <p>The {@code sessionType} FK references the canonical {@code session_type} lookup table,
+ * replacing the legacy {@code service_type_id} column removed in V50.
  */
 @Entity
 @Table(name = "therapist_pricing_rule")
@@ -22,12 +26,12 @@ public class TherapistPricingRule extends BaseEntity {
     @JoinColumn(name = "therapist_profile_id", nullable = false)
     private TherapistProfile therapistProfile;
 
-    /** The service type this rule applies to. */
+    /** The canonical session type this rule applies to. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "service_type_id", nullable = false)
-    private ServiceType serviceType;
+    @JoinColumn(name = "session_type_id", nullable = false)
+    private SessionType sessionType;
 
-    /** Fee or rate for this service type. */
+    /** Fee or rate for this session type. */
     @Column(name = "rate", nullable = false, precision = 10, scale = 2)
     private BigDecimal rate;
 
@@ -44,39 +48,54 @@ public class TherapistPricingRule extends BaseEntity {
     private String updatedByUser;
 
     // Constructors
+
+    /** Default constructor for JPA. */
     public TherapistPricingRule() { }
 
-    public TherapistPricingRule(TherapistProfile therapistProfile, ServiceType serviceType,
-                               BigDecimal rate, String currency, LocalDate effectiveFrom) {
+    /**
+     * Creates a new pricing rule.
+     *
+     * @param therapistProfile the owning therapist profile
+     * @param sessionType      the canonical session type
+     * @param rate             fee charged for this session type
+     * @param currency         ISO-4217 currency code
+     * @param effectiveFrom    date the rule becomes active
+     */
+    public TherapistPricingRule(final TherapistProfile therapistProfile,
+                                final SessionType sessionType,
+                                final BigDecimal rate,
+                                final String currency,
+                                final LocalDate effectiveFrom) {
         this.therapistProfile = therapistProfile;
-        this.serviceType = serviceType;
+        this.sessionType = sessionType;
         this.rate = rate;
         this.currency = currency;
         this.effectiveFrom = effectiveFrom;
     }
 
     // Getters and setters
+
     public TherapistProfile getTherapistProfile() {
         return therapistProfile;
     }
 
-    public void setTherapistProfile(TherapistProfile therapistProfile) {
+    public void setTherapistProfile(final TherapistProfile therapistProfile) {
         this.therapistProfile = therapistProfile;
     }
 
-    public ServiceType getServiceType() {
-        return serviceType;
+    public SessionType getSessionType() {
+        return sessionType;
     }
 
-    public void setServiceType(ServiceType serviceType) {
-        this.serviceType = serviceType;
+    public void setSessionType(final SessionType sessionType) {
+        this.sessionType = sessionType;
     }
 
     public BigDecimal getRate() {
         return rate;
     }
 
-    public void setRate(BigDecimal rate) {
+    public void setRate(final BigDecimal rate) {
         this.rate = rate;
     }
 
@@ -84,7 +103,7 @@ public class TherapistPricingRule extends BaseEntity {
         return currency;
     }
 
-    public void setCurrency(String currency) {
+    public void setCurrency(final String currency) {
         this.currency = currency;
     }
 
@@ -92,7 +111,7 @@ public class TherapistPricingRule extends BaseEntity {
         return effectiveFrom;
     }
 
-    public void setEffectiveFrom(LocalDate effectiveFrom) {
+    public void setEffectiveFrom(final LocalDate effectiveFrom) {
         this.effectiveFrom = effectiveFrom;
     }
 
@@ -100,7 +119,7 @@ public class TherapistPricingRule extends BaseEntity {
         return updatedByUser;
     }
 
-    public void setUpdatedByUser(String updatedByUser) {
+    public void setUpdatedByUser(final String updatedByUser) {
         this.updatedByUser = updatedByUser;
     }
 }

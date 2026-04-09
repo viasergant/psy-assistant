@@ -230,6 +230,24 @@
         "created": "Created",
         "actions": "Actions"
       }
+    },
+    "packages": {
+      "title": "Prepaid Packages",
+      "actions": {
+        "sell": "Sell Package"
+      },
+      "status": {
+        "ACTIVE": "Active",
+        "EXHAUSTED": "Exhausted",
+        "EXPIRED": "Expired"
+      },
+      "loading": "Loading packages...",
+      "loadError": "Failed to load packages.",
+      "empty": "No prepaid packages for this client.",
+      "purchased": "Purchased {{date}}",
+      "expires": "Expires {{date}}",
+      "sessionsRemaining": "{{remaining}} / {{total}} sessions remaining",
+      "viewInvoice": "View invoice"
     }
   },
   "search": {
@@ -1029,6 +1047,106 @@
         "statusFailed": "Failed to update service status.",
         "priceFailed": "Failed to update price.",
         "overrideFailed": "Failed to save override."
+      }
+    },
+    "packages": {
+      "title": "Prepaid Packages",
+      "actions": {
+        "create": "New Package",
+        "archive": "Archive",
+        "restore": "Restore"
+      },
+      "filters": {
+        "statusLabel": "Filter by status",
+        "allStatuses": "All Statuses"
+      },
+      "status": {
+        "ACTIVE": "Active",
+        "ARCHIVED": "Archived"
+      },
+      "fields": {
+        "name": "Package Name",
+        "namePlaceholder": "e.g. 10 Session Pack",
+        "serviceType": "Service Type",
+        "serviceTypePlaceholder": "Select service type",
+        "sessionQty": "Sessions",
+        "price": "Package Price",
+        "perSession": "Per Session",
+        "perSessionHint": "≈ {{price}} per session",
+        "status": "Status"
+      },
+      "list": {
+        "loading": "Loading packages...",
+        "empty": "No package definitions configured yet.",
+        "loadError": "Failed to load package definitions."
+      },
+      "form": {
+        "createTitle": "Create Package Definition"
+      },
+      "validation": {
+        "sessionQtyMin": "Must be at least 1 session",
+        "priceMin": "Price must be zero or greater"
+      },
+      "sell": {
+        "title": "Sell Package to Client",
+        "package": "Package",
+        "selectPackage": "Select a package",
+        "sessions": "sessions",
+        "purchaseDate": "Purchase Date",
+        "validityDays": "Validity (days)",
+        "validityDaysPlaceholder": "No expiry",
+        "validityDaysHint": "Leave blank for no expiry",
+        "invoiceNote": "An invoice will be generated automatically on confirmation.",
+        "confirm": "Sell Package",
+        "error": "Failed to sell package. Please try again."
+      }
+    },
+    "discounts": {
+      "title": "Discount Rules",
+      "actions": {
+        "create": "New Discount Rule",
+        "deactivate": "Deactivate",
+        "activate": "Activate"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "types": {
+        "PERCENTAGE": "Percentage",
+        "FIXED_AMOUNT": "Fixed Amount"
+      },
+      "scopes": {
+        "CLIENT": "Client",
+        "SERVICE": "Service"
+      },
+      "fields": {
+        "name": "Rule Name",
+        "namePlaceholder": "e.g. Low-income discount",
+        "type": "Discount Type",
+        "typePlaceholder": "Select type",
+        "value": "Value",
+        "scope": "Apply To",
+        "scopePlaceholder": "Select scope",
+        "clientId": "Client ID",
+        "clientIdPlaceholder": "Enter client UUID",
+        "clientIdHint": "Discount will apply only to invoices for this client",
+        "clientScopeLabel": "Client-specific",
+        "serviceCatalogId": "Service",
+        "servicePlaceholder": "Select service",
+        "linkedTo": "Linked To",
+        "status": "Status"
+      },
+      "list": {
+        "loading": "Loading discount rules...",
+        "empty": "No discount rules configured yet.",
+        "loadError": "Failed to load discount rules."
+      },
+      "form": {
+        "createTitle": "Create Discount Rule"
+      },
+      "validation": {
+        "percentOver100": "Percentage discount above 100% — will be capped at line item value"
       }
     }
   },

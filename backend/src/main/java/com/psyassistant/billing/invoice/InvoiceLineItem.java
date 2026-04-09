@@ -8,6 +8,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * A single line item inside an {@link Invoice}.
@@ -37,6 +38,10 @@ public class InvoiceLineItem extends SimpleBaseEntity {
 
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
+
+    /** Optional link to the service catalog entry (used for SERVICE-scoped discount lookup). */
+    @Column(name = "service_catalog_id")
+    private UUID serviceCatalogId;
 
     // ---- constructors ----
 
@@ -81,5 +86,17 @@ public class InvoiceLineItem extends SimpleBaseEntity {
 
     public int getSortOrder() {
         return sortOrder;
+    }
+
+    public UUID getServiceCatalogId() {
+        return serviceCatalogId;
+    }
+
+    public void setServiceCatalogId(final UUID serviceCatalogId) {
+        this.serviceCatalogId = serviceCatalogId;
+    }
+
+    public void setLineTotal(final BigDecimal lineTotal) {
+        this.lineTotal = lineTotal;
     }
 }

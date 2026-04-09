@@ -41,6 +41,18 @@ export default [
     loadComponent: () =>
       import('./components/service-catalog-detail/service-catalog-detail.component')
         .then(m => m.ServiceCatalogDetailComponent)
+  },
+  {
+    path: 'packages',
+    loadComponent: () =>
+      import('./components/package-definition-list/package-definition-list.component')
+        .then(m => m.PackageDefinitionListComponent)
+  },
+  {
+    path: 'discounts',
+    loadComponent: () =>
+      import('./components/discount-rule-list/discount-rule-list.component')
+        .then(m => m.DiscountRuleListComponent)
   }
 ] satisfies Routes;
 

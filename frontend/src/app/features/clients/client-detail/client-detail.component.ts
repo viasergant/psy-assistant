@@ -16,6 +16,7 @@ import { AppointmentBookingDialogComponent } from '../../schedule/components/app
 import { TherapistManagementService } from '../../admin/therapists/services/therapist-management.service';
 import { TherapistProfile } from '../../admin/therapists/models/therapist.model';
 import { CarePlanListComponent } from '../care-plans/care-plan-list/care-plan-list.component';
+import { ClientPackagesComponent } from '../components/client-packages/client-packages.component';
 
 /**
  * Client profile page for PA-23 slice-one read and update flow.
@@ -23,7 +24,7 @@ import { CarePlanListComponent } from '../care-plans/care-plan-list/care-plan-li
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ClientTimelineComponent, AppointmentBookingDialogComponent, CarePlanListComponent],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ClientTimelineComponent, AppointmentBookingDialogComponent, CarePlanListComponent, ClientPackagesComponent],
   template: `
     <div class="page">
       <a class="back-link" routerLink="/leads">&larr; Back to leads</a>
@@ -335,6 +336,8 @@ import { CarePlanListComponent } from '../care-plans/care-plan-list/care-plan-li
         <div class="section">
           <app-care-plan-list [clientId]="client.id" />
         </div>
+
+        <app-client-packages [clientId]="client.id" />
       </div>
     </div>
 

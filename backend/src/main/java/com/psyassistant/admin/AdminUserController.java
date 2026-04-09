@@ -218,9 +218,8 @@ public class AdminUserController {
         try {
             String[] parts = sort.split(",");
             String field = parts[0].trim();
-            Sort.Direction direction = parts.length > 1
-                    ? Sort.Direction.fromString(parts[1].trim())
-                    : Sort.Direction.DESC;
+            String dirStr = parts.length > 1 ? String.valueOf(parts[1]).trim() : "desc";
+            Sort.Direction direction = Sort.Direction.fromString(dirStr);
             return PageRequest.of(safePage, clampedSize, Sort.by(direction, field));
         } catch (Exception ex) {
             return PageRequest.of(safePage, clampedSize, Sort.by(Sort.Direction.DESC, "createdAt"));

@@ -230,6 +230,24 @@
         "created": "Створено",
         "actions": "Дії"
       }
+    },
+    "packages": {
+      "title": "Передоплачені пакети",
+      "actions": {
+        "sell": "Продати пакет"
+      },
+      "status": {
+        "ACTIVE": "Активний",
+        "EXHAUSTED": "Вичерпано",
+        "EXPIRED": "Прострочено"
+      },
+      "loading": "Завантаження пакетів...",
+      "loadError": "Не вдалося завантажити пакети.",
+      "empty": "Передоплачених пакетів для цього клієнта немає.",
+      "purchased": "Придбано {{date}}",
+      "expires": "Термін дії до {{date}}",
+      "sessionsRemaining": "{{remaining}} / {{total}} сесій залишилось",
+      "viewInvoice": "Переглянути рахунок"
     }
   },
   "search": {
@@ -1029,6 +1047,106 @@
         "statusFailed": "Не вдалося оновити статус послуги.",
         "priceFailed": "Не вдалося оновити ціну.",
         "overrideFailed": "Не вдалося зберегти індивідуальну ціну."
+      }
+    },
+    "packages": {
+      "title": "Передоплачені пакети",
+      "actions": {
+        "create": "Новий пакет",
+        "archive": "Архівувати",
+        "restore": "Відновити"
+      },
+      "filters": {
+        "statusLabel": "Фільтр за статусом",
+        "allStatuses": "Усі статуси"
+      },
+      "status": {
+        "ACTIVE": "Активний",
+        "ARCHIVED": "Архівований"
+      },
+      "fields": {
+        "name": "Назва пакету",
+        "namePlaceholder": "напр. Пакет 10 сесій",
+        "serviceType": "Тип послуги",
+        "serviceTypePlaceholder": "Оберіть тип послуги",
+        "sessionQty": "Сесії",
+        "price": "Вартість пакету",
+        "perSession": "За сесію",
+        "perSessionHint": "≈ {{price}} за сесію",
+        "status": "Статус"
+      },
+      "list": {
+        "loading": "Завантаження пакетів...",
+        "empty": "Пакети ще не налаштовано.",
+        "loadError": "Не вдалося завантажити пакети."
+      },
+      "form": {
+        "createTitle": "Створити пакет"
+      },
+      "validation": {
+        "sessionQtyMin": "Необхідно хоча б 1 сесія",
+        "priceMin": "Ціна повинна бути нулем або більше"
+      },
+      "sell": {
+        "title": "Продати пакет клієнту",
+        "package": "Пакет",
+        "selectPackage": "Оберіть пакет",
+        "sessions": "сесій",
+        "purchaseDate": "Дата придбання",
+        "validityDays": "Дійсний (днів)",
+        "validityDaysPlaceholder": "Без терміну дії",
+        "validityDaysHint": "Залиште порожнім, якщо без терміну дії",
+        "invoiceNote": "Рахунок буде автоматично згенеровано після підтвердження.",
+        "confirm": "Продати пакет",
+        "error": "Не вдалося продати пакет. Спробуйте ще раз."
+      }
+    },
+    "discounts": {
+      "title": "Правила знижок",
+      "actions": {
+        "create": "Нове правило знижки",
+        "deactivate": "Деактивувати",
+        "activate": "Активувати"
+      },
+      "status": {
+        "active": "Активне",
+        "inactive": "Неактивне"
+      },
+      "types": {
+        "PERCENTAGE": "Відсоток",
+        "FIXED_AMOUNT": "Фіксована сума"
+      },
+      "scopes": {
+        "CLIENT": "Клієнт",
+        "SERVICE": "Послуга"
+      },
+      "fields": {
+        "name": "Назва правила",
+        "namePlaceholder": "напр. Соціальна знижка",
+        "type": "Тип знижки",
+        "typePlaceholder": "Оберіть тип",
+        "value": "Значення",
+        "scope": "Застосувати до",
+        "scopePlaceholder": "Оберіть область",
+        "clientId": "ID клієнта",
+        "clientIdPlaceholder": "Введіть UUID клієнта",
+        "clientIdHint": "Знижка застосовуватиметься лише до рахунків цього клієнта",
+        "clientScopeLabel": "Для конкретного клієнта",
+        "serviceCatalogId": "Послуга",
+        "servicePlaceholder": "Оберіть послугу",
+        "linkedTo": "Прив'язано до",
+        "status": "Статус"
+      },
+      "list": {
+        "loading": "Завантаження правил знижок...",
+        "empty": "Правила знижок ще не налаштовано.",
+        "loadError": "Не вдалося завантажити правила знижок."
+      },
+      "form": {
+        "createTitle": "Створити правило знижки"
+      },
+      "validation": {
+        "percentOver100": "Відсоткова знижка більше 100% — буде обмежена до суми рядка"
       }
     }
   },

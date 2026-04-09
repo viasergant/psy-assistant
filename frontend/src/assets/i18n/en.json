@@ -582,7 +582,8 @@
     "tabs": {
       "users": "Users",
       "therapists": "Therapists",
-      "leaveRequests": "Pending Requests"
+      "leaveRequests": "Pending Requests",
+      "serviceCatalog": "Service Catalog"
     },
     "users": {
       "list": {
@@ -937,6 +938,97 @@
         "past3160": "31 – 60 days",
         "past60plus": "60+ days",
         "amount": "Amount"
+      }
+    },
+    "catalog": {
+      "title": "Service Catalog",
+      "actions": {
+        "addService": "Add Service",
+        "view": "View",
+        "updatePrice": "Update Price",
+        "deactivate": "Deactivate",
+        "activate": "Activate",
+        "backToList": "Back to Catalog"
+      },
+      "filters": {
+        "statusLabel": "Filter by status",
+        "allStatuses": "All Statuses"
+      },
+      "status": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive"
+      },
+      "serviceTypes": {
+        "INDIVIDUAL_SESSION": "Individual Session",
+        "GROUP_SESSION": "Group Session",
+        "INTAKE_ASSESSMENT": "Intake Assessment",
+        "FOLLOW_UP": "Follow-Up"
+      },
+      "fields": {
+        "name": "Service Name",
+        "namePlaceholder": "e.g. Individual Therapy — 50 min",
+        "category": "Category",
+        "categoryPlaceholder": "e.g. Individual Session",
+        "serviceType": "Service Type",
+        "serviceTypePlaceholder": "Select type",
+        "durationMin": "Duration",
+        "min": "min",
+        "defaultPrice": "Default Price",
+        "effectiveFrom": "Effective From",
+        "currentPrice": "Current Price",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "list": {
+        "loading": "Loading service catalog...",
+        "empty": "No services in the catalog yet.",
+        "loadError": "Failed to load service catalog."
+      },
+      "detail": {
+        "loading": "Loading service...",
+        "loadError": "Failed to load service details."
+      },
+      "form": {
+        "createTitle": "Add Service",
+        "editTitle": "Edit Service"
+      },
+      "validation": {
+        "durationMin": "Duration must be at least 1 minute",
+        "priceMin": "Price must be zero or greater",
+        "duplicateName": "A service with this name already exists in this category"
+      },
+      "priceHistory": {
+        "title": "Price History",
+        "empty": "No price history available.",
+        "price": "Price",
+        "effectiveFrom": "Effective From",
+        "effectiveTo": "Effective To",
+        "changedBy": "Changed By",
+        "current": "Current"
+      },
+      "updatePrice": {
+        "title": "Update Default Price",
+        "current": "Current Price",
+        "newPrice": "New Price",
+        "confirm": "Update Price",
+        "hint": "Invoices for sessions before the effective date will continue to use the previous price."
+      },
+      "override": {
+        "sectionTitle": "Therapist Price Overrides",
+        "title": "Add Therapist Override",
+        "therapist": "Therapist",
+        "selectTherapist": "Select therapist",
+        "price": "Override Price",
+        "add": "Add Override",
+        "remove": "Remove",
+        "empty": "No therapist overrides configured.",
+        "hint": "Override prices take precedence over the default price when generating invoices for that therapist."
+      },
+      "error": {
+        "saveFailed": "Failed to save service. Please try again.",
+        "statusFailed": "Failed to update service status.",
+        "priceFailed": "Failed to update price.",
+        "overrideFailed": "Failed to save override."
       }
     }
   },

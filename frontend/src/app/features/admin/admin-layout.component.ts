@@ -47,6 +47,16 @@ import { TranslocoModule } from '@jsverse/transloco';
         >
           {{ 'admin.tabs.leaveRequests' | transloco }}
         </a>
+        <a
+          routerLink="/admin/catalog"
+          routerLinkActive="active"
+          class="tab"
+          role="tab"
+          [attr.aria-selected]="rla4.isActive"
+          #rla4="routerLinkActive"
+        >
+          {{ 'admin.tabs.serviceCatalog' | transloco }}
+        </a>
       </nav>
 
       <div class="admin-content">

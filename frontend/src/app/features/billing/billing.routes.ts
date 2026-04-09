@@ -29,6 +29,18 @@ export default [
     loadComponent: () =>
       import('./components/invoice-detail/invoice-detail.component')
         .then(m => m.InvoiceDetailComponent)
+  },
+  {
+    path: 'catalog',
+    loadComponent: () =>
+      import('./components/service-catalog-list/service-catalog-list.component')
+        .then(m => m.ServiceCatalogListComponent)
+  },
+  {
+    path: 'catalog/:id',
+    loadComponent: () =>
+      import('./components/service-catalog-detail/service-catalog-detail.component')
+        .then(m => m.ServiceCatalogDetailComponent)
   }
 ] satisfies Routes;
 

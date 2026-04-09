@@ -28,6 +28,20 @@ export default [
           import('./leave/components/pending-leave-requests/pending-leave-requests.component').then(
             m => m.PendingLeaveRequestsComponent
           )
+      },
+      {
+        path: 'catalog',
+        loadComponent: () =>
+          import('../billing/components/service-catalog-list/service-catalog-list.component').then(
+            m => m.ServiceCatalogListComponent
+          )
+      },
+      {
+        path: 'catalog/:id',
+        loadComponent: () =>
+          import('../billing/components/service-catalog-detail/service-catalog-detail.component').then(
+            m => m.ServiceCatalogDetailComponent
+          )
       }
     ]
   }

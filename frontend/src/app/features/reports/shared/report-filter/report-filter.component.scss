@@ -1,0 +1,38 @@
+.report-filter-panel {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+
+  .filters-row {
+    display: flex;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-md);
+
+    .field {
+      min-width: 220px;
+      flex: 1;
+
+      label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: var(--spacing-xs);
+        color: var(--color-text-secondary);
+      }
+
+      &--required label::after {
+        content: ' *';
+        color: var(--color-error, #e53e3e);
+      }
+    }
+  }
+
+  .filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+  }
+}

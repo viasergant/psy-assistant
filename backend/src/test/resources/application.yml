@@ -57,6 +57,11 @@ app:
     active-client-days: 90
     job-enabled: false
     job-cron: "0 0 2 * * *"
+  reports:
+    churn-threshold-days: 90
+    max-history-years: 3
+    export-row-cap: 50000
+    default-page-size: 25
   invoices:
     payment-terms-days: 14
     pdf-storage-path: /tmp/test-invoices/pdf

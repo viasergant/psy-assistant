@@ -1,0 +1,19 @@
+.report-page {
+  padding: var(--spacing-xl);
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+    h1 { margin: 0; }
+  }
+
+  .col-num { text-align: right; }
+  .outstanding { color: var(--color-warning, #d97706); }
+  .no-filter-hint {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--color-text-secondary);
+  }
+}

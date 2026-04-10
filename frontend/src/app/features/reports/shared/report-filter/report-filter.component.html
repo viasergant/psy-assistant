@@ -1,0 +1,67 @@
+<div class="report-filter-panel" [formGroup]="form">
+  <div class="filters-row">
+    <div class="field field--required">
+      <label>{{ 'reports.filters.dateRange' | transloco }}</label>
+      <p-datepicker
+        formControlName="dateRange"
+        selectionMode="range"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        [showButtonBar]="true"
+        [readonlyInput]="true"
+        styleClass="w-full"
+      />
+    </div>
+
+    @if (config.showTherapist) {
+      <div class="field">
+        <label>{{ 'reports.filters.therapist' | transloco }}</label>
+        <p-select
+          formControlName="therapistId"
+          [options]="therapists"
+          optionLabel="fullName"
+          optionValue="id"
+          [placeholder]="'reports.filters.allTherapists' | transloco"
+          [showClear]="true"
+          styleClass="w-full"
+        />
+      </div>
+    }
+
+    @if (config.showSessionType) {
+      <div class="field">
+        <label>{{ 'reports.filters.sessionType' | transloco }}</label>
+        <p-select
+          formControlName="sessionTypeId"
+          [options]="sessionTypes"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'reports.filters.allTypes' | transloco"
+          [showClear]="true"
+          styleClass="w-full"
+        />
+      </div>
+    }
+
+    @if (config.showLeadSource) {
+      <div class="field">
+        <label>{{ 'reports.filters.leadSource' | transloco }}</label>
+        <p-select
+          formControlName="leadSource"
+          [options]="leadSourceOptions"
+          optionLabel="label"
+          optionValue="value"
+          [placeholder]="'reports.filters.allSources' | transloco"
+          [showClear]="true"
+          styleClass="w-full"
+        />
+      </div>
+    }
+  </div>
+
+  <div class="filter-actions">
+    <button class="btn btn--secondary btn--sm" type="button" (click)="onReset()">
+      {{ 'reports.filters.reset' | transloco }}
+    </button>
+  </div>
+</div>

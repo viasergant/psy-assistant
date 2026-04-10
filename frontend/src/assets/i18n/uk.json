@@ -1185,6 +1185,75 @@
         "INACTIVE": "Неактивний",
         "DISCHARGED": "Виписаний"
       }
+    },
+    "nav": {
+      "title": "Звіти"
+    },
+    "types": {
+      "leadConversion": "Конверсія лідів",
+      "therapistUtilization": "Завантаженість терапевтів",
+      "revenue": "Дохід",
+      "clientRetention": "Утримання клієнтів",
+      "noShowCancellation": "Неявки та скасування"
+    },
+    "filters": {
+      "dateRange": "Діапазон дат",
+      "dateFrom": "З",
+      "dateTo": "По",
+      "therapist": "Терапевт",
+      "sessionType": "Тип сесії",
+      "leadSource": "Джерело ліда",
+      "allTherapists": "Всі терапевти",
+      "allTypes": "Всі типи",
+      "allSources": "Всі джерела",
+      "apply": "Застосувати",
+      "reset": "Скинути"
+    },
+    "export": {
+      "csv": "Експорт CSV",
+      "xlsx": "Експорт Excel",
+      "exporting": "Підготовка експорту...",
+      "capReached": "Експорт обмежено 50 000 рядками"
+    },
+    "emptyState": {
+      "title": "Даних не знайдено",
+      "message": "Даних не знайдено для обраних фільтрів.",
+      "selectFilters": "Оберіть діапазон дат для запуску звіту."
+    },
+    "columns": {
+      "leadConversion": {
+        "leadSource": "Джерело ліда",
+        "totalLeads": "Всього лідів",
+        "convertedLeads": "Конвертовано",
+        "conversionRate": "Конверсія %"
+      },
+      "therapistUtilization": {
+        "therapistName": "Терапевт",
+        "bookedMinutes": "Заброньовано годин",
+        "availableMinutes": "Доступно годин",
+        "utilizationPct": "Завантаженість %"
+      },
+      "revenue": {
+        "month": "Місяць",
+        "therapistName": "Терапевт",
+        "invoicedTotal": "Виставлено",
+        "paidTotal": "Оплачено",
+        "outstandingAmount": "Заборгованість"
+      },
+      "clientRetention": {
+        "activeAtEndOfPeriod": "Активні клієнти",
+        "newAcquired": "Нові клієнти",
+        "churned": "Відток",
+        "retentionRate": "Утримання %"
+      },
+      "noShowCancellation": {
+        "therapistName": "Терапевт",
+        "totalScheduled": "Всього запланованих",
+        "noShowCount": "Неявок",
+        "noShowRate": "Відсоток неявок %",
+        "cancellationCount": "Скасувань",
+        "cancellationRate": "Відсоток скасувань %"
+      }
     }
   },
   "errors": {

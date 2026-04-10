@@ -111,6 +111,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/api/v1/email/webhooks/**").permitAll()
                 .requestMatchers("/actuator/**").authenticated()
                 .requestMatchers("/api/v1/admin/**")
                     .hasRole("SYSTEM_ADMINISTRATOR")

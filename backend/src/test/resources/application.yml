@@ -15,6 +15,11 @@ spring:
         bootstrap-mode: deferred
   flyway:
     enabled: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: test@test.com
+    password: test-password
 
 management:
   endpoints:
@@ -59,3 +64,14 @@ app:
 session:
   notes:
     encryption-key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
+notifications:
+  email:
+    sender-address: ""
+    sender-name: PSY Assistant Test
+    webhook-secret: test-webhook-secret
+    max-retries: 5
+    outbox:
+      poll-interval-ms: 60000
+      batch-size: 10
+

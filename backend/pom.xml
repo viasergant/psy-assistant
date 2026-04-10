@@ -132,6 +132,12 @@
             <version>20240325.1</version>
         </dependency>
 
+        <!-- Email (SMTP via JavaMailSender) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- PDF generation via HTML/CSS Thymeleaf template (Apache 2.0) -->
         <dependency>
             <groupId>com.openhtmltopdf</groupId>

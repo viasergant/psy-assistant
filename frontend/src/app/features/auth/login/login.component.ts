@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../../core/auth/auth.service';
 
@@ -245,7 +245,8 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -270,7 +271,10 @@ export class LoginComponent {
     this.authService.login(this.form.value).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/clients']);
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
+        // SECURITY: only navigate to same-origin relative paths
+        const safeUrl = returnUrl.startsWith('/') ? returnUrl : '/';
+        this.router.navigateByUrl(safeUrl);
       },
       error: (err: HttpErrorResponse) => {
         this.loading = false;

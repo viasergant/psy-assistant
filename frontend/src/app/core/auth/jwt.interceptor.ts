@@ -4,6 +4,7 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, filter, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
@@ -53,7 +54,8 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
           }),
           catchError(refreshError => {
             refreshing$.next(false);
-            authService.logout();
+            // Pass the current URL so login can redirect back after re-auth
+            authService.logout(inject(Router).url);
             return throwError(() => refreshError);
           })
         );

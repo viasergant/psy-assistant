@@ -100,7 +100,8 @@
         "strong": "Strong"
       },
       "changePasswordButton": "Change Password & Continue"
-    }
+    },
+    "accessDenied": "Access restricted. You do not have permission to view this page."
   },
   "leads": {
     "title": "Leads",

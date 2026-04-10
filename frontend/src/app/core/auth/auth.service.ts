@@ -95,13 +95,16 @@ export class AuthService {
 
   /**
    * Logs out the user: clears the token and redirects to login page.
+   * @param returnUrl Optional relative URL to redirect back to after login.
+   *                  Must start with '/' — open-redirect protection is enforced here.
    */
-  logout(): void {
+  logout(returnUrl?: string): void {
     this.http
       .post(`${this.apiBase}/logout`, {}, { withCredentials: true })
       .subscribe({ error: () => {} }); // fire-and-forget
     this.tokenSubject.next(null);
-    this.router.navigate(['/auth/login']);
+    const safeReturn = returnUrl && returnUrl.startsWith('/') ? returnUrl : undefined;
+    this.router.navigate(['/auth/login'], safeReturn ? { queryParams: { returnUrl: safeReturn } } : {});
   }
 
   /**

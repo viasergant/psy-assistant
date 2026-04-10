@@ -1,0 +1,63 @@
+<div class="report-page">
+  <div class="page-header">
+    <h1>{{ 'reports.types.therapistUtilization' | transloco }}</h1>
+    <app-export-controls
+      [disabled]="totalRecords === 0"
+      (exportCsv)="onExportCsv()"
+      (exportXlsx)="onExportXlsx()"
+    />
+  </div>
+
+  <app-report-filter
+    [config]="filterConfig"
+    [therapists]="therapists"
+    (filterChanged)="onFilterChanged($event)"
+  />
+
+  <div class="table-wrapper table-hoverable">
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="pageSize"
+      [first]="first"
+      [totalRecords]="totalRecords"
+      [loading]="loading"
+      [rowsPerPageOptions]="[25, 50, 100]"
+      [rowHover]="true"
+      [showCurrentPageReport]="true"
+      [currentPageReportTemplate]="'Showing {first} to {last} of {totalRecords} results'"
+      (onLazyLoad)="onLazyLoad($event)"
+      styleClass="p-datatable-striped"
+      emptyMessage=" "
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ 'reports.columns.therapistUtilization.therapistName' | transloco }}</th>
+          <th class="col-num">{{ 'reports.columns.therapistUtilization.bookedMinutes' | transloco }}</th>
+          <th class="col-num">{{ 'reports.columns.therapistUtilization.availableMinutes' | transloco }}</th>
+          <th class="col-num">{{ 'reports.columns.therapistUtilization.utilizationPct' | transloco }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>{{ row.therapistName }}</td>
+          <td class="col-num">{{ formatMinutes(row.bookedMinutes) }}</td>
+          <td class="col-num">{{ row.availableMinutes != null ? formatMinutes(row.availableMinutes) : '—' }}</td>
+          <td class="col-num">{{ row.utilizationPct != null ? (row.utilizationPct | number:'1.1-2') + '%' : '—' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4">
+            @if (!activeFilter) {
+              <div class="no-filter-hint">{{ 'reports.emptyState.selectFilters' | transloco }}</div>
+            } @else {
+              <app-report-empty-state />
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

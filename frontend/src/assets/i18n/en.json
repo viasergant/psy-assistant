@@ -1185,6 +1185,75 @@
         "INACTIVE": "Inactive",
         "DISCHARGED": "Discharged"
       }
+    },
+    "nav": {
+      "title": "Reports"
+    },
+    "types": {
+      "leadConversion": "Lead Conversion Rate",
+      "therapistUtilization": "Therapist Utilization",
+      "revenue": "Revenue",
+      "clientRetention": "Client Retention",
+      "noShowCancellation": "No-Show & Cancellation Rate"
+    },
+    "filters": {
+      "dateRange": "Date Range",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "therapist": "Therapist",
+      "sessionType": "Session Type",
+      "leadSource": "Lead Source",
+      "allTherapists": "All Therapists",
+      "allTypes": "All Types",
+      "allSources": "All Sources",
+      "apply": "Apply Filters",
+      "reset": "Reset"
+    },
+    "export": {
+      "csv": "Export CSV",
+      "xlsx": "Export Excel",
+      "exporting": "Preparing export...",
+      "capReached": "Export limited to 50,000 rows"
+    },
+    "emptyState": {
+      "title": "No data found",
+      "message": "No data found for the selected filters.",
+      "selectFilters": "Select a date range to run the report."
+    },
+    "columns": {
+      "leadConversion": {
+        "leadSource": "Lead Source",
+        "totalLeads": "Total Leads",
+        "convertedLeads": "Converted",
+        "conversionRate": "Conversion Rate %"
+      },
+      "therapistUtilization": {
+        "therapistName": "Therapist",
+        "bookedMinutes": "Booked Hours",
+        "availableMinutes": "Available Hours",
+        "utilizationPct": "Utilization %"
+      },
+      "revenue": {
+        "month": "Month",
+        "therapistName": "Therapist",
+        "invoicedTotal": "Invoiced",
+        "paidTotal": "Paid",
+        "outstandingAmount": "Outstanding"
+      },
+      "clientRetention": {
+        "activeAtEndOfPeriod": "Active Clients",
+        "newAcquired": "New Clients",
+        "churned": "Churned",
+        "retentionRate": "Retention Rate %"
+      },
+      "noShowCancellation": {
+        "therapistName": "Therapist",
+        "totalScheduled": "Total Scheduled",
+        "noShowCount": "No-Shows",
+        "noShowRate": "No-Show Rate %",
+        "cancellationCount": "Cancellations",
+        "cancellationRate": "Cancellation Rate %"
+      }
     }
   },
   "errors": {

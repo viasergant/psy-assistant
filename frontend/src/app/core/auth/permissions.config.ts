@@ -1,4 +1,4 @@
-export type AppRole = 'THERAPIST' | 'FINANCE' | 'RECEPTION_ADMIN_STAFF' | 'SYSTEM_ADMINISTRATOR';
+export type AppRole = 'THERAPIST' | 'FINANCE' | 'RECEPTION_ADMIN_STAFF' | 'SYSTEM_ADMINISTRATOR' | 'SUPERVISOR';
 
 export const ROUTE_ROLES: Readonly<Record<string, AppRole[]>> = {
   leads:    ['SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF'],
@@ -6,7 +6,7 @@ export const ROUTE_ROLES: Readonly<Record<string, AppRole[]>> = {
   schedule: ['THERAPIST', 'SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF'],
   sessions: ['THERAPIST', 'SYSTEM_ADMINISTRATOR'],
   billing:  ['FINANCE', 'SYSTEM_ADMINISTRATOR'],
-  reports:  ['FINANCE', 'SYSTEM_ADMINISTRATOR', 'THERAPIST'],
+  reports:  ['SUPERVISOR', 'FINANCE', 'SYSTEM_ADMINISTRATOR', 'THERAPIST'],
   admin:    ['SYSTEM_ADMINISTRATOR'],
 } as const;
 
@@ -22,7 +22,7 @@ export const PERMISSIONS: Readonly<Record<PermissionKey, AppRole[]>> = {
   VIEW_SESSION_NOTES:   ['THERAPIST', 'SYSTEM_ADMINISTRATOR'],
   BOOK_APPOINTMENT:     ['THERAPIST', 'SYSTEM_ADMINISTRATOR', 'RECEPTION_ADMIN_STAFF'],
   MANAGE_USERS:         ['SYSTEM_ADMINISTRATOR'],
-  VIEW_REPORTS:         ['FINANCE', 'SYSTEM_ADMINISTRATOR', 'THERAPIST'],
+  VIEW_REPORTS:         ['SUPERVISOR', 'FINANCE', 'SYSTEM_ADMINISTRATOR'],
 } as const;
 
 export interface NavItem {

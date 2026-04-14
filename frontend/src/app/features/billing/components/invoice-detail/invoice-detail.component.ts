@@ -215,6 +215,7 @@ import { PaymentHistoryComponent } from '../payment-history/payment-history.comp
       text-align: left; font-weight: 600; border-bottom: 2px solid var(--color-border); }
     .data-table td { padding: 8px 10px; border-bottom: 1px solid var(--color-border); }
     .col-right { text-align: right; }
+    .data-table .col-right { text-align: right; }
     .totals-line { display: flex; justify-content: space-between; gap: var(--spacing-sm); padding: 4px 0;
       font-size: 0.9rem; }
     .totals-line.total { font-weight: 700; font-size: 1rem; border-top: 2px solid var(--color-border);

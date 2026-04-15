@@ -132,6 +132,13 @@
             <version>20240325.1</version>
         </dependency>
 
+        <!-- .env file support via Spring PropertySource -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>spring-dotenv</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
         <!-- Email (SMTP via JavaMailSender) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

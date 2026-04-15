@@ -11,6 +11,7 @@ import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.crm.leads.InvalidStatusTransitionException;
 import com.psyassistant.crm.leads.LeadAlreadyConvertedException;
+import com.psyassistant.notifications.template.TemplateNotInactiveException;
 import com.psyassistant.users.DuplicateEmailException;
 import com.psyassistant.users.SelfDeactivationException;
 import jakarta.persistence.EntityNotFoundException;
@@ -318,6 +319,24 @@ public class GlobalExceptionHandler {
                         HttpStatus.UNPROCESSABLE_ENTITY.value(),
                         ex.getMessage(),
                         "INVOICE_STATE_ERROR",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles attempts to modify or delete a template that is currently ACTIVE (409).
+     */
+    @ExceptionHandler(TemplateNotInactiveException.class)
+    public ResponseEntity<ErrorResponse> handleTemplateNotInactive(
+            final TemplateNotInactiveException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage(),
+                        "TEMPLATE_NOT_INACTIVE",
                         request.getRequestURI()
                 )
         );

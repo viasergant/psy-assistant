@@ -42,6 +42,10 @@ export default [
           import('../billing/components/service-catalog-detail/service-catalog-detail.component').then(
             m => m.ServiceCatalogDetailComponent
           )
+      },
+      {
+        path: 'notification-templates',
+        loadChildren: () => import('./notification-templates/notification-templates.routes')
       }
     ]
   }

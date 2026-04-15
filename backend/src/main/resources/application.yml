@@ -19,7 +19,7 @@ spring:
   mail:
     debug: true
     username: ${GMAIL_USERNAME:alphanet.vin@gmail.com}
-    password: ${GMAIL_APP_PASSWORD:hfsnigdyluzigdpc}
+    password: ${GMAIL_APP_PASSWORD}
     host: smtp.gmail.com
     port: 465
     protocol: smtp
@@ -118,7 +118,7 @@ notifications:
   email:
     sender-address: ${EMAIL_SENDER_ADDRESS:alphanet.vin@gmail.com}
     sender-name: ${EMAIL_SENDER_NAME:PSY Assistant}
-    webhook-secret: ${EMAIL_WEBHOOK_SECRET:hfsnigdyluzigdpc}
+    webhook-secret: ${EMAIL_WEBHOOK_SECRET}
     max-retries: 5
     outbox:
       poll-interval-ms: 5000

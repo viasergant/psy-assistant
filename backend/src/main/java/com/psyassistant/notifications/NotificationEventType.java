@@ -24,5 +24,11 @@ public enum NotificationEventType {
     PACKAGE_EXHAUSTED,
 
     /** Client's prepaid session package has expired with unused sessions. */
-    PACKAGE_EXPIRED
+    PACKAGE_EXPIRED,
+
+    /** Reminder sent to a client about a cancelled appointment. */
+    APPOINTMENT_CANCELLATION,
+
+    /** Follow-up sent to a client after a no-show appointment. */
+    NO_SHOW_FOLLOWUP
 }

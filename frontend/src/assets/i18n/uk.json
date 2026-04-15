@@ -602,7 +602,8 @@
       "users": "Користувачі",
       "therapists": "Терапевти",
       "leaveRequests": "Запити в очікуванні",
-      "serviceCatalog": "Каталог послуг"
+      "serviceCatalog": "Каталог послуг",
+      "notificationTemplates": "Шаблони сповіщень"
     },
     "users": {
       "list": {
@@ -697,6 +698,91 @@
       "adminNotes": "Примітки адміністратора / Причина",
       "adminNotesPlaceholder": "Додайте примітки (необов'язково для затвердження, обов'язкові для відхилення)",
       "selectRequestToReview": "Виберіть запит зі списку для перегляду"
+    },
+    "notificationTemplates": {
+      "title": "Шаблони сповіщень",
+      "list": {
+        "createButton": "Створити шаблон",
+        "filterEventType": "Тип події",
+        "filterChannel": "Канал",
+        "filterLanguage": "Мова",
+        "filterStatus": "Статус",
+        "filterAll": "Усі",
+        "loading": "Завантаження шаблонів...",
+        "empty": "Шаблонів не знайдено.",
+        "ariaFilters": "Фільтри шаблонів",
+        "ariaList": "Список шаблонів",
+        "colEventType": "Тип події",
+        "colChannel": "Канал",
+        "colLanguage": "Мова",
+        "colStatus": "Статус",
+        "colUpdated": "Оновлено",
+        "colActions": "Дії",
+        "actionPreview": "Перегляд",
+        "actionEdit": "Редагувати",
+        "actionActivate": "Активувати",
+        "actionDeactivate": "Деактивувати",
+        "actionDelete": "Видалити",
+        "unknownVarsTooltip": "Містить невідомі змінні",
+        "noActiveWarning": "Деактивація цього шаблону призведе до відсутності активного замінника. Сповіщення не надсилатимуться."
+      },
+      "eventTypes": {
+        "APPOINTMENT_REMINDER": "Нагадування про прийом",
+        "APPOINTMENT_CANCELLATION": "Скасування прийому",
+        "NO_SHOW_FOLLOWUP": "Неявка на прийом",
+        "WELCOME": "Вітання",
+        "PASSWORD_RESET": "Скидання пароля"
+      },
+      "channels": {
+        "EMAIL": "Електронна пошта",
+        "SMS": "SMS"
+      },
+      "languages": {
+        "EN": "Англійська",
+        "UK": "Українська"
+      },
+      "statuses": {
+        "ACTIVE": "Активний",
+        "INACTIVE": "Неактивний"
+      },
+      "form": {
+        "createTitle": "Створити шаблон",
+        "editTitle": "Редагувати шаблон",
+        "eventType": "Тип події",
+        "channel": "Канал",
+        "language": "Мова",
+        "subject": "Тема",
+        "subjectPlaceholder": "напр. Нагадування про прийом для {{clientName}}",
+        "body": "Тіло повідомлення",
+        "bodyPlaceholder": "Тіло шаблону. Використовуйте {{назваЗмінної}} для підстановки.",
+        "select": "— Оберіть —",
+        "multiSegment": "Кілька SMS-сегментів",
+        "segments": "сегментів",
+        "supportedVars": "Підтримувані змінні",
+        "insertVar": "Натисніть для вставки",
+        "unknownVarsWarning": "Тіло містить невідомі змінні — їх не буде підставлено під час відправки.",
+        "cancel": "Скасувати",
+        "save": "Зберегти",
+        "saving": "Збереження..."
+      },
+      "delete": {
+        "title": "Видалити шаблон",
+        "confirm": "Ви впевнені, що хочете видалити цей шаблон? Цю дію неможливо скасувати.",
+        "cancel": "Скасувати",
+        "confirm_btn": "Видалити",
+        "deleting": "Видалення..."
+      },
+      "preview": {
+        "title": "Попередній перегляд шаблону",
+        "subject": "Тема",
+        "body": "Тіло повідомлення",
+        "noSubject": "(без теми)",
+        "close": "Закрити",
+        "loading": "Завантаження перегляду...",
+        "error": "Не вдалося завантажити перегляд.",
+        "chars": "символів",
+        "sampleNote": "Перегляд використовує зразкові дані. Фактичні значення будуть відрізнятись для кожного отримувача."
+      }
     }
   },
   "sessions": {

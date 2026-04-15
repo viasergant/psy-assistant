@@ -602,7 +602,8 @@
       "users": "Users",
       "therapists": "Therapists",
       "leaveRequests": "Pending Requests",
-      "serviceCatalog": "Service Catalog"
+      "serviceCatalog": "Service Catalog",
+      "notificationTemplates": "Notification Templates"
     },
     "users": {
       "list": {
@@ -697,6 +698,91 @@
       "adminNotes": "Admin Notes / Reason",
       "adminNotesPlaceholder": "Add notes (optional for approval, required for rejection)",
       "selectRequestToReview": "Select a request from the list to review"
+    },
+    "notificationTemplates": {
+      "title": "Notification Templates",
+      "list": {
+        "createButton": "Create Template",
+        "filterEventType": "Event Type",
+        "filterChannel": "Channel",
+        "filterLanguage": "Language",
+        "filterStatus": "Status",
+        "filterAll": "All",
+        "loading": "Loading templates...",
+        "empty": "No templates found.",
+        "ariaFilters": "Template filters",
+        "ariaList": "Template list",
+        "colEventType": "Event Type",
+        "colChannel": "Channel",
+        "colLanguage": "Language",
+        "colStatus": "Status",
+        "colUpdated": "Updated",
+        "colActions": "Actions",
+        "actionPreview": "Preview",
+        "actionEdit": "Edit",
+        "actionActivate": "Activate",
+        "actionDeactivate": "Deactivate",
+        "actionDelete": "Delete",
+        "unknownVarsTooltip": "Contains unknown variables",
+        "noActiveWarning": "Deactivating this template will leave no active replacement. Notifications will not be sent."
+      },
+      "eventTypes": {
+        "APPOINTMENT_REMINDER": "Appointment Reminder",
+        "APPOINTMENT_CANCELLATION": "Appointment Cancellation",
+        "NO_SHOW_FOLLOWUP": "No-Show Follow-up",
+        "WELCOME": "Welcome",
+        "PASSWORD_RESET": "Password Reset"
+      },
+      "channels": {
+        "EMAIL": "Email",
+        "SMS": "SMS"
+      },
+      "languages": {
+        "EN": "English",
+        "UK": "Ukrainian"
+      },
+      "statuses": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive"
+      },
+      "form": {
+        "createTitle": "Create Template",
+        "editTitle": "Edit Template",
+        "eventType": "Event Type",
+        "channel": "Channel",
+        "language": "Language",
+        "subject": "Subject",
+        "subjectPlaceholder": "e.g. Appointment reminder for {{clientName}}",
+        "body": "Body",
+        "bodyPlaceholder": "Template body. Use {{variableName}} for placeholders.",
+        "select": "— Select —",
+        "multiSegment": "Multi-segment SMS",
+        "segments": "segments",
+        "supportedVars": "Supported variables",
+        "insertVar": "Click to insert",
+        "unknownVarsWarning": "Body contains unknown variables — they will not be substituted at send time.",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving..."
+      },
+      "delete": {
+        "title": "Delete Template",
+        "confirm": "Are you sure you want to delete this template? This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm_btn": "Delete",
+        "deleting": "Deleting..."
+      },
+      "preview": {
+        "title": "Template Preview",
+        "subject": "Subject",
+        "body": "Body",
+        "noSubject": "(no subject)",
+        "close": "Close",
+        "loading": "Loading preview...",
+        "error": "Failed to load preview.",
+        "chars": "characters",
+        "sampleNote": "Preview uses sample data. Actual values will vary per recipient."
+      }
     }
   },
   "sessions": {

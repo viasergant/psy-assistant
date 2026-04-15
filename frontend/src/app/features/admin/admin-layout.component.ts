@@ -57,6 +57,16 @@ import { TranslocoModule } from '@jsverse/transloco';
         >
           {{ 'admin.tabs.serviceCatalog' | transloco }}
         </a>
+        <a
+          routerLink="/admin/notification-templates"
+          routerLinkActive="active"
+          class="tab"
+          role="tab"
+          [attr.aria-selected]="rla5.isActive"
+          #rla5="routerLinkActive"
+        >
+          {{ 'admin.tabs.notificationTemplates' | transloco }}
+        </a>
       </nav>
 
       <div class="admin-content">

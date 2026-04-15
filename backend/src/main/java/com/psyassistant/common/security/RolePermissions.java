@@ -127,7 +127,8 @@ public final class RolePermissions {
                 Permission.MANAGE_SERVICE_CATALOG,
                 Permission.READ_SERVICE_CATALOG,
                 Permission.MANAGE_PRICING_RULES,
-                Permission.READ_PRICING_RULES
+                Permission.READ_PRICING_RULES,
+                Permission.MANAGE_NOTIFICATION_TEMPLATES
         )));
 
         // Deprecated legacy roles — no permissions; treated as THERAPIST/SYSTEM_ADMINISTRATOR

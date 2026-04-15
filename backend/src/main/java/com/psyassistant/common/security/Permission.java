@@ -106,5 +106,9 @@ public enum Permission {
     MANAGE_PRICING_RULES,
 
     /** Read per-therapist session-type pricing rules. */
-    READ_PRICING_RULES
+    READ_PRICING_RULES,
+
+    // ---- Notification templates ------------------------------------------
+    /** Create, update, activate, deactivate, and delete notification templates. */
+    MANAGE_NOTIFICATION_TEMPLATES
 }

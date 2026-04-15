@@ -39,3 +39,5 @@ logging:
   level:
     root: INFO
     com.psyassistant: DEBUG
+    org.springframework.mail.javamail: DEBUG
+    org.eclipse.angus.mail.smtp: DEBUG

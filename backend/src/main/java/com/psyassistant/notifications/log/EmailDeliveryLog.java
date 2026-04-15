@@ -37,6 +37,9 @@ public class EmailDeliveryLog extends BaseEntity {
     @Column(name = "subject_template_key", nullable = false)
     private String subjectTemplateKey;
 
+    @Column(name = "body", columnDefinition = "TEXT")
+    private String body;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private EmailDeliveryStatus status;
@@ -69,16 +72,19 @@ public class EmailDeliveryLog extends BaseEntity {
      * @param recipientAddressEncrypted encrypted recipient address (via converter)
      * @param recipientAddressHash    SHA-256 hex of the plaintext address
      * @param subjectTemplateKey      i18n key for the subject line
+     * @param body                    pre-rendered email body text
      */
     public EmailDeliveryLog(
             final NotificationEventType eventType,
             final String recipientAddressEncrypted,
             final String recipientAddressHash,
-            final String subjectTemplateKey) {
+            final String subjectTemplateKey,
+            final String body) {
         this.eventType = eventType;
         this.recipientAddressEncrypted = recipientAddressEncrypted;
         this.recipientAddressHash = recipientAddressHash;
         this.subjectTemplateKey = subjectTemplateKey;
+        this.body = body;
         this.status = EmailDeliveryStatus.PENDING;
         this.retryCount = 0;
     }
@@ -97,6 +103,10 @@ public class EmailDeliveryLog extends BaseEntity {
 
     public String getSubjectTemplateKey() {
         return subjectTemplateKey;
+    }
+
+    public String getBody() {
+        return body;
     }
 
     public EmailDeliveryStatus getStatus() {

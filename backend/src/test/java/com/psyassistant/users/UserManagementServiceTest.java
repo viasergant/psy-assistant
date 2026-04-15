@@ -8,6 +8,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.common.config.SecurityProperties;
+import com.psyassistant.notifications.EmailNotificationPort;
 import com.psyassistant.users.dto.CreateUserRequest;
 import com.psyassistant.users.dto.PatchUserRequest;
 import com.psyassistant.users.dto.UserPageResponse;
@@ -50,6 +52,12 @@ class UserManagementServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private EmailNotificationPort emailNotificationPort;
+
+    @Mock
+    private SecurityProperties securityProperties;
+
     private UserManagementService service;
 
     private UUID adminId;
@@ -59,7 +67,9 @@ class UserManagementServiceTest {
     @BeforeEach
     void setUp() {
         service = new UserManagementService(
-                userRepository, resetTokenRepository, auditLogService, passwordEncoder);
+                userRepository, resetTokenRepository, auditLogService, passwordEncoder,
+                emailNotificationPort, securityProperties);
+        ReflectionTestUtils.setField(service, "frontendBaseUrl", "http://localhost:4200");
         adminId = UUID.randomUUID();
         targetId = UUID.randomUUID();
         activeUser = makeUser(targetId, "user@example.com", UserRole.THERAPIST, true);
@@ -226,6 +236,9 @@ class UserManagementServiceTest {
         when(userRepository.findById(targetId)).thenReturn(Optional.of(activeUser));
         when(resetTokenRepository.save(any(PasswordResetToken.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
+        SecurityProperties.PasswordResetProperties resetProps =
+                new SecurityProperties.PasswordResetProperties(24);
+        when(securityProperties.passwordReset()).thenReturn(resetProps);
 
         String rawToken = service.initiatePasswordReset(targetId, adminId);
 
@@ -246,6 +259,9 @@ class UserManagementServiceTest {
     @Test
     void initiatePasswordResetTokenHashIsSha256OfRaw() {
         when(userRepository.findById(targetId)).thenReturn(Optional.of(activeUser));
+        SecurityProperties.PasswordResetProperties resetProps =
+                new SecurityProperties.PasswordResetProperties(24);
+        when(securityProperties.passwordReset()).thenReturn(resetProps);
 
         ArgumentCaptor<PasswordResetToken> tokenCaptor =
                 ArgumentCaptor.forClass(PasswordResetToken.class);

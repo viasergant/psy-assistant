@@ -53,6 +53,12 @@ public class User {
     @Column(nullable = false, length = 5)
     private String language;
 
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts;
+
+    @Column(name = "locked_until")
+    private Instant lockedUntil;
+
     /** Required by JPA. */
     protected User() {
     }
@@ -243,5 +249,53 @@ public class User {
     public void setLanguage(final String language) {
         this.language = language;
         this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Returns the number of consecutive failed login attempts since the counter was last reset.
+     *
+     * @return failed attempt count
+     */
+    public int getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    /**
+     * Sets the failed login attempt counter and updates the updatedAt timestamp.
+     *
+     * @param failedLoginAttempts new value
+     */
+    public void setFailedLoginAttempts(final int failedLoginAttempts) {
+        this.failedLoginAttempts = failedLoginAttempts;
+        this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Returns the instant until which the account is locked, or {@code null} if not locked.
+     *
+     * @return lock expiry or null
+     */
+    public Instant getLockedUntil() {
+        return lockedUntil;
+    }
+
+    /**
+     * Sets the instant until which the account is locked and updates the updatedAt timestamp.
+     * Pass {@code null} to clear the lockout.
+     *
+     * @param lockedUntil lock expiry timestamp or null
+     */
+    public void setLockedUntil(final Instant lockedUntil) {
+        this.lockedUntil = lockedUntil;
+        this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Returns {@code true} if the account is currently locked (lockedUntil is in the future).
+     *
+     * @return true if locked
+     */
+    public boolean isCurrentlyLocked() {
+        return lockedUntil != null && Instant.now().isBefore(lockedUntil);
     }
 }

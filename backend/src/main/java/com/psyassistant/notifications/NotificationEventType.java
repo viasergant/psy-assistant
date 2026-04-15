@@ -17,6 +17,9 @@ public enum NotificationEventType {
     /** Password-reset link for an account holder. */
     PASSWORD_RESET,
 
+    /** Account has been locked due to too many consecutive failed login attempts. */
+    ACCOUNT_LOCKED,
+
     /** Client's prepaid session package has been fully used. */
     PACKAGE_EXHAUSTED,
 

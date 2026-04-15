@@ -60,7 +60,7 @@ class EmailOutboxProcessorTest {
     private EmailDeliveryLog buildEntry() {
         return new EmailDeliveryLog(
                 NotificationEventType.WELCOME, "encrypted@example.com",
-                "abc123", "welcome.subject");
+                "abc123", "welcome.subject", "Welcome to PSY Assistant.");
     }
 
     @Nested

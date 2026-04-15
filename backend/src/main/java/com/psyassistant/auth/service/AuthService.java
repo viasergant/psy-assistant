@@ -7,6 +7,10 @@ import com.psyassistant.auth.dto.LoginRequest;
 import com.psyassistant.auth.dto.LoginResponse;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.common.config.SecurityProperties;
+import com.psyassistant.notifications.EmailMessage;
+import com.psyassistant.notifications.EmailNotificationPort;
+import com.psyassistant.notifications.NotificationEventType;
 import com.psyassistant.therapists.repository.TherapistProfileRepository;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
@@ -14,6 +18,7 @@ import com.psyassistant.users.UserRole;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
@@ -42,6 +47,7 @@ public class AuthService {
     private static final String EVENT_TOKEN_REFRESH = "TOKEN_REFRESH";
     private static final String EVENT_REPLAY_ATTACK = "REPLAY_ATTACK";
     private static final String EVENT_PASSWORD_CHANGED = "PASSWORD_CHANGED";
+    private static final String EVENT_ACCOUNT_LOCKED = "ACCOUNT_LOCKED";
     private static final String OUTCOME_SUCCESS = "SUCCESS";
     private static final String OUTCOME_FAILURE = "FAILURE";
     private static final String SHA_256 = "SHA-256";
@@ -58,16 +64,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
     private final TherapistProfileRepository therapistProfileRepository;
+    private final SecurityProperties securityProperties;
+    private final EmailNotificationPort emailNotificationPort;
 
     /**
      * Constructs the service with all required collaborators.
      *
-     * @param userRepository         user data access
-     * @param refreshTokenRepository refresh token data access
-     * @param tokenService           JWT and token utilities
-     * @param passwordEncoder        BCrypt encoder
-     * @param auditLogService        audit recorder
-     * @param therapistProfileRepository therapist profile repository for linking users to profiles
+     * @param userRepository             user data access
+     * @param refreshTokenRepository     refresh token data access
+     * @param tokenService               JWT and token utilities
+     * @param passwordEncoder            BCrypt encoder
+     * @param auditLogService            audit recorder
+     * @param therapistProfileRepository therapist profile repository
+     * @param securityProperties         security policy settings
+     * @param emailNotificationPort      outbound email queue port
      */
     public AuthService(
             final UserRepository userRepository,
@@ -75,22 +85,32 @@ public class AuthService {
             final TokenService tokenService,
             final PasswordEncoder passwordEncoder,
             final AuditLogService auditLogService,
-            final TherapistProfileRepository therapistProfileRepository) {
+            final TherapistProfileRepository therapistProfileRepository,
+            final SecurityProperties securityProperties,
+            final EmailNotificationPort emailNotificationPort) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.tokenService = tokenService;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
         this.therapistProfileRepository = therapistProfileRepository;
+        this.securityProperties = securityProperties;
+        this.emailNotificationPort = emailNotificationPort;
     }
 
     /**
      * Authenticates a user and issues an access token + raw refresh token.
      *
+     * <p>On each failed attempt the failure counter is incremented atomically.
+     * After {@code lockout.maxAttempts} consecutive failures the account is locked
+     * for {@code lockout.durationMinutes} minutes and a notification email is queued.
+     * A locked account returns HTTP 401 with {@code ACCOUNT_LOCKED} even if the
+     * correct password is supplied.  The counter resets on a successful login.
+     *
      * @param request   login credentials
      * @param ipAddress caller's IP address for audit
      * @return login response containing the access token
-     * @throws AuthException with INVALID_CREDENTIALS or ACCOUNT_DISABLED
+     * @throws AuthException with INVALID_CREDENTIALS, ACCOUNT_DISABLED, or ACCOUNT_LOCKED
      */
     @Transactional
     public AuthResult authenticate(final LoginRequest request, final String ipAddress) {
@@ -105,11 +125,25 @@ public class AuthService {
                 : "$2a$12$n9Rg0LXkEBWvl2rBYFPMCe0RjH1iExbRKIpSA3CqMy7KsBqDNLfIi";
         boolean passwordMatches = passwordEncoder.matches(request.password(), hashToCheck);
 
+        // Lockout check: after BCrypt (for timing) but before credential validation
+        if (user != null && user.isCurrentlyLocked()) {
+            LOG.info("event=LOGIN_FAILURE userId={} code=ACCOUNT_LOCKED requestId={}",
+                    user.getId(), requestId);
+            recordFailure(EVENT_LOGIN_FAILURE, user.getId().toString(),
+                    request.email(), ipAddress, requestId, "ACCOUNT_LOCKED");
+            throw new AuthException(AuthException.ErrorCode.ACCOUNT_LOCKED,
+                    "Account locked until " + user.getLockedUntil());
+        }
+
         if (user == null || !passwordMatches) {
-            recordFailure(EVENT_LOGIN_FAILURE, null, request.email(),
-                    ipAddress, requestId, "INVALID_CREDENTIALS");
-            LOG.info("event=LOGIN_FAILURE emailHash={} code=INVALID_CREDENTIALS requestId={}",
-                    hashEmail(request.email()), requestId);
+            if (user != null) {
+                handleFailedLoginAttempt(user, request.email(), ipAddress, requestId);
+            } else {
+                recordFailure(EVENT_LOGIN_FAILURE, null, request.email(),
+                        ipAddress, requestId, "INVALID_CREDENTIALS");
+                LOG.info("event=LOGIN_FAILURE emailHash={} code=INVALID_CREDENTIALS requestId={}",
+                        hashEmail(request.email()), requestId);
+            }
             throw new AuthException(AuthException.ErrorCode.INVALID_CREDENTIALS,
                     "Invalid credentials");
         }
@@ -122,6 +156,9 @@ public class AuthService {
             throw new AuthException(AuthException.ErrorCode.ACCOUNT_DISABLED,
                     "Account disabled");
         }
+
+        // Successful login: reset failure counter
+        userRepository.clearFailedLoginAttempts(user.getId());
 
         enforceSessionCap(user);
 
@@ -137,10 +174,10 @@ public class AuthService {
                     .map(profile -> profile.getId())
                     .orElse(null);
             if (therapistProfileId != null) {
-                LOG.debug("Including therapistProfileId={} in JWT for user={}", 
+                LOG.debug("Including therapistProfileId={} in JWT for user={}",
                         therapistProfileId, user.getId());
             } else {
-                LOG.warn("User userId={} has THERAPIST role but no TherapistProfile found", 
+                LOG.warn("User userId={} has THERAPIST role but no TherapistProfile found",
                         user.getId());
             }
         }
@@ -342,6 +379,52 @@ public class AuthService {
 
     // ---- private helpers -----------------------------------------------
 
+    /**
+     * Handles a failed login attempt for a known user: increments the counter and,
+     * if the threshold is reached, locks the account and queues a notification email.
+     */
+    private void handleFailedLoginAttempt(
+            final User user, final String email,
+            final String ipAddress, final String requestId) {
+        userRepository.incrementFailedLoginAttempts(user.getId());
+        int newCount = user.getFailedLoginAttempts() + 1;
+        int maxAttempts = securityProperties.lockout().maxAttempts();
+
+        recordFailure(EVENT_LOGIN_FAILURE, user.getId().toString(),
+                email, ipAddress, requestId, "INVALID_CREDENTIALS attempt=" + newCount);
+        LOG.info("event=LOGIN_FAILURE userId={} failedAttempts={} code=INVALID_CREDENTIALS requestId={}",
+                user.getId(), newCount, requestId);
+
+        if (newCount >= maxAttempts) {
+            Instant lockUntil = Instant.now()
+                    .plus(Duration.ofMinutes(securityProperties.lockout().durationMinutes()));
+            userRepository.lockAccount(user.getId(), lockUntil);
+
+            auditLogService.record(new AuditLog.Builder(EVENT_ACCOUNT_LOCKED)
+                    .userId(user.getId())
+                    .emailAttempted(email)
+                    .ipAddress(ipAddress)
+                    .requestId(requestId)
+                    .outcome(OUTCOME_FAILURE)
+                    .detail("lockedUntil=" + lockUntil)
+                    .build());
+            LOG.info("event=ACCOUNT_LOCKED userId={} lockedUntil={} requestId={}",
+                    user.getId(), lockUntil, requestId);
+
+            try {
+                emailNotificationPort.queue(new EmailMessage(
+                        email,
+                        NotificationEventType.ACCOUNT_LOCKED,
+                        "email.subject.account.locked",
+                        "Your account has been locked until " + lockUntil
+                                + " due to too many failed login attempts."));
+            } catch (Exception ex) {
+                LOG.warn("event=LOCKOUT_EMAIL_FAILED userId={} reason={}",
+                        user.getId(), ex.getMessage());
+            }
+        }
+    }
+
     private void enforceSessionCap(final User user) {
         boolean isAdminRole = user.getRole() == UserRole.SYSTEM_ADMINISTRATOR
                 || user.getRole() == UserRole.ADMIN;
@@ -399,3 +482,4 @@ public class AuthService {
         }
     }
 }
+

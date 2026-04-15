@@ -2,6 +2,10 @@ package com.psyassistant.users;
 
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.common.config.SecurityProperties;
+import com.psyassistant.notifications.EmailMessage;
+import com.psyassistant.notifications.EmailNotificationPort;
+import com.psyassistant.notifications.NotificationEventType;
 import com.psyassistant.users.dto.CreateUserRequest;
 import com.psyassistant.users.dto.PatchUserRequest;
 import com.psyassistant.users.dto.UserCreationResponseDto;
@@ -19,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -64,28 +69,39 @@ public class UserManagementService {
     /** Length of auto-generated temporary passwords. */
     private static final int TEMP_PASSWORD_LENGTH = 12;
 
+    @Value("${app.frontend-base-url}")
+    private String frontendBaseUrl;
+
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository resetTokenRepository;
     private final AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
+    private final EmailNotificationPort emailNotificationPort;
+    private final SecurityProperties securityProperties;
 
     /**
      * Constructs the service.
      *
-     * @param userRepository       user data access
-     * @param resetTokenRepository password reset token data access
-     * @param auditLogService      audit recorder
-     * @param passwordEncoder      BCrypt encoder (used to generate an unusable initial hash)
+     * @param userRepository        user data access
+     * @param resetTokenRepository  password reset token data access
+     * @param auditLogService       audit recorder
+     * @param passwordEncoder       BCrypt encoder (used to generate an unusable initial hash)
+     * @param emailNotificationPort outbound email port
+     * @param securityProperties    security policy configuration
      */
     public UserManagementService(
             final UserRepository userRepository,
             final PasswordResetTokenRepository resetTokenRepository,
             final AuditLogService auditLogService,
-            final PasswordEncoder passwordEncoder) {
+            final PasswordEncoder passwordEncoder,
+            final EmailNotificationPort emailNotificationPort,
+            final SecurityProperties securityProperties) {
         this.userRepository = userRepository;
         this.resetTokenRepository = resetTokenRepository;
         this.auditLogService = auditLogService;
         this.passwordEncoder = passwordEncoder;
+        this.emailNotificationPort = emailNotificationPort;
+        this.securityProperties = securityProperties;
     }
 
     /**
@@ -246,6 +262,20 @@ public class UserManagementService {
         String rawToken = generateRawToken();
         storeResetToken(user, rawToken);
 
+        long ttlHours = securityProperties.passwordReset().tokenTtlHours();
+        String resetLink = frontendBaseUrl + "/auth/reset-password?token=" + rawToken;
+        try {
+            emailNotificationPort.queue(new EmailMessage(
+                    user.getEmail(),
+                    NotificationEventType.PASSWORD_RESET,
+                    "email.subject.password.reset",
+                    "Click the link below to reset your password (valid for " + ttlHours
+                            + " hours):\n\n" + resetLink));
+        } catch (Exception ex) {
+            LOG.warn("event=PASSWORD_RESET_EMAIL_FAILED userId={} reason={}",
+                    userId, ex.getMessage());
+        }
+
         auditLogService.record(new AuditLog.Builder(EVENT_USER_PASSWORD_RESET_INITIATED)
                 .userId(actorId)
                 .outcome(OUTCOME_SUCCESS)
@@ -368,6 +398,29 @@ public class UserManagementService {
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException("SHA-256 algorithm unavailable", ex);
         }
+    }
+
+    /**
+     * Immediately unlocks a locked user account and resets the failed-attempt counter.
+     *
+     * @param userId  the user to unlock
+     * @param actorId UUID of the admin performing the action (for audit)
+     * @throws jakarta.persistence.EntityNotFoundException if the user does not exist
+     */
+    @Transactional
+    public void unlockUser(final UUID userId, final UUID actorId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
+
+        userRepository.unlockAccount(user.getId());
+
+        auditLogService.record(new AuditLog.Builder("ACCOUNT_UNLOCKED")
+                .userId(actorId)
+                .outcome(OUTCOME_SUCCESS)
+                .detail("targetUserId=" + userId)
+                .build());
+
+        LOG.info("event=ACCOUNT_UNLOCKED actorId={} targetUserId={}", actorId, userId);
     }
 
     /**

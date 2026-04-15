@@ -10,9 +10,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
+import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -44,6 +46,7 @@ public class GmailSmtpAdapter implements EmailNotificationPort {
     private final JavaMailSender mailSender;
     private final GmailEmailProperties properties;
     private final EmailDeliveryLogRepository repository;
+    private final MessageSource messageSource;
 
     @Value("${spring.mail.username:}")
     private String smtpUsername;
@@ -54,17 +57,20 @@ public class GmailSmtpAdapter implements EmailNotificationPort {
     /**
      * Constructs the adapter.
      *
-     * @param mailSender  Spring {@link JavaMailSender} configured for Gmail SMTP
-     * @param properties  typed configuration properties
-     * @param repository  outbox delivery log repository
+     * @param mailSender     Spring {@link JavaMailSender} configured for Gmail SMTP
+     * @param properties     typed configuration properties
+     * @param repository     outbox delivery log repository
+     * @param messageSource  message source for resolving i18n subject keys
      */
     public GmailSmtpAdapter(
             final JavaMailSender mailSender,
             final GmailEmailProperties properties,
-            final EmailDeliveryLogRepository repository) {
+            final EmailDeliveryLogRepository repository,
+            final MessageSource messageSource) {
         this.mailSender = mailSender;
         this.properties = properties;
         this.repository = repository;
+        this.messageSource = messageSource;
     }
 
     /**
@@ -82,7 +88,8 @@ public class GmailSmtpAdapter implements EmailNotificationPort {
                 message.eventType(),
                 message.recipientAddress(),  // stored encrypted via EncryptedStringConverter
                 hash,
-                message.subjectTemplateKey());
+                message.subjectTemplateKey(),
+                message.renderedBody());
 
         if (!isConfigured()) {
             log.setStatus(EmailDeliveryStatus.CONFIG_ERROR);
@@ -121,11 +128,13 @@ public class GmailSmtpAdapter implements EmailNotificationPort {
         }
 
         try {
+            final String subject = messageSource.getMessage(
+                    entry.getSubjectTemplateKey(), null, entry.getSubjectTemplateKey(), Locale.ENGLISH);
             final SimpleMailMessage mail = new SimpleMailMessage();
             mail.setFrom(properties.getSenderName() + " <" + properties.getSenderAddress() + ">");
             mail.setTo(entry.getRecipientAddressEncrypted()); // decrypted by converter on read
-            mail.setSubject(entry.getSubjectTemplateKey());
-            mail.setText(""); // body rendering is handled in PA-52
+            mail.setSubject(subject);
+            mail.setText(entry.getBody() != null ? entry.getBody() : "");
 
             mailSender.send(mail);
 

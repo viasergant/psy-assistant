@@ -3,6 +3,7 @@ package com.psyassistant.notifications.gmail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -11,6 +12,7 @@ import com.psyassistant.notifications.NotificationEventType;
 import com.psyassistant.notifications.log.EmailDeliveryLog;
 import com.psyassistant.notifications.log.EmailDeliveryLogRepository;
 import com.psyassistant.notifications.log.EmailDeliveryStatus;
+import java.util.Locale;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -35,6 +38,9 @@ class GmailSmtpAdapterTest {
     @Mock
     private EmailDeliveryLogRepository repository;
 
+    @Mock
+    private MessageSource messageSource;
+
     private GmailEmailProperties properties;
     private GmailSmtpAdapter adapter;
 
@@ -46,10 +52,12 @@ class GmailSmtpAdapterTest {
         properties = new GmailEmailProperties();
         properties.setSenderAddress("noreply@psyassistant.com");
         properties.setSenderName("PSY Assistant");
-        adapter = new GmailSmtpAdapter(mailSender, properties, repository);
+        adapter = new GmailSmtpAdapter(mailSender, properties, repository, messageSource);
         ReflectionTestUtils.setField(adapter, "smtpUsername", "smtp@gmail.com");
         ReflectionTestUtils.setField(adapter, "smtpPassword", "secret");
         lenient().when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(messageSource.getMessage(any(String.class), isNull(), any(String.class), any(Locale.class)))
+                .thenAnswer(inv -> inv.getArgument(2));
     }
 
     @Nested
@@ -147,7 +155,8 @@ class GmailSmtpAdapterTest {
                     NotificationEventType.APPOINTMENT_REMINDER,
                     TEST_RECIPIENT,
                     "abc123",
-                    TEST_SUBJECT_KEY);
+                    TEST_SUBJECT_KEY,
+                    "Click here to reset your password: https://example.com/reset?token=abc");
         }
 
         @Test

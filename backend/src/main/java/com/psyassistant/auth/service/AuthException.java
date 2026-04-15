@@ -20,7 +20,13 @@ public class AuthException extends RuntimeException {
         ACCOUNT_DISABLED,
 
         /** The supplied refresh token is expired, revoked, or unknown. */
-        TOKEN_EXPIRED
+        TOKEN_EXPIRED,
+
+        /** The account has been temporarily locked due to too many failed login attempts. */
+        ACCOUNT_LOCKED,
+
+        /** The supplied password-reset token is invalid or has already been used. */
+        TOKEN_INVALID
     }
 
     private final ErrorCode code;

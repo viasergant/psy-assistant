@@ -23,3 +23,10 @@ TIMESTAMP=$(date +%Y%m%d%H%M%S)
      --therapist-specialization "Anxiety Disorders" \
      --client-name "Ivan Petrenko" \
      --client-email "ivan.${TIMESTAMP}@example.com"
+
+./seed-therapist-and-client.sh \
+     --therapist-name "th1" \
+     --therapist-email "alphanet.vin1@gmail.com" \
+     --therapist-specialization "Anxiety Disorders" \
+     --client-name "Ivan Petrenko 1" \
+     --client-email "ivan.${TIMESTAMP}@example.com"     

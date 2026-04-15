@@ -17,6 +17,8 @@ import com.psyassistant.auth.service.AuthResult;
 import com.psyassistant.auth.service.AuthService;
 import com.psyassistant.auth.service.TokenService;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.common.config.SecurityProperties;
+import com.psyassistant.notifications.EmailNotificationPort;
 import com.psyassistant.therapists.repository.TherapistProfileRepository;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
@@ -61,6 +63,12 @@ class AuthServiceTest {
     @Mock
     private TherapistProfileRepository therapistProfileRepository;
 
+    @Mock
+    private SecurityProperties securityProperties;
+
+    @Mock
+    private EmailNotificationPort emailNotificationPort;
+
     private AuthService authService;
 
     private User activeUser;
@@ -69,9 +77,14 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
+        SecurityProperties.LockoutProperties lockout =
+                new SecurityProperties.LockoutProperties(5, 30);
+        org.mockito.Mockito.lenient().when(securityProperties.lockout()).thenReturn(lockout);
+
         authService = new AuthService(
                 userRepository, refreshTokenRepository, tokenService,
-                passwordEncoder, auditLogService, therapistProfileRepository);
+                passwordEncoder, auditLogService, therapistProfileRepository,
+                securityProperties, emailNotificationPort);
         ReflectionTestUtils.setField(authService, "maxAdminSessions", 1);
         ReflectionTestUtils.setField(authService, "maxUserSessions", 5);
 

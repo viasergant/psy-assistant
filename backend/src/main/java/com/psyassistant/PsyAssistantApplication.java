@@ -2,6 +2,7 @@ package com.psyassistant;
 
 import com.psyassistant.billing.invoice.config.InvoiceProperties;
 import com.psyassistant.careplans.config.CarePlanProperties;
+import com.psyassistant.common.config.SecurityProperties;
 import com.psyassistant.reporting.caseload.CaseloadProperties;
 import java.util.TimeZone;
 import org.springframework.boot.SpringApplication;
@@ -21,7 +22,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 @EnableScheduling
 @EnableConfigurationProperties({CarePlanProperties.class, CaseloadProperties.class, InvoiceProperties.class,
-        com.psyassistant.reporting.reports.ReportProperties.class})
+        com.psyassistant.reporting.reports.ReportProperties.class, SecurityProperties.class})
 public class PsyAssistantApplication {
 
     private static final String LEGACY_KYIV_TIME_ZONE = "Europe/Kiev";

@@ -3,8 +3,11 @@ package com.psyassistant.auth.controller;
 import com.psyassistant.auth.dto.FirstLoginPasswordChangeDto;
 import com.psyassistant.auth.dto.LoginRequest;
 import com.psyassistant.auth.dto.LoginResponse;
+import com.psyassistant.auth.dto.PasswordResetConfirmDto;
+import com.psyassistant.auth.dto.PasswordResetRequestDto;
 import com.psyassistant.auth.service.AuthResult;
 import com.psyassistant.auth.service.AuthService;
+import com.psyassistant.auth.service.PasswordResetService;
 import com.psyassistant.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,14 +43,19 @@ public class AuthController {
     private static final String REFRESH_TOKEN_COOKIE = "refreshToken";
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
     /**
-     * Constructs the controller with its required service.
+     * Constructs the controller with its required services.
      *
-     * @param authService the authentication service
+     * @param authService          the authentication service
+     * @param passwordResetService the password reset service
      */
-    public AuthController(final AuthService authService) {
+    public AuthController(
+            final AuthService authService,
+            final PasswordResetService passwordResetService) {
         this.authService = authService;
+        this.passwordResetService = passwordResetService;
     }
 
     /**
@@ -203,5 +211,49 @@ public class AuthController {
             return forwarded.split(",")[0].trim();
         }
         return request.getRemoteAddr();
+    }
+
+    // ---- password reset -----------------------------------------------
+
+    /**
+     * Requests a password reset email for the given address.
+     *
+     * <p>Always returns HTTP 200 regardless of whether the email is registered
+     * (anti-enumeration).
+     *
+     * @param dto email address of the account
+     * @return 200 OK
+     */
+    @Operation(summary = "Request password reset",
+            description = "Queues a one-time reset link email. Always returns 200 "
+                    + "to prevent user enumeration.")
+    @ApiResponse(responseCode = "200", description = "Request accepted")
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<Void> requestPasswordReset(
+            @Valid @RequestBody final PasswordResetRequestDto dto) {
+        passwordResetService.requestReset(dto.email());
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Confirms a password reset by validating the token and setting the new password.
+     *
+     * @param dto token and new password
+     * @return 200 OK on success
+     */
+    @Operation(summary = "Confirm password reset",
+            description = "Validates the reset token and updates the password. "
+                    + "All active sessions are invalidated.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Password updated successfully"),
+        @ApiResponse(responseCode = "400", description = "TOKEN_EXPIRED, TOKEN_INVALID, "
+                + "or PASSWORD_POLICY_VIOLATION",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<Void> confirmPasswordReset(
+            @Valid @RequestBody final PasswordResetConfirmDto dto) {
+        passwordResetService.confirmReset(dto.token(), dto.newPassword());
+        return ResponseEntity.ok().build();
     }
 }

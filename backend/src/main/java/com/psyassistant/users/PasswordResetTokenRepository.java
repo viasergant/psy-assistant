@@ -25,6 +25,15 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
     Optional<PasswordResetToken> findActiveByHash(@Param("hash") String tokenHash);
 
     /**
+     * Finds any token by its hash, regardless of used/expired state.
+     * Used during confirmation to distinguish invalid vs expired tokens.
+     *
+     * @param tokenHash SHA-256 hex of the raw token
+     * @return token if it exists
+     */
+    Optional<PasswordResetToken> findByTokenHash(String tokenHash);
+
+    /**
      * Deletes all tokens (used or expired) for a given user — called before issuing a new one
      * to avoid token accumulation.
      *

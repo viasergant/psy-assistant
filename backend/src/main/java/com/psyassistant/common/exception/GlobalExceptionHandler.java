@@ -1,6 +1,7 @@
 package com.psyassistant.common.exception;
 
 import com.psyassistant.auth.service.AuthException;
+import com.psyassistant.auth.service.PasswordPolicyException;
 import com.psyassistant.billing.catalog.DuplicateServiceException;
 import com.psyassistant.billing.invoice.InvoiceStateException;
 import com.psyassistant.billing.payment.PaymentValidationException;
@@ -447,14 +448,34 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles domain-level validation failures (400).
+     * Handles password complexity policy violations (400).
      *
-     * <p>Triggered by service-layer validation that throws IllegalArgumentException,
-     * such as invalid business rule violations.
-     *
-     * @param ex      the illegal argument exception
+     * @param ex      the policy exception
      * @param request the current HTTP request
-     * @return 400 Bad Request (or 404 if message indicates resource not found)
+     * @return 400 with {@code PASSWORD_POLICY_VIOLATION} code and violation list
+     */
+    @ExceptionHandler(PasswordPolicyException.class)
+    public ResponseEntity<PasswordPolicyErrorResponse> handlePasswordPolicy(
+            final PasswordPolicyException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(
+                new PasswordPolicyErrorResponse(
+                        Instant.now(),
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Password does not meet policy requirements",
+                        "PASSWORD_POLICY_VIOLATION",
+                        request.getRequestURI(),
+                        ex.getViolations()
+                )
+        );
+    }
+
+    /**
+     * Handles every {@link Exception} not caught by a more specific handler.
+     *
+     * @param ex      the unhandled exception
+     * @param request the current HTTP request (used to extract the request URI)
+     * @return a 500 response containing an {@link ErrorResponse} payload
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(

@@ -14,6 +14,7 @@ import com.psyassistant.auth.dto.LoginResponse;
 import com.psyassistant.auth.service.AuthException;
 import com.psyassistant.auth.service.AuthResult;
 import com.psyassistant.auth.service.AuthService;
+import com.psyassistant.auth.service.PasswordResetService;
 import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.common.config.SecurityConfig;
 import com.psyassistant.common.exception.GlobalExceptionHandler;
@@ -46,6 +47,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private PasswordResetService passwordResetService;
 
     @MockitoBean
     private AuditLogService auditLogService;

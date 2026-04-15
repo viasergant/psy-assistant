@@ -31,10 +31,21 @@ management:
       show-details: never
 
 app:
+  frontend-base-url: http://localhost:4200
   jwt:
     secret: test-secret-key-that-is-at-least-32-bytes-long
     issuer: psy-assistant
   security:
+    lockout:
+      max-attempts: 5
+      duration-minutes: 30
+    password:
+      min-length: 8
+      require-uppercase: true
+      require-digit: true
+      require-special-char: true
+    password-reset:
+      token-ttl-hours: 24
     token-ttl:
       admin:
         access: PT15M

@@ -2,7 +2,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
+  AttendanceOutcomeResponse,
   CompleteSessionRequest,
+  RecordAttendanceRequest,
   SessionFilters,
   SessionRecord,
 } from '../models/session.model';
@@ -85,6 +87,23 @@ export class SessionService {
   cancelSession(sessionId: string, reason: string): Observable<SessionRecord> {
     return this.http.post<any>(`${this.base}/${sessionId}/cancel`, { reason }).pipe(
       map(s => this.transformSessionRecord(s))
+    );
+  }
+
+  /**
+   * Records an attendance outcome for a session.
+   *
+   * @param sessionId Session record UUID
+   * @param request Attendance outcome request
+   * @returns Observable of attendance outcome response
+   */
+  recordAttendanceOutcome(
+    sessionId: string,
+    request: RecordAttendanceRequest
+  ): Observable<AttendanceOutcomeResponse> {
+    return this.http.patch<AttendanceOutcomeResponse>(
+      `${this.base}/${sessionId}/attendance`,
+      request
     );
   }
 

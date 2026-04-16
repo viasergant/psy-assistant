@@ -77,6 +77,28 @@
       </div>
     </div>
 
+    <!-- Attendance Outcome -->
+    <div class="session-details-card">
+      <div class="attendance-header">
+        <h4 class="section-title">{{ 'sessions.attendance.sectionTitle' | transloco }}</h4>
+        <p-button
+          [label]="'sessions.attendance.record' | transloco"
+          severity="secondary"
+          size="small"
+          (onClick)="openAttendanceDialog()"
+        />
+      </div>
+      <div *ngIf="session.attendanceOutcome; else noOutcome">
+        <p-tag
+          [value]="getAttendanceOutcomeI18nKey(session.attendanceOutcome) | transloco"
+          [severity]="getAttendanceOutcomeSeverity(session.attendanceOutcome)"
+        />
+      </div>
+      <ng-template #noOutcome>
+        <p class="no-outcome-text">{{ 'sessions.attendance.notRecorded' | transloco }}</p>
+      </ng-template>
+    </div>
+
   </div>
 
   <ng-template pTemplate="footer">
@@ -89,3 +111,12 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<!-- Attendance Recording Dialog -->
+<app-record-attendance-dialog
+  *ngIf="session && attendanceDialogVisible"
+  [session]="session"
+  [visible]="attendanceDialogVisible"
+  (recorded)="onAttendanceRecorded($event)"
+  (closed)="onAttendanceDialogClosed()"
+/>

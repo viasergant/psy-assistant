@@ -249,6 +249,10 @@
       "expires": "Термін дії до {{date}}",
       "sessionsRemaining": "{{remaining}} / {{total}} сесій залишилось",
       "viewInvoice": "Переглянути рахунок"
+    },
+    "atRisk": {
+      "badge": "Під ризиком",
+      "tooltip": "Клієнт позначений як ризиковий через повторні пропуски"
     }
   },
   "search": {
@@ -268,7 +272,8 @@
       "CONVERSION": "Конверсія",
       "NOTE": "Примітка",
       "PAYMENT": "Платіж",
-      "COMMUNICATION": "Комунікація"
+      "COMMUNICATION": "Комунікація",
+      "ATTENDANCE_OUTCOME": "Результат відвідування"
     },
     "eventSubtype": {
       "appointment.scheduled": "Заплановано",
@@ -288,6 +293,13 @@
     },
     "conversion": {
       "fromLead": "Клієнт створений з конверсії ліда"
+    },
+    "attendanceOutcome": {
+      "ATTENDED": "Відвідав сесію",
+      "NO_SHOW": "Не з'явився",
+      "LATE_CANCELLATION": "Пізнє скасування",
+      "CANCELLED": "Скасовано",
+      "THERAPIST_CANCELLATION": "Скасовано терапевтом"
     }
   },
   "therapists": {
@@ -851,7 +863,8 @@
       "startError": "Не вдалося розпочати сесію",
       "completeError": "Не вдалося завершити сесію",
       "cancelError": "Не вдалося скасувати сесію",
-      "viewSessionInfo": "Перегляд інформації про сесію"
+      "viewSessionInfo": "Перегляд інформації про сесію",
+      "attendanceError": "Не вдалося зберегти результат відвідування"
     },
     "emptyState": {
       "noSessions": "Не знайдено сесій для вибраних фільтрів",
@@ -863,6 +876,23 @@
     },
     "hints": {
       "actualEndTime": "Залиште порожнім для використання поточного часу"
+    },
+    "attendance": {
+      "sectionTitle": "Відвідуваність",
+      "label": "Результат відвідування",
+      "dialogTitle": "Записати відвідування",
+      "record": "Записати відвідування",
+      "placeholder": "Оберіть результат...",
+      "notRecorded": "Ще не записано",
+      "saved": "Результат відвідування збережено",
+      "save": "Зберегти",
+      "outcome": {
+        "attended": "Прийшов",
+        "noShow": "Не з'явився",
+        "lateCancellation": "Пізнє скасування",
+        "cancelled": "Скасовано",
+        "therapistCancellation": "Скасовано терапевтом"
+      }
     }
   },
   "notes": {

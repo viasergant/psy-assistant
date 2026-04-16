@@ -170,6 +170,14 @@ public class Client extends BaseEntity {
     private String treatmentStatus = "ACTIVE";
 
     /**
+     * Indicates that this client is currently flagged as "at-risk" due to repeated no-shows.
+     * Re-evaluated automatically every time a new attendance outcome is recorded.
+     * Cleared automatically when the no-show count drops below the configured threshold.
+     */
+    @Column(name = "is_at_risk", nullable = false)
+    private boolean atRisk = false;
+
+    /**
      * UUID of the lead this client was converted from.
      * Carries a UNIQUE constraint enforced at the database level.
      */
@@ -546,6 +554,16 @@ public class Client extends BaseEntity {
     /** Sets the treatment status. */
     public void setTreatmentStatus(final String treatmentStatus) {
         this.treatmentStatus = treatmentStatus;
+    }
+
+    /** Returns true if this client is currently flagged as at-risk due to repeated no-shows. */
+    public boolean isAtRisk() {
+        return atRisk;
+    }
+
+    /** Sets the at-risk flag. Should only be called by {@code AtRiskEvaluationService}. */
+    public void setAtRisk(final boolean atRisk) {
+        this.atRisk = atRisk;
     }
 
     /**

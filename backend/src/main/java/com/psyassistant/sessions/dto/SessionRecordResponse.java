@@ -1,5 +1,6 @@
 package com.psyassistant.sessions.dto;
 
+import com.psyassistant.sessions.domain.AttendanceOutcome;
 import com.psyassistant.sessions.domain.SessionStatus;
 import java.time.Duration;
 import java.time.Instant;
@@ -26,6 +27,9 @@ public record SessionRecordResponse(
         String cancellationReason,
         String sessionNotes,
         LocalTime actualEndTime,
+        AttendanceOutcome attendanceOutcome,
+        Instant cancelledAt,
+        UUID cancellationInitiatorId,
         Instant createdAt,
         Instant updatedAt,
         String createdBy

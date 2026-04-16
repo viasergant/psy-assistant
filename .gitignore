@@ -3,3 +3,4 @@
 .vscode/mcp.json
 .env
 backend/invoices/
+backend/logs/

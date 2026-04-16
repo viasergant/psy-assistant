@@ -76,6 +76,14 @@ app:
   invoices:
     payment-terms-days: 14
     pdf-storage-path: /tmp/test-invoices/pdf
+  attendance:
+    no-show:
+      threshold: 3
+      lookback-days: 90
+    late-cancellation:
+      window-hours: 24
+    followup:
+      assign-to: THERAPIST
 
 session:
   notes:

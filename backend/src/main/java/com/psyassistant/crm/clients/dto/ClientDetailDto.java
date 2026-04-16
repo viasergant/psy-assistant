@@ -44,6 +44,7 @@ import java.util.UUID;
  * @param emergencyContactEmail        optional emergency contact email
  * @param tags                         client tags
  * @param photoUrl                     profile photo download URL
+ * @param isAtRisk                     true when client is flagged as at-risk due to repeated no-shows
  * @param canEditProfile               capability flag for profile edits
  * @param canEditTags                  capability flag for tag edits
  * @param canUploadPhoto               capability flag for photo upload
@@ -87,6 +88,7 @@ public record ClientDetailDto(
         String emergencyContactEmail,
         List<String> tags,
         String photoUrl,
+        boolean isAtRisk,
         boolean canEditProfile,
         boolean canEditTags,
         boolean canUploadPhoto,
@@ -148,6 +150,7 @@ public record ClientDetailDto(
                 client.getEmergencyContactEmail(),
                 tags,
                 photoUrl,
+                client.isAtRisk(),
                 canEditProfile,
                 canEditTags,
                 canUploadPhoto,

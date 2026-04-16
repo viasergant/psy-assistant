@@ -62,6 +62,9 @@ public class SessionRecordMapper {
                 sessionRecord.getCancellationReason(),
                 sessionRecord.getSessionNotes(),
                 sessionRecord.getActualEndTime(),
+                sessionRecord.getAttendanceOutcome(),
+                sessionRecord.getCancelledAt(),
+                sessionRecord.getCancellationInitiatorId(),
                 sessionRecord.getCreatedAt(),
                 sessionRecord.getUpdatedAt(),
                 sessionRecord.getCreatedBy()

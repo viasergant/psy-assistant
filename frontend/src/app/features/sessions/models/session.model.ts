@@ -1,4 +1,15 @@
 /**
+ * Attendance outcome enumeration
+ */
+export enum AttendanceOutcome {
+  ATTENDED = 'ATTENDED',
+  NO_SHOW = 'NO_SHOW',
+  LATE_CANCELLATION = 'LATE_CANCELLATION',
+  CANCELLED = 'CANCELLED',
+  THERAPIST_CANCELLATION = 'THERAPIST_CANCELLATION'
+}
+
+/**
  * Session type information from backend
  */
 export interface SessionTypeInfo {
@@ -25,6 +36,9 @@ export interface SessionRecord {
   cancellationReason?: string;
   sessionNotes?: string;
   actualEndTime?: string; // ISO time (HH:mm:ss)
+  attendanceOutcome?: AttendanceOutcome;
+  cancelledAt?: string; // ISO instant
+  cancellationInitiatorId?: string; // UUID
   createdAt: string;
   updatedAt: string;
 }
@@ -45,6 +59,26 @@ export enum SessionStatus {
 export interface CompleteSessionRequest {
   sessionNotes: string;
   actualEndTime?: string; // ISO time (HH:mm:ss)
+}
+
+/**
+ * Request payload for recording an attendance outcome
+ */
+export interface RecordAttendanceRequest {
+  outcome: AttendanceOutcome;
+  cancelledAt?: string; // ISO instant
+  note?: string;
+}
+
+/**
+ * Response from recording an attendance outcome
+ */
+export interface AttendanceOutcomeResponse {
+  sessionId: string;
+  effectiveOutcome: AttendanceOutcome;
+  requestedOutcome: AttendanceOutcome;
+  cancelledAt?: string;
+  updatedAt: string;
 }
 
 /**

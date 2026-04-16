@@ -38,6 +38,7 @@ export interface ClientDetail {
   canEditProfile: boolean;
   canEditTags: boolean;
   canUploadPhoto: boolean;
+  isAtRisk: boolean;
   createdAt: string;
   updatedAt: string;
   createdBy: string | null;

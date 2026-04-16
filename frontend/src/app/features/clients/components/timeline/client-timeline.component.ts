@@ -68,6 +68,11 @@ interface EventTypeFilter {
                     <div *ngSwitchCase="'CONVERSION'">
                       {{ 'timeline.conversion.fromLead' | transloco }}
                     </div>
+                    <div *ngSwitchCase="'ATTENDANCE_OUTCOME'">
+                      <div *ngIf="event.eventData.outcome" class="attendance-outcome" [class]="'outcome-' + event.eventData.outcome">
+                        {{ 'timeline.attendanceOutcome.' + event.eventData.outcome | transloco }}
+                      </div>
+                    </div>
                   </ng-container>
                 </div>
               </div>
@@ -157,6 +162,11 @@ interface EventTypeFilter {
         background: var(--pink-100);
         color: var(--pink-900);
       }
+
+      &.ATTENDANCE_OUTCOME {
+        background: var(--indigo-100);
+        color: var(--indigo-900);
+      }
     }
 
     .event-timestamp {
@@ -181,6 +191,20 @@ interface EventTypeFilter {
 
     .event-data {
       font-size: 0.875rem;
+    }
+
+    .attendance-outcome {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+
+      &.outcome-ATTENDED { background: var(--green-100); color: var(--green-900); }
+      &.outcome-NO_SHOW { background: var(--red-100); color: var(--red-900); }
+      &.outcome-LATE_CANCELLATION { background: var(--orange-100); color: var(--orange-900); }
+      &.outcome-CANCELLED { background: var(--surface-200); color: var(--text-color-secondary); }
+      &.outcome-THERAPIST_CANCELLATION { background: var(--blue-100); color: var(--blue-900); }
     }
 
     .field-change {
@@ -238,7 +262,8 @@ export class ClientTimelineComponent implements OnInit, OnDestroy {
     { label: 'Conversion', value: 'CONVERSION' },
     { label: 'Notes', value: 'NOTE' },
     { label: 'Payments', value: 'PAYMENT' },
-    { label: 'Communications', value: 'COMMUNICATION' }
+    { label: 'Communications', value: 'COMMUNICATION' },
+    { label: 'Attendance', value: 'ATTENDANCE_OUTCOME' }
   ];
 
   private destroy$ = new Subject<void>();

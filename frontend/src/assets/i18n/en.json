@@ -249,6 +249,10 @@
       "expires": "Expires {{date}}",
       "sessionsRemaining": "{{remaining}} / {{total}} sessions remaining",
       "viewInvoice": "View invoice"
+    },
+    "atRisk": {
+      "badge": "At Risk",
+      "tooltip": "Client has been flagged as at-risk due to repeated no-shows"
     }
   },
   "search": {
@@ -268,7 +272,8 @@
       "CONVERSION": "Conversion",
       "NOTE": "Note",
       "PAYMENT": "Payment",
-      "COMMUNICATION": "Communication"
+      "COMMUNICATION": "Communication",
+      "ATTENDANCE_OUTCOME": "Attendance Outcome"
     },
     "eventSubtype": {
       "appointment.scheduled": "Scheduled",
@@ -288,6 +293,13 @@
     },
     "conversion": {
       "fromLead": "Client created from lead conversion"
+    },
+    "attendanceOutcome": {
+      "ATTENDED": "Attended session",
+      "NO_SHOW": "No-show recorded",
+      "LATE_CANCELLATION": "Late cancellation",
+      "CANCELLED": "Cancelled",
+      "THERAPIST_CANCELLATION": "Therapist cancelled"
     }
   },
   "therapists": {
@@ -851,7 +863,8 @@
       "startError": "Failed to start session",
       "completeError": "Failed to complete session",
       "cancelError": "Failed to cancel session",
-      "viewSessionInfo": "View session details"
+      "viewSessionInfo": "View session details",
+      "attendanceError": "Failed to save attendance outcome"
     },
     "emptyState": {
       "noSessions": "No sessions found for the selected filters",
@@ -863,6 +876,23 @@
     },
     "hints": {
       "actualEndTime": "Leave blank to use current time"
+    },
+    "attendance": {
+      "sectionTitle": "Attendance",
+      "label": "Attendance Outcome",
+      "dialogTitle": "Record Attendance",
+      "record": "Record Attendance",
+      "placeholder": "Select outcome...",
+      "notRecorded": "Not yet recorded",
+      "saved": "Attendance outcome saved",
+      "save": "Save",
+      "outcome": {
+        "attended": "Attended",
+        "noShow": "No-Show",
+        "lateCancellation": "Late Cancellation",
+        "cancelled": "Cancelled",
+        "therapistCancellation": "Therapist Cancellation"
+      }
     }
   },
   "notes": {

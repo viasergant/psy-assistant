@@ -29,7 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class TimelineService {
 
     private static final Set<String> VALID_EVENT_TYPES = Set.of(
-            "APPOINTMENT", "PROFILE_CHANGE", "CONVERSION", "NOTE", "PAYMENT", "COMMUNICATION"
+            "APPOINTMENT", "PROFILE_CHANGE", "CONVERSION", "NOTE", "PAYMENT", "COMMUNICATION",
+            "ATTENDANCE_OUTCOME"
     );
 
     private final JdbcTemplate jdbcTemplate;

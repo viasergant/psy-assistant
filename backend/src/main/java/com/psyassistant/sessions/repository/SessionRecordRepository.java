@@ -68,4 +68,23 @@ public interface SessionRecordRepository extends JpaRepository<SessionRecord, UU
             @Param("endDate") LocalDate endDate,
             @Param("status") SessionStatus status
     );
+
+    /**
+     * Counts the number of no-show outcomes for a specific client within an optional date window.
+     *
+     * <p>When {@code lookbackFrom} is null, counts all no-shows for the client (all-time).
+     *
+     * @param clientId     client UUID
+     * @param lookbackFrom earliest session date to include (inclusive), or null for all-time
+     * @return count of no-show session records
+     */
+    @Query("SELECT COUNT(s) FROM SessionRecord s WHERE "
+            + "s.clientId = :clientId AND "
+            + "s.attendanceOutcome = com.psyassistant.sessions.domain.AttendanceOutcome.NO_SHOW AND "
+            + "(:lookbackFrom IS NULL OR s.sessionDate >= :lookbackFrom)")
+    long countNoShowsForClient(
+            @Param("clientId") UUID clientId,
+            @Param("lookbackFrom") LocalDate lookbackFrom
+    );
 }
+

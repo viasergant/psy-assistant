@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
@@ -99,6 +100,27 @@ public class SessionRecord extends BaseEntity {
     /** Actual end time if different from scheduled (optional, populated when session is completed). */
     @Column(name = "actual_end_time")
     private LocalTime actualEndTime;
+
+    // ========== Attendance Outcome ==========
+
+    /** Attendance outcome recorded after the session. Null until outcome is explicitly recorded. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "attendance_outcome", columnDefinition = "attendance_outcome_type")
+    private AttendanceOutcome attendanceOutcome;
+
+    /**
+     * Timestamp when the cancellation occurred.
+     * Used to evaluate whether the cancellation qualifies as a late cancellation.
+     */
+    @Column(name = "cancelled_at")
+    private Instant cancelledAt;
+
+    /**
+     * UUID of the user who initiated the cancellation.
+     * Used to distinguish therapist cancellations from client-initiated ones.
+     */
+    @Column(name = "cancellation_initiator_id")
+    private UUID cancellationInitiatorId;
 
     /**
      * Default constructor for JPA.
@@ -236,5 +258,29 @@ public class SessionRecord extends BaseEntity {
 
     public void setActualEndTime(final LocalTime actualEndTime) {
         this.actualEndTime = actualEndTime;
+    }
+
+    public AttendanceOutcome getAttendanceOutcome() {
+        return attendanceOutcome;
+    }
+
+    public void setAttendanceOutcome(final AttendanceOutcome attendanceOutcome) {
+        this.attendanceOutcome = attendanceOutcome;
+    }
+
+    public Instant getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public void setCancelledAt(final Instant cancelledAt) {
+        this.cancelledAt = cancelledAt;
+    }
+
+    public UUID getCancellationInitiatorId() {
+        return cancellationInitiatorId;
+    }
+
+    public void setCancellationInitiatorId(final UUID cancellationInitiatorId) {
+        this.cancellationInitiatorId = cancellationInitiatorId;
     }
 }

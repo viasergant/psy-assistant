@@ -2,11 +2,14 @@ package com.psyassistant.sessions.rest;
 
 import com.psyassistant.sessions.domain.SessionRecord;
 import com.psyassistant.sessions.domain.SessionStatus;
+import com.psyassistant.sessions.dto.AttendanceOutcomeResponse;
 import com.psyassistant.sessions.dto.CancelSessionRequest;
 import com.psyassistant.sessions.dto.CompleteSessionRequest;
+import com.psyassistant.sessions.dto.RecordAttendanceRequest;
 import com.psyassistant.sessions.dto.SessionRecordMapper;
 import com.psyassistant.sessions.dto.SessionRecordResponse;
 import com.psyassistant.sessions.dto.StartSessionRequest;
+import com.psyassistant.sessions.service.AttendanceOutcomeService;
 import com.psyassistant.sessions.service.SessionRecordService;
 import jakarta.validation.Valid;
 import java.security.Principal;
@@ -19,7 +22,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,17 +53,21 @@ public class SessionRecordController {
 
     private final SessionRecordService sessionRecordService;
     private final SessionRecordMapper sessionRecordMapper;
+    private final AttendanceOutcomeService attendanceOutcomeService;
 
     /**
      * Constructs a new SessionRecordController.
      *
      * @param sessionRecordService the session record service
      * @param sessionRecordMapper the session record mapper
+     * @param attendanceOutcomeService the attendance outcome service
      */
     public SessionRecordController(final SessionRecordService sessionRecordService,
-                                    final SessionRecordMapper sessionRecordMapper) {
+                                    final SessionRecordMapper sessionRecordMapper,
+                                    final AttendanceOutcomeService attendanceOutcomeService) {
         this.sessionRecordService = sessionRecordService;
         this.sessionRecordMapper = sessionRecordMapper;
+        this.attendanceOutcomeService = attendanceOutcomeService;
     }
 
     /**
@@ -251,5 +261,49 @@ public class SessionRecordController {
                     sessionId, principalName, e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
+    }
+
+    /**
+     * Records an attendance outcome for a session.
+     *
+     * <p>PATCH /api/sessions/{sessionId}/attendance
+     *
+     * <p>If the requested outcome is {@code LATE_CANCELLATION} but the {@code cancelledAt}
+     * timestamp is outside the configured late-cancellation window, the effective outcome is
+     * downgraded to {@code CANCELLED}. The response indicates both requested and effective outcomes.
+     *
+     * @param sessionId session UUID
+     * @param request   attendance outcome request
+     * @return 200 OK with attendance outcome response
+     * @throws ResponseStatusException 404 Not Found if session does not exist
+     */
+    @PatchMapping("/{sessionId}/attendance")
+    @PreAuthorize("hasAnyRole('THERAPIST', 'RECEPTION_ADMIN_STAFF', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<AttendanceOutcomeResponse> recordAttendanceOutcome(
+            @PathVariable final UUID sessionId,
+            @Valid @RequestBody final RecordAttendanceRequest request) {
+
+        final UUID actorUserId = getCurrentUserId();
+
+        final AttendanceOutcomeResponse response =
+                attendanceOutcomeService.recordOutcome(sessionId, request, actorUserId);
+
+        LOG.info("Attendance outcome recorded via API: sessionId={}, outcome={}, actor={}",
+                sessionId, response.effectiveOutcome(), actorUserId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    private UUID getCurrentUserId() {
+        final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
+            try {
+                return UUID.fromString(auth.getName());
+            } catch (final IllegalArgumentException e) {
+                LOG.warn("Failed to parse user ID from authentication: {}", auth.getName());
+                return UUID.randomUUID();
+            }
+        }
+        return UUID.randomUUID();
     }
 }

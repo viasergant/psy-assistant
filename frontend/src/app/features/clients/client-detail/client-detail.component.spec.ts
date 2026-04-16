@@ -50,6 +50,7 @@ describe('ClientDetailComponent', () => {
     canEditProfile: true,
     canEditTags: true,
     canUploadPhoto: true,
+    isAtRisk: false,
     createdAt: '2026-03-30T00:00:00Z',
     updatedAt: '2026-03-30T00:00:00Z',
     createdBy: 'system'

@@ -1,0 +1,70 @@
+<p-dialog
+  [visible]="visible"
+  [modal]="true"
+  [closable]="true"
+  [style]="{ width: '500px' }"
+  [header]="'sessions.attendance.dialogTitle' | transloco"
+  (onHide)="close()"
+>
+  <form [formGroup]="attendanceForm" (ngSubmit)="submit()" novalidate>
+    <!-- Session Summary -->
+    <div class="session-summary">
+      <div class="summary-row">
+        <span class="summary-label">{{ 'sessions.list.client' | transloco }}:</span>
+        <span class="summary-value">{{ session.clientName }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">{{ 'sessions.list.dateTime' | transloco }}:</span>
+        <span class="summary-value">
+          {{ session.sessionDate }} {{ session.scheduledStartTime }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Attendance Outcome Selector -->
+    <div class="field">
+      <label for="outcome">
+        {{ 'sessions.attendance.label' | transloco }}
+        <span class="required" aria-hidden="true">*</span>
+      </label>
+      <p-select
+        inputId="outcome"
+        formControlName="outcome"
+        [options]="outcomeOptions"
+        [placeholder]="'sessions.attendance.placeholder' | transloco"
+        [attr.aria-invalid]="isInvalid('outcome')"
+        aria-required="true"
+        styleClass="w-full"
+      >
+        <ng-template pTemplate="item" let-item>
+          {{ item.label | transloco }}
+        </ng-template>
+        <ng-template pTemplate="selectedItem" let-item>
+          {{ item?.label | transloco }}
+        </ng-template>
+      </p-select>
+      <span *ngIf="isInvalid('outcome')" class="error-msg" role="alert">
+        {{ 'common.validation.required' | transloco }}
+      </span>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        [label]="'common.actions.close' | transloco"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="close()"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'sessions.attendance.save' | transloco"
+        severity="primary"
+        (onClick)="submit()"
+        [loading]="loading"
+        [disabled]="attendanceForm.invalid"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

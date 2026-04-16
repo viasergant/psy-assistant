@@ -122,9 +122,9 @@ describe('SessionService', () => {
         status: SessionStatus.IN_PROGRESS,
       };
 
-      service.startSession(1).subscribe((session) => {
+      service.startSession('1').subscribe((session) => {
         expect(session.status).toBe(SessionStatus.IN_PROGRESS);
-        expect(session.id).toBe(1);
+        expect(session.id).toBe('1');
       });
 
       const req = httpMock.expectOne('/api/sessions/1/start');
@@ -144,7 +144,7 @@ describe('SessionService', () => {
         status: SessionStatus.COMPLETED,
       };
 
-      service.completeSession(1, request).subscribe((session) => {
+      service.completeSession('1', request).subscribe((session) => {
         expect(session.status).toBe(SessionStatus.COMPLETED);
       });
 
@@ -164,7 +164,7 @@ describe('SessionService', () => {
         status: SessionStatus.COMPLETED,
       };
 
-      service.completeSession(1, request).subscribe((session) => {
+      service.completeSession('1', request).subscribe((session) => {
         expect(session.status).toBe(SessionStatus.COMPLETED);
       });
 
@@ -183,7 +183,7 @@ describe('SessionService', () => {
         cancellationReason: reason,
       };
 
-      service.cancelSession(1, reason).subscribe((session) => {
+      service.cancelSession('1', reason).subscribe((session) => {
         expect(session.status).toBe(SessionStatus.CANCELLED);
         expect(session.cancellationReason).toBe(reason);
       });

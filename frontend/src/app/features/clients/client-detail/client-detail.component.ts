@@ -39,7 +39,12 @@ import { ClientPackagesComponent } from '../components/client-packages/client-pa
             <h1>{{ client.fullName }}</h1>
             <p class="sub">{{ client.clientCode || client.id }}</p>
           </div>
-          <span class="badge-client">{{ 'clients.detail.badge' | transloco }}</span>
+          <div class="header-badges">
+            <span class="badge-client">{{ 'clients.detail.badge' | transloco }}</span>
+            <span *ngIf="client.isAtRisk" class="badge-at-risk" [title]="'clients.atRisk.tooltip' | transloco">
+              {{ 'clients.atRisk.badge' | transloco }}
+            </span>
+          </div>
         </header>
 
         <div class="toolbar">
@@ -361,9 +366,15 @@ import { ClientPackagesComponent } from '../components/client-packages/client-pa
       display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;
     }
     h1 { margin: 0; font-size: 1.5rem; }
+    .header-badges { display: flex; gap: .5rem; align-items: center; }
     .badge-client {
       padding: .2rem .7rem; background: #F0FDF4;
       border-radius: 999px; font-size: .8rem; font-weight: 600; color: #166534;
+    }
+    .badge-at-risk {
+      padding: .2rem .7rem; background: #FEF2F2;
+      border-radius: 999px; font-size: .8rem; font-weight: 600; color: #991B1B;
+      cursor: default;
     }
     .section { margin-bottom: 2rem; }
     .profile-form { display: block; }

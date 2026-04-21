@@ -2,14 +2,24 @@
   [(visible)]="visible"
   [modal]="true"
   [closable]="true"
-  [style]="{ width: '600px', 'max-height': '90vh' }"
+  [style]="{ width: '700px', 'max-height': '90vh' }"
   [header]="'sessions.dialog.detailTitle' | transloco"
   (onHide)="close()"
 >
   <div class="session-detail-content" *ngIf="session">
-    <!-- Client and Status Header -->
+    <!-- Client / Group Header -->
     <div class="detail-header">
-      <h3 class="client-name">{{ session.clientName }}</h3>
+      <div class="header-left">
+        <!-- INDIVIDUAL: show single client name -->
+        <h3 class="client-name" *ngIf="!isGroupSession">{{ session.clientName }}</h3>
+        <!-- GROUP: show group label + participant count -->
+        <h3 class="client-name" *ngIf="isGroupSession">
+          {{ 'sessions.group.groupSession' | transloco }}
+          <span class="participant-badge">
+            {{ activeParticipants.length }} {{ 'sessions.group.participants' | transloco }}
+          </span>
+        </h3>
+      </div>
       <p-tag
         [value]="'sessions.status.' + getStatusKey(session.status) | transloco"
         [severity]="getStatusSeverity(session.status)"
@@ -17,27 +27,34 @@
       />
     </div>
 
+    <!-- Group Participant List Panel (GROUP only) -->
+    <div class="session-details-card" *ngIf="isGroupSession">
+      <app-group-participant-panel
+        [participants]="session.participants"
+      ></app-group-participant-panel>
+    </div>
+
     <!-- Session Information -->
     <div class="session-details-card">
       <h4 class="section-title">{{ 'sessions.dialog.sessionInfo' | transloco }}</h4>
-      
+
       <div class="detail-row">
         <span class="detail-label">{{ 'sessions.list.dateTime' | transloco }}</span>
         <span class="detail-value">{{ session.sessionDate }} {{ session.scheduledStartTime }}</span>
       </div>
-      
+
       <div class="detail-row">
         <span class="detail-label">{{ 'sessions.list.type' | transloco }}</span>
         <span class="detail-value">{{ 'sessions.types.' + session.sessionType.code | transloco }}</span>
       </div>
-      
+
       <div class="detail-row">
         <span class="detail-label">{{ 'sessions.dialog.plannedDuration' | transloco }}</span>
         <span class="detail-value">
           {{ session.plannedDuration }} {{ 'sessions.dialog.minutes' | transloco }}
         </span>
       </div>
-      
+
       <div class="detail-row" *ngIf="session.actualEndTime">
         <span class="detail-label">{{ 'sessions.dialog.actualEndTime' | transloco }}</span>
         <span class="detail-value">{{ session.actualEndTime }}</span>
@@ -47,19 +64,19 @@
     <!-- Record Metadata -->
     <div class="session-details-card">
       <h4 class="section-title">{{ 'sessions.dialog.recordInfo' | transloco }}</h4>
-      
+
       <div class="detail-row">
         <span class="detail-label">{{ 'sessions.dialog.createdAt' | transloco }}</span>
         <span class="detail-value">{{ session.createdAt | date: 'medium' }}</span>
       </div>
-      
+
       <div class="detail-row">
         <span class="detail-label">{{ 'sessions.dialog.updatedAt' | transloco }}</span>
         <span class="detail-value">{{ session.updatedAt | date: 'medium' }}</span>
       </div>
     </div>
 
-    <!-- Clinical Notes -->
+    <!-- Clinical Notes (shared group notes + per-client notes via noteScope) -->
     <div class="session-details-card">
       <h4 class="section-title">{{ 'sessions.dialog.sessionNotes' | transloco }}</h4>
       <app-session-notes-panel
@@ -77,8 +94,8 @@
       </div>
     </div>
 
-    <!-- Attendance Outcome -->
-    <div class="session-details-card">
+    <!-- Attendance Outcome — INDIVIDUAL sessions -->
+    <div class="session-details-card" *ngIf="!isGroupSession">
       <div class="attendance-header">
         <h4 class="section-title">{{ 'sessions.attendance.sectionTitle' | transloco }}</h4>
         <p-button
@@ -99,6 +116,36 @@
       </ng-template>
     </div>
 
+    <!-- Attendance Outcome — GROUP sessions: per-client inputs -->
+    <div class="session-details-card" *ngIf="isGroupSession">
+      <div class="attendance-header">
+        <h4 class="section-title">{{ 'sessions.attendance.sectionTitle' | transloco }}</h4>
+        <p-button
+          [label]="(showGroupAttendancePanel ? 'common.actions.cancel' : 'sessions.attendance.record') | transloco"
+          severity="secondary"
+          size="small"
+          (onClick)="openAttendanceDialog()"
+        />
+      </div>
+
+      <!-- Participant-level attendance summary -->
+      <div *ngIf="!showGroupAttendancePanel" class="group-attendance-summary">
+        <span *ngFor="let p of activeParticipants" class="participant-attendance-row">
+          <strong>{{ p.clientName }}</strong>:
+          <span *ngIf="p.attendanceOutcome">{{ p.attendanceOutcome }}</span>
+          <em *ngIf="!p.attendanceOutcome">{{ 'sessions.attendance.notRecorded' | transloco }}</em>
+        </span>
+      </div>
+
+      <!-- Inline attendance entry form -->
+      <app-group-attendance-panel
+        *ngIf="showGroupAttendancePanel"
+        [sessionId]="session.id"
+        [participants]="session.participants"
+        (saved)="onGroupAttendanceSaved($event)"
+      ></app-group-attendance-panel>
+    </div>
+
   </div>
 
   <ng-template pTemplate="footer">
@@ -112,9 +159,9 @@
   </ng-template>
 </p-dialog>
 
-<!-- Attendance Recording Dialog -->
+<!-- Attendance Recording Dialog — INDIVIDUAL sessions only -->
 <app-record-attendance-dialog
-  *ngIf="session && attendanceDialogVisible"
+  *ngIf="session && !isGroupSession && attendanceDialogVisible"
   [session]="session"
   [visible]="attendanceDialogVisible"
   (recorded)="onAttendanceRecorded($event)"

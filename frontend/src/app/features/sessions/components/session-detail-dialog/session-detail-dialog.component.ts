@@ -4,18 +4,33 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { DialogModule } from 'primeng/dialog';
 import { Button } from 'primeng/button';
 import { Tag } from 'primeng/tag';
-import { AttendanceOutcome, AttendanceOutcomeResponse, SessionRecord, SessionStatus } from '../../models/session.model';
+import { AttendanceOutcome, AttendanceOutcomeResponse, GroupSessionParticipant, RecordKind, SessionRecord, SessionStatus } from '../../models/session.model';
 import { SessionNotesPanelComponent } from '../session-notes-panel/session-notes-panel.component';
 import { RecordAttendanceDialogComponent } from '../record-attendance-dialog/record-attendance-dialog.component';
+import { GroupParticipantPanelComponent } from '../group-participant-panel/group-participant-panel.component';
+import { GroupAttendancePanelComponent, GroupAttendanceResult } from '../group-attendance-panel/group-attendance-panel.component';
 
 /**
- * Session detail dialog component for viewing complete session information
- * @class SessionDetailDialogComponent
+ * Session detail dialog component for viewing complete session information.
+ *
+ * Supports both INDIVIDUAL and GROUP session records. For GROUP records,
+ * the participant list panel and per-client attendance panel are rendered
+ * in place of the single-client attendance dialog.
  */
 @Component({
   selector: 'app-session-detail-dialog',
   standalone: true,
-  imports: [CommonModule, TranslocoPipe, DialogModule, Button, Tag, SessionNotesPanelComponent, RecordAttendanceDialogComponent],
+  imports: [
+    CommonModule,
+    TranslocoPipe,
+    DialogModule,
+    Button,
+    Tag,
+    SessionNotesPanelComponent,
+    RecordAttendanceDialogComponent,
+    GroupParticipantPanelComponent,
+    GroupAttendancePanelComponent,
+  ],
   templateUrl: './session-detail-dialog.component.html',
   styleUrls: ['./session-detail-dialog.component.scss'],
 })
@@ -27,7 +42,17 @@ export class SessionDetailDialogComponent {
 
   SessionStatus = SessionStatus;
   AttendanceOutcome = AttendanceOutcome;
+  RecordKind = RecordKind;
   attendanceDialogVisible = false;
+  showGroupAttendancePanel = false;
+
+  get isGroupSession(): boolean {
+    return this.session?.recordKind === RecordKind.GROUP;
+  }
+
+  get activeParticipants(): GroupSessionParticipant[] {
+    return (this.session?.participants ?? []).filter(p => !p.removedAt);
+  }
 
   close(): void {
     this.visible = false;
@@ -35,7 +60,11 @@ export class SessionDetailDialogComponent {
   }
 
   openAttendanceDialog(): void {
-    this.attendanceDialogVisible = true;
+    if (this.isGroupSession) {
+      this.showGroupAttendancePanel = !this.showGroupAttendancePanel;
+    } else {
+      this.attendanceDialogVisible = true;
+    }
   }
 
   onAttendanceRecorded(response: AttendanceOutcomeResponse): void {
@@ -46,6 +75,19 @@ export class SessionDetailDialogComponent {
 
   onAttendanceDialogClosed(): void {
     this.attendanceDialogVisible = false;
+  }
+
+  onGroupAttendanceSaved(results: GroupAttendanceResult[]): void {
+    // Update participant outcomes in the session object
+    const updatedParticipants = (this.session.participants ?? []).map(p => {
+      const result = results.find(r => r.clientId === p.clientId);
+      if (result) {
+        return { ...p, attendanceOutcome: result.response.effectiveOutcome };
+      }
+      return p;
+    });
+    this.session = { ...this.session, participants: updatedParticipants };
+    this.showGroupAttendancePanel = false;
   }
 
   getAttendanceOutcomeI18nKey(outcome: AttendanceOutcome): string {

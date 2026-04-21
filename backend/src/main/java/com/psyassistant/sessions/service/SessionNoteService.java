@@ -3,6 +3,7 @@ package com.psyassistant.sessions.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.psyassistant.sessions.domain.NoteScope;
 import com.psyassistant.sessions.domain.NoteType;
 import com.psyassistant.sessions.domain.NoteVisibility;
 import com.psyassistant.sessions.domain.SessionNote;
@@ -111,11 +112,26 @@ public class SessionNoteService {
 
         validateNoteContent(request.noteType(), request.content(), request.structuredFields());
 
-        final SessionNote note = new SessionNote(
-                sessionRecordId,
-                principal,
-                request.noteType(),
-                request.visibility() != null ? request.visibility() : NoteVisibility.PRIVATE);
+        // Resolve note scope and targetClientId for group sessions
+        final NoteScope noteScope = request.noteScope() != null ? request.noteScope() : NoteScope.SESSION;
+        final java.util.UUID targetClientId = noteScope == NoteScope.CLIENT
+                ? request.targetClientId() : null;
+
+        final SessionNote note;
+        if (noteScope == NoteScope.CLIENT && targetClientId != null) {
+            note = new SessionNote(
+                    sessionRecordId,
+                    principal,
+                    request.noteType(),
+                    request.visibility() != null ? request.visibility() : NoteVisibility.PRIVATE,
+                    targetClientId);
+        } else {
+            note = new SessionNote(
+                    sessionRecordId,
+                    principal,
+                    request.noteType(),
+                    request.visibility() != null ? request.visibility() : NoteVisibility.PRIVATE);
+        }
 
         applyContent(note, request.noteType(), request.content(), request.structuredFields());
 
@@ -204,7 +220,14 @@ public class SessionNoteService {
      *   <li>{@code READ_ALL_SESSION_NOTES}: returns notes where
      *       {@code visibility == SUPERVISOR_VISIBLE}</li>
      * </ul>
-     * Roles with neither permission receive HTTP 403 from the controller; this method
+     *
+     * <p>For GROUP session records, CLIENT-scoped notes are additionally filtered by
+     * {@code viewingClientId}: only notes whose {@code targetClientId} matches the
+     * viewing client (or SESSION-scoped shared notes) are returned.
+     * Pass {@code null} for {@code viewingClientId} when the caller is a therapist/admin
+     * who should see all notes.
+     *
+     * <p>Roles with neither permission receive HTTP 403 from the controller; this method
      * is never reached for them.
      */
     @Transactional(readOnly = true)
@@ -213,6 +236,26 @@ public class SessionNoteService {
             final String principal,
             final boolean hasReadOwn,
             final boolean hasReadAll) {
+        return listNotes(sessionRecordId, principal, hasReadOwn, hasReadAll, null);
+    }
+
+    /**
+     * Lists notes for a session record with optional client-scoped filtering.
+     *
+     * @param sessionRecordId session record UUID
+     * @param principal       authenticated user's principal name
+     * @param hasReadOwn      caller has READ_OWN_SESSION_NOTES authority
+     * @param hasReadAll      caller has READ_ALL_SESSION_NOTES authority
+     * @param viewingClientId when non-null, CLIENT-scoped notes are filtered to this client only
+     * @return filtered note list
+     */
+    @Transactional(readOnly = true)
+    public List<NoteResponse> listNotes(
+            final UUID sessionRecordId,
+            final String principal,
+            final boolean hasReadOwn,
+            final boolean hasReadAll,
+            final java.util.UUID viewingClientId) {
 
         if (!hasReadOwn && !hasReadAll) {
             throw new AccessDeniedException("You do not have permission to view clinical notes");
@@ -232,7 +275,15 @@ public class SessionNoteService {
                     .toList();
         }
 
-        return notes.stream()
+        // PA-40 + PA-42 visibility: CLIENT-scoped notes are only visible to the target client
+        // When viewingClientId is null (therapist/admin context), all notes are returned
+        final java.util.List<SessionNote> filtered = viewingClientId == null ? notes
+                : notes.stream()
+                        .filter(n -> n.getNoteScope() == NoteScope.SESSION
+                                || java.util.Objects.equals(n.getTargetClientId(), viewingClientId))
+                        .toList();
+
+        return filtered.stream()
                 .map(n -> toResponse(n, versionRepository.countByNoteId(n.getId()) > 0))
                 .toList();
     }
@@ -427,7 +478,9 @@ public class SessionNoteService {
                 resolveAuthorName(note.getAuthorId()),
                 note.getCreatedAt(),
                 note.getUpdatedAt(),
-                hasVersionHistory);
+                hasVersionHistory,
+                note.getNoteScope(),
+                note.getTargetClientId());
     }
 
     private NoteVersionResponse toVersionResponse(final SessionNoteVersion v) {

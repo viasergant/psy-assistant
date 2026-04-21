@@ -4,7 +4,10 @@ import { Observable, map } from 'rxjs';
 import {
   AttendanceOutcomeResponse,
   CompleteSessionRequest,
+  GroupSessionParticipant,
   RecordAttendanceRequest,
+  RecordGroupAttendanceRequest,
+  RecordKind,
   SessionFilters,
   SessionRecord,
 } from '../models/session.model';
@@ -108,8 +111,40 @@ export class SessionService {
   }
 
   /**
+   * Records the attendance outcome for a single client within a GROUP session.
+   *
+   * @param sessionId Session record UUID
+   * @param clientId  Client UUID
+   * @param request   Per-client attendance outcome request
+   * @returns Observable of attendance outcome response
+   */
+  recordGroupClientAttendance(
+    sessionId: string,
+    clientId: string,
+    request: RecordGroupAttendanceRequest
+  ): Observable<AttendanceOutcomeResponse> {
+    return this.http.patch<AttendanceOutcomeResponse>(
+      `${this.base}/${sessionId}/participants/${clientId}/attendance`,
+      request
+    );
+  }
+
+  /**
+   * Retrieves the active participant list for a GROUP session.
+   *
+   * @param sessionId Session record UUID
+   * @returns Observable of participant list
+   */
+  getGroupParticipants(sessionId: string): Observable<GroupSessionParticipant[]> {
+    return this.http.get<GroupSessionParticipant[]>(
+      `${this.base}/${sessionId}/participants`
+    );
+  }
+
+  /**
    * Transforms backend session record response to frontend model.
    * Converts ISO 8601 duration (PT1H30M) to minutes.
+   * Normalizes recordKind and participants fields.
    */
   private transformSessionRecord(record: any): SessionRecord {
     try {
@@ -122,6 +157,8 @@ export class SessionService {
       return {
         ...record,
         plannedDuration,
+        recordKind: record.recordKind ?? RecordKind.INDIVIDUAL,
+        participants: record.participants ?? [],
       };
     } catch (error) {
       console.error('Error transforming session record:', error, record);

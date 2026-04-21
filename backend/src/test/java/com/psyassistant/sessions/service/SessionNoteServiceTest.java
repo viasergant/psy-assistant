@@ -73,7 +73,7 @@ class SessionNoteServiceTest {
         @DisplayName("creates FREE_FORM note and persists it")
         void createFreeFormNote() {
             final CreateNoteRequest req = new CreateNoteRequest(
-                    NoteType.FREE_FORM, NoteVisibility.PRIVATE, "<p>Hello</p>", null);
+                    NoteType.FREE_FORM, NoteVisibility.PRIVATE, "<p>Hello</p>", null, null, null);
 
             when(noteRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -93,7 +93,7 @@ class SessionNoteServiceTest {
                     "presentingProblem", "Anxiety",
                     "interventionsUsed", "CBT");
             final CreateNoteRequest req = new CreateNoteRequest(
-                    NoteType.STRUCTURED, NoteVisibility.SUPERVISOR_VISIBLE, null, fields);
+                    NoteType.STRUCTURED, NoteVisibility.SUPERVISOR_VISIBLE, null, fields, null, null);
 
             when(noteRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -108,7 +108,7 @@ class SessionNoteServiceTest {
         @DisplayName("rejects FREE_FORM with blank content")
         void rejectsBlankFreeForm() {
             final CreateNoteRequest req = new CreateNoteRequest(
-                    NoteType.FREE_FORM, NoteVisibility.PRIVATE, "", null);
+                    NoteType.FREE_FORM, NoteVisibility.PRIVATE, "", null, null, null);
 
             assertThatThrownBy(() -> service.createNote(SESSION_ID, req, THERAPIST))
                     .isInstanceOf(ResponseStatusException.class);
@@ -118,7 +118,7 @@ class SessionNoteServiceTest {
         @DisplayName("rejects STRUCTURED with no fields")
         void rejectsEmptyStructuredFields() {
             final CreateNoteRequest req = new CreateNoteRequest(
-                    NoteType.STRUCTURED, NoteVisibility.PRIVATE, null, Map.of());
+                    NoteType.STRUCTURED, NoteVisibility.PRIVATE, null, Map.of(), null, null);
 
             assertThatThrownBy(() -> service.createNote(SESSION_ID, req, THERAPIST))
                     .isInstanceOf(ResponseStatusException.class);
@@ -129,7 +129,7 @@ class SessionNoteServiceTest {
         void sanitizesHtml() {
             final CreateNoteRequest req = new CreateNoteRequest(
                     NoteType.FREE_FORM, NoteVisibility.PRIVATE,
-                    "<p>Safe</p><script>alert(1)</script>", null);
+                    "<p>Safe</p><script>alert(1)</script>", null, null, null);
 
             when(noteRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -191,7 +191,7 @@ class SessionNoteServiceTest {
 
             // Create the note first to get the hash
             final CreateNoteRequest createReq = new CreateNoteRequest(
-                    NoteType.FREE_FORM, NoteVisibility.PRIVATE, sameContent, null);
+                    NoteType.FREE_FORM, NoteVisibility.PRIVATE, sameContent, null, null, null);
             service.createNote(SESSION_ID, createReq, THERAPIST);
 
             // Now simulate existing note already having that hash

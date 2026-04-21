@@ -29,6 +29,9 @@ management:
   endpoint:
     health:
       show-details: never
+  health:
+    mail:
+      enabled: false
 
 app:
   frontend-base-url: http://localhost:4200

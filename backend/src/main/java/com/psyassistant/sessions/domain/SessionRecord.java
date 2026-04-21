@@ -28,6 +28,8 @@ import org.hibernate.type.SqlTypes;
  *
  * <p>Key features:
  * <ul>
+ *     <li><strong>Discriminated union</strong>: {@link RecordKind} ({@code INDIVIDUAL} or {@code GROUP})
+ *         is set at creation time and is immutable thereafter.</li>
  *     <li><strong>Immutable context</strong>: Client, therapist, date, time, type, and duration
  *         fields are copied from the appointment and never changed</li>
  *     <li><strong>One-to-one mapping</strong>: Each appointment can have at most one session record
@@ -36,6 +38,9 @@ import org.hibernate.type.SqlTypes;
  *         (PENDING → IN_PROGRESS → COMPLETED)</li>
  *     <li><strong>Audit trail</strong>: Inherits automatic audit fields from {@link BaseEntity}</li>
  * </ul>
+ *
+ * <p>For GROUP records, {@link #clientId} is null; participants are linked via
+ * the {@code session_participant} table and managed by {@code GroupSessionRecordService}.
  *
  * <p>Extends {@link BaseEntity} to inherit UUID primary key and Spring Data Auditing.
  */
@@ -56,8 +61,20 @@ public class SessionRecord extends BaseEntity {
     @Column(name = "appointment_id", nullable = false, unique = true)
     private UUID appointmentId;
 
-    /** Foreign key to client. Immutable snapshot from appointment. */
-    @Column(name = "client_id", nullable = false, updatable = false)
+    /**
+     * Discriminator that identifies whether this is an INDIVIDUAL or GROUP session.
+     * Set at creation; never updated (enforced by {@code updatable = false}).
+     */
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.NAMED_ENUM)
+    @Column(name = "record_kind", nullable = false, updatable = false, columnDefinition = "record_kind")
+    private RecordKind recordKind = RecordKind.INDIVIDUAL;
+
+    /**
+     * Foreign key to client. Immutable snapshot from appointment.
+     * Null for GROUP session records — participants are in {@code session_participant}.
+     * Non-null for INDIVIDUAL records (enforced at application layer).
+     */
+    @Column(name = "client_id", nullable = true, updatable = false)
     private UUID clientId;
 
     /** Foreign key to therapist. Immutable snapshot from appointment. */
@@ -129,10 +146,10 @@ public class SessionRecord extends BaseEntity {
     }
 
     /**
-     * Creates a new session record from an appointment.
+     * Creates a new INDIVIDUAL session record from an appointment.
      *
      * @param appointmentId appointment UUID
-     * @param clientId client UUID
+     * @param clientId client UUID (must be non-null for INDIVIDUAL records)
      * @param therapistId therapist UUID
      * @param sessionDate session date
      * @param scheduledStartTime scheduled start time
@@ -148,6 +165,9 @@ public class SessionRecord extends BaseEntity {
                           final SessionType sessionType,
                           final Duration plannedDuration,
                           final SessionStatus status) {
+        if (clientId == null) {
+            throw new IllegalArgumentException("clientId must not be null for INDIVIDUAL session records");
+        }
         this.appointmentId = appointmentId;
         this.clientId = clientId;
         this.therapistId = therapistId;
@@ -156,6 +176,41 @@ public class SessionRecord extends BaseEntity {
         this.sessionType = sessionType;
         this.plannedDuration = plannedDuration;
         this.status = status;
+        this.recordKind = RecordKind.INDIVIDUAL;
+    }
+
+    /**
+     * Creates a new GROUP session record from an appointment.
+     *
+     * <p>Client participants are not set here; they must be linked separately
+     * via {@code GroupSessionRecordService} using the {@code session_participant} table.
+     *
+     * @param appointmentId appointment UUID
+     * @param therapistId therapist UUID
+     * @param sessionDate session date
+     * @param scheduledStartTime scheduled start time
+     * @param sessionType session type entity
+     * @param plannedDuration planned duration
+     * @param status initial status
+     */
+    public static SessionRecord forGroup(final UUID appointmentId,
+                                          final UUID therapistId,
+                                          final LocalDate sessionDate,
+                                          final LocalTime scheduledStartTime,
+                                          final SessionType sessionType,
+                                          final Duration plannedDuration,
+                                          final SessionStatus status) {
+        final SessionRecord record = new SessionRecord();
+        record.appointmentId = appointmentId;
+        record.clientId = null;
+        record.therapistId = therapistId;
+        record.sessionDate = sessionDate;
+        record.scheduledStartTime = scheduledStartTime;
+        record.sessionType = sessionType;
+        record.plannedDuration = plannedDuration;
+        record.status = status;
+        record.recordKind = RecordKind.GROUP;
+        return record;
     }
 
     // ========== Business Methods ==========
@@ -202,6 +257,10 @@ public class SessionRecord extends BaseEntity {
 
     public void setAppointmentId(final UUID appointmentId) {
         this.appointmentId = appointmentId;
+    }
+
+    public RecordKind getRecordKind() {
+        return recordKind;
     }
 
     public UUID getClientId() {

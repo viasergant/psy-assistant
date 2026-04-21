@@ -1,5 +1,6 @@
 package com.psyassistant.sessions.dto;
 
+import com.psyassistant.sessions.domain.NoteScope;
 import com.psyassistant.sessions.domain.NoteType;
 import com.psyassistant.sessions.domain.NoteVisibility;
 import java.time.Instant;
@@ -23,5 +24,9 @@ public record NoteResponse(
     Instant createdAt,
     Instant updatedAt,
     /** True if at least one previous version exists. */
-    boolean hasVersionHistory
+    boolean hasVersionHistory,
+    /** Note scope: SESSION (shared) or CLIENT (per-client private). */
+    NoteScope noteScope,
+    /** Target client UUID for CLIENT-scoped notes; null for SESSION-scoped notes. */
+    UUID targetClientId
 ) { }

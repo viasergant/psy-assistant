@@ -1,4 +1,12 @@
 /**
+ * Session record kind discriminator
+ */
+export enum RecordKind {
+  INDIVIDUAL = 'INDIVIDUAL',
+  GROUP = 'GROUP'
+}
+
+/**
  * Attendance outcome enumeration
  */
 export enum AttendanceOutcome {
@@ -20,13 +28,26 @@ export interface SessionTypeInfo {
 }
 
 /**
+ * A single participant in a group session record
+ */
+export interface GroupSessionParticipant {
+  participantId: string; // UUID of session_participant row
+  clientId: string; // UUID
+  clientName: string;
+  joinedAt: string; // ISO instant
+  removedAt?: string; // ISO instant — null means still active
+  attendanceOutcome?: AttendanceOutcome;
+}
+
+/**
  * Session record entity
  */
 export interface SessionRecord {
   id: string; // UUID
   appointmentId: string; // UUID
-  clientId: string; // UUID
-  clientName: string;
+  recordKind: RecordKind;
+  clientId?: string; // UUID — null for GROUP sessions
+  clientName?: string; // null for GROUP sessions
   therapistId: string; // UUID
   sessionDate: string; // ISO date (YYYY-MM-DD)
   scheduledStartTime: string; // ISO time (HH:mm:ss)
@@ -36,11 +57,12 @@ export interface SessionRecord {
   cancellationReason?: string;
   sessionNotes?: string;
   actualEndTime?: string; // ISO time (HH:mm:ss)
-  attendanceOutcome?: AttendanceOutcome;
+  attendanceOutcome?: AttendanceOutcome; // INDIVIDUAL sessions only
   cancelledAt?: string; // ISO instant
   cancellationInitiatorId?: string; // UUID
   createdAt: string;
   updatedAt: string;
+  participants: GroupSessionParticipant[]; // empty for INDIVIDUAL, populated for GROUP
 }
 
 /**
@@ -82,6 +104,15 @@ export interface AttendanceOutcomeResponse {
 }
 
 /**
+ * Request payload for recording per-client attendance within a group session
+ */
+export interface RecordGroupAttendanceRequest {
+  outcome: AttendanceOutcome;
+  cancelledAt?: string; // ISO instant
+  note?: string;
+}
+
+/**
  * Filters for querying session records
  */
 export interface SessionFilters {
@@ -89,4 +120,5 @@ export interface SessionFilters {
   startDate?: string; // ISO date
   endDate?: string; // ISO date
   status?: SessionStatus[];
+  recordKind?: RecordKind;
 }

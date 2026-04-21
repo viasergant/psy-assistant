@@ -66,6 +66,22 @@ public class SessionNote {
     @Column(name = "content_hash", length = 64)
     private String contentHash;
 
+    /**
+     * Scope of the note within a session.
+     * SESSION = shared group-level note; CLIENT = per-client private note.
+     * Defaults to SESSION so existing individual session notes are unaffected.
+     */
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "note_scope", nullable = false, columnDefinition = "note_scope")
+    private NoteScope noteScope = NoteScope.SESSION;
+
+    /**
+     * For CLIENT-scoped notes: the target client within the group session.
+     * Null for SESSION-scoped notes (including all notes on INDIVIDUAL sessions).
+     */
+    @Column(name = "target_client_id")
+    private UUID targetClientId;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -86,7 +102,7 @@ public class SessionNote {
     }
 
     /**
-     * Factory constructor for creating new notes.
+     * Factory constructor for creating new SESSION-scoped notes (INDIVIDUAL or shared GROUP).
      */
     public SessionNote(
             final UUID sessionRecordId,
@@ -97,6 +113,25 @@ public class SessionNote {
         this.authorId = authorId;
         this.noteType = noteType;
         this.visibility = visibility;
+        this.noteScope = NoteScope.SESSION;
+        this.targetClientId = null;
+    }
+
+    /**
+     * Factory constructor for creating CLIENT-scoped per-client notes within a group session.
+     */
+    public SessionNote(
+            final UUID sessionRecordId,
+            final String authorId,
+            final NoteType noteType,
+            final NoteVisibility visibility,
+            final UUID targetClientId) {
+        this.sessionRecordId = sessionRecordId;
+        this.authorId = authorId;
+        this.noteType = noteType;
+        this.visibility = visibility;
+        this.noteScope = NoteScope.CLIENT;
+        this.targetClientId = targetClientId;
     }
 
     // -------------------------------------------------------------------------
@@ -161,5 +196,21 @@ public class SessionNote {
 
     public String getCreatedBy() {
         return createdBy;
+    }
+
+    public NoteScope getNoteScope() {
+        return noteScope;
+    }
+
+    public void setNoteScope(final NoteScope noteScope) {
+        this.noteScope = noteScope;
+    }
+
+    public UUID getTargetClientId() {
+        return targetClientId;
+    }
+
+    public void setTargetClientId(final UUID targetClientId) {
+        this.targetClientId = targetClientId;
     }
 }

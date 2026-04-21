@@ -2,14 +2,14 @@ package com.psyassistant.sessions.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Append-only audit record for attendance outcome changes.
@@ -40,12 +40,12 @@ public class AttendanceAuditLog {
     private Instant changedAt;
 
     /** Previous attendance outcome (null if this is the first outcome recorded). */
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "previous_outcome", columnDefinition = "attendance_outcome_type")
     private AttendanceOutcome previousOutcome;
 
     /** New attendance outcome. */
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "new_outcome", nullable = false, columnDefinition = "attendance_outcome_type")
     private AttendanceOutcome newOutcome;
 

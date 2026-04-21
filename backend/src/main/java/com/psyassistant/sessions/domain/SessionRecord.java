@@ -121,7 +121,7 @@ public class SessionRecord extends BaseEntity {
     // ========== Attendance Outcome ==========
 
     /** Attendance outcome recorded after the session. Null until outcome is explicitly recorded. */
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "attendance_outcome", columnDefinition = "attendance_outcome_type")
     private AttendanceOutcome attendanceOutcome;
 

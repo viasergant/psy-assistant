@@ -239,7 +239,7 @@ export class SessionListComponent implements OnInit, OnDestroy {
     if (!searchTerm) return sessions;
 
     return sessions.filter((session) =>
-      session.clientName.toLowerCase().includes(searchTerm)
+      session.clientName?.toLowerCase().includes(searchTerm)
     );
   }
 

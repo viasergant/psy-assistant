@@ -37,7 +37,7 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
     <div class="page">
       <header class="page-header">
         <h1>{{ 'leads.title' | transloco }}</h1>
-        <button class="btn-primary" (click)="openCreate()">+ New lead</button>
+        <button class="btn-primary" (click)="openCreate()">{{ 'leads.list.newLead' | transloco }}</button>
       </header>
 
       <!-- Filters -->
@@ -45,8 +45,8 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
         <div class="filter-group">
           <label for="statusFilter">{{ 'leads.list.statusLabel' | transloco }}</label>
           <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
-            <option value="">All statuses</option>
-            <option *ngFor="let s of allStatuses" [value]="s">{{ statusLabels[s] }}</option>
+            <option value="">{{ 'leads.list.statusAll' | transloco }}</option>
+            <option *ngFor="let s of allStatuses" [value]="s">{{ statusTransKeys[s] | transloco }}</option>
           </select>
         </div>
 
@@ -58,16 +58,16 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
               [(ngModel)]="includeArchived"
               (change)="applyFilters()"
             />
-            Show archived
+            {{ 'leads.list.showArchived' | transloco }}
           </label>
         </div>
       </div>
 
       <!-- Loading / empty / error states -->
-      <div *ngIf="loading" class="state-msg" aria-live="polite">Loading…</div>
+      <div *ngIf="loading" class="state-msg" aria-live="polite">{{ 'leads.list.loading' | transloco }}</div>
       <div *ngIf="!loading && loadError" class="alert-error" role="alert">{{ loadError }}</div>
       <div *ngIf="!loading && !loadError && leads.length === 0" class="state-msg">
-        No leads match the current filters.
+        {{ 'leads.list.noLeadsFiltered' | transloco }}
       </div>
 
       <!-- Table -->
@@ -86,7 +86,7 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
                         [attr.aria-sort]="ariaSort('status')">{{ 'leads.list.tableHeaders.status' | transloco }}</button>
               </th>
               <th scope="col">{{ 'leads.list.tableHeaders.owner' | transloco }}</th>
-              <th scope="col">Last contact</th>
+              <th scope="col">{{ 'leads.list.lastContact' | transloco }}</th>
               <th scope="col">
                 <button class="sort-btn" (click)="sortBy('createdAt')" type="button"
                         [attr.aria-sort]="ariaSort('createdAt')">{{ 'leads.list.tableHeaders.created' | transloco }}</button>
@@ -101,7 +101,7 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
               <td>{{ lead.source ?? '—' }}</td>
               <td>
                 <span class="badge" [class]="'badge-' + lead.status.toLowerCase()">
-                  {{ statusLabels[lead.status] }}
+                  {{ statusTransKeys[lead.status] | transloco }}
                 </span>
               </td>
               <td>{{ lead.ownerName ?? '—' }}</td>
@@ -109,15 +109,15 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
               <td>{{ lead.createdAt | date:'dd MMM yyyy' }}</td>
               <td class="actions-cell">
                 <button class="btn-action" (click)="openEdit(lead.id)"
-                        [attr.aria-label]="'Edit ' + lead.fullName">
-                  Edit
+                        [attr.aria-label]="'leads.list.editAriaLabel' | transloco:{name: lead.fullName}">
+                  {{ 'leads.list.edit' | transloco }}
                 </button>
                 <button
                   class="btn-action btn-danger"
                   *ngIf="lead.status !== 'INACTIVE' && lead.status !== 'CONVERTED'"
                   (click)="archive(lead)"
-                  [attr.aria-label]="'Archive ' + lead.fullName">
-                  Archive
+                  [attr.aria-label]="'leads.list.archiveAriaLabel' | transloco:{name: lead.fullName}">
+                  {{ 'leads.list.archive' | transloco }}
                 </button>
               </td>
             </tr>
@@ -134,7 +134,7 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
                 [attr.aria-label]="'common.pagination.nextPage' | transloco">&rsaquo;</button>
       </nav>
       <p class="total-count" *ngIf="!loading">
-        {{ totalElements }} lead{{ totalElements !== 1 ? 's' : '' }} found
+        {{ 'leads.list.leadsFound' | transloco:{count: totalElements} }}
       </p>
     </div>
 
@@ -238,6 +238,13 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
 export class LeadListComponent implements OnInit {
   readonly allStatuses = ALL_STATUSES;
   readonly statusLabels = LEAD_STATUS_LABELS;
+  readonly statusTransKeys: Record<LeadStatus, string> = {
+    NEW: 'leads.list.statusNew',
+    CONTACTED: 'leads.list.statusContacted',
+    QUALIFIED: 'leads.list.statusQualified',
+    CONVERTED: 'leads.list.statusConverted',
+    INACTIVE: 'leads.list.statusInactive',
+  };
 
   leads: LeadSummary[] = [];
   totalElements = 0;

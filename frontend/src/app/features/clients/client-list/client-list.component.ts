@@ -93,17 +93,17 @@ import { ClientService } from '../services/client.service';
 
         <!-- Sort controls -->
         <div class="cl-filter-group cl-sort-group">
-          <label class="cl-filter-label">Sort</label>
+          <label class="cl-filter-label">{{ 'clients.list.sortLabel' | transloco }}</label>
           <div class="cl-sort-row">
             <select class="cl-select" [(ngModel)]="sortField" (change)="applyFilters()">
-              <option value="fullName">Name</option>
-              <option value="createdAt">Created</option>
+              <option value="fullName">{{ 'clients.list.sortByName' | transloco }}</option>
+              <option value="createdAt">{{ 'clients.list.sortByCreated' | transloco }}</option>
             </select>
             <button
               class="cl-sort-dir"
               type="button"
               (click)="toggleSortDir()"
-              [attr.aria-label]="sortDir === 'asc' ? 'Sort ascending' : 'Sort descending'">
+              [attr.aria-label]="sortDir === 'asc' ? ('clients.list.sortAscending' | transloco) : ('clients.list.sortDescending' | transloco)">
               <svg *ngIf="sortDir === 'asc'" width="14" height="14" viewBox="0 0 24 24"
                    fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M12 19V5M5 12l7-7 7 7"/>

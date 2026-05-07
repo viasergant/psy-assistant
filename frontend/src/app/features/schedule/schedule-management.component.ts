@@ -77,7 +77,7 @@ interface ClientOption {
             class="btn-primary"
             (click)="openConfigPanel()"
           >
-            Configure Schedule
+            {{ 'schedule.configureSchedule' | transloco }}
           </button>
           <button
             *ngIf="canEdit && therapistProfileId"

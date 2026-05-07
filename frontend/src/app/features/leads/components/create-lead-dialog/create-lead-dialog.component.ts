@@ -26,12 +26,12 @@ import { LeadService } from '../../services/lead.service';
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="create-lead-title">
       <div class="dialog">
-        <h2 id="create-lead-title">New Lead</h2>
+        <h2 id="create-lead-title">{{ 'leads.create.dialogTitle' | transloco }}</h2>
 
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
           <div class="field">
-            <label for="fullName">Full name <span aria-hidden="true">*</span></label>
+            <label for="fullName">{{ 'leads.create.fullNameLabel' | transloco }} <span aria-hidden="true">*</span></label>
             <input
               id="fullName"
               type="text"
@@ -40,16 +40,16 @@ import { LeadService } from '../../services/lead.service';
               aria-required="true"
             />
             <span *ngIf="isInvalid('fullName')" class="error-msg" role="alert">
-              Full name is required.
+              {{ 'leads.create.fullNameRequired' | transloco }}
             </span>
           </div>
 
           <!-- Contact methods -->
           <fieldset formArrayName="contactMethods">
-            <legend>Contact methods <span aria-hidden="true">*</span></legend>
+            <legend>{{ 'leads.create.contactMethodsLabel' | transloco }} <span aria-hidden="true">*</span></legend>
             <div *ngIf="contactMethods.touched && contactMethods.length === 0"
                  class="error-msg" role="alert">
-              At least one contact method is required.
+              {{ 'leads.create.contactMethodRequired' | transloco }}
             </div>
 
             <div *ngFor="let cm of contactMethods.controls; let i = index"
@@ -61,20 +61,20 @@ import { LeadService } from '../../services/lead.service';
               <input
                 type="text"
                 formControlName="value"
-                [attr.aria-label]="'Contact value ' + (i + 1)"
+                [attr.aria-label]="'leads.create.contactValueAriaLabel' | transloco: { index: i + 1 }"
                 [attr.aria-invalid]="isCmInvalid(i, 'value')"
-                placeholder="email or phone"
+                [placeholder]="'leads.create.contactValuePlaceholder' | transloco"
               />
               <label class="primary-label">
                 <input type="checkbox" formControlName="isPrimary" />
-                Primary
+                {{ 'leads.create.primaryLabel' | transloco }}
               </label>
               <button type="button" class="btn-remove" (click)="removeContactMethod(i)"
-                      [attr.aria-label]="'Remove contact ' + (i + 1)">✕</button>
+                      [attr.aria-label]="'leads.create.removeContactAriaLabel' | transloco: { index: i + 1 }">✕</button>
             </div>
 
             <button type="button" class="btn-add-contact" (click)="addContactMethod()">
-              + Add contact method
+              {{ 'leads.create.addContactMethod' | transloco }}
             </button>
           </fieldset>
 
@@ -93,7 +93,7 @@ import { LeadService } from '../../services/lead.service';
           <div class="actions">
             <button type="button" (click)="cancel()" [disabled]="saving">{{ 'common.actions.cancel' | transloco }}</button>
             <button type="submit" [disabled]="saving">
-              {{ saving ? 'Creating…' : 'Create lead' }}
+              {{ saving ? ('leads.create.creating' | transloco) : ('leads.create.createButton' | transloco) }}
             </button>
           </div>
         </form>

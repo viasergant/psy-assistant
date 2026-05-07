@@ -1,6 +1,6 @@
 spring:
   flyway:
-    clean-disabled: false   # required for LocalFlywayConfig; clean() is blocked by default in Flyway 9+
+    clean-disabled: true   # required for LocalFlywayConfig; clean() is blocked by default in Flyway 9+
     locations: classpath:db/migration,classpath:db/local-seed
   datasource:
     url: ${DB_URL:jdbc:postgresql://192.168.10.146:5432/psyassistant}

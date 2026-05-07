@@ -101,6 +101,13 @@ if $BUILD_FRONTEND; then
   log "Building frontend (production)..."
   cd "$PROJECT_ROOT/frontend"
   npm ci --silent
+
+  # Stamp a build version so Transloco cache-busts i18n JSON files after each deploy
+  BUILD_TS="$(date -u +%Y%m%d%H%M%S)"
+  sed -i.bak "s/appVersion: '[^']*'/appVersion: '${BUILD_TS}'/" \
+    src/app/environments/environment.prod.ts && rm -f src/app/environments/environment.prod.ts.bak
+  log "Build version stamped: ${BUILD_TS}"
+
   npx ng build --configuration production
   FRONTEND_DIST="$PROJECT_ROOT/frontend/dist/frontend/browser"
   [[ -d "$FRONTEND_DIST" ]] || die "Frontend build output not found: $FRONTEND_DIST"
@@ -158,7 +165,16 @@ if $BUILD_BACKEND; then
   done
 fi
 
-# ─── Reload Caddy (no-downtime config reload) ─────────────────────────────────
+# ─── Upload Caddyfile and reload ──────────────────────────────────────────────
+CADDYFILE_SRC="$SCRIPT_DIR/Caddyfile"
+if [[ -f "$CADDYFILE_SRC" ]]; then
+  log "Uploading Caddyfile..."
+  TMP_CADDY=$(remote_exec "mktemp /tmp/Caddyfile.XXXXXX")
+  scp_to_remote "$CADDYFILE_SRC" "$TMP_CADDY"
+  remote_exec "sudo bash -c 'mkdir -p /etc/caddy && mv $TMP_CADDY /etc/caddy/Caddyfile && chmod 644 /etc/caddy/Caddyfile'"
+  log "Caddyfile uploaded"
+fi
+
 log "Reloading Caddy..."
 remote_exec "sudo systemctl reload caddy || sudo caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || true"
 

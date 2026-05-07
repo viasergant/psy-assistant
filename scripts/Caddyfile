@@ -1,0 +1,23 @@
+# Caddy configuration for psy-assistant
+#
+# Serves the Angular SPA from /var/www/html and proxies /api/* to the
+# Spring Boot backend on port 8080.
+#
+# SPA note: try_files ensures that any deep-link (e.g. /billing/invoices)
+# returns index.html so Angular's client-side router can handle it.
+# Without this directive the server returns 404 on page refresh.
+
+:80 {
+    root * /var/www/html
+
+    # Proxy all backend API calls
+    handle /api/* {
+        reverse_proxy localhost:8080
+    }
+
+    # SPA fallback – serve index.html for every path that is not a static file
+    handle {
+        try_files {path} /index.html
+        file_server
+    }
+}

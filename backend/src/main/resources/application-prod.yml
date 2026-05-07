@@ -5,6 +5,7 @@ spring:
   flyway:
     clean-disabled: true
     locations: classpath:db/migration
+    ignore-migration-patterns: "repeatable:missing"  # dev seed was applied to prod DB; ignore orphaned repeatable migrations
 
   datasource:
     url: ${DB_URL:jdbc:postgresql://192.168.10.146:5432/psyassistant_prod}

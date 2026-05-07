@@ -234,6 +234,50 @@ remote_sudo "
   chmod 775 $BACKEND_DIR
 "
 
+# ─── Caddy ────────────────────────────────────────────────────────────────────
+log "Installing Caddy..."
+if ! remote_exec "command -v caddy >/dev/null 2>&1"; then
+  if [[ "$PKG" == "apt-get" ]]; then
+    remote_sudo "
+      apt-get install -y -qq debian-keyring debian-archive-keyring apt-transport-https
+      curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+        | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+      curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+        | tee /etc/apt/sources.list.d/caddy-stable.list
+      apt-get update -qq
+      apt-get install -y -qq caddy
+    "
+  else
+    remote_sudo "
+      dnf install -y 'dnf-command(copr)'
+      dnf copr enable -y @caddy/caddy
+      dnf install -y caddy
+    "
+  fi
+  log "  Caddy installed"
+else
+  log "  Caddy already installed, skipping"
+fi
+
+# ─── Caddyfile ────────────────────────────────────────────────────────────────
+log "Deploying Caddyfile..."
+CADDYFILE_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/Caddyfile"
+[[ -f "$CADDYFILE_SRC" ]] || die "Caddyfile not found at $CADDYFILE_SRC"
+
+# Upload to a temp location then move to /etc/caddy/Caddyfile as root
+TMP_CADDY=$(remote_exec "mktemp /tmp/Caddyfile.XXXXXX")
+scp "${ssh_opts[@]}" "$CADDYFILE_SRC" "${REMOTE_USER}@${REMOTE_HOST}:${TMP_CADDY}"
+remote_sudo "
+  mkdir -p /etc/caddy
+  mv $TMP_CADDY /etc/caddy/Caddyfile
+  chown root:caddy /etc/caddy/Caddyfile 2>/dev/null || chown root:root /etc/caddy/Caddyfile
+  chmod 644 /etc/caddy/Caddyfile
+  caddy validate --config /etc/caddy/Caddyfile
+  systemctl enable caddy
+  systemctl restart caddy
+"
+log "  Caddyfile deployed and Caddy restarted"
+
 # ─── Done ─────────────────────────────────────────────────────────────────────
 log ""
 log "Server setup complete."

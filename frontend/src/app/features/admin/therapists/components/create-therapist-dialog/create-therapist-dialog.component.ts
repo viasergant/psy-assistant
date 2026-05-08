@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
   EMPLOYMENT_STATUS_OPTIONS,
@@ -11,6 +11,7 @@ import {
 } from '../../models/therapist.model';
 import { UserCreationResponse } from '../../../users/models/user.model';
 import { TherapistAccountCreatedModalComponent } from '../../../components/therapist-account-created-modal/therapist-account-created-modal.component';
+import { TranslateSpecializationPipe } from '../../pipes/translate-specialization.pipe';
 
 interface TherapistWithAccountResponseDto {
   userDetails: UserCreationResponse;
@@ -32,18 +33,18 @@ interface TherapistWithAccountResponseDto {
 @Component({
   selector: 'app-create-therapist-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, TherapistAccountCreatedModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, TranslateSpecializationPipe, TherapistAccountCreatedModalComponent],
   styleUrl: './create-therapist-dialog.component.scss',
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="create-therapist-title">
       <div class="dialog">
-        <h2 id="create-therapist-title">Create Therapist Account</h2>
-        <p class="subtitle">Create a therapist account. The system will generate a secure temporary password.</p>
+        <h2 id="create-therapist-title">{{ 'admin.therapists.create.title' | transloco }}</h2>
+        <p class="subtitle">{{ 'admin.therapists.create.subtitle' | transloco }}</p>
 
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
           <div class="field">
-            <label for="fullName">Full name <span aria-hidden="true">*</span></label>
+            <label for="fullName">{{ 'admin.therapists.create.fullNameLabel' | transloco }} <span aria-hidden="true">*</span></label>
             <input
               id="fullName"
               type="text"
@@ -53,12 +54,12 @@ interface TherapistWithAccountResponseDto {
               [placeholder]="'admin.therapists.create.fullNamePlaceholder' | transloco"
             />
             <span *ngIf="isInvalid('fullName')" class="error-msg" role="alert">
-              Full name is required.
+              {{ 'admin.therapists.create.fullNameRequired' | transloco }}
             </span>
           </div>
 
           <div class="field">
-            <label for="email">Email <span aria-hidden="true">*</span></label>
+            <label for="email">{{ 'admin.therapists.create.emailLabel' | transloco }} <span aria-hidden="true">*</span></label>
             <input
               id="email"
               type="email"
@@ -66,57 +67,57 @@ interface TherapistWithAccountResponseDto {
               autocomplete="off"
               [attr.aria-invalid]="isInvalid('email')"
               aria-required="true"
-              placeholder="therapist@example.com"
+              [placeholder]="'admin.therapists.create.emailPlaceholder' | transloco"
             />
             <span *ngIf="isInvalid('email')" class="error-msg" role="alert">
-              Enter a valid email address.
+              {{ 'admin.therapists.create.emailInvalid' | transloco }}
             </span>
           </div>
 
           <div class="field">
-            <label for="phone">Phone number</label>
+            <label for="phone">{{ 'admin.therapists.create.phoneLabel' | transloco }}</label>
             <input
               id="phone"
               type="tel"
               formControlName="phone"
               [attr.aria-invalid]="isInvalid('phone')"
-              placeholder="+1 (555) 123-4567"
+              [placeholder]="'admin.therapists.create.phonePlaceholder' | transloco"
             />
           </div>
 
           <div class="field">
-            <label for="employmentStatus">Employment Status <span aria-hidden="true">*</span></label>
+            <label for="employmentStatus">{{ 'admin.therapists.create.employmentStatusLabel' | transloco }} <span aria-hidden="true">*</span></label>
             <select
               id="employmentStatus"
               formControlName="employmentStatus"
               [attr.aria-invalid]="isInvalid('employmentStatus')"
               aria-required="true">
-              <option value="">— select —</option>
+              <option value="">{{ 'admin.therapists.create.selectPlaceholder' | transloco }}</option>
               <option *ngFor="let status of employmentStatuses" [value]="status">
                 {{ statusLabels[status] }}
               </option>
             </select>
             <span *ngIf="isInvalid('employmentStatus')" class="error-msg" role="alert">
-              Select an employment status.
+              {{ 'admin.therapists.create.employmentStatusRequired' | transloco }}
             </span>
           </div>
 
           <div class="field">
-            <label for="primarySpecialization">Primary Specialization <span aria-hidden="true">*</span></label>
+            <label for="primarySpecialization">{{ 'admin.therapists.create.primarySpecializationLabel' | transloco }} <span aria-hidden="true">*</span></label>
             <select
               id="primarySpecialization"
               formControlName="primarySpecializationId"
               [attr.aria-invalid]="isInvalid('primarySpecializationId')"
               aria-required="true">
-              <option value="">— select —</option>
+              <option value="">{{ 'admin.therapists.create.selectPlaceholder' | transloco }}</option>
               <option *ngFor="let spec of availableSpecializations" [value]="spec.id">
-                {{ spec.name }}
+                {{ spec.name | translateSpecialization }}
               </option>
             </select>
             <span *ngIf="isInvalid('primarySpecializationId')" class="error-msg" role="alert">
-              Select a primary specialization.
+              {{ 'admin.therapists.create.primarySpecializationRequired' | transloco }}
             </span>
-            <small class="help-text">Therapist can add more specializations later in their profile</small>
+            <small class="help-text">{{ 'admin.therapists.create.specializationHint' | transloco }}</small>
           </div>
 
           <div class="info-box">
@@ -124,8 +125,8 @@ interface TherapistWithAccountResponseDto {
               <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z" fill="currentColor"/>
             </svg>
             <div>
-              <strong>After creation:</strong>
-              <p>A secure temporary password will be generated. The therapist must change it on first login and complete their profile.</p>
+              <strong>{{ 'admin.therapists.create.afterCreationTitle' | transloco }}</strong>
+              <p>{{ 'admin.therapists.create.afterCreationText' | transloco }}</p>
             </div>
           </div>
 
@@ -136,7 +137,7 @@ interface TherapistWithAccountResponseDto {
           <div class="dialog-actions">
             <button type="button" class="btn-secondary" (click)="cancel()" [disabled]="saving">{{ 'common.actions.cancel' | transloco }}</button>
             <button type="submit" [disabled]="saving">
-              {{ saving ? 'Creating…' : 'Create account' }}
+              {{ saving ? ('admin.therapists.create.creatingLabel' | transloco) : ('admin.therapists.create.submitButton' | transloco) }}
             </button>
           </div>
         </form>
@@ -176,7 +177,8 @@ export class CreateTherapistDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private therapistService: TherapistManagementService,
-    private http: HttpClient
+    private http: HttpClient,
+    private transloco: TranslocoService
   ) {
     this.form = this.fb.group({
       fullName: ['', [Validators.required, Validators.maxLength(255)]],
@@ -204,7 +206,7 @@ export class CreateTherapistDialogComponent implements OnInit {
         this.availableSpecializations = data;
       },
       error: () => {
-        this.serverError = 'Failed to load specializations. Please refresh the page.';
+        this.serverError = this.transloco.translate('admin.therapists.create.errors.loadSpecializationsFailed');
       }
     });
   }
@@ -280,27 +282,28 @@ export class CreateTherapistDialogComponent implements OnInit {
 
   private mapError(err: HttpErrorResponse): string {
     const code = err.error?.code as string | undefined;
-    
+    const t = (key: string) => this.transloco.translate(`admin.therapists.create.errors.${key}`);
+
     if (err.status === 401) {
-      return 'You are not authorized to perform this action. Please log in as an administrator.';
+      return t('unauthorized');
     }
     if (err.status === 403) {
-      return 'You do not have permission to create therapist accounts.';
+      return t('forbidden');
     }
     if (code === 'DUPLICATE_EMAIL') {
-      return 'This email address is already registered.';
+      return t('duplicateEmail');
     }
     if (err.status === 400) {
       if (err.error?.message) {
         return err.error.message;
       }
-      return 'Invalid request. Please check all fields are filled correctly.';
+      return t('invalidRequest');
     }
     if (err.status === 500) {
-      return 'Server error occurred. Please try again later or contact support.';
+      return t('serverError');
     }
-    
+
     console.error('Therapist creation error:', err);
-    return 'Failed to create therapist account. Please try again.';
+    return t('genericFailure');
   }
 }

@@ -329,6 +329,25 @@
       "THERAPIST_CANCELLATION": "Скасовано терапевтом"
     }
   },
+  "specializations": {
+    "names": {
+      "adhd": "СДУГ",
+      "anxietyDisorders": "Тривожні розлади",
+      "careerCounseling": "Кар'єрне консультування",
+      "childAndAdolescentTherapy": "Терапія для дітей та підлітків",
+      "depression": "Депресія",
+      "eatingDisorders": "Розлади харчування",
+      "familyTherapy": "Сімейна терапія",
+      "griefAndLoss": "Горе та втрата",
+      "lifeTransitions": "Життєві переходи",
+      "ocd": "Обсесивно-компульсивний розлад (ОКР)",
+      "relationshipIssues": "Проблеми у взаємостосунках",
+      "selfEsteem": "Самооцінка",
+      "stressManagement": "Управління стресом",
+      "substanceAbuse": "Залежності та наркоманія",
+      "traumaAndPtsd": "Травма та ПТСР"
+    }
+  },
   "therapists": {
     "wizard": {
       "title": "Завершити ваш профіль",
@@ -669,10 +688,20 @@
     },
     "therapists": {
       "list": {
+        "pageTitle": "Управління терапевтами",
+        "createButton": "+ Створити терапевта",
         "roleLabel": "Роль",
         "statusLabel": "Статус",
         "statusActive": "Активний",
         "statusInactive": "Неактивний",
+        "filterAllRoles": "Всі ролі",
+        "filterAllStatuses": "Всі статуси",
+        "employmentStatusLabel": "Статус зайнятості",
+        "loading": "Завантаження…",
+        "noResults": "Терапевтів за поточними фільтрами не знайдено.",
+        "editAction": "Редагувати",
+        "deactivateAction": "Деактивувати",
+        "reactivateAction": "Реактивувати",
         "ariaFilters": "Фільтри терапевтів",
         "ariaList": "Список терапевтів",
         "ariaPagination": "Пагінація списку терапевтів",
@@ -680,6 +709,7 @@
           "name": "Ім'я",
           "email": "Електронна пошта",
           "phone": "Телефон",
+          "employmentStatus": "Статус зайнятості",
           "specializations": "Спеціалізації",
           "status": "Статус",
           "created": "Створено",
@@ -702,12 +732,34 @@
       },
       "create": {
         "title": "Створити обліковий запис терапевта",
+        "subtitle": "Створіть обліковий запис терапевта. Система згенерує безпечний тимчасовий пароль.",
         "fullNameLabel": "Повне ім'я",
         "fullNamePlaceholder": "Введіть повне ім'я терапевта",
+        "fullNameRequired": "Повне ім'я обов'язкове.",
         "emailLabel": "Електронна пошта",
         "emailPlaceholder": "therapist@example.com",
+        "emailInvalid": "Введіть дійсну адресу електронної пошти.",
         "phoneLabel": "Номер телефону",
-        "phonePlaceholder": "+380 (XX) XXX-XX-XX"
+        "phonePlaceholder": "+380 (XX) XXX-XX-XX",
+        "employmentStatusLabel": "Статус зайнятості",
+        "selectPlaceholder": "— оберіть —",
+        "employmentStatusRequired": "Оберіть статус зайнятості.",
+        "primarySpecializationLabel": "Основна спеціалізація",
+        "primarySpecializationRequired": "Оберіть основну спеціалізацію.",
+        "specializationHint": "Терапевт може додати більше спеціалізацій пізніше у своєму профілі",
+        "afterCreationTitle": "Після створення:",
+        "afterCreationText": "Буде згенеровано безпечний тимчасовий пароль. Терапевт повинен змінити його при першому вході та заповнити свій профіль.",
+        "creatingLabel": "Створення…",
+        "submitButton": "Створити обліковий запис",
+        "errors": {
+          "loadSpecializationsFailed": "Не вдалося завантажити спеціалізації. Будь ласка, оновіть сторінку.",
+          "unauthorized": "Ви не авторизовані для виконання цієї дії. Будь ласка, увійдіть як адміністратор.",
+          "forbidden": "У вас немає дозволу на створення облікових записів терапевтів.",
+          "duplicateEmail": "Ця адреса електронної пошти вже зареєстрована.",
+          "invalidRequest": "Невірний запит. Будь ласка, перевірте правильність заповнення всіх полів.",
+          "serverError": "Виникла помилка сервера. Будь ласка, спробуйте ще раз або зверніться до служби підтримки.",
+          "genericFailure": "Не вдалося створити обліковий запис терапевта. Будь ласка, спробуйте ще раз."
+        }
       },
       "edit": {
         "bioLabel": "Професійна біографія",

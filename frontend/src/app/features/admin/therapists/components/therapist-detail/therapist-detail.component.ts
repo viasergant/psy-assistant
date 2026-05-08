@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapist.model';
+import { TranslateSpecializationPipe } from '../../pipes/translate-specialization.pipe';
 
 /**
  * Therapist profile detail view.
@@ -18,7 +19,7 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
 @Component({
   selector: 'app-therapist-detail',
   standalone: true,
-  imports: [CommonModule, TranslocoPipe],
+  imports: [CommonModule, TranslocoPipe, TranslateSpecializationPipe],
   styleUrl: './therapist-detail.component.scss',
   template: `
     <div class="page">
@@ -74,7 +75,7 @@ import { TherapistProfile, EMPLOYMENT_STATUS_LABELS } from '../../models/therapi
           <h2>{{ 'admin.therapists.detail.sections.specializations' | transloco }}</h2>
           <div class="chips-container" *ngIf="therapist.specializations.length > 0">
             <span *ngFor="let spec of therapist.specializations" class="chip">
-              {{ spec.name }}
+              {{ spec.name | translateSpecialization }}
             </span>
           </div>
           <p *ngIf="therapist.specializations.length === 0" class="text-muted">No specializations listed</p>

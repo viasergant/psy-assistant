@@ -9,6 +9,7 @@ import {
   EMPLOYMENT_STATUS_OPTIONS,
   EMPLOYMENT_STATUS_LABELS
 } from '../../models/therapist.model';
+import { TranslateSpecializationPipe } from '../../pipes/translate-specialization.pipe';
 
 /**
  * Modal dialog for editing an existing therapist profile.
@@ -19,7 +20,7 @@ import {
 @Component({
   selector: 'app-edit-therapist-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, TranslateSpecializationPipe],
   styleUrls: ['./edit-therapist-dialog.component.scss'],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-therapist-title">
@@ -100,7 +101,7 @@ import {
             <h3>Current Specializations</h3>
             <div class="chip-list">
               <span *ngFor="let spec of therapist.specializations" class="chip">
-                {{ spec.name }}
+                {{ spec.name | translateSpecialization }}
               </span>
               <span *ngIf="therapist.specializations.length === 0" class="empty-text">
                 None assigned

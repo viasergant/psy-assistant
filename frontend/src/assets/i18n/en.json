@@ -329,6 +329,25 @@
       "THERAPIST_CANCELLATION": "Therapist cancelled"
     }
   },
+  "specializations": {
+    "names": {
+      "adhd": "ADHD",
+      "anxietyDisorders": "Anxiety Disorders",
+      "careerCounseling": "Career Counseling",
+      "childAndAdolescentTherapy": "Child and Adolescent Therapy",
+      "depression": "Depression",
+      "eatingDisorders": "Eating Disorders",
+      "familyTherapy": "Family Therapy",
+      "griefAndLoss": "Grief and Loss",
+      "lifeTransitions": "Life Transitions",
+      "ocd": "OCD",
+      "relationshipIssues": "Relationship Issues",
+      "selfEsteem": "Self-Esteem",
+      "stressManagement": "Stress Management",
+      "substanceAbuse": "Substance Abuse",
+      "traumaAndPtsd": "Trauma and PTSD"
+    }
+  },
   "therapists": {
     "wizard": {
       "title": "Complete Your Profile",
@@ -669,10 +688,20 @@
     },
     "therapists": {
       "list": {
+        "pageTitle": "Therapist Management",
+        "createButton": "+ Create therapist",
         "roleLabel": "Role",
         "statusLabel": "Status",
         "statusActive": "Active",
         "statusInactive": "Inactive",
+        "filterAllRoles": "All roles",
+        "filterAllStatuses": "All statuses",
+        "employmentStatusLabel": "Employment Status",
+        "loading": "Loading…",
+        "noResults": "No therapists match the current filters.",
+        "editAction": "Edit",
+        "deactivateAction": "Deactivate",
+        "reactivateAction": "Reactivate",
         "ariaFilters": "Therapist filters",
         "ariaList": "Therapist list",
         "ariaPagination": "Therapist list pagination",
@@ -680,6 +709,7 @@
           "name": "Name",
           "email": "Email",
           "phone": "Phone",
+          "employmentStatus": "Employment Status",
           "specializations": "Specializations",
           "status": "Status",
           "created": "Created",
@@ -702,12 +732,34 @@
       },
       "create": {
         "title": "Create Therapist Account",
+        "subtitle": "Create a therapist account. The system will generate a secure temporary password.",
         "fullNameLabel": "Full Name",
         "fullNamePlaceholder": "Enter therapist's full name",
+        "fullNameRequired": "Full name is required.",
         "emailLabel": "Email",
         "emailPlaceholder": "therapist@example.com",
+        "emailInvalid": "Enter a valid email address.",
         "phoneLabel": "Phone Number",
-        "phonePlaceholder": "+1 (555) 123-4567"
+        "phonePlaceholder": "+1 (555) 123-4567",
+        "employmentStatusLabel": "Employment Status",
+        "selectPlaceholder": "— select —",
+        "employmentStatusRequired": "Select an employment status.",
+        "primarySpecializationLabel": "Primary Specialization",
+        "primarySpecializationRequired": "Select a primary specialization.",
+        "specializationHint": "Therapist can add more specializations later in their profile",
+        "afterCreationTitle": "After creation:",
+        "afterCreationText": "A secure temporary password will be generated. The therapist must change it on first login and complete their profile.",
+        "creatingLabel": "Creating…",
+        "submitButton": "Create account",
+        "errors": {
+          "loadSpecializationsFailed": "Failed to load specializations. Please refresh the page.",
+          "unauthorized": "You are not authorized to perform this action. Please log in as an administrator.",
+          "forbidden": "You do not have permission to create therapist accounts.",
+          "duplicateEmail": "This email address is already registered.",
+          "invalidRequest": "Invalid request. Please check all fields are filled correctly.",
+          "serverError": "Server error occurred. Please try again later or contact support.",
+          "genericFailure": "Failed to create therapist account. Please try again."
+        }
       },
       "edit": {
         "bioLabel": "Professional Bio",

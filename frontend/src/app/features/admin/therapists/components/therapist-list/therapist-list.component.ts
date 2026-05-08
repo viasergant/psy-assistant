@@ -13,6 +13,7 @@ import {
 import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole } from '../../../users/models/user.model';
 import { CreateTherapistDialogComponent } from '../../../therapists/components/create-therapist-dialog/create-therapist-dialog.component';
 import { EditTherapistDialogComponent } from '../../../therapists/components/edit-therapist-dialog/edit-therapist-dialog.component';
+import { TranslateSpecializationPipe } from '../../pipes/translate-specialization.pipe';
 
 /**
  * Admin therapist list page.
@@ -30,6 +31,7 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
     CommonModule,
     FormsModule,
     TranslocoPipe,
+    TranslateSpecializationPipe,
     CreateTherapistDialogComponent,
     EditTherapistDialogComponent
   ],
@@ -37,8 +39,8 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
   template: `
     <div class="page">
       <header class="page-header">
-        <h1>Therapist Management</h1>
-        <button class="btn-primary" (click)="openCreate()">+ Create therapist</button>
+        <h1>{{ 'admin.therapists.list.pageTitle' | transloco }}</h1>
+        <button class="btn-primary" (click)="openCreate()">{{ 'admin.therapists.list.createButton' | transloco }}</button>
       </header>
 
       <!-- Filters -->
@@ -46,7 +48,7 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
         <div class="filter-group">
           <label for="roleFilter">{{ 'admin.therapists.list.roleLabel' | transloco }}</label>
           <select id="roleFilter" [(ngModel)]="roleFilter" (change)="onRoleFilterChange()">
-            <option value="">All roles</option>
+            <option value="">{{ 'admin.therapists.list.filterAllRoles' | transloco }}</option>
             <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
           </select>
         </div>
@@ -54,16 +56,16 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
         <div class="filter-group">
           <label for="statusFilter">{{ 'admin.therapists.list.statusLabel' | transloco }}</label>
           <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
-            <option value="">All statuses</option>
+            <option value="">{{ 'admin.therapists.list.filterAllStatuses' | transloco }}</option>
             <option value="true">{{ 'admin.therapists.list.statusActive' | transloco }}</option>
             <option value="false">{{ 'admin.therapists.list.statusInactive' | transloco }}</option>
           </select>
         </div>
 
         <div class="filter-group">
-          <label for="employmentFilter">Employment Status</label>
+          <label for="employmentFilter">{{ 'admin.therapists.list.employmentStatusLabel' | transloco }}</label>
           <select id="employmentFilter" [(ngModel)]="employmentFilter" (change)="applyFilters()">
-            <option value="">All statuses</option>
+            <option value="">{{ 'admin.therapists.list.filterAllStatuses' | transloco }}</option>
             <option *ngFor="let status of employmentStatuses" [value]="status">
               {{ statusLabels[status] }}
             </option>
@@ -72,10 +74,10 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
       </div>
 
       <!-- Loading / empty / error states -->
-      <div *ngIf="loading" class="state-msg" aria-live="polite">Loading…</div>
+      <div *ngIf="loading" class="state-msg" aria-live="polite">{{ 'admin.therapists.list.loading' | transloco }}</div>
       <div *ngIf="!loading && loadError" class="alert-error" role="alert">{{ loadError }}</div>
       <div *ngIf="!loading && !loadError && therapists.length === 0" class="state-msg">
-        No therapists match the current filters.
+        {{ 'admin.therapists.list.noResults' | transloco }}
       </div>
 
       <!-- Table -->
@@ -86,7 +88,7 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
               <th scope="col">{{ 'admin.therapists.list.tableHeaders.name' | transloco }}</th>
               <th scope="col">{{ 'admin.therapists.list.tableHeaders.email' | transloco }}</th>
               <th scope="col">{{ 'admin.therapists.list.tableHeaders.phone' | transloco }}</th>
-              <th scope="col">Employment Status</th>
+              <th scope="col">{{ 'admin.therapists.list.tableHeaders.employmentStatus' | transloco }}</th>
               <th scope="col">{{ 'admin.therapists.list.tableHeaders.specializations' | transloco }}</th>
               <th scope="col">{{ 'admin.therapists.list.tableHeaders.status' | transloco }}</th>
               <th scope="col">{{ 'admin.therapists.list.tableHeaders.created' | transloco }}</th>
@@ -105,26 +107,26 @@ import { EditTherapistDialogComponent } from '../../../therapists/components/edi
               </td>
               <td class="specs-cell">
                 <span *ngFor="let spec of t.specializations" class="spec-chip">
-                  {{ spec.name }}
+                  {{ spec.name | translateSpecialization }}
                 </span>
                 <span *ngIf="t.specializations.length === 0" class="text-muted">—</span>
               </td>
               <td>
                 <span class="badge" [class.badge-active]="t.active" [class.badge-inactive]="!t.active">
-                  {{ t.active ? 'Active' : 'Inactive' }}
+                  {{ t.active ? ('admin.therapists.list.statusActive' | transloco) : ('admin.therapists.list.statusInactive' | transloco) }}
                 </span>
               </td>
               <td>{{ t.createdAt | date:'dd MMM yyyy' }}</td>
               <td class="actions-cell">
-                <button class="btn-action" (click)="openEdit(t)" [attr.aria-label]="'Edit ' + t.name">
-                  Edit
+                <button class="btn-action" (click)="openEdit(t)" [attr.aria-label]="('admin.therapists.list.editAction' | transloco) + ' ' + t.name">
+                  {{ 'admin.therapists.list.editAction' | transloco }}
                 </button>
                 <button
                   class="btn-action"
                   [class.btn-danger]="t.active"
                   (click)="toggleActive(t)"
-                  [attr.aria-label]="(t.active ? 'Deactivate ' : 'Reactivate ') + t.name">
-                  {{ t.active ? 'Deactivate' : 'Reactivate' }}
+                  [attr.aria-label]="(t.active ? ('admin.therapists.list.deactivateAction' | transloco) : ('admin.therapists.list.reactivateAction' | transloco)) + ' ' + t.name">
+                  {{ t.active ? ('admin.therapists.list.deactivateAction' | transloco) : ('admin.therapists.list.reactivateAction' | transloco) }}
                 </button>
               </td>
             </tr>

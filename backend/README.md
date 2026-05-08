@@ -80,3 +80,123 @@ This runs compilation, tests, and Checkstyle validation.
 | (none)  | Base config; datasource from env vars        |
 | `local` | PostgreSQL via Docker Compose, Swagger UI enabled, Flyway-managed DDL |
 | `prod`  | Swagger UI disabled, tighter logging         |
+
+---
+
+## Production (remote server) setup
+
+This section describes how to provision a fresh Linux server and deploy the application for the first time.
+
+### Prerequisites
+
+**Local machine:**
+- `ssh`, `rsync`, `scp`
+- Java 21 + Maven wrapper (`backend/mvnw`)
+- Node.js 22 + npm
+
+**Remote server:**
+- Ubuntu 22.04 / Debian 12 (or RHEL-compatible) with `sudo` access
+- SSH key-based auth for the deploy user
+- PostgreSQL already running and accessible (see `DB_URL` below)
+
+### Step 1 — Provision the server (one-time)
+
+```bash
+# Default deploy user is "deploy"; override with env vars if needed
+DEPLOY_USER=deploy DEPLOY_SSH_KEY=~/.ssh/id_ed25519_psy ./scripts/setup-server.sh
+```
+
+This script (idempotent, safe to re-run) installs:
+- Java 21 (Eclipse Temurin)
+- Caddy web server with SPA routing and API reverse-proxy config
+- A systemd service unit (`psy-assistant`)
+- Required directories and a sudoers rule for the deploy user
+
+### Step 2 — Fill in secrets
+
+After provisioning, SSH into the server and edit the env file that was created:
+
+```bash
+ssh deploy@192.168.10.128
+sudo nano /opt/psy-assistant/psy-assistant.env
+```
+
+Set every `CHANGE_ME` value:
+
+| Variable | Description | How to generate |
+|---|---|---|
+| `DB_PASSWORD` | PostgreSQL password | — |
+| `JWT_SECRET` | JWT signing secret (min 32 chars) | `openssl rand -base64 48` |
+| `SESSION_NOTES_ENCRYPTION_KEY` | AES-256-GCM key for session-note encryption | `openssl rand -base64 32` |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated list of frontend origins (no trailing slash) | e.g. `https://psy-assistant.tail1cbdbb.ts.net` |
+
+> **Important:** `CORS_ALLOWED_ORIGINS` must include every hostname the frontend is served from.
+> If the value is wrong or missing, `/api/v1/auth/login` will return **403 Forbidden**.
+
+Example `/opt/psy-assistant/psy-assistant.env`:
+
+```dotenv
+SPRING_PROFILES_ACTIVE=prod
+DB_URL=jdbc:postgresql://192.168.10.146:5432/psyassistant_prod
+DB_USERNAME=psyassistant
+DB_PASSWORD=<strong-password>
+JWT_SECRET=<base64-48-bytes>
+SESSION_NOTES_ENCRYPTION_KEY=<base64-32-bytes>
+CORS_ALLOWED_ORIGINS=https://psy-assistant.tail1cbdbb.ts.net
+```
+
+After editing, restart the service:
+
+```bash
+sudo systemctl restart psy-assistant
+sudo systemctl status psy-assistant
+```
+
+### Step 3 — Deploy
+
+Run from the project root on your local machine:
+
+```bash
+# Full deploy (builds frontend + backend, uploads, restarts)
+./scripts/deploy.sh
+
+# Skip tests for a faster iteration
+./scripts/deploy.sh --skip-tests
+
+# Deploy only the frontend (e.g. after a UI-only change)
+./scripts/deploy.sh --frontend-only
+
+# Deploy only the backend JAR
+./scripts/deploy.sh --backend-only
+```
+
+Override the deploy user or SSH key without editing the script:
+
+```bash
+DEPLOY_USER=ubuntu DEPLOY_SSH_KEY=~/.ssh/id_ed25519 ./scripts/deploy.sh --skip-tests
+```
+
+### Ongoing operations
+
+```bash
+# Tail application logs
+ssh deploy@192.168.10.128 'tail -f /var/log/psy-assistant/app.log'
+
+# Check service status
+ssh deploy@192.168.10.128 'sudo systemctl status psy-assistant'
+
+# Restart service manually
+ssh deploy@192.168.10.128 'sudo systemctl restart psy-assistant'
+
+# View Caddy logs
+ssh deploy@192.168.10.128 'sudo journalctl -u caddy -f'
+```
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Page refresh returns **404** | Caddy missing SPA fallback config | Re-run `setup-server.sh` or manually upload `scripts/Caddyfile` |
+| Login / refresh returns **403** | `CORS_ALLOWED_ORIGINS` doesn't include the frontend origin | Edit `/opt/psy-assistant/psy-assistant.env`, restart service |
+| Backend health check fails | Service not started or wrong DB credentials | Check `app.log`, verify `psy-assistant.env` values |
+| `rsync: Permission denied` | Deploy user lacks write access to `/var/www/html` | Re-run `setup-server.sh` to restore sudoers and directory permissions |

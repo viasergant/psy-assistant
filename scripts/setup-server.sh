@@ -155,6 +155,10 @@ DB_USERNAME=psyassistant
 DB_PASSWORD=CHANGE_ME
 JWT_SECRET=CHANGE_ME
 SESSION_NOTES_ENCRYPTION_KEY=CHANGE_ME
+# Comma-separated list of allowed CORS origins.
+# Add every hostname/IP the frontend is served from (no trailing slash).
+# Example: http://192.168.10.128,https://psy-assistant.tail1cbdbb.ts.net
+CORS_ALLOWED_ORIGINS=CHANGE_ME
 ENVFILE
     chmod 640 $ENV_FILE
     chown root:$APP_USER $ENV_FILE

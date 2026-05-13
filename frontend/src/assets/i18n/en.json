@@ -584,7 +584,8 @@
         "notesPlaceholder": "Optional notes about status change",
         "characters": "characters",
         "updateButton": "Update Appointment",
-        "updatingInProgress": "Updating..."
+        "updatingInProgress": "Updating...",
+        "riskFlagsLabel": "Risk Flags"
       },
       "cancellationType": {
         "clientInitiated": "Client Initiated",

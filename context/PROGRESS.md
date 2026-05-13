@@ -440,3 +440,50 @@
   - Angular `ng build --configuration production` exit code: 0, zero TypeScript errors
   - 5 pre-existing warnings (CSS budget overruns for 4 unrelated components, quill CommonJS) — all pre-existing, none from Increment 8
 - Action: all clear — no failures, no regressions
+
+---
+
+## 2026-05-13 — Increment 9: Frontend: risk flag indicator on appointment detail
+
+- **What was completed:** Added `activeRiskFlagTypes: string[]` to the `Appointment` interface and added a risk flag chips section to the appointment-edit-dialog template. The chips section renders only when at least one active flag is present.
+- **Interfaces/methods created:**
+  - `Appointment.activeRiskFlagTypes: string[]` — new field on the `Appointment` interface in `schedule.model.ts`
+- **Files created/modified:**
+  - `frontend/src/app/features/schedule/models/schedule.model.ts` (modified — added `activeRiskFlagTypes: string[]` with a PA-27 comment)
+  - `frontend/src/app/features/schedule/components/appointment-edit-dialog/appointment-edit-dialog.component.ts` (modified — risk flag chips section added to template between appointment details and status selection; CSS for `.risk-flag-chips` and `.risk-flag-chip` added to component styles)
+  - `frontend/src/app/features/schedule/components/appointment-edit-dialog/appointment-edit-dialog.component.spec.ts` (created — 12 tests covering chip rendering, zero-flag no-render, undefined guard, existing dialog behaviour)
+  - `frontend/src/assets/i18n/en.json` (modified — added `schedule.appointment.edit.riskFlagsLabel: "Risk Flags"`)
+  - `frontend/src/assets/i18n/uk.json` (modified — added `schedule.appointment.edit.riskFlagsLabel: "Прапорці ризику"`)
+- **Decisions made:**
+  - `CalendarAppointmentBlock` in `calendar.model.ts` was confirmed separate from `Appointment` in `schedule.model.ts` — it was NOT modified, avoiding any N+1 risk on the calendar grid.
+  - Chip section placed between appointment details (time/duration) and status selection — visible context before the user interacts.
+  - `*ngIf="appointment.activeRiskFlagTypes && appointment.activeRiskFlagTypes.length > 0"` guards against both `undefined` and empty arrays, future-proofing callers that populate the detail endpoint response vs. list endpoint responses.
+  - Chip style matches spec exactly: `background: #FEE2E2; color: #991B1B; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem`.
+- **Tests:** 12 new spec tests; `ng build --configuration production` exit 0, zero TypeScript errors. Pre-existing warnings (CSS budget overruns, quill CommonJS) are unrelated.
+
+---
+
+## 2026-05-13 — Test Run (Increment 9, attempt 1)
+- Passed: 464 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured in pom.xml)
+- Coverage gate: N/A
+- Duration: 11.244s (backend); Angular build exit 0
+- Failures: none
+- Key results:
+  - Backend: 464/464 passed — no regression (Increment 9 is frontend-only)
+  - AppointmentMapperTest: 10/10 passed
+  - RiskFlagControllerTest: 13/13 passed
+  - RiskFlagServiceTest: 10/10 passed
+  - AppointmentServiceTest: 13/13 passed
+  - RolePermissionsRiskFlagsTest: 15/15 passed
+  - RbacIntegrationTest: 10/10 passed
+  - TokenServiceTest: 16/16 passed
+  - Angular `ng build --configuration production` exit code: 0, zero TypeScript errors
+  - 3 pre-existing warnings (CSS budget overruns: pending-leave-requests.component.scss, schedule-management.component.ts; quill CommonJS) — all pre-existing, none from Increment 9
+- Action: all clear — no failures, no regressions
+
+---
+
+## 2026-05-13 — Code Review (Increment 9)
+- Quality: PASS (Critical: 0, High: 0)
+- Coverage: FULLY COVERED
+- Recommendation: approve

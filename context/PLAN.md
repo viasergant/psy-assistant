@@ -140,7 +140,7 @@ Repositories:
 
 ---
 
-### Increment 4 — Service layer and unit tests
+### Increment 4 — Service layer and unit tests [completed]
 
 **Goal:** Implement `RiskFlagService` and `RiskFlagTypeService` with all business rules; cover with unit tests.
 
@@ -211,7 +211,7 @@ Unit tests for `RiskFlagService` covering:
 
 ---
 
-### Increment 5 — REST controllers
+### Increment 5 — REST controllers [completed]
 
 **Goal:** Expose the service layer via REST endpoints following existing controller conventions.
 
@@ -245,7 +245,7 @@ Both controllers use `UserManagementService.currentPrincipalId()` for `actorId` 
 
 ---
 
-### Increment 6 — Extend AppointmentResponse with activeRiskFlagTypes
+### Increment 6 — Extend AppointmentResponse with activeRiskFlagTypes [completed]
 
 **Goal:** Add `activeRiskFlagTypes: List<String>` to `AppointmentResponse` so appointment detail views can show risk flag labels without an extra HTTP call.
 
@@ -271,7 +271,7 @@ Note: `CalendarAppointmentBlock` is intentionally NOT changed — the calendar g
 
 ---
 
-### Increment 7 — Frontend: models and service
+### Increment 7 — Frontend: models and service [completed]
 
 **Goal:** Define TypeScript models and an HTTP service for the risk flags feature.
 
@@ -333,7 +333,7 @@ export interface ResolveRiskFlagPayload {
 
 ---
 
-### Increment 8 — Frontend: RiskFlagsPanel on client detail
+### Increment 8 — Frontend: RiskFlagsPanel on client detail [completed]
 
 **Goal:** Render active risk flags on the client detail page, with add-flag and resolve-flag dialogs. Visibility of clinical notes is governed by the permission embedded in the JWT.
 
@@ -382,7 +382,7 @@ Integration into `client-detail.component.ts`:
 
 ---
 
-### Increment 9 — Frontend: risk flag indicator on appointment detail
+### Increment 9 — Frontend: risk flag indicator on appointment detail [completed]
 
 **Goal:** Show active risk flag type labels in the appointment detail panel.
 

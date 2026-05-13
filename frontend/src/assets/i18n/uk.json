@@ -584,7 +584,8 @@
         "notesPlaceholder": "Додаткові примітки про зміну статусу",
         "characters": "символів",
         "updateButton": "Оновити прийом",
-        "updatingInProgress": "Оновлення..."
+        "updatingInProgress": "Оновлення...",
+        "riskFlagsLabel": "Прапорці ризику"
       },
       "cancellationType": {
         "clientInitiated": "Ініційовано клієнтом",

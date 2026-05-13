@@ -116,6 +116,49 @@
 
 ---
 
+## 2026-05-13 — Increment 5: REST controllers
+
+- **What was completed:** Created `RiskFlagController`, `RiskFlagTypeController`, and the `CreateRiskFlagTypeRequest` DTO. All REST endpoints are wired to the service layer with `@PreAuthorize` security and correct HTTP semantics.
+- **Interfaces/methods created:**
+  - `RiskFlagController.listActive(UUID clientId)` — `GET /api/v1/clients/{clientId}/risk-flags`
+  - `RiskFlagController.listHistory(UUID clientId)` — `GET /api/v1/clients/{clientId}/risk-flags/history`
+  - `RiskFlagController.create(UUID clientId, CreateRiskFlagRequest, Authentication)` — `POST /api/v1/clients/{clientId}/risk-flags` → 201 + Location
+  - `RiskFlagController.resolve(UUID clientId, UUID flagId, ResolveRiskFlagRequest, Authentication)` — `PATCH /api/v1/clients/{clientId}/risk-flags/{flagId}/resolve` → 200
+  - `RiskFlagTypeController.listActive()` — `GET /api/v1/risk-flag-types` (no `@PreAuthorize`, any authenticated user)
+  - `RiskFlagTypeController.listAll()` — `GET /api/v1/admin/risk-flag-types`
+  - `RiskFlagTypeController.create(CreateRiskFlagTypeRequest)` — `POST /api/v1/admin/risk-flag-types` → 201 + Location
+  - `RiskFlagTypeController.deactivate(UUID id)` — `PATCH /api/v1/admin/risk-flag-types/{id}/deactivate` → 200
+  - `CreateRiskFlagTypeRequest` record: `name @NotBlank @Size(max=100)`, `displayOrder int @Min(0)`
+- **Files created:**
+  - `backend/src/main/java/com/psyassistant/riskflags/rest/RiskFlagController.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/rest/RiskFlagTypeController.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/dto/CreateRiskFlagTypeRequest.java`
+- **Decisions made:**
+  - `actorId` extracted via `UserManagementService.currentPrincipalId()` (matches `ClientController` pattern).
+  - `actorName` extracted via `auth.getName()` (matches spec; avoids the extra DB lookup that `CarePlanController.resolveActorName()` does).
+  - `Location` header on 201 responses is constructed as a plain `URI.create(...)` string — the existing codebase does not use `ServletUriComponentsBuilder` and returns 201 without `Location` in other controllers; the explicit URI string approach is simpler and doesn't depend on servlet context being available in tests.
+  - `RiskFlagTypeController` uses two base paths (`/api/v1/risk-flag-types` and `/api/v1/admin/risk-flag-types`) on the same class without a class-level `@RequestMapping` — each method carries its full path. This is consistent with the plan spec and avoids a shared base path.
+  - No controller-slice tests added in this increment per the spec ("controller slice tests are deferred").
+- **Tests:** 441/441 passing, 0 failures (no regressions)
+
+---
+
+## 2026-05-13 — Pre-Increment-5 hotfix: RiskFlagController actorName resolution
+
+- **What was completed:** Fixed a High-severity bug where `RiskFlagController` passed `auth.getName()` (a raw UUID JWT subject) as `actorName` to the audit log instead of a human-readable display name.
+- **Root cause:** `Authentication.getName()` returns the JWT subject claim, which is the user's UUID string, not their name.
+- **Fix applied:** Injected `UserRepository` into `RiskFlagController` and added a private `resolveActorName(UUID actorId, Authentication auth)` helper that mirrors the identical pattern in `CarePlanController`: looks up the user by ID, prefers `fullName`, falls back to `email`, and finally falls back to `auth.getName()` (UUID) if the user is not found.
+- **Files modified:**
+  - `backend/src/main/java/com/psyassistant/riskflags/rest/RiskFlagController.java` — constructor updated, `UserRepository` field added, `resolveActorName` private method added, both `actorName` usages updated
+- **Files created:**
+  - `backend/src/test/java/com/psyassistant/riskflags/rest/RiskFlagControllerTest.java` — 13 controller-slice tests (actorName resolution with fullName, with null fullName → email, with missing user → UUID fallback; HTTP status and security checks for all endpoints)
+- **Decisions made:**
+  - Exact same `resolveActorName` implementation as `CarePlanController` — no deviation.
+  - `@MockitoBean AuditLogService` added to the test (required by `GlobalExceptionHandler` constructor injection).
+- **Tests:** 454/454 passing (441 existing + 13 new), 0 failures
+
+---
+
 ## 2026-05-13 — Planning Complete
 
 10 increments defined.
@@ -126,7 +169,7 @@
 | 2 | New permissions in Permission.java / RolePermissions.java | completed |
 | 3 | Domain entities and repositories | pending |
 | 4 | Service layer and unit tests | pending |
-| 5 | REST controllers | pending |
+| 5 | REST controllers | completed |
 | 6 | Extend AppointmentResponse with activeRiskFlagTypes | pending |
 | 7 | Frontend: models and service | pending |
 | 8 | Frontend: RiskFlagsPanel on client detail | pending |
@@ -197,3 +240,28 @@
   - `TokenServiceTest`: 16/16 passed (no regression)
   - All 441 pre-existing and new tests passed without regression
 - Action: all clear — no failures, no regressions
+
+---
+
+## 2026-05-13 — Test Run (Increment 5, attempt 1)
+- Passed: 441 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured in pom.xml)
+- Coverage gate: N/A
+- Duration: 10.823s
+- Failures: none
+- Key results:
+  - `RiskFlagServiceTest`: 10/10 passed (no regression from Increment 4)
+  - `RiskFlagTypeTest`: 6/6 passed
+  - `ClientRiskFlagTest`: 8/8 passed
+  - `RiskFlagAuditLogTest`: 4/4 passed
+  - `RolePermissionsRiskFlagsTest`: 15/15 passed (no regression)
+  - `RbacIntegrationTest`: 10/10 passed (no regression)
+  - `TokenServiceTest`: 16/16 passed (no regression)
+  - `AuthControllerTest`: 8/8 passed
+  - `AuthServiceTest`: 12/12 passed
+  - All 441 pre-existing and Increment 5 tests passed without regression
+- Action: all clear — no failures, no regressions
+
+## 2026-05-13 — Code Review (Increment 5)
+- Quality: PASS (Critical: 0, High: 1, Medium: 1)
+- Coverage: FULLY COVERED
+- Recommendation: fix and re-review (High finding must be addressed before this increment ships)

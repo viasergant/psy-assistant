@@ -90,7 +90,7 @@ Structured, role-protected risk flag indicators on client profiles. Replaces the
 
 ---
 
-### Increment 3 — Domain entities and repositories
+### Increment 3 — Domain entities and repositories [completed]
 
 **Goal:** Define the three JPA entities and their Spring Data repositories.
 

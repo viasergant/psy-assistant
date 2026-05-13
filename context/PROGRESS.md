@@ -32,6 +32,38 @@
 
 ---
 
+## 2026-05-13 — Increment 3: Domain entities and repositories
+
+- **What was completed:** Created three JPA entities, two status/action enums, and three Spring Data repositories for the riskflags package.
+- **Interfaces/methods created:**
+  - `RiskFlagType(String name, short displayOrder)` constructor; `deactivate()` method; getters for all fields
+  - `ClientRiskFlag(UUID clientId, UUID flagTypeId, String clinicalNote, LocalDate reviewDate, UUID createdByUserId)` constructor; `resolve(UUID resolvedByUserId, String resolutionNote)` method; getters for all fields
+  - `RiskFlagAuditLog(UUID flagId, UUID clientId, UUID actorUserId, String actorName, RiskFlagAuditActionType actionType, String flagTypeName, String status)` constructor; getters for all fields
+  - `RiskFlagTypeRepository.findAllByActiveTrueOrderByDisplayOrderAsc()`
+  - `ClientRiskFlagRepository.findAllByClientIdAndStatus(UUID, ClientRiskFlagStatus)`
+  - `ClientRiskFlagRepository.findAllByClientIdOrderByCreatedAtDesc(UUID)`
+  - `RiskFlagAuditLogRepository.findAllByClientIdOrderByActionTimestampDesc(UUID)`
+- **Files created:**
+  - `backend/src/main/java/com/psyassistant/riskflags/domain/ClientRiskFlagStatus.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/domain/RiskFlagAuditActionType.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/domain/RiskFlagType.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/domain/ClientRiskFlag.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/domain/RiskFlagAuditLog.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/repository/RiskFlagTypeRepository.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/repository/ClientRiskFlagRepository.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/repository/RiskFlagAuditLogRepository.java`
+  - `backend/src/test/java/com/psyassistant/riskflags/domain/RiskFlagTypeTest.java`
+  - `backend/src/test/java/com/psyassistant/riskflags/domain/ClientRiskFlagTest.java`
+  - `backend/src/test/java/com/psyassistant/riskflags/domain/RiskFlagAuditLogTest.java`
+- **Decisions made:**
+  - `RiskFlagType` does NOT extend `SimpleBaseEntity`. The `risk_flag_types` table (V67) has only `created_at`, not `updated_at`. Extending `SimpleBaseEntity` would require an `updated_at` column that doesn't exist in the schema, causing a Hibernate mapping error. Explicit `@Column(name = "created_at", insertable = false, updatable = false)` is used instead — matching the `CarePlanAudit` pattern.
+  - `ClientRiskFlag.createdAt` uses `insertable = false, updatable = false` so the DB DEFAULT NOW() populates the column; this matches the V67 schema where `created_at` defaults server-side.
+  - `RiskFlagAuditLog.actionTimestamp` uses the same `insertable = false, updatable = false` approach — DB-managed, not application-managed.
+  - `ClientRiskFlagRepository` exposes `findAllByClientIdOrderByCreatedAtDesc` (not `findAllByClientId`) to enforce consistent ordering for the supervisor full-history view.
+- **Tests:** 18 new tests passing; full suite 431/431 passing, 0 failures
+
+---
+
 ## 2026-05-13 — Planning Complete
 
 10 increments defined.
@@ -69,3 +101,23 @@
   - `AuthServiceTest`: 12/12 passed
   - `AuthControllerTest`: 8/8 passed
 - Action: all clear — no failures, no regressions
+
+---
+
+## 2026-05-13 — Test Run (Increment 3, attempt 1)
+- Passed: 431 | Failed: 0 | Coverage: N/A (JaCoCo not configured in pom.xml)
+- Coverage gate: N/A
+- Failures: none
+- Key results:
+  - `RiskFlagTypeTest`: 6/6 passed (pure unit, no Spring context)
+  - `ClientRiskFlagTest`: 8/8 passed (pure unit, no Spring context)
+  - `RiskFlagAuditLogTest`: 4/4 passed (pure unit, no Spring context)
+  - All 18 new Increment 3 tests passed; 413 pre-existing tests passed without regression
+- Action: all clear — no failures, no regressions
+
+---
+
+## 2026-05-13 — Code Review (Increment 3)
+- Quality: PASS (Critical: 0, High: 0, Medium: 3)
+- Coverage: FULLY COVERED
+- Recommendation: approve

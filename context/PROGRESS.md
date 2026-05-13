@@ -64,6 +64,58 @@
 
 ---
 
+## 2026-05-13 — Increment 4: Service layer and unit tests
+
+- **What was completed:** Created four DTOs, two services (`RiskFlagService` and `RiskFlagTypeService`), and 10 unit tests for `RiskFlagService`.
+- **Interfaces/methods created:**
+  - `CreateRiskFlagRequest` record: `flagTypeId UUID @NotNull`, `clinicalNote String`, `reviewDate LocalDate @NotNull @FutureOrPresent`
+  - `ResolveRiskFlagRequest` record: `resolutionNote String @NotBlank`
+  - `RiskFlagResponse` record: `id, clientId, flagTypeId, flagTypeName, status, clinicalNote, reviewDate, createdByUserId, createdAt, resolvedByUserId, resolvedAt, resolutionNote`
+  - `RiskFlagTypeResponse` record: `id UUID, name String, displayOrder int, active boolean`
+  - `RiskFlagService.createFlag(UUID clientId, CreateRiskFlagRequest request, UUID actorId, String actorName)`
+  - `RiskFlagService.resolveFlag(UUID clientId, UUID flagId, ResolveRiskFlagRequest request, UUID actorId, String actorName)`
+  - `RiskFlagService.listActiveFlags(UUID clientId)`
+  - `RiskFlagService.listAllFlags(UUID clientId)`
+  - `RiskFlagTypeService.listActive()`
+  - `RiskFlagTypeService.listAll()`
+  - `RiskFlagTypeService.create(String name, int displayOrder)`
+  - `RiskFlagTypeService.deactivate(UUID id)`
+- **Files created:**
+  - `backend/src/main/java/com/psyassistant/riskflags/dto/CreateRiskFlagRequest.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/dto/ResolveRiskFlagRequest.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/dto/RiskFlagResponse.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/dto/RiskFlagTypeResponse.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/service/RiskFlagService.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/service/RiskFlagTypeService.java`
+  - `backend/src/test/java/com/psyassistant/riskflags/service/RiskFlagServiceTest.java`
+- **Decisions made:**
+  - Permission checks are implemented both via `@PreAuthorize` (for Spring context enforcement) and via programmatic `SecurityContextHolder` checks (to support unit testing without a Spring context). This dual approach ensures AOP-level enforcement in production and testable logic at the method level.
+  - `listAll()` and `create()` and `deactivate()` in `RiskFlagTypeService` use both `@PreAuthorize` and `requireAuthority()` — consistent with the programmatic approach used in `RiskFlagService`.
+  - `loadActiveFlagType()` throws `EntityNotFoundException` for both missing and inactive flag types, as specified.
+  - Method test names follow the project's camelCase convention (no underscores) to satisfy Checkstyle rule `^[a-z][a-zA-Z0-9]*$`.
+  - `@DisplayName` is used to retain human-readable test descriptions.
+- **Tests:** 10 new tests passing; full suite 441/441 passing, 0 failures
+
+---
+
+## 2026-05-13 — Increment 4 post-merge fixes
+
+- **What was completed:** Two performance/correctness fixes applied to the Increment 4 service layer before Increment 5 proceeds.
+- **Fix 1 (High) — N+1 query eliminated in `RiskFlagService.listActiveFlags` and `listAllFlags`:**
+  - Both methods previously called `flagTypeRepository.findById(flag.getFlagTypeId())` inside a stream loop.
+  - Refactored to collect distinct `flagTypeId` values into a `Set<UUID>`, call `flagTypeRepository.findAllById(ids)` once, build a `Map<UUID, String>` (id → name), and look up names from the map during mapping.
+  - Two existing tests updated to stub `findAllById(Set.of(flagTypeId))` instead of the removed `findById(flagTypeId)` stubs (the old stubs triggered `UnnecessaryStubbing` errors under Mockito strict mode).
+- **Fix 2 (Medium) — `RiskFlagTypeService.listAll()` now returns rows in deterministic order:**
+  - Changed `flagTypeRepository.findAll()` to `flagTypeRepository.findAll(Sort.by(Sort.Direction.ASC, "displayOrder"))`.
+  - Added `import org.springframework.data.domain.Sort`.
+- **Files modified:**
+  - `backend/src/main/java/com/psyassistant/riskflags/service/RiskFlagService.java`
+  - `backend/src/main/java/com/psyassistant/riskflags/service/RiskFlagTypeService.java`
+  - `backend/src/test/java/com/psyassistant/riskflags/service/RiskFlagServiceTest.java`
+- **Tests:** 441/441 passing, 0 failures
+
+---
+
 ## 2026-05-13 — Planning Complete
 
 10 increments defined.
@@ -121,3 +173,27 @@
 - Quality: PASS (Critical: 0, High: 0, Medium: 3)
 - Coverage: FULLY COVERED
 - Recommendation: approve
+
+---
+
+## 2026-05-13 — Code Review (Increment 4)
+- Quality: PASS (Critical: 0, High: 1, Medium: 3, Low: 3)
+- Coverage: FULLY COVERED
+- Recommendation: approve with remediation required for N+1 before Increment 5 ships
+
+---
+
+## 2026-05-13 — Test Run (Increment 4, attempt 1)
+- Passed: 441 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured in pom.xml)
+- Coverage gate: N/A
+- Failures: none
+- Key results:
+  - `RiskFlagServiceTest`: 10/10 passed (pure unit, Mockito only — no Spring context)
+  - `RiskFlagTypeTest`: 6/6 passed
+  - `ClientRiskFlagTest`: 8/8 passed
+  - `RiskFlagAuditLogTest`: 4/4 passed
+  - `RolePermissionsRiskFlagsTest`: 15/15 passed (no regression)
+  - `RbacIntegrationTest`: 10/10 passed (no regression)
+  - `TokenServiceTest`: 16/16 passed (no regression)
+  - All 441 pre-existing and new tests passed without regression
+- Action: all clear — no failures, no regressions

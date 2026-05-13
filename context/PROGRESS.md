@@ -487,3 +487,64 @@
 - Quality: PASS (Critical: 0, High: 0)
 - Coverage: FULLY COVERED
 - Recommendation: approve
+
+---
+
+## 2026-05-13 — Increment 10: Frontend: admin risk flag type configuration
+
+- **What was completed:** Created the full admin panel for SYSTEM_ADMINISTRATOR to view, create, and deactivate risk flag types. All five files specified were created; two existing files were modified; i18n translations added for both `en.json` and `uk.json`.
+- **Interfaces/methods created:**
+  - `RiskFlagType` interface in `risk-flag-type-admin.model.ts`: `id, name, displayOrder, active` — mirrors `RiskFlagType` from Increment 7
+  - `RiskFlagTypeAdminService.listAll(): Observable<RiskFlagType[]>` — `GET /api/v1/admin/risk-flag-types`
+  - `RiskFlagTypeAdminService.create(name: string, displayOrder: number): Observable<RiskFlagType>` — `POST /api/v1/admin/risk-flag-types`
+  - `RiskFlagTypeAdminService.deactivate(id: string): Observable<void>` — `PATCH /api/v1/admin/risk-flag-types/{id}/deactivate`
+  - `RiskFlagTypeListComponent` — standalone; loads list on init, "Add Flag Type" button opens dialog, per-row "Deactivate" button for active types
+  - `RiskFlagTypeFormDialogComponent` — standalone; reactive form with `name` (`required`, `maxLength(100)`) and `displayOrder` (`required`, `min(0)`); outputs `saved` and `cancelled`
+- **Files created:**
+  - `frontend/src/app/features/admin/risk-flag-types/models/risk-flag-type-admin.model.ts`
+  - `frontend/src/app/features/admin/risk-flag-types/services/risk-flag-type-admin.service.ts`
+  - `frontend/src/app/features/admin/risk-flag-types/services/risk-flag-type-admin.service.spec.ts` (11 tests)
+  - `frontend/src/app/features/admin/risk-flag-types/components/risk-flag-type-list/risk-flag-type-list.component.ts`
+  - `frontend/src/app/features/admin/risk-flag-types/components/risk-flag-type-list/risk-flag-type-list.component.spec.ts` (11 tests)
+  - `frontend/src/app/features/admin/risk-flag-types/components/risk-flag-type-form-dialog/risk-flag-type-form-dialog.component.ts`
+  - `frontend/src/app/features/admin/risk-flag-types/components/risk-flag-type-form-dialog/risk-flag-type-form-dialog.component.spec.ts` (13 tests)
+  - `frontend/src/app/features/admin/risk-flag-types/risk-flag-types.routes.ts`
+- **Files modified:**
+  - `frontend/src/app/features/admin/admin.routes.ts` — added `risk-flag-types` lazy-loaded child route matching `notification-templates` pattern exactly
+  - `frontend/src/app/features/admin/admin-layout.component.ts` — added `rla6` nav tab for `/admin/risk-flag-types`
+  - `frontend/src/assets/i18n/en.json` — added `admin.tabs.riskFlagTypes`, `admin.riskFlagTypes.title`, `admin.riskFlagTypes.list.*`, `admin.riskFlagTypes.form.*`
+  - `frontend/src/assets/i18n/uk.json` — same keys in Ukrainian
+- **Decisions made:**
+  - Constructor injection (`constructor(private http: HttpClient)`) used throughout — matches all existing services in this codebase; `inject()` is not used in any existing service.
+  - `RiskFlagTypeAdminService` uses a single `baseUrl = '/api/v1/admin/risk-flag-types'` constant — consistent with `NotificationTemplateService.baseUrl` pattern.
+  - `RiskFlagTypeFormDialogComponent` uses `ReactiveFormsModule` (not template-driven `FormsModule`) because the spec calls for reactive forms with `Validators.required`, `Validators.maxLength`, `Validators.min` — same pattern as `RiskFlagFormDialogComponent` from Increment 8.
+  - `RiskFlagTypeListComponent` does not import `FormsModule` since it has no two-way bindings — minimises imports.
+  - Translation keys follow existing `admin.<feature>.*` pattern established by `notificationTemplates`.
+- **Tests:** 35 new spec tests (11 service + 11 list + 13 form dialog); `ng build --configuration production` exit 0, zero TypeScript errors. All pre-existing warnings (CSS budget overruns, quill CommonJS) are unrelated to Increment 10.
+
+---
+
+## 2026-05-13 — Test Run (Increment 10, attempt 1)
+- Passed: 464 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured in pom.xml)
+- Coverage gate: N/A
+- Duration: 10.592s (backend); Angular build exit 0
+- Failures: none
+- Key results:
+  - Backend: 464/464 passed — exact expected count confirmed, no regression (Increment 10 is frontend-only)
+  - AppointmentMapperTest: 10/10 passed
+  - RiskFlagControllerTest: 13/13 passed
+  - RiskFlagServiceTest: 10/10 passed
+  - AppointmentServiceTest: 13/13 passed
+  - RolePermissionsRiskFlagsTest: 15/15 passed
+  - RbacIntegrationTest: 10/10 passed
+  - TokenServiceTest: 16/16 passed
+  - Angular `ng build --configuration production` exit code: 0, zero TypeScript errors
+  - 3 pre-existing warnings (CSS budget overruns: session-list.component.scss, appointment-booking-dialog.component.ts; quill CommonJS) — all pre-existing, none from Increment 10
+- Action: all clear — final increment clean, no failures, no regressions
+
+---
+
+## 2026-05-13 — Code Review (Increment 10)
+- Quality: PASS (Critical: 0, High: 0, Medium: 2, Suggestion: 2)
+- Coverage: FULLY COVERED
+- Recommendation: approve

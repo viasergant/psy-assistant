@@ -662,7 +662,8 @@
       "therapists": "Therapists",
       "leaveRequests": "Pending Requests",
       "serviceCatalog": "Service Catalog",
-      "notificationTemplates": "Notification Templates"
+      "notificationTemplates": "Notification Templates",
+      "riskFlagTypes": "Risk Flag Types"
     },
     "users": {
       "list": {
@@ -874,6 +875,33 @@
         "error": "Failed to load preview.",
         "chars": "characters",
         "sampleNote": "Preview uses sample data. Actual values will vary per recipient."
+      }
+    },
+    "riskFlagTypes": {
+      "title": "Risk Flag Types",
+      "list": {
+        "createButton": "Add Flag Type",
+        "loading": "Loading flag types...",
+        "empty": "No flag types found.",
+        "ariaList": "Risk flag type list",
+        "colName": "Name",
+        "colDisplayOrder": "Display Order",
+        "colActive": "Active",
+        "colActions": "Actions",
+        "statusYes": "Yes",
+        "statusNo": "No",
+        "actionDeactivate": "Deactivate"
+      },
+      "form": {
+        "title": "Add Flag Type",
+        "name": "Name",
+        "namePlaceholder": "e.g. Self-Harm Risk",
+        "nameRequired": "Name is required (max 100 characters).",
+        "displayOrder": "Display Order",
+        "displayOrderRequired": "Display order is required (must be 0 or greater).",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving..."
       }
     }
   },

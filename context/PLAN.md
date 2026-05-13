@@ -406,7 +406,7 @@ Note: `CalendarAppointmentBlock` model is NOT changed. Risk flag chips only appe
 
 ---
 
-### Increment 10 — Frontend: admin risk flag type configuration
+### Increment 10 — Frontend: admin risk flag type configuration [completed]
 
 **Goal:** Allow SYSTEM_ADMINISTRATOR to view, create, and deactivate flag types through the admin panel.
 

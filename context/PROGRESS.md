@@ -201,6 +201,33 @@
 
 ---
 
+## 2026-05-13 — Increment 7: Frontend: models and service
+
+- **What was completed:** Created TypeScript model interfaces/types for risk flags and a root-level Angular HTTP service wiring all five backend endpoints.
+- **Interfaces/methods created:**
+  - `RiskFlagStatus` — `'ACTIVE' | 'RESOLVED'` union type
+  - `RiskFlagType` interface: `id, name, displayOrder, active`
+  - `RiskFlag` interface: `id, clientId, flagTypeId, flagTypeName, status, clinicalNote, reviewDate, createdByUserId, createdAt, resolvedByUserId, resolvedAt, resolutionNote`
+  - `CreateRiskFlagPayload` interface: `flagTypeId, clinicalNote, reviewDate`
+  - `ResolveRiskFlagPayload` interface: `resolutionNote`
+  - `RiskFlagService.listActive(clientId: string): Observable<RiskFlag[]>` — GET `/api/v1/clients/{id}/risk-flags`
+  - `RiskFlagService.listAll(clientId: string): Observable<RiskFlag[]>` — GET `/api/v1/clients/{id}/risk-flags/history`
+  - `RiskFlagService.create(clientId: string, payload: CreateRiskFlagPayload): Observable<RiskFlag>` — POST `/api/v1/clients/{id}/risk-flags`
+  - `RiskFlagService.resolve(clientId: string, flagId: string, payload: ResolveRiskFlagPayload): Observable<RiskFlag>` — PATCH `/api/v1/clients/{id}/risk-flags/{flagId}/resolve`
+  - `RiskFlagService.listTypes(): Observable<RiskFlagType[]>` — GET `/api/v1/risk-flag-types`
+- **Files created:**
+  - `frontend/src/app/features/clients/components/risk-flags/models/risk-flag.model.ts`
+  - `frontend/src/app/features/clients/components/risk-flags/services/risk-flag.service.ts`
+  - `frontend/src/app/features/clients/components/risk-flags/services/risk-flag.service.spec.ts`
+- **Decisions made:**
+  - Service uses constructor injection (`constructor(private http: HttpClient)`) — matches the existing pattern in `ClientService` and `CarePlanService` (not `inject()`, which is not used in any existing service in this codebase).
+  - Base URL is hardcoded as `/api/v1/clients` and `/api/v1/risk-flag-types` — no `environment.apiUrl` reference, matching all existing services which use relative path strings directly. The `environment.ts` file does not define `apiUrl`.
+  - Two separate base path constants (`clientsBase`, `typesBase`) keep the `listTypes()` endpoint clearly distinct from the client-scoped endpoints.
+  - Spec uses `HttpClientTestingModule` + `HttpTestingController` — matches the Angular testing pattern used elsewhere; 13 tests covering all five methods, including edge cases (null clinicalNote, empty arrays, correct HTTP methods and URL shapes).
+- **Tests:** 13 new spec tests; `ng build --configuration production` passes with zero TypeScript errors (pre-existing budget warnings are unrelated).
+
+---
+
 ## 2026-05-13 — Planning Complete
 
 10 increments defined.
@@ -332,4 +359,31 @@
   - `AppointmentServiceTest`: 13/13 passed (no regression)
   - All 461 pre-existing and Increment 6 tests passed without regression
   - Confirmed: 454 pre-existing + 7 new `AppointmentMapperTest` = 461 total
+- Action: all clear — no failures, no regressions
+
+---
+
+## 2026-05-13 — Code Review (Increment 7)
+- Quality: PASS (Critical: 0, High: 0, Medium: 0)
+- Coverage: FULLY COVERED
+- Recommendation: approve
+
+---
+
+## 2026-05-13 — Test Run (Increment 7, attempt 1)
+- Passed: 464 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured in pom.xml)
+- Coverage gate: N/A
+- Duration: 11.619s
+- Failures: none
+- Angular build: EXIT_CODE 0 — zero TypeScript errors; 13 bundle warnings (pre-existing CSS budget overruns and quill CommonJS warning, all pre-existing and unrelated to Increment 7)
+- Key results:
+  - All 464 backend tests passed (no regression from Increment 7 frontend-only changes)
+  - `AppointmentMapperTest`: 10/10 passed (no regression from Increment 6)
+  - `RiskFlagControllerTest`: 13/13 passed
+  - `RiskFlagServiceTest`: 10/10 passed
+  - `AppointmentServiceTest`: 13/13 passed
+  - `RolePermissionsRiskFlagsTest`: 15/15 passed
+  - `RbacIntegrationTest`: 10/10 passed
+  - `TokenServiceTest`: 16/16 passed
+  - Angular `ng build --configuration production` completed successfully (exit 0)
 - Action: all clear — no failures, no regressions

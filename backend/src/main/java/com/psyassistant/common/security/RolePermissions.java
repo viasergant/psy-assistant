@@ -40,6 +40,10 @@ import java.util.Set;
  * MANAGE_USERS             |     |     |     |     |  Y
  * VIEW_AUDIT_LOG           |     |     |     |     |  Y
  * MANAGE_SYSTEM_CONFIG     |     |     |     |     |  Y
+ * MANAGE_RISK_FLAGS        |     |  Y  |  Y  |     |  Y
+ * READ_RISK_FLAGS          |  Y  |  Y  |  Y  |     |  Y
+ * READ_RISK_FLAG_NOTES     |     |  Y  |  Y  |     |  Y
+ * MANAGE_RISK_FLAG_TYPES   |     |     |     |     |  Y
  *
  * RAS = RECEPTION_ADMIN_STAFF, THE = THERAPIST, SUP = SUPERVISOR,
  * FIN = FINANCE,               SYS = SYSTEM_ADMINISTRATOR
@@ -60,7 +64,8 @@ public final class RolePermissions {
                 Permission.MANAGE_CLIENTS,
                 Permission.MANAGE_APPOINTMENTS,
                 Permission.MANAGE_LEADS,
-                Permission.READ_CARE_PLANS
+                Permission.READ_CARE_PLANS,
+                Permission.READ_RISK_FLAGS
         )));
 
         map.put(UserRole.THERAPIST, Collections.unmodifiableSet(EnumSet.of(
@@ -70,7 +75,10 @@ public final class RolePermissions {
                 Permission.READ_OWN_SESSION_NOTES,
                 Permission.READ_CARE_PLANS,
                 Permission.MANAGE_CARE_PLANS,
-                Permission.READ_PRICING_RULES
+                Permission.READ_PRICING_RULES,
+                Permission.MANAGE_RISK_FLAGS,
+                Permission.READ_RISK_FLAGS,
+                Permission.READ_RISK_FLAG_NOTES
         )));
 
         map.put(UserRole.SUPERVISOR, Collections.unmodifiableSet(EnumSet.of(
@@ -83,7 +91,10 @@ public final class RolePermissions {
                 Permission.READ_LEADS,
                 Permission.READ_INVOICES,
                 Permission.READ_SERVICE_CATALOG,
-                Permission.READ_PRICING_RULES
+                Permission.READ_PRICING_RULES,
+                Permission.MANAGE_RISK_FLAGS,
+                Permission.READ_RISK_FLAGS,
+                Permission.READ_RISK_FLAG_NOTES
         )));
 
         map.put(UserRole.FINANCE, Collections.unmodifiableSet(EnumSet.of(
@@ -128,7 +139,11 @@ public final class RolePermissions {
                 Permission.READ_SERVICE_CATALOG,
                 Permission.MANAGE_PRICING_RULES,
                 Permission.READ_PRICING_RULES,
-                Permission.MANAGE_NOTIFICATION_TEMPLATES
+                Permission.MANAGE_NOTIFICATION_TEMPLATES,
+                Permission.MANAGE_RISK_FLAGS,
+                Permission.READ_RISK_FLAGS,
+                Permission.READ_RISK_FLAG_NOTES,
+                Permission.MANAGE_RISK_FLAG_TYPES
         )));
 
         // Deprecated legacy roles — no permissions; treated as THERAPIST/SYSTEM_ADMINISTRATOR

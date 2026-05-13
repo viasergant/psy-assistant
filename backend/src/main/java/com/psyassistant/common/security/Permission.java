@@ -110,5 +110,18 @@ public enum Permission {
 
     // ---- Notification templates ------------------------------------------
     /** Create, update, activate, deactivate, and delete notification templates. */
-    MANAGE_NOTIFICATION_TEMPLATES
+    MANAGE_NOTIFICATION_TEMPLATES,
+
+    // ---- Risk flags ------------------------------------------------------
+    /** Create, update, and resolve risk flags on client profiles. */
+    MANAGE_RISK_FLAGS,
+
+    /** Read risk flag type labels on client profiles. */
+    READ_RISK_FLAGS,
+
+    /** Read clinical notes attached to risk flags. */
+    READ_RISK_FLAG_NOTES,
+
+    /** CRUD for risk flag type configuration in the admin panel. */
+    MANAGE_RISK_FLAG_TYPES
 }

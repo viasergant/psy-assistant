@@ -228,6 +228,32 @@
 
 ---
 
+## 2026-05-13 — Increment 8: Frontend: RiskFlagsPanel on client detail
+
+- **What was completed:** Created three standalone Angular components — `RiskFlagsPanelComponent`, `RiskFlagFormDialogComponent`, `RiskFlagResolveDialogComponent` — and integrated the panel into `client-detail.component.ts`.
+- **Interfaces/methods created:**
+  - `RiskFlagsPanelComponent` — inputs: `clientId: string`, `canManage: boolean`, `canReadNotes: boolean`; displays active risk flags, opens add/resolve dialogs, reloads on save/resolve
+  - `RiskFlagFormDialogComponent` — inputs: `clientId: string`; outputs: `saved`, `cancelled`; reactive form with `flagTypeId` (required), `reviewDate` (required), `clinicalNote` (optional)
+  - `RiskFlagResolveDialogComponent` — inputs: `clientId: string`, `flagId: string`; outputs: `resolved`, `cancelled`; reactive form with `resolutionNote` (required)
+  - `ClientDetailComponent.hasPermission(authority: string): boolean` — decodes JWT and checks `decoded.roles` array (same pattern as `CarePlanListComponent.hasAuthority()`)
+- **Files created:**
+  - `frontend/src/app/features/clients/components/risk-flags/risk-flags-panel/risk-flags-panel.component.ts`
+  - `frontend/src/app/features/clients/components/risk-flags/risk-flags-panel/risk-flags-panel.component.spec.ts` (18 tests)
+  - `frontend/src/app/features/clients/components/risk-flags/risk-flag-form-dialog/risk-flag-form-dialog.component.ts`
+  - `frontend/src/app/features/clients/components/risk-flags/risk-flag-form-dialog/risk-flag-form-dialog.component.spec.ts` (11 tests)
+  - `frontend/src/app/features/clients/components/risk-flags/risk-flag-resolve-dialog/risk-flag-resolve-dialog.component.ts`
+  - `frontend/src/app/features/clients/components/risk-flags/risk-flag-resolve-dialog/risk-flag-resolve-dialog.component.spec.ts` (9 tests)
+- **Files modified:**
+  - `frontend/src/app/features/clients/client-detail/client-detail.component.ts` — added `RiskFlagsPanelComponent` import + `jwtDecode` import, added component to `imports` array, added `<app-risk-flags-panel>` element to template with `hasPermission()` bindings, added `hasPermission()` public method
+- **Decisions made:**
+  - `hasPermission(authority: string): boolean` uses `jwtDecode` on `authService.token` and checks `decoded.roles.includes(authority)` — identical pattern to `CarePlanListComponent.hasAuthority()`. The `PermissionService.hasPermission()` was not used because it works with role-based `PermissionKey` constants and does not support arbitrary permission strings like `MANAGE_RISK_FLAGS`.
+  - `RiskFlagsPanelComponent` calls `listAll()` when `canReadNotes=true` (supervisor/admin) and filters to `status === 'ACTIVE'` client-side, keeping the panel focused on actionable flags while still using the supervisor endpoint. `listActive()` is used for all other roles.
+  - Component pattern matches `CarePlanListComponent` exactly: constructor injection (not `inject()`), `TranslocoModule` in `imports`, overlay-click dismissal in dialogs.
+  - `clinicalNote` is coerced to `null` when blank on submit (trim + falsy check), preventing empty-string notes from reaching the backend.
+- **Tests:** 38 new spec tests (11 + 9 + 18); `ng build --configuration production` exit 0, zero TypeScript errors. Pre-existing test TS errors in `session.service.spec.ts`, `permission.service.spec.ts`, and `complete-session-dialog.component.spec.ts` are unrelated to this increment.
+
+---
+
 ## 2026-05-13 — Planning Complete
 
 10 increments defined.
@@ -241,7 +267,7 @@
 | 5 | REST controllers | completed |
 | 6 | Extend AppointmentResponse with activeRiskFlagTypes | completed |
 | 7 | Frontend: models and service | pending |
-| 8 | Frontend: RiskFlagsPanel on client detail | pending |
+| 8 | Frontend: RiskFlagsPanel on client detail | completed |
 | 9 | Frontend: risk flag indicator on appointment detail | pending |
 | 10 | Frontend: admin risk flag type configuration | pending |
 
@@ -386,4 +412,31 @@
   - `RbacIntegrationTest`: 10/10 passed
   - `TokenServiceTest`: 16/16 passed
   - Angular `ng build --configuration production` completed successfully (exit 0)
+- Action: all clear — no failures, no regressions
+
+---
+
+## 2026-05-13 — Code Review (Increment 8)
+- Quality: PASS (Critical: 0, High: 0, Medium: 4)
+- Coverage: FULLY COVERED
+- Recommendation: approve (medium findings are improvements, not blockers)
+
+---
+
+## 2026-05-13 — Test Run (Increment 8, attempt 1)
+- Passed: 464 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured in pom.xml)
+- Coverage gate: N/A
+- Duration: 10.966s (backend); Angular build exit 0
+- Failures: none
+- Key results:
+  - All 464 backend tests passed (no regression — Increment 8 is frontend-only)
+  - `AppointmentMapperTest`: 10/10 passed
+  - `RiskFlagControllerTest`: 13/13 passed
+  - `RiskFlagServiceTest`: 10/10 passed
+  - `AppointmentServiceTest`: 13/13 passed
+  - `RolePermissionsRiskFlagsTest`: 15/15 passed
+  - `RbacIntegrationTest`: 10/10 passed
+  - `TokenServiceTest`: 16/16 passed
+  - Angular `ng build --configuration production` exit code: 0, zero TypeScript errors
+  - 5 pre-existing warnings (CSS budget overruns for 4 unrelated components, quill CommonJS) — all pre-existing, none from Increment 8
 - Action: all clear — no failures, no regressions

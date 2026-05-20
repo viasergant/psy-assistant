@@ -1,32 +1,58 @@
-# PA-27 — Risk Flag Indicators on Client Profiles
+# Multi-Role Support (PA-XX)
 
 ## Overview
 
-Structured, role-protected risk flag indicators on client profiles. Replaces the coarse `is_at_risk` boolean (added in V59 for no-show tracking) with a full risk-flag subsystem: configurable flag types, per-flag clinical notes, mandatory review dates, resolve workflow with resolution notes, and an append-only audit log. Access to clinical notes is restricted by role; flag type labels are visible to all staff with client access.
+Allow a single internal CRM user to hold multiple roles simultaneously (e.g., THERAPIST + SUPERVISOR). The union of permissions for all assigned roles must be reflected in the JWT and enforced in the backend. The admin UI must support assigning/removing multiple roles when creating or editing a user.
 
 ## Architecture Notes
 
-### Backend
+### Data model change — junction table replaces single column
 
-- New package: `com.psyassistant.riskflags` with subpackages `domain/`, `dto/`, `repository/`, `rest/`, `service/`
-- Three domain entities: `RiskFlagType`, `ClientRiskFlag` (status enum `ACTIVE`/`RESOLVED`), `RiskFlagAuditLog`
-- `RiskFlagAuditLog` is append-only — no update/delete methods exposed at any layer. Modelled after the existing `care_plan_audit` pattern (inline fields, no FK on `flag_id` to survive flag deletion, server-managed `action_timestamp`)
-- Assignment check for THERAPIST role mirrors `ClientProfileService.enforceAssignedTherapistRead()` — compares `currentPrincipalId()` against `client.getAssignedTherapistId()`
-- `AppointmentResponse` is a Java `record` — to add `activeRiskFlagTypes` it must be replaced with a new record that includes the field. `AppointmentMapper.toResponse()` must be extended accordingly; `CalendarAppointmentBlock` is a separate record used for calendar views and is NOT changed (avoids N+1 on the calendar grid)
-- `RiskFlagTypeController` uses two base paths: public read at `/api/v1/risk-flag-types` (all authenticated staff) and admin CRUD at `/api/v1/admin/risk-flag-types`
-- New permissions added to `Permission.java` and `RolePermissions.java` — propagate automatically to JWTs via `TokenService` (no other wiring needed)
+The existing `users.role VARCHAR(50)` column is replaced by a `user_roles` junction table:
+
+```
+user_roles (user_id UUID FK, role VARCHAR(50), PRIMARY KEY (user_id, role))
+```
+
+The old `users.role` column is dropped only after the data migration copies every existing single-role row into the junction table. A `CHECK` constraint on `user_roles.role` replaces the one that was on `users.role`.
+
+The `User` JPA entity gains an `@ElementCollection` `Set<UserRole> roles` field; the `getRole()` / `setRole()` single-role methods are kept as deprecated bridge methods (returning/setting the first role) so that callers outside the scope of this feature do not break.
+
+### JWT — union of permissions
+
+`TokenService.buildAuthorities(Collection<UserRole> roles)` replaces the single-role variant. The `roles` claim becomes the union set of `ROLE_X` values and all distinct permissions across every assigned role. `hasRole('THERAPIST')` works if `ROLE_THERAPIST` appears anywhere in the union; `hasAuthority('WRITE_SESSION_NOTE')` works if that permission comes from any role. No Spring Security configuration changes are required.
+
+### TTL rule
+
+If ANY assigned role is `SYSTEM_ADMINISTRATOR`, admin TTL applies (15 min access / 24 h refresh). Otherwise standard TTL applies.
+
+### Therapist profile ID injection
+
+`TokenService.buildAccessToken` checks whether `THERAPIST` is among the user's roles (not the only role) before injecting `therapistProfileId`. This is a one-line predicate change.
+
+### Session cap rule
+
+If ANY assigned role is `SYSTEM_ADMINISTRATOR`, the admin session cap (1) applies.
+
+### Admin filter
+
+`GET /api/v1/admin/users?role=THERAPIST` returns users that have THERAPIST among their roles. `UserSpecification` must JOIN against `user_roles` instead of matching `users.role`.
+
+### `AuthResult` record
+
+`AuthResult` carries a single `UserRole role` field used by the controller to compute the refresh cookie max-age. This must become `Collection<UserRole> roles`; the controller picks the shortest TTL (admin TTL if any is SYSTEM_ADMINISTRATOR, otherwise standard TTL). The `LoginResponse` is unchanged.
 
 ### Frontend
 
-- New Angular feature module at `frontend/src/app/features/clients/components/risk-flags/`
-- Admin sub-feature at `frontend/src/app/features/admin/risk-flag-types/`
-- All components are standalone with `inject()` for DI, reactive forms, `TranslocoModule` for i18n, matching existing component conventions
-- `RiskFlagService` lives at `providedIn: 'root'`
-- Risk flag chips on appointment view are added to `AppointmentBlockComponent` — requires extending `CalendarAppointmentBlock` frontend model with `activeRiskFlagTypes: string[]` and updating `CalendarMapper` backend to populate it
+`PermissionService.roles` currently reads one `ROLE_X` entry. With multi-role, all `ROLE_X` entries are collected. `permissions.config.ts`'s `ROUTE_ROLES` and `PERMISSIONS` maps do set-membership checks that already iterate an array, so they remain correct. The user admin dialogs replace a single-select `<select>` with checkboxes so multiple roles can be chosen.
 
-### DB Migration
+### Backward compatibility
 
-- V67 — three new tables plus seed data. `risk_flag_types.active` column enables soft-delete without data loss. `client_risk_flags.flag_type_id` carries a FK; `risk_flag_audit_log` intentionally has no FK on `flag_id` (mirrors `care_plan_audit` pattern) to preserve history if a flag is ever hard-deleted in the future.
+Existing single-role tokens issued before this migration will decode correctly: the `roles` claim will still include the single `ROLE_X` value plus permissions, which the Spring Security converter already accepts. No token invalidation is needed.
+
+### Deprecated legacy roles
+
+`UserRole.ADMIN` and `UserRole.USER` canonical mappings are already handled by `canonical()`. The migration converts any stale rows in `users.role` before the column is dropped. No special handling is needed at the entity layer.
 
 ---
 
@@ -34,444 +60,385 @@ Structured, role-protected risk flag indicators on client profiles. Replaces the
 
 ---
 
-### Increment 1 — V67 Flyway migration: schema + seed [completed]
+### Increment 1 — Flyway migration: `user_roles` junction table
 
-**Goal:** Create all three tables and seed the initial five flag types. No Java code changes.
+**Status:** completed
 
-**Files to create/modify:**
-- `backend/src/main/resources/db/migration/V67__risk_flag_tables.sql` (create)
+**Goal:** Add the `user_roles` junction table, copy existing role data from `users.role`, drop the old column and its CHECK constraint.
+
+**Files to create:**
+- `backend/src/main/resources/db/migration/V68__multi_role_junction.sql`
 
 **Tasks:**
-1. Create `risk_flag_types` table: `id UUID PK`, `name VARCHAR(100) NOT NULL UNIQUE`, `display_order SMALLINT NOT NULL DEFAULT 0`, `active BOOLEAN NOT NULL DEFAULT TRUE`, `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
-2. Create `client_risk_flags` table: `id UUID PK DEFAULT gen_random_uuid()`, `client_id UUID NOT NULL REFERENCES clients(id)`, `flag_type_id UUID NOT NULL REFERENCES risk_flag_types(id)`, `status VARCHAR(20) NOT NULL CHECK (status IN ('ACTIVE','RESOLVED'))`, `clinical_note TEXT`, `review_date DATE NOT NULL`, `created_by_user_id UUID NOT NULL REFERENCES users(id)`, `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `resolved_by_user_id UUID REFERENCES users(id)`, `resolved_at TIMESTAMPTZ`, `resolution_note TEXT`
-3. Create `risk_flag_audit_log` table: `id UUID PK DEFAULT gen_random_uuid()`, `flag_id UUID NOT NULL` (no FK — append-only intent), `client_id UUID NOT NULL`, `actor_user_id UUID NOT NULL REFERENCES users(id)`, `actor_name VARCHAR(255) NOT NULL`, `action_type VARCHAR(30) NOT NULL CHECK (action_type IN ('FLAG_CREATED','FLAG_RESOLVED','FLAG_UPDATED'))`, `flag_type_name VARCHAR(100) NOT NULL`, `status VARCHAR(20) NOT NULL`, `action_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()`
-4. Add indexes: `idx_risk_flags_client_status ON client_risk_flags(client_id, status)`, `idx_risk_flag_audit_client ON risk_flag_audit_log(client_id, action_timestamp DESC)`, `idx_risk_flag_audit_flag ON risk_flag_audit_log(flag_id)`
-5. Seed five initial flag types with `display_order` 1–5: Self-Harm Risk, Crisis History, Safeguarding Concern, Domestic Abuse Concern, Suicidal Ideation
+1. Drop constraint `chk_user_role` on `users`.
+2. Create `user_roles (user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, role VARCHAR(50) NOT NULL CHECK (role IN ('RECEPTION_ADMIN_STAFF','THERAPIST','SUPERVISOR','FINANCE','SYSTEM_ADMINISTRATOR')), CONSTRAINT pk_user_roles PRIMARY KEY (user_id, role))`.
+3. Insert into `user_roles` by selecting from `users.role`: `INSERT INTO user_roles (user_id, role) SELECT id, role FROM users WHERE role IN (...)`.
+4. Handle legacy aliases in the migration: also insert canonical mappings for any `ADMIN` or `USER` rows that may have been missed by V5.
+5. Drop column `users.role`.
+6. Create index `idx_user_roles_role ON user_roles(role)` to support the role-filter query.
 
 **Acceptance criteria:**
-- `mvn flyway:migrate` runs clean on a fresh schema
-- All five seed rows present in `risk_flag_types`
-- FK constraints enforce referential integrity
-- `risk_flag_audit_log` has no FK on `flag_id`
+- Migration runs clean on a fresh schema with all V2–V67 already applied.
+- Every existing user row has exactly one row in `user_roles` with the canonical role value.
+- `users` table no longer has a `role` column.
+- `user_roles` rejects inserts with values outside the five valid roles.
 
 **Dependencies:** none
 
 ---
 
-### Increment 2 — New permissions in Permission.java and RolePermissions.java [completed]
+### Increment 2 — `User` entity: multi-role `@ElementCollection`
 
-**Goal:** Add four new permission constants and assign them to roles. JWT picks them up automatically via existing `TokenService`.
+**Status:** completed
+
+**Goal:** Update the `User` JPA entity to use an `@ElementCollection` `Set<UserRole> roles` mapped to `user_roles`. Retain `getRole()` and `setRole()` as deprecated bridge methods so that all existing callers (auth service, token service, management service) continue to compile.
 
 **Files to modify:**
-- `backend/src/main/java/com/psyassistant/common/security/Permission.java`
-- `backend/src/main/java/com/psyassistant/common/security/RolePermissions.java`
+- `backend/src/main/java/com/psyassistant/users/User.java`
 
 **Tasks:**
-1. Add to `Permission.java` (in a new `// ---- Risk flags` section):
-   - `MANAGE_RISK_FLAGS` — create/update/resolve risk flags
-   - `READ_RISK_FLAGS` — read risk flag type labels
-   - `READ_RISK_FLAG_NOTES` — read clinical notes
-   - `MANAGE_RISK_FLAG_TYPES` — CRUD for flag type config
-2. Update `RolePermissions.java` role matrix:
-   - `RECEPTION_ADMIN_STAFF`: add `READ_RISK_FLAGS`
-   - `THERAPIST`: add `MANAGE_RISK_FLAGS`, `READ_RISK_FLAGS`, `READ_RISK_FLAG_NOTES`
-   - `SUPERVISOR`: add `MANAGE_RISK_FLAGS`, `READ_RISK_FLAGS`, `READ_RISK_FLAG_NOTES`
-   - `FINANCE`: no new permissions
-   - `SYSTEM_ADMINISTRATOR`: add all four new permissions
-3. Update the Javadoc permission matrix table in `RolePermissions.java`
+1. Remove the `@Enumerated @Column private UserRole role` field.
+2. Add:
+   ```java
+   @ElementCollection(fetch = FetchType.EAGER)
+   @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+   @Column(name = "role", nullable = false, length = 50)
+   @Enumerated(EnumType.STRING)
+   private Set<UserRole> roles = new LinkedHashSet<>();
+   ```
+3. Add `getRoles(): Set<UserRole>` and `setRoles(Set<UserRole>)` methods.
+4. Add `addRole(UserRole)`, `removeRole(UserRole)`, `hasRole(UserRole)` convenience methods.
+5. Keep `getRole()` as a `@Deprecated` bridge that returns `roles.iterator().next()` (or throws if empty). Keep `setRole(UserRole)` as a `@Deprecated` bridge that calls `setRoles(Set.of(role))`.
+6. Update both constructors to accept `Set<UserRole>` and set the `roles` collection; keep the existing `UserRole role` constructors as `@Deprecated` bridges that delegate.
+7. Invariant: `roles` must never be empty — enforce in `setRoles` and `removeRole`.
+
+**Expected interfaces:**
+- `User.getRoles()`, `User.setRoles(Set<UserRole>)`, `User.addRole(UserRole)`, `User.removeRole(UserRole)`, `User.hasRole(UserRole)`
+- `User.getRole()` (deprecated bridge), `User.setRole(UserRole)` (deprecated bridge)
 
 **Acceptance criteria:**
-- `RolePermissions.permissionsFor(UserRole.RECEPTION_ADMIN_STAFF)` contains `READ_RISK_FLAGS` but not `MANAGE_RISK_FLAGS`
-- `RolePermissions.permissionsFor(UserRole.THERAPIST)` contains `MANAGE_RISK_FLAGS`, `READ_RISK_FLAGS`, `READ_RISK_FLAG_NOTES` but not `MANAGE_RISK_FLAG_TYPES`
-- `RolePermissions.permissionsFor(UserRole.SYSTEM_ADMINISTRATOR)` contains all four
-- Existing `RbacIntegrationTest` still passes
-
-**Dependencies:** none (can run parallel to Increment 1)
-
----
-
-### Increment 3 — Domain entities and repositories [completed]
-
-**Goal:** Define the three JPA entities and their Spring Data repositories.
-
-**Files to create:**
-- `backend/src/main/java/com/psyassistant/riskflags/domain/RiskFlagType.java`
-- `backend/src/main/java/com/psyassistant/riskflags/domain/ClientRiskFlag.java`
-- `backend/src/main/java/com/psyassistant/riskflags/domain/ClientRiskFlagStatus.java` (enum)
-- `backend/src/main/java/com/psyassistant/riskflags/domain/RiskFlagAuditLog.java`
-- `backend/src/main/java/com/psyassistant/riskflags/domain/RiskFlagAuditActionType.java` (enum)
-- `backend/src/main/java/com/psyassistant/riskflags/repository/RiskFlagTypeRepository.java`
-- `backend/src/main/java/com/psyassistant/riskflags/repository/ClientRiskFlagRepository.java`
-- `backend/src/main/java/com/psyassistant/riskflags/repository/RiskFlagAuditLogRepository.java`
-
-**Tasks:**
-
-`RiskFlagType` — extends `SimpleBaseEntity`:
-- `name VARCHAR(100) NOT NULL UNIQUE`
-- `displayOrder SMALLINT`
-- `active BOOLEAN NOT NULL DEFAULT TRUE`
-- No `updatedAt` needed (config data) — but `SimpleBaseEntity` provides it automatically; acceptable
-
-`ClientRiskFlag` — plain `@Entity` (not extending base classes since it has no `updatedAt` or `createdBy` from Spring auditing — use explicit columns to match schema):
-- `@Id UUID id` with `@GeneratedValue(strategy = GenerationType.UUID)`
-- `UUID clientId`, `UUID flagTypeId`, `@Enumerated(EnumType.STRING) ClientRiskFlagStatus status`
-- `String clinicalNote` (TEXT), `LocalDate reviewDate` (NOT NULL)
-- `UUID createdByUserId`, `Instant createdAt` (`insertable=true, updatable=false, nullable=false`)
-- `UUID resolvedByUserId`, `Instant resolvedAt`, `String resolutionNote`
-
-`RiskFlagAuditLog` — append-only, plain `@Entity`:
-- `@Id UUID id` with `@GeneratedValue(strategy = GenerationType.UUID)`
-- `UUID flagId`, `UUID clientId` (NOT NULL)
-- `UUID actorUserId`, `String actorName` (NOT NULL)
-- `@Enumerated(EnumType.STRING) RiskFlagAuditActionType actionType`
-- `String flagTypeName`, `String status`
-- `Instant actionTimestamp` (`insertable=false, updatable=false` — DB default NOW())
-
-Repositories:
-- `RiskFlagTypeRepository extends JpaRepository<RiskFlagType, UUID>`: query `findAllByActiveTrueOrderByDisplayOrderAsc()`
-- `ClientRiskFlagRepository extends JpaRepository<ClientRiskFlag, UUID>`: queries `findAllByClientIdAndStatus(UUID, ClientRiskFlagStatus)`, `findAllByClientId(UUID)` (for supervisor full history)
-- `RiskFlagAuditLogRepository extends JpaRepository<RiskFlagAuditLog, UUID>` — no update/delete methods
-
-**Acceptance criteria:**
-- Application context loads cleanly with Flyway V67 in place
-- `RiskFlagAuditLogRepository` exposes only `save()` and read methods (no `delete*`, no `update*`)
+- Existing `UserManagementServiceTest` and `TokenServiceTest` still compile and pass (they use `new User(..., UserRole.THERAPIST, true)` — this constructor bridge must remain).
+- Application context starts (Hibernate must see `user_roles` table, which was created in Increment 1).
+- A user entity loaded from the DB has `roles` populated.
 
 **Dependencies:** Increment 1
 
 ---
 
-### Increment 4 — Service layer and unit tests [completed]
+### Increment 3 — `TokenService`: multi-role authority building
 
-**Goal:** Implement `RiskFlagService` and `RiskFlagTypeService` with all business rules; cover with unit tests.
+**Status:** completed
 
-**Files to create:**
-- `backend/src/main/java/com/psyassistant/riskflags/dto/CreateRiskFlagRequest.java`
-- `backend/src/main/java/com/psyassistant/riskflags/dto/ResolveRiskFlagRequest.java`
-- `backend/src/main/java/com/psyassistant/riskflags/dto/RiskFlagResponse.java`
-- `backend/src/main/java/com/psyassistant/riskflags/dto/RiskFlagTypeResponse.java`
-- `backend/src/main/java/com/psyassistant/riskflags/service/RiskFlagService.java`
-- `backend/src/main/java/com/psyassistant/riskflags/service/RiskFlagTypeService.java`
-- `backend/src/test/java/com/psyassistant/riskflags/service/RiskFlagServiceTest.java`
-
-**Tasks:**
-
-`CreateRiskFlagRequest` record: `flagTypeId UUID @NotNull`, `clinicalNote String`, `reviewDate LocalDate @NotNull @FutureOrPresent`
-
-`ResolveRiskFlagRequest` record: `resolutionNote String @NotBlank`
-
-`RiskFlagResponse` record: all `ClientRiskFlag` fields + `flagTypeName String`. Include `clinicalNote` in the response object — the controller will null it out for callers without `READ_RISK_FLAG_NOTES`.
-
-`RiskFlagTypeResponse` record: `id UUID`, `name String`, `displayOrder int`, `active boolean`
-
-`RiskFlagService`:
-- `createFlag(UUID clientId, CreateRiskFlagRequest request, UUID actorId, String actorName)`:
-  1. Require `MANAGE_RISK_FLAGS` authority — throw `AccessDeniedException` if absent
-  2. If THERAPIST role (has `READ_ASSIGNED_CLIENTS` but not `READ_CLIENTS_ALL`): load client, compare `client.getAssignedTherapistId()` with `actorId` — throw `AccessDeniedException` if not assigned
-  3. Load `RiskFlagType` by ID — throw `EntityNotFoundException` if missing or inactive
-  4. Build and persist `ClientRiskFlag` with `status=ACTIVE`, `createdByUserId=actorId`, `createdAt=Instant.now()`
-  5. Append to `risk_flag_audit_log` with `action_type=FLAG_CREATED`
-  6. Return `RiskFlagResponse`
-
-- `resolveFlag(UUID clientId, UUID flagId, ResolveRiskFlagRequest request, UUID actorId, String actorName)`:
-  1. Require `MANAGE_RISK_FLAGS`
-  2. Load flag — throw `EntityNotFoundException` if not found or `clientId` doesn't match
-  3. If already `RESOLVED` — throw `ResponseStatusException(422, "Flag is already resolved")`
-  4. THERAPIST assignment check (same as create)
-  5. Set `status=RESOLVED`, `resolvedByUserId=actorId`, `resolvedAt=Instant.now()`, `resolutionNote`
-  6. Append audit with `action_type=FLAG_RESOLVED`
-  7. Return `RiskFlagResponse`
-
-- `listActiveFlags(UUID clientId)`: require `READ_RISK_FLAGS`; return flags with `status=ACTIVE`; strip `clinicalNote` if caller lacks `READ_RISK_FLAG_NOTES`
-- `listAllFlags(UUID clientId)`: require `READ_RISK_FLAG_NOTES` (supervisor/SYS only — full history with all details)
-
-`RiskFlagTypeService`:
-- `listActive()`: returns `findAllByActiveTrueOrderByDisplayOrderAsc()` — no permission check (used by create form)
-- `listAll()`: requires `MANAGE_RISK_FLAG_TYPES`
-- `create(String name, int displayOrder)`: requires `MANAGE_RISK_FLAG_TYPES`
-- `deactivate(UUID id)`: requires `MANAGE_RISK_FLAG_TYPES`
-
-Unit tests for `RiskFlagService` covering:
-- `createFlag` happy path: flag persisted + audit appended
-- `createFlag` with caller lacking `MANAGE_RISK_FLAGS` → `AccessDeniedException`
-- `createFlag` by THERAPIST not assigned to client → `AccessDeniedException`
-- `createFlag` by THERAPIST who is assigned → succeeds
-- `createFlag` with inactive flag type → `EntityNotFoundException`
-- `resolveFlag` happy path: status updated + audit appended
-- `resolveFlag` when already resolved → 422
-- `resolveFlag` for flag belonging to different client → `EntityNotFoundException`
-- `listActiveFlags` strips `clinicalNote` when caller lacks `READ_RISK_FLAG_NOTES`
-- `listActiveFlags` includes `clinicalNote` when caller has `READ_RISK_FLAG_NOTES`
-
-**Acceptance criteria:**
-- All unit tests pass via `mvn test`
-- No infrastructure dependency in tests (Mockito only)
-- Audit log `save()` is called exactly once per `createFlag` and once per `resolveFlag`
-
-**Dependencies:** Increments 2, 3
-
----
-
-### Increment 5 — REST controllers [completed]
-
-**Goal:** Expose the service layer via REST endpoints following existing controller conventions.
-
-**Files to create:**
-- `backend/src/main/java/com/psyassistant/riskflags/rest/RiskFlagController.java`
-- `backend/src/main/java/com/psyassistant/riskflags/rest/RiskFlagTypeController.java`
-
-**Tasks:**
-
-`RiskFlagController` at `/api/v1/clients/{id}/risk-flags`:
-- `GET /` — `@PreAuthorize("hasAuthority('READ_RISK_FLAGS')")` — calls `listActiveFlags()`; response omits `clinicalNote` for `RECEPTION_ADMIN_STAFF` (already handled in service)
-- `GET /history` — `@PreAuthorize("hasAuthority('READ_RISK_FLAG_NOTES')")` — calls `listAllFlags()`
-- `POST /` — `@PreAuthorize("hasAuthority('MANAGE_RISK_FLAGS')")` — calls `createFlag()`; returns 201 + `Location` header
-- `PATCH /{flagId}/resolve` — `@PreAuthorize("hasAuthority('MANAGE_RISK_FLAGS')")` — calls `resolveFlag()`; returns 200
-
-`RiskFlagTypeController`:
-- `GET /api/v1/risk-flag-types` — no `@PreAuthorize` beyond authenticated (any role sees active types for the create form)
-- `GET /api/v1/admin/risk-flag-types` — `@PreAuthorize("hasAuthority('MANAGE_RISK_FLAG_TYPES')")`
-- `POST /api/v1/admin/risk-flag-types` — `@PreAuthorize("hasAuthority('MANAGE_RISK_FLAG_TYPES')")`
-- `PATCH /api/v1/admin/risk-flag-types/{id}/deactivate` — `@PreAuthorize("hasAuthority('MANAGE_RISK_FLAG_TYPES')")`
-
-Both controllers use `UserManagementService.currentPrincipalId()` for `actorId` and `auth.getName()` for `actorName`, matching `ClientController` pattern.
-
-**Acceptance criteria:**
-- `GET /api/v1/clients/{id}/risk-flags` with a RECEPTION_ADMIN_STAFF token returns 200 with flags, no `clinicalNote` field populated
-- `POST /api/v1/clients/{id}/risk-flags` with a RECEPTION_ADMIN_STAFF token returns 403
-- `PATCH /api/v1/clients/{id}/risk-flags/{flagId}/resolve` with a FINANCE token returns 403
-- `POST /api/v1/admin/risk-flag-types` with a THERAPIST token returns 403
-
-**Dependencies:** Increment 4
-
----
-
-### Increment 6 — Extend AppointmentResponse with activeRiskFlagTypes [completed]
-
-**Goal:** Add `activeRiskFlagTypes: List<String>` to `AppointmentResponse` so appointment detail views can show risk flag labels without an extra HTTP call.
+**Goal:** Change `TokenService` to build JWT authorities and compute TTL/therapist-profile-ID from a set of roles rather than a single role. All callers that pass `user.getRole()` must be updated to pass `user.getRoles()`.
 
 **Files to modify:**
-- `backend/src/main/java/com/psyassistant/scheduling/dto/AppointmentResponse.java`
-- `backend/src/main/java/com/psyassistant/scheduling/dto/AppointmentMapper.java`
-- `backend/src/main/java/com/psyassistant/scheduling/service/AppointmentService.java`
-
-**Tasks:**
-1. `AppointmentResponse` record: add `List<String> activeRiskFlagTypes` as the last field
-2. `AppointmentMapper`: add `ClientRiskFlagRepository` dependency; in `toResponse()`, query `findAllByClientIdAndStatus(clientId, ACTIVE)` and map to flag type names; pass the list into the record constructor
-3. Update all existing `new AppointmentResponse(...)` call-sites (only `AppointmentMapper.toResponse()` constructs it — verify with grep before writing)
-4. Verify `AppointmentMapper` tests still pass
-
-Note: `CalendarAppointmentBlock` is intentionally NOT changed — the calendar grid renders many blocks at once and the N+1 cost is unacceptable. Risk flag chips are only shown on the appointment detail panel (opened on click), which uses `AppointmentResponse`.
-
-**Acceptance criteria:**
-- `GET /api/v1/appointments/{id}` response contains `"activeRiskFlagTypes": [...]`
-- Existing appointment tests pass without modification (list may be empty but field must be present)
-- No N+1 query regression on the calendar week view
-
-**Dependencies:** Increments 3, 5
-
----
-
-### Increment 7 — Frontend: models and service [completed]
-
-**Goal:** Define TypeScript models and an HTTP service for the risk flags feature.
-
-**Files to create:**
-- `frontend/src/app/features/clients/components/risk-flags/models/risk-flag.model.ts`
-- `frontend/src/app/features/clients/components/risk-flags/services/risk-flag.service.ts`
+- `backend/src/main/java/com/psyassistant/auth/service/TokenService.java`
+- `backend/src/main/java/com/psyassistant/auth/service/AuthResult.java`
+- `backend/src/main/java/com/psyassistant/auth/service/AuthService.java`
+- `backend/src/test/java/com/psyassistant/auth/TokenServiceTest.java`
 
 **Tasks:**
 
-`risk-flag.model.ts`:
-```typescript
-export type RiskFlagStatus = 'ACTIVE' | 'RESOLVED';
+`TokenService`:
+1. Add `buildAuthorities(Collection<UserRole> roles)`: union of `ROLE_X` strings + union of permission names across all roles (deduplication via `LinkedHashSet`).
+2. Change `buildAccessToken(User user, UUID therapistProfileId)` to call `buildAuthorities(user.getRoles())` and use `accessTtlFor(user.getRoles())`.
+3. `accessTtlFor(Collection<UserRole> roles)`: admin TTL if any role is `SYSTEM_ADMINISTRATOR` or `ADMIN`; standard otherwise.
+4. `refreshTtlFor(Collection<UserRole> roles)`: same logic for refresh TTL.
+5. Keep `accessTokenExpiresAt(UserRole role)` signature but add a `accessTokenExpiresAt(Collection<UserRole> roles)` overload; deprecate single-role version.
+6. The `therapistProfileId` injection check becomes: `roles.contains(UserRole.THERAPIST)`.
 
-export interface RiskFlagType {
-  id: string;
-  name: string;
-  displayOrder: number;
-  active: boolean;
-}
+`AuthResult`:
+1. Change field `UserRole role` to `Collection<UserRole> roles` (keeps record semantics, rename field).
+2. Update the single constructor call-site in `AuthService`.
 
-export interface RiskFlag {
-  id: string;
-  clientId: string;
-  flagTypeId: string;
-  flagTypeName: string;
-  status: RiskFlagStatus;
-  clinicalNote: string | null;      // null when caller lacks READ_RISK_FLAG_NOTES
-  reviewDate: string;               // ISO date
-  createdByUserId: string;
-  createdAt: string;
-  resolvedByUserId: string | null;
-  resolvedAt: string | null;
-  resolutionNote: string | null;
-}
+`AuthService`:
+1. All three places that call `tokenService.refreshTtlFor(user.getRole())` change to `tokenService.refreshTtlFor(user.getRoles())`.
+2. All three places that check `user.getRole() == UserRole.THERAPIST` for `therapistProfileId` change to `user.hasRole(UserRole.THERAPIST)`.
+3. `enforceSessionCap` check changes from `user.getRole() == UserRole.SYSTEM_ADMINISTRATOR || user.getRole() == UserRole.ADMIN` to `user.getRoles().stream().anyMatch(r -> r == UserRole.SYSTEM_ADMINISTRATOR || r == UserRole.ADMIN)`.
+4. Return `new AuthResult(response, rawToken, user.getRoles(), tokenService.refreshTtlFor(user.getRoles()))`.
 
-export interface CreateRiskFlagPayload {
-  flagTypeId: string;
-  clinicalNote: string | null;
-  reviewDate: string;               // ISO date
-}
+`AuthController` (check — currently reads `result.role()` to compute cookie max-age):
+1. Change to read `result.roles()` and pass to `tokenService.refreshTtlFor(result.roles())`.
 
-export interface ResolveRiskFlagPayload {
-  resolutionNote: string;
-}
-```
+`TokenServiceTest`:
+1. Update to set `user.setRoles(Set.of(UserRole.SYSTEM_ADMINISTRATOR))` etc. instead of single-role variants.
+2. Add test: `buildAccessTokenForUserWithTwoRolesContainsBothRoleClaimsAndUnionPermissions`.
+3. Add test: `accessTtlUsesAdminTtlWhenOneRoleIsSysAdmin`.
 
-`RiskFlagService` (`@Injectable({ providedIn: 'root' })`):
-- `listActive(clientId: string): Observable<RiskFlag[]>` — `GET /api/v1/clients/{id}/risk-flags`
-- `listAll(clientId: string): Observable<RiskFlag[]>` — `GET /api/v1/clients/{id}/risk-flags/history`
-- `create(clientId: string, payload: CreateRiskFlagPayload): Observable<RiskFlag>` — `POST /api/v1/clients/{id}/risk-flags`
-- `resolve(clientId: string, flagId: string, payload: ResolveRiskFlagPayload): Observable<RiskFlag>` — `PATCH /api/v1/clients/{id}/risk-flags/{flagId}/resolve`
-- `listTypes(): Observable<RiskFlagType[]>` — `GET /api/v1/risk-flag-types`
+**Expected interfaces:**
+- `TokenService.buildAuthorities(Collection<UserRole>)`
+- `TokenService.refreshTtlFor(Collection<UserRole>)` (and deprecated single-role overload)
+- `AuthResult.roles(): Collection<UserRole>` (replacing `role()`)
 
 **Acceptance criteria:**
-- Service compiles with no TypeScript errors
-- Models match backend `RiskFlagResponse` field names exactly
+- `TokenServiceTest` passes including new multi-role tests.
+- JWT from a user with `[THERAPIST, SUPERVISOR]` contains `ROLE_THERAPIST`, `ROLE_SUPERVISOR`, and the union of their permissions — no duplicate entries.
+- JWT from a user with `[THERAPIST, SYSTEM_ADMINISTRATOR]` uses 15-min access TTL.
+- `AuthServiceTest` passes without modification (the service now calls multi-role methods).
 
-**Dependencies:** Increment 5
+**Dependencies:** Increment 2
 
 ---
 
-### Increment 8 — Frontend: RiskFlagsPanel on client detail [completed]
+### Increment 4 — `UserManagementService` and DTOs: multi-role create/update
 
-**Goal:** Render active risk flags on the client detail page, with add-flag and resolve-flag dialogs. Visibility of clinical notes is governed by the permission embedded in the JWT.
+**Status:** pending
 
-**Files to create:**
-- `frontend/src/app/features/clients/components/risk-flags/risk-flags-panel/risk-flags-panel.component.ts`
-- `frontend/src/app/features/clients/components/risk-flags/risk-flag-form-dialog/risk-flag-form-dialog.component.ts`
-- `frontend/src/app/features/clients/components/risk-flags/risk-flag-resolve-dialog/risk-flag-resolve-dialog.component.ts`
+**Goal:** Update the request/response DTOs and service so that creating and patching a user operates on a `Set<UserRole>` (minimum one element). The `UserSummaryDto` gains a `roles: Set<UserRole>` field alongside the deprecated single `role`.
 
 **Files to modify:**
-- `frontend/src/app/features/clients/client-detail/client-detail.component.ts` (add `RiskFlagsPanelComponent` to the imports and template)
+- `backend/src/main/java/com/psyassistant/users/dto/CreateUserRequest.java`
+- `backend/src/main/java/com/psyassistant/users/dto/PatchUserRequest.java`
+- `backend/src/main/java/com/psyassistant/users/dto/UserSummaryDto.java`
+- `backend/src/main/java/com/psyassistant/users/dto/UserCreationResponseDto.java`
+- `backend/src/main/java/com/psyassistant/users/UserManagementService.java`
+- `backend/src/main/java/com/psyassistant/users/UserSpecification.java`
+- `backend/src/test/java/com/psyassistant/users/UserManagementServiceTest.java`
+- `backend/src/test/java/com/psyassistant/admin/AdminUserControllerTest.java`
 
 **Tasks:**
 
-`RiskFlagsPanelComponent` (standalone):
-- Inputs: `clientId: string`, `canManage: boolean` (derived from `MANAGE_RISK_FLAGS` in token), `canReadNotes: boolean`
-- On `ngOnInit`: call `riskFlagService.listActive(clientId)` (or `listAll` if supervisor)
-- Display list of active flags as cards: flag type name chip (color-coded by status), review date, resolution info if resolved
-- Show `clinicalNote` block only when `canReadNotes && flag.clinicalNote != null`
-- "Add flag" button (visible when `canManage`): opens `RiskFlagFormDialogComponent`
-- "Resolve" button per active flag (visible when `canManage`): opens `RiskFlagResolveDialogComponent`
+`CreateUserRequest`:
+1. Replace `@NotNull UserRole role` with `@NotNull @Size(min=1, message="at least one role required") Set<@NotNull UserRole> roles`.
 
-`RiskFlagFormDialogComponent` (standalone):
-- Inputs: `clientId: string`; Outputs: `saved: EventEmitter<void>`, `cancelled: EventEmitter<void>`
-- Reactive form: `flagTypeId` (select, required), `clinicalNote` (textarea), `reviewDate` (date, required, today or future)
-- On init: load flag types via `riskFlagService.listTypes()`
-- On submit: call `riskFlagService.create()`; emit `saved` on success
+`PatchUserRequest`:
+1. Replace `UserRole role` with `Set<@Size(min=1) UserRole> roles` (optional, null means no change).
 
-`RiskFlagResolveDialogComponent` (standalone):
-- Inputs: `clientId: string`, `flagId: string`; Outputs: `resolved: EventEmitter<void>`, `cancelled: EventEmitter<void>`
-- Reactive form: `resolutionNote` (textarea, required, `@NotBlank` enforced in template with `Validators.required`)
-- On submit: call `riskFlagService.resolve()`; emit `resolved` on success
+`UserSummaryDto`:
+1. Add `Set<UserRole> roles` field.
+2. Keep `UserRole role` as a deprecated bridge (returns `roles.iterator().next()` for backward compat in serialised JSON — the first role alphabetically/insertion-order).
+3. Update `from(User)` factory method to populate `roles` from `user.getRoles()`.
 
-Integration into `client-detail.component.ts`:
-- Add `RiskFlagsPanelComponent` to the `imports` array
-- Add a "Risk Flags" section/tab below the existing profile section
-- Pass `[clientId]="client.id"`, `[canManage]="hasPermission('MANAGE_RISK_FLAGS')"`, `[canReadNotes]="hasPermission('READ_RISK_FLAG_NOTES')"`
-- The existing `client-detail` component already checks permissions against `auth.authorities` — follow the same pattern
+`UserCreationResponseDto`:
+1. Add `Set<UserRole> roles` (mirror the same pattern as `UserSummaryDto`).
+
+`UserManagementService`:
+1. `createUser` / `createUserWithTemporaryPassword`: call `request.roles().stream().map(UserRole::canonical).collect(...)`, pass the set to `new User(...)`.
+2. `updateUser` with `PatchUserRequest`: if `request.roles() != null && !request.roles().isEmpty()`, compute canonical set, call `user.setRoles(canonicalSet)`, log old and new roles.
+3. `listUsers`: the `UserSpecification.withFilters(role, active)` must be updated for multi-role (see below).
+4. Audit log detail strings: use `roles=` instead of `role=`.
+
+`UserSpecification`:
+1. `withFilters(UserRole role, Boolean active)`: change role filter from `cb.equal(root.get("role"), role)` to a sub-query or JOIN on the `user_roles` collection: `root.join("roles", JoinType.INNER)` and then `cb.equal(join, role)`. Use `DISTINCT` or `countDistinct` to avoid duplicate rows.
+
+`UserManagementServiceTest`:
+1. Update all `new CreateUserRequest(email, name, UserRole.THERAPIST)` to `new CreateUserRequest(email, name, Set.of(UserRole.THERAPIST))`.
+2. Add test: creating user with empty roles throws validation error.
+3. Add test: `updateUser` with multiple roles persists all of them.
+4. Add test: `listUsers` with role filter returns user that has that role plus another.
+
+`AdminUserControllerTest`:
+1. Update request JSON bodies in tests to use `"roles": ["THERAPIST"]` instead of `"role": "THERAPIST"`.
+
+**Expected interfaces:**
+- `CreateUserRequest.roles(): Set<UserRole>`
+- `PatchUserRequest.roles(): Set<UserRole>` (nullable)
+- `UserSummaryDto.roles(): Set<UserRole>` + deprecated `role()`
 
 **Acceptance criteria:**
-- Panel renders without error for RECEPTION_ADMIN_STAFF (list visible, no add/resolve buttons, no clinical notes)
-- Panel renders with add/resolve controls for THERAPIST (assigned client)
-- FormDialog validation prevents submission without `reviewDate` or `flagTypeId`
-- Resolve dialog prevents submission with empty `resolutionNote`
+- `mvn test` passes.
+- `POST /api/v1/admin/users` with `{"roles": ["THERAPIST","SUPERVISOR"]}` creates a user with both roles.
+- `POST /api/v1/admin/users` with `{"roles": []}` returns 400.
+- `GET /api/v1/admin/users?role=THERAPIST` returns a user who has roles `[THERAPIST, SUPERVISOR]`.
+- `UserSummaryDto` JSON contains both `"roles": ["THERAPIST","SUPERVISOR"]` and the deprecated `"role": "THERAPIST"` (first entry).
 
-**Dependencies:** Increments 7
+**Dependencies:** Increment 2
 
 ---
 
-### Increment 9 — Frontend: risk flag indicator on appointment detail [completed]
+### Increment 5 — `AdminUserController`: update endpoint to accept `roles`
 
-**Goal:** Show active risk flag type labels in the appointment detail panel.
+**Status:** pending
+
+**Goal:** Align the controller with the updated DTOs. The existing `/api/v1/admin/users/therapists` endpoint is checked to confirm it still works — it creates a user with a single role and now passes `Set.of(UserRole.THERAPIST)` internally.
 
 **Files to modify:**
-- `frontend/src/app/features/schedule/models/schedule.model.ts` — add `activeRiskFlagTypes: string[]` to `Appointment` interface
-- `frontend/src/app/features/schedule/components/appointment-edit-dialog/appointment-edit-dialog.component.ts` — add flag chip display
+- `backend/src/main/java/com/psyassistant/admin/AdminUserController.java`
 
 **Tasks:**
-1. In `schedule.model.ts`, add `activeRiskFlagTypes: string[]` to the `Appointment` interface (the model that maps to `AppointmentResponse`)
-2. In `appointment-edit-dialog.component.ts`, add a risk flags section in the template: if `appointment.activeRiskFlagTypes.length > 0`, display a row of styled chips showing each flag type name
-3. Style: small `background: #FEE2E2; color: #991B1B; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem` chips — consistent with existing status badges
-
-Note: `CalendarAppointmentBlock` model is NOT changed. Risk flag chips only appear in the appointment detail panel, not on the calendar grid blocks.
+1. The `/api/v1/admin/users/therapists` endpoint currently validates `request.role() != UserRole.THERAPIST`. Change to validate `!request.roles().equals(Set.of(UserRole.THERAPIST))` (or `!request.roles().contains(UserRole.THERAPIST)`).
+2. Review all `@Operation` and `@ApiResponse` Swagger annotations — update descriptions where they mention "single role".
+3. No new endpoints are needed — the existing `POST /api/v1/admin/users` and `PATCH /api/v1/admin/users/{id}` already accept the updated DTOs from Increment 4.
 
 **Acceptance criteria:**
-- When a client has active risk flags, opening an appointment detail panel shows the flag type name chips
-- When no active flags, no chips section is rendered
-- Existing appointment dialog behavior unchanged
+- `POST /api/v1/admin/users/therapists` still returns 201 for a THERAPIST-only role request.
+- `POST /api/v1/admin/users/therapists` with `{"roles": ["FINANCE"]}` returns 400 (not THERAPIST).
+- All `AdminUserControllerTest` tests pass.
 
-**Dependencies:** Increments 6, 8
+**Dependencies:** Increments 3, 4
 
 ---
 
-### Increment 10 — Frontend: admin risk flag type configuration [completed]
+### Increment 6 — `PermissionService`: read all roles from JWT
 
-**Goal:** Allow SYSTEM_ADMINISTRATOR to view, create, and deactivate flag types through the admin panel.
+**Status:** pending
 
-**Files to create:**
-- `frontend/src/app/features/admin/risk-flag-types/models/risk-flag-type-admin.model.ts`
-- `frontend/src/app/features/admin/risk-flag-types/services/risk-flag-type-admin.service.ts`
-- `frontend/src/app/features/admin/risk-flag-types/components/risk-flag-type-list/risk-flag-type-list.component.ts`
-- `frontend/src/app/features/admin/risk-flag-types/components/risk-flag-type-form-dialog/risk-flag-type-form-dialog.component.ts`
-- `frontend/src/app/features/admin/risk-flag-types/risk-flag-types.routes.ts`
+**Goal:** Update the Angular `PermissionService` to collect all `ROLE_X` entries from the JWT `roles` claim instead of only the first one. Update `JwtClaims` model as needed. All route guards and permission checks continue to work as before.
 
 **Files to modify:**
-- `frontend/src/app/features/admin/admin.routes.ts` — add `risk-flag-types` route
-- `frontend/src/app/features/admin/admin-layout.component.ts` — add nav link if sidebar exists
+- `frontend/src/app/core/auth/permission.service.ts`
+- `frontend/src/app/core/auth/jwt-claims.model.ts` (comment update only, no structural change)
+
+**Tasks:**
+1. In `PermissionService.roles` signal: replace `claims.roles?.find(r => r.startsWith('ROLE_'))` (returns first match) with `claims.roles?.filter(r => r.startsWith('ROLE_')).map(r => r.replace('ROLE_', ''))` (returns all).
+2. `hasAnyRole(required: AppRole[])` is already a `.some(r => required.includes(r))` call — no change needed.
+3. `hasPermission(key: PermissionKey)` delegates to `hasAnyRole` — no change needed.
+4. Update the comment in `jwt-claims.model.ts` to say "Backend emits multiple ROLE_X entries for multi-role users".
+
+**Acceptance criteria:**
+- A user with roles `[THERAPIST, SUPERVISOR]` in the JWT has `PermissionService.roles()` returning `['THERAPIST', 'SUPERVISOR']`.
+- Route guard for `/reports` (allowed for SUPERVISOR) grants access when the user has `[THERAPIST, SUPERVISOR]`.
+- Route guard for `/admin` (SYSTEM_ADMINISTRATOR only) still denies access for `[THERAPIST, SUPERVISOR]`.
+
+**Dependencies:** Increment 3 (backend emits multiple `ROLE_X` values)
+
+---
+
+### Increment 7 — Frontend: user model and admin dialogs for multi-role
+
+**Status:** pending
+
+**Goal:** Update the Angular user model interfaces and the create/edit user dialogs to support multiple roles.
+
+**Files to modify:**
+- `frontend/src/app/features/admin/users/models/user.model.ts`
+- `frontend/src/app/features/admin/users/components/create-user-dialog/create-user-dialog.component.ts`
+- `frontend/src/app/features/admin/users/components/edit-user-dialog/edit-user-dialog.component.ts`
+- `frontend/src/app/features/admin/users/components/user-list/user-list.component.ts`
+- `frontend/src/app/features/admin/therapists/components/create-therapist-dialog/create-therapist-dialog.component.ts`
+- `frontend/src/app/features/admin/therapists/components/edit-therapist-dialog/edit-therapist-dialog.component.ts`
+- `frontend/src/app/features/admin/therapists/components/therapist-list/therapist-list.component.ts`
+- `frontend/src/assets/i18n/en.json`
+- `frontend/src/assets/i18n/uk.json`
 
 **Tasks:**
 
-`risk-flag-type-admin.model.ts`: mirror `RiskFlagType` from Increment 7 model
+`user.model.ts`:
+1. Add `roles: UserRole[]` to `UserSummary` (alongside the deprecated `role: UserRole` for backward compat).
+2. Change `CreateUserPayload.role: UserRole` to `roles: UserRole[]`.
+3. Change `PatchUserPayload.role?: UserRole` to `roles?: UserRole[]`.
+4. Add `normalizeRoles(roles: string[]): UserRole[]` helper.
 
-`RiskFlagTypeAdminService` (`@Injectable({ providedIn: 'root' })`):
-- `listAll(): Observable<RiskFlagType[]>` — `GET /api/v1/admin/risk-flag-types`
-- `create(name: string, displayOrder: number): Observable<RiskFlagType>` — `POST /api/v1/admin/risk-flag-types`
-- `deactivate(id: string): Observable<void>` — `PATCH /api/v1/admin/risk-flag-types/{id}/deactivate`
+`CreateUserDialogComponent`:
+1. Replace the `<select id="role">` single-select with a checkbox group — one checkbox per `ASSIGNABLE_ROLES` entry.
+2. Form control changes from `role: ['', Validators.required]` to `roles: [[], rolesValidator]` where `rolesValidator` checks `value.length >= 1`.
+3. The THERAPIST-redirect logic: if `formValue.roles.includes('THERAPIST')` (still redirect to therapist wizard, unchanged behaviour).
+4. Payload sent: `{ email, fullName, roles: formValue.roles }`.
 
-`RiskFlagTypeListComponent` (standalone):
-- Table of all flag types: name, display order, active status, actions column
-- "Add Flag Type" button: opens `RiskFlagTypeFormDialogComponent`
-- "Deactivate" button per active type: calls service + reloads list
+`EditUserDialogComponent`:
+1. Replace single-role `<select>` with checkbox group.
+2. Pre-populate from `user.roles` (or fall back to `[normalizeRole(user.role)]` for backward compat).
+3. Validate: at least one role must remain checked before save.
+4. Payload sent: `{ roles: selectedRoles }`.
 
-`RiskFlagTypeFormDialogComponent` (standalone):
-- Reactive form: `name` (text, required, maxLength 100), `displayOrder` (number, required, min 0)
-- On submit: call `riskFlagTypeAdminService.create()`
+`user-list.component.ts`:
+1. Display all roles in the table cell instead of one — comma-separated role labels or multiple chips.
 
-`risk-flag-types.routes.ts`:
-```typescript
-export default [
-  { path: '', loadComponent: () => import('./components/risk-flag-type-list/...').then(m => m.RiskFlagTypeListComponent) }
-] satisfies Routes;
-```
+Therapist-related components: these use `UserSummary` and display `user.role`. Update to handle `user.roles` (show all, or show THERAPIST as primary with additional roles noted).
 
-Add to `admin.routes.ts`:
-```typescript
-{ path: 'risk-flag-types', loadChildren: () => import('./risk-flag-types/risk-flag-types.routes') }
-```
+`en.json` / `uk.json`: add keys for the multi-role select label and validation message if needed.
 
 **Acceptance criteria:**
-- Route `/admin/risk-flag-types` loads list component
-- Adding a new type via the form persists it and it appears in the list
-- Deactivating a type causes it to show as inactive; it no longer appears in the create-flag dropdown
-- Non-admin tokens cannot reach `POST /api/v1/admin/risk-flag-types` (403)
+- Admin can create a user with `[THERAPIST, SUPERVISOR]` by checking two checkboxes.
+- At least one checkbox must be selected (validation error shown otherwise).
+- Editing a user shows existing roles as pre-checked and allows adding/removing roles (cannot remove the last one).
+- The user list table shows all roles for multi-role users.
+- `ng build --configuration production` passes with zero TypeScript errors.
 
-**Dependencies:** Increments 7, 5
+**Dependencies:** Increment 4 (backend multi-role DTOs deployed), Increment 6 (frontend permission service updated)
+
+---
+
+### Increment 8 — `AuthService` and `AuthController` wiring + tests
+
+**Status:** pending
+
+**Goal:** Verify the full authentication flow (login, refresh, first-login password change) works end-to-end with multi-role users. Fix the `AuthController` cookie max-age computation to use `result.roles()`. Add integration tests covering multi-role login.
+
+**Files to modify:**
+- `backend/src/main/java/com/psyassistant/auth/AuthController.java`
+- `backend/src/test/java/com/psyassistant/auth/AuthServiceTest.java`
+- `backend/src/test/java/com/psyassistant/auth/AuthControllerTest.java`
+
+**Tasks:**
+
+`AuthController`:
+1. Find all uses of `result.role()` (single-role `AuthResult` field) — change to `result.roles()`.
+2. The cookie max-age line typically looks like `tokenService.refreshTtlFor(result.role()).toSeconds()` — change to `tokenService.refreshTtlFor(result.roles()).toSeconds()`.
+
+`AuthServiceTest`:
+1. Update `setUp()` to use `user.setRoles(Set.of(UserRole.THERAPIST))` instead of `user.setRole(...)` (wherever `User` entities are constructed with a role).
+2. Add test: `authenticateUserWithTwoRoles_jwtContainsBothRoleValues`.
+3. Add test: `authenticateUserWithSysAdminRole_usesAdminTtl`.
+
+`AuthControllerTest`:
+1. Update mock stubs that return `AuthResult` to use `new AuthResult(response, rawToken, Set.of(UserRole.THERAPIST), ttl)`.
+
+**Acceptance criteria:**
+- `AuthServiceTest` passes.
+- `AuthControllerTest` passes.
+- Login for a user with `[THERAPIST, SUPERVISOR]` produces a token containing `ROLE_THERAPIST`, `ROLE_SUPERVISOR`, and the union of their permissions.
+- Refresh token cookie max-age is correct for both single and multi-role users.
+
+**Dependencies:** Increment 3
+
+---
+
+### Increment 9 — `UserManagementServiceTest` and integration validation
+
+**Status:** pending
+
+**Goal:** Ensure `UserManagementServiceTest` and `AdminUserControllerTest` are fully updated, and that the `RbacIntegrationTest` passes with the new multi-role infrastructure. Add a new integration test proving that a user with `[THERAPIST, SUPERVISOR]` can access both `/api/v1/sessions` and supervisor-only reports.
+
+**Files to modify:**
+- `backend/src/test/java/com/psyassistant/users/UserManagementServiceTest.java`
+- `backend/src/test/java/com/psyassistant/common/rbac/RbacIntegrationTest.java`
+
+**Tasks:**
+
+`UserManagementServiceTest`:
+1. Verify all test helper calls to `makeUser(...)` use the new multi-role constructors.
+2. Add test: `createUser_withMultipleRoles_persistsAllRoles`.
+3. Add test: `updateUser_withRolesSet_replacesRoles`.
+4. Add test: `updateUser_withEmptyRolesSet_throwsValidationError`.
+5. Add test: `listUsers_roleFilter_matchesUsersWithRoleAmongMany`.
+
+`RbacIntegrationTest`:
+1. Add test `AC8`: a JWT with `[ROLE_THERAPIST, ROLE_SUPERVISOR]` authorities can `GET /api/v1/clients/{id}/sessions` (therapist access) — HTTP 200.
+2. Add test `AC9`: same JWT can access `GET /api/v1/reporting/team-workload` (supervisor-only permission `READ_TEAM_WORKLOAD`) — HTTP 200.
+3. Add test `AC10`: same JWT cannot `POST /api/v1/admin/users` (no SYSTEM_ADMINISTRATOR) — HTTP 403.
+
+**Acceptance criteria:**
+- `mvn test` passes, all existing tests unbroken.
+- AC8, AC9, AC10 pass.
+- `UserManagementServiceTest` new multi-role tests pass.
+
+**Dependencies:** Increments 4, 5, 8
 
 ---
 
 ## Risks
 
-1. `AppointmentResponse` is a Java `record` — every call-site that constructs `new AppointmentResponse(...)` must be updated when the field is added. There is only one such site (`AppointmentMapper.toResponse()`), confirmed by code inspection, but a grep before writing is mandatory.
-2. N+1 on appointment list endpoints — `AppointmentMapper` will now query `ClientRiskFlagRepository` per appointment. This is safe for single-appointment detail endpoints. It must NOT be applied to list/calendar endpoints. The plan scope explicitly excludes `CalendarAppointmentBlock`.
-3. THERAPIST assignment check requires `client.getAssignedTherapistId()` to be populated. The `Client` entity has this field. If an older client record has a null `assignedTherapistId`, the THERAPIST will be denied — this is intentional and matches existing behavior in `enforceAssignedTherapistRead()`.
-4. Frontend permission checking relies on JWT claims. The existing pattern in `client-detail.component.ts` (checking `auth.authorities`) must be followed exactly.
+1. **Hibernate `@ElementCollection` lazy vs. eager loading**: `FetchType.EAGER` is required so that `user.getRoles()` is available when `TokenService.buildAuthorities()` is called outside a transaction. If set to LAZY, a `LazyInitializationException` will occur. This is the correct choice given the small set size (max 5 roles per user).
+
+2. **`DISTINCT` in `UserSpecification`**: joining `user_roles` in a JPA `Specification` can produce duplicate `User` rows. A `query.distinct(true)` call or a subquery approach must be used to avoid the count/total-pages in pagination being wrong.
+
+3. **`UserSummaryDto` JSON backward compatibility**: existing API consumers (frontend, tests) expect `"role": "THERAPIST"` in the response. Adding `"roles": [...]` is additive and non-breaking. The deprecated `role` field must remain serialised for the duration of the migration.
+
+4. **`AuthResult` record rename**: `result.role()` → `result.roles()` appears in `AuthController`; any other callers that reference the record accessor by name will not compile. A grep for `result.role()` and `AuthResult` before writing is mandatory.
+
+5. **`AdminUserController /therapists` endpoint role check**: the current `request.role() != UserRole.THERAPIST` check must become `!request.roles().contains(UserRole.THERAPIST)` — failing to update this will silently accept non-therapist multi-role combinations or reject valid ones.
+
+6. **Frontend therapist wizard redirect logic**: `CreateUserDialogComponent` currently redirects to the therapist wizard when `formValue.role === 'THERAPIST'`. With multi-role checkboxes, the trigger should be `formValue.roles.includes('THERAPIST')`. If this is missed, creating a THERAPIST+SUPERVISOR user will skip the wizard.
+
+---
 
 ## Success Criteria
 
-- All five acceptance criteria groups from the ticket are met
-- Zero clinical notes exposed to RECEPTION_ADMIN_STAFF in any API response (verified by role-boundary tests in Increment 5)
-- Audit log rows are immutable: no update/delete at any layer
-- All unit tests pass: `mvn test`
-- Frontend compiles: `ng build --configuration production`
+- A user can be assigned `[THERAPIST, SUPERVISOR]`; their JWT contains `ROLE_THERAPIST`, `ROLE_SUPERVISOR`, plus the union of THERAPIST and SUPERVISOR permissions.
+- `hasRole('THERAPIST')` and `hasAuthority('READ_TEAM_WORKLOAD')` both pass for the same token.
+- The admin UI checkboxes allow selecting zero to N roles; validation prevents saving with zero roles.
+- `GET /api/v1/admin/users?role=THERAPIST` returns multi-role users that include THERAPIST.
+- All existing backend tests pass (`mvn test`).
+- Angular production build exits 0 with zero TypeScript errors.
+- No existing single-role tokens are invalidated by the migration.

@@ -25,12 +25,15 @@ import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -88,9 +91,9 @@ class AuthServiceTest {
         ReflectionTestUtils.setField(authService, "maxAdminSessions", 1);
         ReflectionTestUtils.setField(authService, "maxUserSessions", 5);
 
-        activeUser = makeUser("user@example.com", UserRole.THERAPIST, true);
-        sysAdminUser = makeUser("admin@example.com", UserRole.SYSTEM_ADMINISTRATOR, true);
-        disabledUser = makeUser("disabled@example.com", UserRole.THERAPIST, false);
+        activeUser = makeUser("user@example.com", Set.of(UserRole.THERAPIST), true);
+        sysAdminUser = makeUser("admin@example.com", Set.of(UserRole.SYSTEM_ADMINISTRATOR), true);
+        disabledUser = makeUser("disabled@example.com", Set.of(UserRole.THERAPIST), false);
     }
 
     @Test
@@ -101,8 +104,8 @@ class AuthServiceTest {
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
         when(tokenService.buildAccessToken(any(), any())).thenReturn("jwt-token");
-        when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
-        when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
+        when(tokenService.accessTokenExpiresAt(any(Collection.class))).thenReturn(Instant.now().plusSeconds(3600));
+        when(tokenService.refreshTtlFor(any(Collection.class))).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(therapistProfileRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
 
@@ -162,8 +165,8 @@ class AuthServiceTest {
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
         when(tokenService.buildAccessToken(any(), any())).thenReturn("jwt-token");
-        when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
-        when(tokenService.refreshTtlFor(UserRole.SYSTEM_ADMINISTRATOR)).thenReturn(Duration.ofHours(24));
+        when(tokenService.accessTokenExpiresAt(any(Collection.class))).thenReturn(Instant.now().plusSeconds(3600));
+        when(tokenService.refreshTtlFor(any(Collection.class))).thenReturn(Duration.ofHours(24));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         authService.authenticate(
@@ -180,8 +183,8 @@ class AuthServiceTest {
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
         when(tokenService.buildAccessToken(any(), any())).thenReturn("jwt-token");
-        when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
-        when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
+        when(tokenService.accessTokenExpiresAt(any(Collection.class))).thenReturn(Instant.now().plusSeconds(3600));
+        when(tokenService.refreshTtlFor(any(Collection.class))).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(therapistProfileRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
 
@@ -200,8 +203,8 @@ class AuthServiceTest {
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
         when(tokenService.buildAccessToken(any(), any())).thenReturn("jwt-token");
-        when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
-        when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
+        when(tokenService.accessTokenExpiresAt(any(Collection.class))).thenReturn(Instant.now().plusSeconds(3600));
+        when(tokenService.refreshTtlFor(any(Collection.class))).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(therapistProfileRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
 
@@ -224,8 +227,8 @@ class AuthServiceTest {
         when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
         when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
         when(tokenService.buildAccessToken(any(), any())).thenReturn("jwt-token");
-        when(tokenService.accessTokenExpiresAt(any())).thenReturn(Instant.now().plusSeconds(3600));
-        when(tokenService.refreshTtlFor(UserRole.THERAPIST)).thenReturn(Duration.ofDays(15));
+        when(tokenService.accessTokenExpiresAt(any(Collection.class))).thenReturn(Instant.now().plusSeconds(3600));
+        when(tokenService.refreshTtlFor(any(Collection.class))).thenReturn(Duration.ofDays(15));
         when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(therapistProfileRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
 
@@ -288,10 +291,72 @@ class AuthServiceTest {
         verify(refreshTokenRepository, never()).findActiveByHash(any());
     }
 
+    @Test
+    void authenticateUserWithTwoRolesReturnsAuthResultWithBothRoles() {
+        // Arrange: user with THERAPIST + SUPERVISOR
+        User multiRoleUser = makeUser("multi@example.com",
+                Set.of(UserRole.THERAPIST, UserRole.SUPERVISOR), true);
+
+        when(userRepository.findByEmail("multi@example.com")).thenReturn(Optional.of(multiRoleUser));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(refreshTokenRepository.countActiveSessions(any())).thenReturn(0L);
+        when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
+        when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
+        when(tokenService.buildAccessToken(any(), any())).thenReturn("multi-role-jwt");
+        when(tokenService.accessTokenExpiresAt(any(Collection.class))).thenReturn(Instant.now().plusSeconds(3600));
+        when(tokenService.refreshTtlFor(any(Collection.class))).thenReturn(Duration.ofDays(15));
+        when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(therapistProfileRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
+
+        // Act
+        AuthResult result = authService.authenticate(
+                new LoginRequest("multi@example.com", "pass"), "127.0.0.1");
+
+        // Assert: AuthResult carries both roles
+        assertThat(result.loginResponse().accessToken()).isEqualTo("multi-role-jwt");
+        assertThat(result.roles()).containsExactlyInAnyOrder(UserRole.THERAPIST, UserRole.SUPERVISOR);
+    }
+
+    @Test
+    void authenticateUserWithSysAdminRoleUsesAdminTtl() {
+        // Arrange: user with SYSTEM_ADMINISTRATOR role only
+        User adminUser = makeUser("sysadmin@example.com",
+                Set.of(UserRole.SYSTEM_ADMINISTRATOR), true);
+
+        when(userRepository.findByEmail("sysadmin@example.com")).thenReturn(Optional.of(adminUser));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(refreshTokenRepository.countActiveSessions(any())).thenReturn(0L);
+        when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
+        when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
+        when(tokenService.buildAccessToken(any(), any())).thenReturn("admin-jwt");
+        when(tokenService.accessTokenExpiresAt(any(Collection.class))).thenReturn(Instant.now().plusSeconds(900));
+
+        // Capture what roles are passed to refreshTtlFor so we can verify canonicality
+        ArgumentCaptor<Collection<UserRole>> rolesCaptor =
+                ArgumentCaptor.forClass(Collection.class);
+        Duration adminRefreshTtl = Duration.ofHours(24);
+        when(tokenService.refreshTtlFor(rolesCaptor.capture())).thenReturn(adminRefreshTtl);
+
+        when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        AuthResult result = authService.authenticate(
+                new LoginRequest("sysadmin@example.com", "pass"), "127.0.0.1");
+
+        // Assert: AuthResult carries the admin refresh TTL, not the standard 15-day TTL
+        assertThat(result.refreshTtl()).isEqualTo(adminRefreshTtl);
+        assertThat(result.refreshTtl()).isLessThan(Duration.ofDays(15));
+
+        // Assert: the roles collection passed to refreshTtlFor contains SYSTEM_ADMINISTRATOR
+        Collection<UserRole> capturedRoles = rolesCaptor.getValue();
+        assertThat(capturedRoles).contains(UserRole.SYSTEM_ADMINISTRATOR);
+        assertThat(capturedRoles).doesNotContain(UserRole.THERAPIST);
+    }
+
     // ---- helpers -------------------------------------------------------
 
-    private User makeUser(final String email, final UserRole role, final boolean active) {
-        User user = new User(email, "hashed-pw", role, active);
+    private User makeUser(final String email, final Set<UserRole> roles, final boolean active) {
+        User user = new User(email, "hashed-pw", roles, active);
         ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
         return user;
     }

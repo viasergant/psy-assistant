@@ -1,14 +1,21 @@
 package com.psyassistant.users;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -16,6 +23,11 @@ import java.util.UUID;
  *
  * <p>Password is stored as a BCrypt hash (strength 12). Plain-text passwords are
  * never stored and must never appear in logs.
+ *
+ * <p>A user may hold multiple roles simultaneously. The set is stored in the
+ * {@code user_roles} junction table and loaded eagerly to avoid
+ * {@link org.hibernate.LazyInitializationException} when roles are accessed outside
+ * a JPA transaction (e.g. in {@code TokenService}).
  */
 @Entity
 @Table(name = "users")
@@ -34,9 +46,11 @@ public class User {
     @Column(name = "full_name", length = 255)
     private String fullName;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role", nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
-    private UserRole role;
+    private Set<UserRole> roles = new LinkedHashSet<>();
 
     @Column(nullable = false)
     private boolean active;
@@ -64,38 +78,72 @@ public class User {
     }
 
     /**
-     * Constructs a new user.
+     * Constructs a new user with a set of roles.
+     *
+     * @param email        unique email address
+     * @param passwordHash BCrypt hash of the password
+     * @param fullName     display name (may be null)
+     * @param roles        non-empty set of roles; each element is canonicalised
+     * @param active       whether the account is active
+     */
+    public User(final String email, final String passwordHash, final String fullName,
+                final Set<UserRole> roles, final boolean active) {
+        this.email = email;
+        this.mustChangePassword = false;
+        this.passwordHash = passwordHash;
+        this.fullName = fullName;
+        this.active = active;
+        this.language = "en"; // Default locale
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+        if (roles == null || roles.isEmpty()) {
+            throw new IllegalArgumentException("roles must not be empty");
+        }
+        this.roles = new LinkedHashSet<>(canonicalize(roles));
+    }
+
+    /**
+     * Constructs a new user with a set of roles and no full name.
+     *
+     * @param email        unique email address
+     * @param passwordHash BCrypt hash of the password
+     * @param roles        non-empty set of roles; each element is canonicalised
+     * @param active       whether the account is active
+     */
+    public User(final String email, final String passwordHash,
+                final Set<UserRole> roles, final boolean active) {
+        this(email, passwordHash, null, roles, active);
+    }
+
+    /**
+     * Constructs a new user with a single role.
      *
      * @param email        unique email address
      * @param passwordHash BCrypt hash of the password
      * @param role         user role
      * @param active       whether the account is active
+     * @deprecated Use {@link #User(String, String, Set, boolean)} to support multiple roles.
      */
+    @Deprecated
     public User(final String email, final String passwordHash,
                 final UserRole role, final boolean active) {
-        this.email = email;
-        this.mustChangePassword = false;
-        this.passwordHash = passwordHash;
-        this.role = role;
-        this.active = active;
-        this.language = "en"; // Default locale
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
+        this(email, passwordHash, null, new LinkedHashSet<>(Set.of(role.canonical())), active);
     }
 
     /**
-     * Constructs a new user with a full name.
+     * Constructs a new user with a full name and a single role.
      *
      * @param email        unique email address
      * @param passwordHash BCrypt hash of the password
      * @param fullName     display name
      * @param role         user role
      * @param active       whether the account is active
+     * @deprecated Use {@link #User(String, String, String, Set, boolean)} to support multiple roles.
      */
+    @Deprecated
     public User(final String email, final String passwordHash, final String fullName,
                 final UserRole role, final boolean active) {
-        this(email, passwordHash, role, active);
-        this.fullName = fullName;
+        this(email, passwordHash, fullName, new LinkedHashSet<>(Set.of(role.canonical())), active);
     }
 
     /**
@@ -145,22 +193,92 @@ public class User {
     }
 
     /**
-     * Returns the user's role.
+     * Returns all roles assigned to this user.
      *
-     * @return role
+     * @return unmodifiable view of the roles set
      */
-    public UserRole getRole() {
-        return role;
+    public Set<UserRole> getRoles() {
+        return Collections.unmodifiableSet(roles);
     }
 
     /**
-     * Sets the user's role and updates the updatedAt timestamp.
+     * Replaces all roles for this user and updates the updatedAt timestamp.
      *
-     * @param role new role
+     * @param roles non-empty set of roles
+     * @throws IllegalArgumentException if {@code roles} is null or empty
      */
-    public void setRole(final UserRole role) {
-        this.role = role;
+    public void setRoles(final Set<UserRole> roles) {
+        if (roles == null || roles.isEmpty()) {
+            throw new IllegalArgumentException("roles must not be empty");
+        }
+        this.roles = new LinkedHashSet<>(roles);
         this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Adds a role to this user and updates the updatedAt timestamp.
+     * The role is canonicalised before being stored so that deprecated aliases
+     * never reach the {@code user_roles} junction table.
+     *
+     * @param role role to add
+     */
+    public void addRole(final UserRole role) {
+        this.roles.add(role.canonical());
+        this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Removes a role from this user and updates the updatedAt timestamp.
+     * The role is canonicalised before the lookup/removal so that passing a
+     * deprecated alias (e.g. {@code ADMIN}) correctly targets the stored
+     * canonical value ({@code SYSTEM_ADMINISTRATOR}).
+     *
+     * @param role role to remove
+     * @throws IllegalStateException if removing the role would leave the user with no roles
+     */
+    public void removeRole(final UserRole role) {
+        final UserRole canonical = role.canonical();
+        if (this.roles.size() <= 1 && this.roles.contains(canonical)) {
+            throw new IllegalStateException("user must have at least one role");
+        }
+        this.roles.remove(canonical);
+        this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Returns {@code true} if the given role is among this user's roles.
+     *
+     * @param role role to test
+     * @return true if present
+     */
+    public boolean hasRole(final UserRole role) {
+        return roles.contains(role);
+    }
+
+    /**
+     * Returns the first role in the set.
+     *
+     * @return first assigned role
+     * @throws IllegalStateException if the roles set is empty
+     * @deprecated Use {@link #getRoles()} to support multiple roles.
+     */
+    @Deprecated
+    public UserRole getRole() {
+        if (roles.isEmpty()) {
+            throw new IllegalStateException("user has no roles");
+        }
+        return roles.iterator().next();
+    }
+
+    /**
+     * Replaces all roles with a single role.
+     *
+     * @param role the sole role to assign
+     * @deprecated Use {@link #setRoles(Set)} to support multiple roles.
+     */
+    @Deprecated
+    public void setRole(final UserRole role) {
+        setRoles(new LinkedHashSet<>(Set.of(role)));
     }
 
     /**
@@ -297,5 +415,15 @@ public class User {
      */
     public boolean isCurrentlyLocked() {
         return lockedUntil != null && Instant.now().isBefore(lockedUntil);
+    }
+
+    // ---- private helpers --------------------------------------------------
+
+    private static Set<UserRole> canonicalize(final Set<UserRole> roles) {
+        Set<UserRole> result = new LinkedHashSet<>();
+        for (UserRole r : roles) {
+            result.add(r.canonical());
+        }
+        return result;
     }
 }

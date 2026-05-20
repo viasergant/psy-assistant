@@ -22,6 +22,7 @@ import com.psyassistant.users.UserRole;
 import jakarta.servlet.http.Cookie;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -61,7 +62,7 @@ class AuthControllerTest {
     @Test
     void validLoginReturns200WithTokens() throws Exception {
         LoginResponse resp = new LoginResponse("jwt-abc", Instant.now().plusSeconds(900), "Bearer");
-        AuthResult result = new AuthResult(resp, "raw-refresh-uuid", UserRole.THERAPIST,
+        AuthResult result = new AuthResult(resp, "raw-refresh-uuid", Set.of(UserRole.THERAPIST),
                 Duration.ofDays(15));
         when(authService.authenticate(any(), anyString())).thenReturn(result);
 
@@ -98,7 +99,7 @@ class AuthControllerTest {
     @Test
     void validRefreshCookieReturns200WithNewTokens() throws Exception {
         LoginResponse resp = new LoginResponse("new-jwt", Instant.now().plusSeconds(900), "Bearer");
-        AuthResult result = new AuthResult(resp, "new-raw-refresh", UserRole.THERAPIST,
+        AuthResult result = new AuthResult(resp, "new-raw-refresh", Set.of(UserRole.THERAPIST),
                 Duration.ofDays(15));
         when(authService.refresh(anyString(), anyString())).thenReturn(result);
 
@@ -170,7 +171,7 @@ class AuthControllerTest {
     @Test
     void successfulLoginSetsHttpOnlyCookie() throws Exception {
         LoginResponse resp = new LoginResponse("jwt", Instant.now().plusSeconds(900), "Bearer");
-        AuthResult result = new AuthResult(resp, "refresh-val", UserRole.THERAPIST,
+        AuthResult result = new AuthResult(resp, "refresh-val", Set.of(UserRole.THERAPIST),
                 Duration.ofDays(15));
         when(authService.authenticate(any(), anyString())).thenReturn(result);
 

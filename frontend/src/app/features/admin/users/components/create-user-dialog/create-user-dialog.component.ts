@@ -284,8 +284,15 @@ const rolesRequiredValidator: ValidatorFn = (control: AbstractControl): Validati
       cursor: pointer;
     }
     .role-checkbox-label input[type="checkbox"] {
+      appearance: checkbox;
+      -webkit-appearance: checkbox;
       width: 1rem;
       height: 1rem;
+      padding: 0;
+      border: initial;
+      border-radius: 0;
+      box-shadow: none;
+      outline: revert;
       cursor: pointer;
       accent-color: #0EA5A0;
     }

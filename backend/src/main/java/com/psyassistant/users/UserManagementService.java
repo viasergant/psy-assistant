@@ -19,8 +19,11 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -145,13 +148,15 @@ public class UserManagementService {
             throw new DuplicateEmailException(request.email());
         }
 
-        UserRole normalizedRole = request.role().canonical();
+        Set<UserRole> canonicalRoles = request.roles().stream()
+                .map(UserRole::canonical)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         // Store a BCrypt hash of a random string — the user cannot log in until
         // they complete the password reset flow.
         String unusableHash = passwordEncoder.encode(UUID.randomUUID().toString() + UNUSABLE_PASSWORD);
         User user = new User(request.email(), unusableHash, request.fullName(),
-                normalizedRole, true);
+                canonicalRoles, true);
         userRepository.save(user);
 
         // Issue a 24h password reset token so the new user can set their password
@@ -162,18 +167,18 @@ public class UserManagementService {
                 .userId(actorId)
                 .emailAttempted(request.email())
                 .outcome(OUTCOME_SUCCESS)
-                .detail("targetUserId=" + user.getId() + " requestedRole=" + request.role()
-                        + " persistedRole=" + normalizedRole)
+                .detail("targetUserId=" + user.getId() + " requestedRoles=" + request.roles()
+                        + " persistedRoles=" + canonicalRoles)
                 .build());
 
-        LOG.info("event=USER_CREATED actorId={} targetUserId={} requestedRole={} persistedRole={}",
-                actorId, user.getId(), request.role(), normalizedRole);
+        LOG.info("event=USER_CREATED actorId={} targetUserId={} requestedRoles={} persistedRoles={}",
+                actorId, user.getId(), request.roles(), canonicalRoles);
 
         return UserSummaryDto.from(user);
     }
 
     /**
-     * Applies a partial update to a user account (role, full name, or active status).
+     * Applies a partial update to a user account (roles, full name, or active status).
      * Only non-null fields in the request are applied.
      *
      * <p>Self-deactivation guard: if the request sets {@code active=false} and the
@@ -196,19 +201,23 @@ public class UserManagementService {
             user.setFullName(request.fullName());
         }
 
-        if (request.role() != null && !request.role().canonical().equals(user.getRole())) {
-            UserRole oldRole = user.getRole();
-            UserRole normalizedRole = request.role().canonical();
-            user.setRole(normalizedRole);
-            auditLogService.record(new AuditLog.Builder(EVENT_USER_ROLE_CHANGED)
-                    .userId(actorId)
-                    .outcome(OUTCOME_SUCCESS)
-                    .detail("targetUserId=" + userId + " oldRole=" + oldRole
-                            + " requestedRole=" + request.role()
-                            + " newRole=" + normalizedRole)
-                    .build());
-            LOG.info("event=USER_ROLE_CHANGED actorId={} targetUserId={} {} -> {} (requested={})",
-                    actorId, userId, oldRole, normalizedRole, request.role());
+        if (request.roles() != null && !request.roles().isEmpty()) {
+            Set<UserRole> canonicalRoles = request.roles().stream()
+                    .map(UserRole::canonical)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            Set<UserRole> oldRoles = user.getRoles();
+            if (!canonicalRoles.equals(oldRoles)) {
+                user.setRoles(canonicalRoles);
+                auditLogService.record(new AuditLog.Builder(EVENT_USER_ROLE_CHANGED)
+                        .userId(actorId)
+                        .outcome(OUTCOME_SUCCESS)
+                        .detail("targetUserId=" + userId + " oldRoles=" + oldRoles
+                                + " requestedRoles=" + request.roles()
+                                + " newRoles=" + canonicalRoles)
+                        .build());
+                LOG.info("event=USER_ROLE_CHANGED actorId={} targetUserId={} {} -> {} (requested={})",
+                        actorId, userId, oldRoles, canonicalRoles, request.roles());
+            }
         }
 
         if (request.active() != null && request.active() != user.isActive()) {
@@ -311,14 +320,16 @@ public class UserManagementService {
             throw new DuplicateEmailException(request.email());
         }
 
-        UserRole normalizedRole = request.role().canonical();
+        Set<UserRole> canonicalRoles = request.roles().stream()
+                .map(UserRole::canonical)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         // Generate secure temporary password
         String temporaryPassword = generateTemporaryPassword();
         String passwordHash = passwordEncoder.encode(temporaryPassword);
 
         User user = new User(request.email(), passwordHash, request.fullName(),
-                normalizedRole, true);
+                canonicalRoles, true);
         user.setMustChangePassword(true);
         userRepository.save(user);
 
@@ -326,13 +337,13 @@ public class UserManagementService {
                 .userId(actorId)
                 .emailAttempted(request.email())
                 .outcome(OUTCOME_SUCCESS)
-                .detail("targetUserId=" + user.getId() + " requestedRole=" + request.role()
-                        + " persistedRole=" + normalizedRole + " temporaryPassword=true")
+                .detail("targetUserId=" + user.getId() + " requestedRoles=" + request.roles()
+                        + " persistedRoles=" + canonicalRoles + " temporaryPassword=true")
                 .build());
 
-        LOG.info("event=USER_CREATED actorId={} targetUserId={} requestedRole={} "
-                + "persistedRole={} temporaryPassword=true",
-                actorId, user.getId(), request.role(), normalizedRole);
+        LOG.info("event=USER_CREATED actorId={} targetUserId={} requestedRoles={} "
+                + "persistedRoles={} temporaryPassword=true",
+                actorId, user.getId(), request.roles(), canonicalRoles);
 
         return UserCreationResponseDto.from(user, temporaryPassword);
     }
@@ -357,9 +368,6 @@ public class UserManagementService {
         }
         return password.toString();
     }
-
-
-    // ---- private helpers -----------------------------------------------
 
     /**
      * Generates a cryptographically random hex token (32 bytes = 64 hex chars).

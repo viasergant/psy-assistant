@@ -2,6 +2,7 @@ package com.psyassistant.users.dto;
 
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRole;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -14,14 +15,16 @@ import java.util.UUID;
  * @param id                user primary key
  * @param email             unique email address
  * @param fullName          display name
- * @param role              assigned role
+ * @param roles             all roles assigned to the user
+ * @param role              first assigned role (deprecated — use {@code roles} instead)
  * @param temporaryPassword plain-text password (returned only on creation)
  */
 public record UserCreationResponseDto(
         UUID id,
         String email,
         String fullName,
-        UserRole role,
+        Set<UserRole> roles,
+        @Deprecated UserRole role,
         String temporaryPassword) {
 
     /**
@@ -32,11 +35,14 @@ public record UserCreationResponseDto(
      * @return populated DTO
      */
     public static UserCreationResponseDto from(final User user, final String temporaryPassword) {
+        Set<UserRole> userRoles = user.getRoles();
+        UserRole firstRole = userRoles.isEmpty() ? null : userRoles.iterator().next();
         return new UserCreationResponseDto(
                 user.getId(),
                 user.getEmail(),
                 user.getFullName(),
-                user.getRole(),
+                userRoles,
+                firstRole,
                 temporaryPassword
         );
     }

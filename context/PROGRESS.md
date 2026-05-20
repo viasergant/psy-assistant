@@ -9,7 +9,7 @@
 | 1 | Flyway migration: `user_roles` junction table | completed |
 | 2 | `User` entity: multi-role `@ElementCollection` | pending |
 | 3 | `TokenService`: multi-role authority building | pending |
-| 4 | `UserManagementService` and DTOs: multi-role create/update | pending |
+| 4 | `UserManagementService` and DTOs: multi-role create/update | completed |
 | 5 | `AdminUserController`: update endpoint to accept `roles` | pending |
 | 6 | `PermissionService`: read all roles from JWT | pending |
 | 7 | Frontend: user model and admin dialogs for multi-role | pending |
@@ -159,3 +159,90 @@
   - `backend/src/main/java/com/psyassistant/auth/service/AuthResult.java` (modified — `Collection` → `Set`)
   - `context/PROGRESS.md` (updated)
 - **Tests:** 498 passing / 0 failures
+
+---
+
+## 2026-05-20 — Increment 4: `UserManagementService` and DTOs multi-role create/update
+
+- **What was completed:** Updated request/response DTOs to use `Set<UserRole>` for roles. Updated `UserManagementService` to canonicalize and persist multi-role sets. Updated `UserSpecification` to JOIN `user_roles` collection for role filtering. Updated all tests. Added fix to `AdminUserController` therapist check and `TherapistProfileService` to maintain compilation.
+- **Interfaces/methods created:**
+  - `CreateUserRequest.roles(): Set<UserRole>` — replaces `role(): UserRole`
+  - `PatchUserRequest.roles(): Set<UserRole>` — replaces `role(): UserRole`; nullable (null = no change)
+  - `UserSummaryDto.roles(): Set<UserRole>` — new; `role(): UserRole` kept as `@Deprecated` bridge returning first element
+  - `UserCreationResponseDto.roles(): Set<UserRole>` — new; `role(): UserRole` kept as `@Deprecated` bridge
+  - `UserSpecification.withFilters(UserRole, Boolean)` — updated to JOIN `roles` collection with `query.distinct(true)`
+- **Files created/modified:**
+  - `backend/src/main/java/com/psyassistant/users/dto/CreateUserRequest.java` (modified)
+  - `backend/src/main/java/com/psyassistant/users/dto/PatchUserRequest.java` (modified)
+  - `backend/src/main/java/com/psyassistant/users/dto/UserSummaryDto.java` (modified)
+  - `backend/src/main/java/com/psyassistant/users/dto/UserCreationResponseDto.java` (modified)
+  - `backend/src/main/java/com/psyassistant/users/UserManagementService.java` (modified)
+  - `backend/src/main/java/com/psyassistant/users/UserSpecification.java` (modified)
+  - `backend/src/main/java/com/psyassistant/admin/AdminUserController.java` (minimal fix: `request.role()` → `request.roles().contains(UserRole.THERAPIST)`)
+  - `backend/src/main/java/com/psyassistant/therapists/service/TherapistProfileService.java` (updated two `new CreateUserRequest(...)` calls to `Set.of(UserRole.THERAPIST)`)
+  - `backend/src/test/java/com/psyassistant/users/UserManagementServiceTest.java` (modified — all assertions updated, 3 new tests added)
+  - `backend/src/test/java/com/psyassistant/admin/AdminUserControllerTest.java` (modified — all request/response updated, 1 new test added)
+  - `context/PROGRESS.md` (updated)
+  - `context/PLAN.md` (increment 4 status → completed)
+- **Decisions made:**
+  - `AdminUserController.createTherapistWithTemporaryPassword` references `request.role()` which no longer exists after removing the single-role accessor; the minimal fix (changing to `request.roles().contains(UserRole.THERAPIST)`) was applied here rather than deferring to Increment 5 — without it the project would not compile.
+  - `TherapistProfileService` had two `new CreateUserRequest(email, name, UserRole.THERAPIST)` calls that required updating to `Set.of(UserRole.THERAPIST)` for compilation.
+  - `UserSummaryDto` and `UserCreationResponseDto` both gained `roles` as the primary field (before the deprecated `role` in the record component order) to match JSON serialisation priority.
+  - The `updateUser` method compares canonical new roles against current roles before auditing, to avoid a spurious audit entry when the roles are effectively unchanged.
+  - `createUserWithEmptyRolesThrowsValidationError` test uses `jakarta.validation.Validator` directly (no Spring context) for fast unit-level validation testing.
+- **Tests:** 503 passing / 0 failures
+
+---
+
+## 2026-05-20 — Code Review (Increment 4)
+- Quality: FAIL (Critical: 0, High: 3, Medium: 4, Suggestion: 2)
+- Coverage: GAPS FOUND (3 items)
+- Recommendation: fix and re-review
+
+---
+
+## 2026-05-20 — Test Run (Increment 4, attempt 1)
+- Passed: 503 | Failed: 0 | Skipped: 0 | Coverage: N/A (Jacoco not configured in pom.xml)
+- Coverage gate: N/A — no Jacoco plugin present; gate cannot be evaluated
+- Failures: none
+- Action: all clear — full suite passes cleanly after UserManagementService/DTOs multi-role changes
+
+---
+
+## 2026-05-20 — Code Review Fixes (Increment 4)
+
+- **What was completed:** Applied seven code-review fixes across DTOs, `UserSpecification`, `UserManagementService`, and test files.
+- **Fixes applied:**
+  1. **Fix 1 (High) — `PatchUserRequest.roles` element constraint:** Changed `Set<UserRole> roles` to `Set<@NotNull UserRole> roles`. Added `import jakarta.validation.constraints.NotNull;`. Prevents a `null` element in the set from causing `NullPointerException` when `UserRole::canonical` is called in `UserManagementService.updateUser`.
+  2. **Fix 2 (High) — `UserSummaryDto.from` guard:** Added `userRoles.isEmpty() ? null : userRoles.iterator().next()` guard before calling `iterator().next()` for the deprecated `role` bridge field. Prevents `NoSuchElementException` if the entity's roles set is ever empty.
+  3. **Fix 2 (High) — `UserCreationResponseDto.from` guard:** Same guard applied for the deprecated `role` bridge field.
+  4. **Fix 3 (High) — `UserSpecification` EXISTS subquery:** Replaced `root.join("roles", JoinType.INNER)` + `query.distinct(true)` with a correlated EXISTS subquery (`Subquery<Integer>` / `sub.correlate(root)` / `sub.select(cb.literal(1))`). Removed `query.distinct(true)` entirely. Added `Root` and `Subquery` imports. Eliminates the risk of incorrect count queries under JPA providers that do not honour `distinct(true)` on count queries.
+  5. **Fix 4 (Medium) — Duplicate section header in `UserManagementService`:** Removed the first of two consecutive `// ---- private helpers` section headers that appeared between `generateTemporaryPassword()` and `generateRawToken()`.
+  6. **Fix 5 — Test: `PATCH` with empty `roles` returns 400:** Added `updateUserReturns400OnEmptyRoles` to `AdminUserControllerTest`. Sends `{"roles":[]}` to `PATCH /api/v1/admin/users/{id}` and asserts HTTP 400.
+  7. **Fix 6 — Test: `POST` with `roles` field omitted returns 400:** Added `createUserReturns400WhenRolesFieldOmitted` to `AdminUserControllerTest`. Sends a JSON body with no `roles` key and asserts HTTP 400.
+  8. **Fix 7 — Test: `PatchUserRequest` validation with empty roles:** Added `updateUserWithEmptyRolesThrowsValidationError` to `UserManagementServiceTest`. Validates `new PatchUserRequest(null, Set.of(), null)` directly via `jakarta.validation.Validator` and asserts exactly one `ConstraintViolation` on the `roles` property.
+- **Files modified:**
+  - `backend/src/main/java/com/psyassistant/users/dto/PatchUserRequest.java`
+  - `backend/src/main/java/com/psyassistant/users/dto/UserSummaryDto.java`
+  - `backend/src/main/java/com/psyassistant/users/dto/UserCreationResponseDto.java`
+  - `backend/src/main/java/com/psyassistant/users/UserSpecification.java`
+  - `backend/src/main/java/com/psyassistant/users/UserManagementService.java`
+  - `backend/src/test/java/com/psyassistant/admin/AdminUserControllerTest.java`
+  - `backend/src/test/java/com/psyassistant/users/UserManagementServiceTest.java`
+  - `context/PROGRESS.md`
+- **Tests:** 506 passing / 0 failures
+
+---
+
+## 2026-05-20 — Test Run (Increment 4 code-review fixes, attempt 2)
+- Passed: 506 | Failed: 0 | Skipped: 0 | Coverage: N/A (no Jacoco plugin in pom.xml)
+- Coverage gate: N/A — Jacoco not configured; gate cannot be evaluated
+- Failures: none
+- Action: all clear — full suite passes cleanly after all Increment 4 code-review fixes
+
+---
+
+## 2026-05-20 — Code Review (Increment 4, re-review after fixes)
+- Quality: PASS (Critical: 0, High: 0, Medium: 2)
+- Coverage: FULLY COVERED
+- Recommendation: approve

@@ -139,8 +139,8 @@ public class AdminUserController {
     public ResponseEntity<UserCreationResponseDto> createTherapistWithTemporaryPassword(
             @Valid @RequestBody final CreateUserRequest request) {
 
-        // Validate that role is THERAPIST
-        if (request.role() != UserRole.THERAPIST) {
+        // Validate that roles include THERAPIST
+        if (!request.roles().contains(UserRole.THERAPIST)) {
             throw new IllegalArgumentException("This endpoint is only for creating therapist accounts");
         }
 

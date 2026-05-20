@@ -182,7 +182,7 @@ Existing single-role tokens issued before this migration will decode correctly: 
 
 ### Increment 4 — `UserManagementService` and DTOs: multi-role create/update
 
-**Status:** pending
+**Status:** completed
 
 **Goal:** Update the request/response DTOs and service so that creating and patching a user operates on a `Set<UserRole>` (minimum one element). The `UserSummaryDto` gains a `roles: Set<UserRole>` field alongside the deprecated single `role`.
 

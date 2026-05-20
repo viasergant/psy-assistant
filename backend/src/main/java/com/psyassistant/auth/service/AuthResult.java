@@ -3,6 +3,7 @@ package com.psyassistant.auth.service;
 import com.psyassistant.auth.dto.LoginResponse;
 import com.psyassistant.users.UserRole;
 import java.time.Duration;
+import java.util.Set;
 
 /**
  * Internal value object returned by {@link AuthService} authentication methods.
@@ -12,13 +13,14 @@ import java.time.Duration;
  *
  * @param loginResponse    the JSON body to send to the client
  * @param rawRefreshToken  the plain UUID refresh token for the Set-Cookie header
- * @param role             the authenticated user's role (used to compute cookie max-age)
+ * @param roles            the authenticated user's roles (used to compute cookie max-age);
+ *                         never null, never empty
  * @param refreshTtl       TTL of the issued refresh token
  */
 public record AuthResult(
         LoginResponse loginResponse,
         String rawRefreshToken,
-        UserRole role,
+        Set<UserRole> roles,
         Duration refreshTtl
 ) {
 }

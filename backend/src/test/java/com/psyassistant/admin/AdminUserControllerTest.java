@@ -25,6 +25,7 @@ import com.psyassistant.users.dto.UserSummaryDto;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,7 +116,8 @@ class AdminUserControllerTest {
     @Test
     void createUserReturns201OnSuccess() throws Exception {
         UserCreationResponseDto dto = new UserCreationResponseDto(
-                USER_ID, "new@example.com", "Alice", UserRole.THERAPIST, "tmp-pass-123");
+                USER_ID, "new@example.com", "Alice",
+                Set.of(UserRole.THERAPIST), UserRole.THERAPIST, "tmp-pass-123");
         when(userManagementService.createUserWithTemporaryPassword(any(), any())).thenReturn(dto);
 
         mockMvc.perform(post(BASE)
@@ -123,9 +125,11 @@ class AdminUserControllerTest {
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new CreateUserRequest("new@example.com", "Alice", UserRole.THERAPIST))))
+                                new CreateUserRequest("new@example.com", "Alice",
+                                        Set.of(UserRole.THERAPIST)))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("new@example.com"))
+                .andExpect(jsonPath("$.roles[0]").value("THERAPIST"))
                 .andExpect(jsonPath("$.active").doesNotExist());
     }
 
@@ -136,7 +140,8 @@ class AdminUserControllerTest {
                                 .jwt(j -> j.subject(UUID.randomUUID().toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new CreateUserRequest("new@example.com", "Alice", UserRole.THERAPIST))))
+                                new CreateUserRequest("new@example.com", "Alice",
+                                        Set.of(UserRole.THERAPIST)))))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
     }
@@ -151,7 +156,8 @@ class AdminUserControllerTest {
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new CreateUserRequest("dup@example.com", "Bob", UserRole.THERAPIST))))
+                                new CreateUserRequest("dup@example.com", "Bob",
+                                        Set.of(UserRole.THERAPIST)))))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("DUPLICATE_EMAIL"));
     }
@@ -162,7 +168,7 @@ class AdminUserControllerTest {
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"fullName\":\"Alice\",\"role\":\"THERAPIST\"}"))
+                        .content("{\"fullName\":\"Alice\",\"roles\":[\"THERAPIST\"]}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -173,8 +179,86 @@ class AdminUserControllerTest {
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new CreateUserRequest("not-an-email", "Alice", UserRole.THERAPIST))))
+                                new CreateUserRequest("not-an-email", "Alice",
+                                        Set.of(UserRole.THERAPIST)))))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createUserReturns400OnEmptyRoles() throws Exception {
+        // Arrange: request with an empty roles array
+        mockMvc.perform(post(BASE)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
+                                .jwt(j -> j.subject(ADMIN_ID.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"test@example.com\",\"fullName\":\"Test\",\"roles\":[]}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createUserReturns400WhenRolesFieldOmitted() throws Exception {
+        // Arrange: request with the roles field entirely absent
+        mockMvc.perform(post(BASE)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
+                                .jwt(j -> j.subject(ADMIN_ID.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"test@example.com\",\"fullName\":\"Test\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // ---- createTherapistWithTemporaryPassword --------------------------------
+
+    @Test
+    void createTherapistReturns400WhenRolesDoNotIncludeTherapist() throws Exception {
+        // Arrange: roles contain FINANCE but not THERAPIST — endpoint must reject with 400
+        mockMvc.perform(post(BASE + "/therapists")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
+                                .jwt(j -> j.subject(ADMIN_ID.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"finance@example.com\","
+                                + "\"fullName\":\"Finance User\","
+                                + "\"roles\":[\"FINANCE\"]}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createTherapistReturns201WhenRolesContainOnlyTherapist() throws Exception {
+        // Arrange: roles contain only THERAPIST — the primary use case of this endpoint
+        UserCreationResponseDto dto = new UserCreationResponseDto(
+                USER_ID, "therapist@example.com", "Dr Jones",
+                Set.of(UserRole.THERAPIST), UserRole.THERAPIST, "tmp-pass-789");
+        when(userManagementService.createUserWithTemporaryPassword(any(), any())).thenReturn(dto);
+
+        mockMvc.perform(post(BASE + "/therapists")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
+                                .jwt(j -> j.subject(ADMIN_ID.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"therapist@example.com\","
+                                + "\"fullName\":\"Dr Jones\","
+                                + "\"roles\":[\"THERAPIST\"]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("therapist@example.com"))
+                .andExpect(jsonPath("$.roles[0]").value("THERAPIST"));
+    }
+
+    @Test
+    void createTherapistReturns201WhenRolesIncludeTherapistAndOtherRoles() throws Exception {
+        // Arrange: roles include THERAPIST plus SUPERVISOR — endpoint must accept (contains semantics)
+        UserCreationResponseDto dto = new UserCreationResponseDto(
+                USER_ID, "therapist@example.com", "Dr Smith",
+                Set.of(UserRole.THERAPIST, UserRole.SUPERVISOR),
+                UserRole.THERAPIST, "tmp-pass-456");
+        when(userManagementService.createUserWithTemporaryPassword(any(), any())).thenReturn(dto);
+
+        mockMvc.perform(post(BASE + "/therapists")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
+                                .jwt(j -> j.subject(ADMIN_ID.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"therapist@example.com\","
+                                + "\"fullName\":\"Dr Smith\","
+                                + "\"roles\":[\"THERAPIST\",\"SUPERVISOR\"]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("therapist@example.com"));
     }
 
     // ---- updateUser -------------------------------------------------------
@@ -182,7 +266,8 @@ class AdminUserControllerTest {
     @Test
     void updateUserReturns200OnSuccess() throws Exception {
         UserSummaryDto dto = new UserSummaryDto(
-                USER_ID, "user@example.com", "Updated", UserRole.SYSTEM_ADMINISTRATOR, true,
+                USER_ID, "user@example.com", "Updated",
+                Set.of(UserRole.SYSTEM_ADMINISTRATOR), UserRole.SYSTEM_ADMINISTRATOR, true,
                 Instant.now(), Instant.now());
         when(userManagementService.updateUser(eq(USER_ID), any(), any())).thenReturn(dto);
 
@@ -191,9 +276,22 @@ class AdminUserControllerTest {
                                 .jwt(j -> j.subject(ADMIN_ID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new PatchUserRequest(null, UserRole.SYSTEM_ADMINISTRATOR, null))))
+                                new PatchUserRequest(null, Set.of(UserRole.SYSTEM_ADMINISTRATOR),
+                                        null))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.role").value("SYSTEM_ADMINISTRATOR"));
+                .andExpect(jsonPath("$.role").value("SYSTEM_ADMINISTRATOR"))
+                .andExpect(jsonPath("$.roles[0]").value("SYSTEM_ADMINISTRATOR"));
+    }
+
+    @Test
+    void updateUserReturns400OnEmptyRoles() throws Exception {
+        // Arrange: PATCH request with an empty roles array
+        mockMvc.perform(patch(BASE + "/" + USER_ID)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
+                                .jwt(j -> j.subject(ADMIN_ID.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"roles\":[]}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

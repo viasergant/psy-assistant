@@ -6,6 +6,7 @@ import {
   SessionStatus,
   CompleteSessionRequest,
   SessionFilters,
+  RecordKind,
 } from '../models/session.model';
 
 describe('SessionService', () => {
@@ -13,21 +14,23 @@ describe('SessionService', () => {
   let httpMock: HttpTestingController;
 
   const mockSession: SessionRecord = {
-    id: 1,
-    appointmentId: 101,
-    clientId: 201,
+    id: 'uuid-1',
+    appointmentId: 'uuid-101',
+    recordKind: RecordKind.INDIVIDUAL,
+    clientId: 'uuid-201',
     clientName: 'John Doe',
-    therapistId: 301,
+    therapistId: 'uuid-301',
     sessionDate: '2026-04-15',
     scheduledStartTime: '10:00:00',
-      sessionType: {
-        id: 'uuid-1',
-        code: 'FOLLOW_UP',
-        name: 'Follow-Up Session',
-        description: 'Regular therapeutic session'
-      },
+    sessionType: {
+      id: 'uuid-1',
+      code: 'FOLLOW_UP',
+      name: 'Follow-Up Session',
+      description: 'Regular therapeutic session'
+    },
     plannedDuration: 60,
     status: SessionStatus.PENDING,
+    participants: [],
     createdAt: '2026-04-01T08:00:00Z',
     updatedAt: '2026-04-01T08:00:00Z',
   };
@@ -61,14 +64,14 @@ describe('SessionService', () => {
     });
 
     it('should retrieve sessions with client filter', () => {
-      const filters: SessionFilters = { clientId: 201 };
+      const filters: SessionFilters = { clientId: 'uuid-201' };
 
       service.getSessions(filters).subscribe();
 
       const req = httpMock.expectOne((request) =>
         request.url === '/api/sessions' && request.params.has('clientId')
       );
-      expect(req.request.params.get('clientId')).toBe('201');
+      expect(req.request.params.get('clientId')).toBe('uuid-201');
       req.flush([mockSession]);
     });
 
@@ -122,12 +125,12 @@ describe('SessionService', () => {
         status: SessionStatus.IN_PROGRESS,
       };
 
-      service.startSession('1').subscribe((session) => {
+      service.startSession('uuid-1').subscribe((session) => {
         expect(session.status).toBe(SessionStatus.IN_PROGRESS);
-        expect(session.id).toBe('1');
+        expect(session.id).toBe('uuid-1');
       });
 
-      const req = httpMock.expectOne('/api/sessions/1/start');
+      const req = httpMock.expectOne('/api/sessions/uuid-1/start');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({});
       req.flush(startedSession);

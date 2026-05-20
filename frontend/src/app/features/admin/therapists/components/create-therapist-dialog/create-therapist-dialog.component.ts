@@ -94,7 +94,7 @@ interface TherapistWithAccountResponseDto {
               aria-required="true">
               <option value="">{{ 'admin.therapists.create.selectPlaceholder' | transloco }}</option>
               <option *ngFor="let status of employmentStatuses" [value]="status">
-                {{ statusLabels[status] }}
+                {{ 'admin.therapists.create.employmentStatuses.' + status | transloco }}
               </option>
             </select>
             <span *ngIf="isInvalid('employmentStatus')" class="error-msg" role="alert">

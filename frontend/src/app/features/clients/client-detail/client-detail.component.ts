@@ -504,7 +504,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   therapistProfileId: string | null = null;
   availableTherapists: TherapistProfile[] = [];
   selectedAdminTherapistId = '';
-  private _userRole: string | null = null;
+  private _userRole: string[] = [];
   private photoObjectUrl: string | null = null;
 
   profileForm: FormGroup;
@@ -600,9 +600,8 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   }
 
   get needsTherapistPicker(): boolean {
-    const role = this._userRole;
     return !this.therapistProfileId &&
-      (role === 'SYSTEM_ADMINISTRATOR' || role === 'RECEPTION_ADMIN_STAFF');
+      (this._userRole.includes('SYSTEM_ADMINISTRATOR') || this._userRole.includes('RECEPTION_ADMIN_STAFF'));
   }
 
   get effectiveTherapistId(): string | null {

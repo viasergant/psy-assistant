@@ -1,10 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { UserManagementService } from '../../services/user-management.service';
-import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserSummary } from '../../models/user.model';
+import { ASSIGNABLE_ROLES, normalizeRole, normalizeRoles, ROLE_LABELS, UserRole, UserSummary } from '../../models/user.model';
+
+/** Validates that at least one role checkbox is selected. */
+const rolesRequiredValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const value = control.value as UserRole[];
+  return Array.isArray(value) && value.length >= 1 ? null : { rolesRequired: true };
+};
 
 /**
  * Modal dialog for editing an existing user's full name, role, or active status.
@@ -34,10 +40,23 @@ import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserSummary } from '../..
           </div>
 
           <div class="field">
-            <label for="role">{{ 'admin.users.edit.roleLabel' | transloco }}</label>
-            <select id="role" formControlName="role">
-              <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
-            </select>
+            <fieldset class="roles-fieldset" [class.roles-invalid]="isInvalid('roles')">
+              <legend>{{ 'admin.users.roles.label' | transloco }}</legend>
+              <div class="roles-checkboxes">
+                <label *ngFor="let r of assignableRoles" class="role-checkbox-label">
+                  <input
+                    type="checkbox"
+                    [value]="r"
+                    [checked]="isRoleSelected(r)"
+                    (change)="toggleRole(r, $event)"
+                  />
+                  {{ 'roles.' + r | transloco }}
+                </label>
+              </div>
+              <span *ngIf="isInvalid('roles')" class="error-msg" role="alert">
+                {{ 'admin.users.roles.required' | transloco }}
+              </span>
+            </fieldset>
           </div>
 
           <div class="field field-row">
@@ -115,6 +134,41 @@ import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserSummary } from '../..
     button[type="button"] { background: #F1F5F9; color: #374151; border: 1.5px solid #E2E8F0; }
     button[type="button"]:hover:not(:disabled) { background: #E2E8F0; }
     button:disabled { opacity: .55; cursor: not-allowed; }
+    .roles-fieldset {
+      border: 1.5px solid #D1D5DB;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      margin: 0;
+    }
+    .roles-fieldset.roles-invalid {
+      border-color: #DC2626;
+    }
+    .roles-fieldset legend {
+      font-weight: 500;
+      font-size: .9375rem;
+      padding: 0 .25rem;
+    }
+    .roles-checkboxes {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      margin-top: .5rem;
+    }
+    .role-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-weight: 400;
+      font-size: .9375rem;
+      cursor: pointer;
+    }
+    .role-checkbox-label input[type="checkbox"] {
+      width: 1rem;
+      height: 1rem;
+      cursor: pointer;
+      accent-color: #0EA5A0;
+    }
+    .error-msg { color: #DC2626; font-size: .8125rem; margin-top: .25rem; display: block; }
   `]
 })
 export class EditUserDialogComponent implements OnInit {
@@ -137,19 +191,60 @@ export class EditUserDialogComponent implements OnInit {
   readonly roleLabels = ROLE_LABELS;
 
   ngOnInit(): void {
+    // Pre-populate roles: prefer the `roles` array if present, fall back to normalising the single `role` value
+    const initialRoles: UserRole[] = this.user.roles && this.user.roles.length > 0
+      ? normalizeRoles(this.user.roles)
+      : [normalizeRole(this.user.role)];
+
     this.form = this.fb.group({
       fullName: [this.user.fullName ?? ''],
-      role: [normalizeRole(this.user.role)],
+      roles: [initialRoles, rolesRequiredValidator],
       active: [this.user.active]
     });
   }
 
+  /** Returns true when the given role is in the current selection. */
+  isRoleSelected(role: UserRole): boolean {
+    const current = this.form.get('roles')?.value as UserRole[];
+    return Array.isArray(current) && current.includes(role);
+  }
+
+  /** Adds or removes a role from the `roles` form control value on checkbox change. */
+  toggleRole(role: UserRole, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const ctrl = this.form.get('roles')!;
+    const current: UserRole[] = Array.isArray(ctrl.value) ? [...ctrl.value] : [];
+    if (checked) {
+      if (!current.includes(role)) {
+        ctrl.setValue([...current, role]);
+      }
+    } else {
+      ctrl.setValue(current.filter(r => r !== role));
+    }
+    ctrl.markAsTouched();
+  }
+
+  /** Returns true when the field is invalid and touched. */
+  isInvalid(field: string): boolean {
+    const ctrl = this.form.get(field);
+    return !!ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched);
+  }
+
   /** Submits only the changed fields to the PATCH endpoint. */
   submit(): void {
+    this.form.markAllAsTouched();
+    if (this.form.invalid) return;
+
     this.saving = true;
     this.serverError = null;
 
-    this.userService.updateUser(this.user.id, this.form.value).subscribe({
+    const formValue = this.form.value as { fullName: string; roles: UserRole[]; active: boolean };
+
+    this.userService.updateUser(this.user.id, {
+      fullName: formValue.fullName,
+      roles: formValue.roles,
+      active: formValue.active
+    }).subscribe({
       next: (updated) => {
         this.saving = false;
         this.updated.emit(updated);

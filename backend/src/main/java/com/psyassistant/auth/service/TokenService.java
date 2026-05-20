@@ -12,7 +12,9 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HexFormat;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.UUID;
 import javax.crypto.SecretKey;
@@ -34,14 +36,15 @@ import org.springframework.stereotype.Service;
  * <p>Access tokens are HS256-signed JWTs. Refresh tokens are random UUIDs that
  * are stored only as their SHA-256 hex digests in the database.
  *
- * <p>The {@code roles} claim in the JWT contains both the {@code ROLE_X} value
+ * <p>The {@code roles} claim in the JWT contains the union of all {@code ROLE_X} values
  * (consumed by Spring Security's {@code hasRole()} checks in the filter chain)
- * and all {@link Permission} names for the role (consumed by
+ * and all distinct {@link Permission} names across every assigned role (consumed by
  * {@code hasAuthority()} checks in {@code @PreAuthorize} annotations).
  *
  * <p>Token TTLs by role:
  * <ul>
- *   <li>SYSTEM_ADMINISTRATOR: access=15 min, refresh=24 h</li>
+ *   <li>SYSTEM_ADMINISTRATOR (or any role set containing SYSTEM_ADMINISTRATOR/ADMIN):
+ *       access=15 min, refresh=24 h</li>
  *   <li>All other roles: access=60 min, refresh=15 d</li>
  * </ul>
  */
@@ -94,10 +97,11 @@ public class TokenService {
     /**
      * Builds and signs a JWT access token for the given user.
      *
-     * <p>The {@code roles} claim contains:
+     * <p>The {@code roles} claim contains the union of:
      * <ol>
-     *   <li>The {@code ROLE_X} value for the user's role (for {@code hasRole()} checks)</li>
-     *   <li>All {@link Permission} names granted to the role (for {@code hasAuthority()} checks)</li>
+     *   <li>A {@code ROLE_X} value for each of the user's roles (for {@code hasRole()} checks)</li>
+     *   <li>All distinct {@link Permission} names granted across every role
+     *       (for {@code hasAuthority()} checks)</li>
      * </ol>
      *
      * @param user the authenticated user
@@ -110,23 +114,22 @@ public class TokenService {
     /**
      * Builds and signs a JWT access token for the given user with optional therapist profile ID.
      *
-     * <p>The {@code roles} claim contains:
-     * <ol>
-     *   <li>The {@code ROLE_X} value for the user's role (for {@code hasRole()} checks)</li>
-     *   <li>All {@link Permission} names granted to the role (for {@code hasAuthority()} checks)</li>
-     * </ol>
+     * <p>The {@code roles} claim contains the union of all {@code ROLE_X} values and all
+     * distinct {@link Permission} names across every assigned role. No duplicate entries.
      *
-     * <p>If the therapistProfileId is provided, it is included as a claim for therapist-specific operations.
+     * <p>If {@code therapistProfileId} is provided, it is included as a claim for
+     * therapist-specific operations. The claim is included when {@code THERAPIST} is
+     * among the user's roles.
      *
-     * @param user the authenticated user
+     * @param user               the authenticated user
      * @param therapistProfileId optional therapist profile UUID (for THERAPIST role users)
      * @return signed JWT string
      */
     public String buildAccessToken(final User user, final UUID therapistProfileId) {
         Instant now = Instant.now();
-        Duration ttl = accessTtlFor(user.getRole());
+        Duration ttl = accessTtlFor(user.getRoles());
 
-        List<String> authorities = buildAuthorities(user.getRole());
+        List<String> authorities = buildAuthorities(user.getRoles());
 
         JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
                 .issuer(issuer)
@@ -135,7 +138,7 @@ public class TokenService {
                 .expiresAt(now.plus(ttl))
                 .claim(ROLES_CLAIM, authorities);
 
-        if (therapistProfileId != null) {
+        if (therapistProfileId != null && user.hasRole(UserRole.THERAPIST)) {
             claimsBuilder.claim("therapistProfileId", therapistProfileId.toString());
         }
 
@@ -146,11 +149,23 @@ public class TokenService {
     }
 
     /**
+     * Returns when an access token built now for the given roles will expire.
+     *
+     * @param roles user roles
+     * @return expiry instant
+     */
+    public Instant accessTokenExpiresAt(final Collection<UserRole> roles) {
+        return Instant.now().plus(accessTtlFor(roles));
+    }
+
+    /**
      * Returns when an access token built now for the given role will expire.
      *
      * @param role user role
      * @return expiry instant
+     * @deprecated Use {@link #accessTokenExpiresAt(Collection)} instead.
      */
+    @Deprecated
     public Instant accessTokenExpiresAt(final UserRole role) {
         return Instant.now().plus(accessTtlFor(role));
     }
@@ -181,13 +196,30 @@ public class TokenService {
     }
 
     /**
+     * Returns the refresh TTL for the given roles.
+     *
+     * <p>If ANY role is {@code SYSTEM_ADMINISTRATOR} or {@code ADMIN}, admin TTL (24 h) applies.
+     * All other combinations use the standard TTL (15 d).
+     *
+     * @param roles user roles
+     * @return refresh token duration
+     */
+    public Duration refreshTtlFor(final Collection<UserRole> roles) {
+        boolean isAdmin = roles.stream()
+                .anyMatch(r -> r == UserRole.SYSTEM_ADMINISTRATOR || r == UserRole.ADMIN);
+        return isAdmin ? adminRefreshTtl : userRefreshTtl;
+    }
+
+    /**
      * Returns the refresh TTL for the given role.
      *
      * <p>SYSTEM_ADMINISTRATOR tokens expire in 24 hours; all other roles in 15 days.
      *
      * @param role user role
      * @return refresh token duration
+     * @deprecated Use {@link #refreshTtlFor(Collection)} instead.
      */
+    @Deprecated
     public Duration refreshTtlFor(final UserRole role) {
         return role == UserRole.SYSTEM_ADMINISTRATOR || role == UserRole.ADMIN
                 ? adminRefreshTtl
@@ -197,22 +229,39 @@ public class TokenService {
     // ---- private helpers -------------------------------------------------
 
     /**
-     * Builds the full authority list for the JWT {@code roles} claim.
+     * Builds the full authority list for the JWT {@code roles} claim from a collection of roles.
      *
-     * <p>The list starts with {@code ROLE_X} and is followed by all
-     * {@link Permission} names (without any {@code ROLE_} prefix) from
-     * {@link RolePermissions}.
+     * <p>Uses a {@link LinkedHashSet} to collect authorities (deduplication). For each role,
+     * adds {@code ROLE_X} and all {@link Permission} names from {@link RolePermissions}.
+     * Returns the set as a {@link List}.
      *
-     * @param role the user role
-     * @return mutable list of authority strings for the JWT claim
+     * @param roles the user roles
+     * @return deduplicated list of authority strings for the JWT claim
      */
-    private List<String> buildAuthorities(final UserRole role) {
-        List<String> authorities = new ArrayList<>();
-        authorities.add("ROLE_" + role.name());
-        for (Permission permission : RolePermissions.permissionsFor(role)) {
-            authorities.add(permission.name());
+    List<String> buildAuthorities(final Collection<UserRole> roles) {
+        LinkedHashSet<String> authorities = new LinkedHashSet<>();
+        for (UserRole role : roles) {
+            authorities.add("ROLE_" + role.canonical().name());
+            for (Permission permission : RolePermissions.permissionsFor(role)) {
+                authorities.add(permission.name());
+            }
         }
-        return authorities;
+        return new ArrayList<>(authorities);
+    }
+
+    /**
+     * Returns the access TTL for the given roles.
+     *
+     * <p>If ANY role is {@code SYSTEM_ADMINISTRATOR} or {@code ADMIN}, admin TTL applies.
+     * All other combinations use the standard TTL.
+     *
+     * @param roles user roles
+     * @return access token duration
+     */
+    public Duration accessTtlFor(final Collection<UserRole> roles) {
+        boolean isAdmin = roles.stream()
+                .anyMatch(r -> r == UserRole.SYSTEM_ADMINISTRATOR || r == UserRole.ADMIN);
+        return isAdmin ? adminAccessTtl : userAccessTtl;
     }
 
     private Duration accessTtlFor(final UserRole role) {

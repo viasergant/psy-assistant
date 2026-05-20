@@ -1,6 +1,6 @@
 export interface JwtClaims {
   sub: string;
-  /** Backend emits ["ROLE_THERAPIST", ...permissions]. Use extractRole() to get AppRole. */
+  /** Backend emits multiple ROLE_X entries for multi-role users, followed by permission strings. */
   roles: string[];
   mustChangePassword?: boolean;
   profileComplete?: boolean;

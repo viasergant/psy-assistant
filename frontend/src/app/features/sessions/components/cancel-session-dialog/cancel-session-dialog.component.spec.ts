@@ -6,7 +6,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { of, throwError } from 'rxjs';
 import { CancelSessionDialogComponent } from './cancel-session-dialog.component';
 import { SessionService } from '../../services/session.service';
-import { SessionRecord, SessionStatus } from '../../models/session.model';
+import { SessionRecord, SessionStatus, RecordKind } from '../../models/session.model';
 
 describe('CancelSessionDialogComponent', () => {
   let component: CancelSessionDialogComponent;
@@ -15,11 +15,12 @@ describe('CancelSessionDialogComponent', () => {
   let messageService: jasmine.SpyObj<MessageService>;
 
   const mockSession: SessionRecord = {
-    id: 1,
-    appointmentId: 101,
-    clientId: 201,
+    id: 'uuid-1',
+    appointmentId: 'uuid-101',
+    recordKind: RecordKind.INDIVIDUAL,
+    clientId: 'uuid-201',
     clientName: 'John Doe',
-    therapistId: 301,
+    therapistId: 'uuid-301',
     sessionDate: '2026-04-15',
     scheduledStartTime: '10:00:00',
     sessionType: {
@@ -30,6 +31,7 @@ describe('CancelSessionDialogComponent', () => {
     },
     plannedDuration: 60,
     status: SessionStatus.PENDING,
+    participants: [],
     createdAt: '2026-04-01T08:00:00Z',
     updatedAt: '2026-04-01T08:00:00Z',
   };

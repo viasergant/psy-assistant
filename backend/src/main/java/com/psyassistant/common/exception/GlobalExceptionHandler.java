@@ -13,6 +13,7 @@ import com.psyassistant.crm.leads.InvalidStatusTransitionException;
 import com.psyassistant.crm.leads.LeadAlreadyConvertedException;
 import com.psyassistant.notifications.template.TemplateNotInactiveException;
 import com.psyassistant.users.DuplicateEmailException;
+import com.psyassistant.users.RoleValidationException;
 import com.psyassistant.users.SelfDeactivationException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -199,6 +200,29 @@ public class GlobalExceptionHandler {
                         HttpStatus.BAD_REQUEST.value(),
                         ex.getMessage(),
                         "SELF_DEACTIVATION_FORBIDDEN",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles role-based business rule violations, such as calling a role-specific endpoint
+     * without the required role in the request (400).
+     *
+     * @param ex      the role validation exception
+     * @param request the current HTTP request
+     * @return 400 Bad Request with machine-readable code
+     */
+    @ExceptionHandler(RoleValidationException.class)
+    public ResponseEntity<ErrorResponse> handleRoleValidation(
+            final RoleValidationException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.BAD_REQUEST.value(),
+                        ex.getMessage(),
+                        "ROLE_VALIDATION_ERROR",
                         request.getRequestURI()
                 )
         );

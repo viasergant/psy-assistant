@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-05-20
+
+### Added
+
+- **Multi-role user support** — a single CRM user can now hold multiple roles simultaneously (e.g., THERAPIST + SUPERVISOR); the union of permissions for all assigned roles is reflected in the JWT and enforced at every endpoint
+- **`user_roles` junction table** (V68 migration) — replaces the single `users.role` column; existing role data migrated automatically with legacy alias normalisation; pre-flight check aborts migration if unrecognised role values are present
+- **Multi-role JWT authority building** — `TokenService` emits all `ROLE_X` values and the full permission union for every assigned role; admin TTL applies if any assigned role is `SYSTEM_ADMINISTRATOR`
+- **Admin UI multi-role assignment** — create/edit user dialogs replaced single-role `<select>` with a checkbox group; at least one role must remain selected; the user list table displays all assigned roles
+- **`RoleValidationException`** — typed domain exception (HTTP 400, code `ROLE_VALIDATION_ERROR`) for role validation failures on the therapist creation endpoint, replacing a generic `IllegalArgumentException`
+- **RBAC integration tests** — dual-role (THERAPIST + SUPERVISOR) JWT verified to grant therapist access, grant supervisor-only `READ_TEAM_WORKLOAD` access, and be denied admin endpoint access (AC8/AC9/AC10)
+
+### Changed
+
+- `POST /api/v1/admin/users` and `PATCH /api/v1/admin/users/{id}` now accept `roles: [...]` (array) instead of `role` (single value); the deprecated `role` field is still included in responses for backward compatibility
+- `GET /api/v1/admin/users?role=THERAPIST` now matches users that have THERAPIST among their roles (not just as their sole role)
+- `POST /api/v1/admin/users/therapists` accepts requests where roles include THERAPIST plus additional roles (e.g., `[THERAPIST, SUPERVISOR]`)
+- `PermissionService` (Angular) now collects all `ROLE_X` entries from the JWT rather than only the first, enabling correct permission resolution for multi-role users
+- Schedule guard and client-detail component updated to use array role checks (`.includes()`) so a multi-role user is not misidentified
+
+### Fixed
+
+- Pagination count queries on `GET /api/v1/admin/users?role=X` now return the correct `totalPages` — the previous JOIN-based filter produced duplicate rows under some JPA providers; replaced with a correlated EXISTS subquery
+
+---
+
 ## [Unreleased] — 2026-05-13
 
 ### Added

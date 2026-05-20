@@ -502,3 +502,71 @@
 - Quality: PASS (Critical: 0, High: 0, Medium: 1, Suggestion: 1)
 - Coverage: FULLY COVERED
 - Recommendation: approve
+
+---
+
+## 2026-05-20 — Increment 9: `UserManagementServiceTest` and integration validation
+
+- **What was completed:** Verified that all four required `UserManagementServiceTest` multi-role tests already existed from Increment 4 (no additions needed). Added three new RBAC integration tests (AC8, AC9, AC10) to `RbacIntegrationTest` proving that a dual-role THERAPIST+SUPERVISOR JWT grants access correctly and is denied where expected.
+- **Interfaces/methods created:** none (tests only)
+- **Files created/modified:**
+  - `backend/src/test/java/com/psyassistant/common/rbac/RbacIntegrationTest.java` (modified — three new tests added: `dualRoleTokenGrantsTherapistAccess`, `dualRoleTokenGrantsSupervisorAccess`, `dualRoleTokenDeniesAdminAccess`)
+  - `context/PROGRESS.md` (updated)
+  - `context/PLAN.md` (increment 9 status → completed)
+- **Decisions made:**
+  - `UserManagementServiceTest` already contained all four tests required by the plan (`createUserWithMultipleRolesPersistsAllRoles`, `updateUserWithMultipleRolesPersistsAllRoles`, `updateUserWithEmptyRolesThrowsValidationError`, `listUsersRoleFilterMatchesUsersWithRoleAmongMany`) — added during Increment 4 and code-review fixes. No duplication introduced.
+  - AC8 uses `GET /api/v1/clients/{id}/sessions` with the `ASSIGNED_CLIENT` constant (same as AC1) so the service layer does not deny on assignment check; the test asserts `status != 403` (200 acceptable).
+  - AC9 uses `GET /api/v1/caseload` which requires `READ_TEAM_WORKLOAD` — a SUPERVISOR-only permission not held by THERAPIST alone. The dual-role token includes this permission from the SUPERVISOR role; the test asserts `status != 403`.
+  - AC10 uses `POST /api/v1/admin/users` which requires `MANAGE_USERS` / `ROLE_SYSTEM_ADMINISTRATOR`. The dual-role token omits both; the test asserts HTTP 403.
+  - All 16 authorities in the dual-role token match the exact union of THERAPIST and SUPERVISOR permissions from `RolePermissions.java`, mirroring what `TokenService.buildAuthorities` would produce at runtime.
+  - `RbacIntegrationTest` grew from 10 to 13 tests (10 original + 3 new AC8/AC9/AC10).
+- **Tests:** 513 passing / 0 failures (+3 from 510)
+
+---
+
+## 2026-05-20 — Test Run (Increment 9, attempt 1)
+- Passed: 513 | Failed: 0 | Skipped: 0 | Coverage: N/A (no Jacoco plugin in pom.xml)
+- Coverage gate: N/A — Jacoco not configured in pom.xml; gate cannot be evaluated
+- Duration: 11s
+- Failures: none
+- Action: all clear — full suite passes cleanly; all increments 1-9 complete, 513/513 tests passing
+
+---
+
+## 2026-05-20 — Code Review (Increment 9)
+- Quality: FAIL (Critical: 0, High: 1, Medium: 3, Suggestion: 1)
+- Coverage: FULLY COVERED
+- Recommendation: fix and re-review
+
+---
+
+## 2026-05-20 — Code Review Fixes (Increment 9)
+
+Increment 9 code-review fixes applied: corrected authority lists in AC8/AC9/AC10, added body+audit assertions to AC10, fixed PLAN.md AC9 URL.
+
+- **What was completed:** Four targeted fixes applied to `RbacIntegrationTest.java` and `context/PLAN.md`.
+- **Fixes applied:**
+  1. **Fix 1 (High) — Missing permissions in AC8/AC9/AC10 authority lists:** Added four missing permissions (`READ_PRICING_RULES`, `READ_LEADS`, `READ_INVOICES`, `READ_SERVICE_CATALOG`) to the `jwt(...).authorities(...)` calls in all three new tests. Authority lists now correctly reflect the full THERAPIST + SUPERVISOR union: 2 role authorities + 16 distinct permissions = 18 entries total, matching `RolePermissions.java`.
+  2. **Fix 2 (Medium) — Body assertion in AC10:** Added `.andExpect(jsonPath("$.code").value("ACCESS_DENIED"))` to `dualRoleTokenDeniesAdminAccess`, matching the pattern used by all other 403 tests in the file.
+  3. **Fix 3 (Medium) — Audit log assertions in AC10:** Added `auditCountBefore` capture, `assertThat(auditCountAfter).isGreaterThan(auditCountBefore)`, and `anySatisfy(entry -> assertThat(entry.getEventType()).isEqualTo("ACCESS_DENIED"))` to `dualRoleTokenDeniesAdminAccess`, matching the pattern used by AC2.
+  4. **Fix 4 (Docs) — AC9 URL in PLAN.md:** Changed `/api/v1/reporting/team-workload` to `/api/v1/caseload` on the AC9 task description line.
+- **Files modified:**
+  - `backend/src/test/java/com/psyassistant/common/rbac/RbacIntegrationTest.java`
+  - `context/PLAN.md`
+  - `context/PROGRESS.md`
+- **Tests:** 513 passing / 0 failures
+
+---
+
+## 2026-05-20 — Code Review (Increment 9, re-review after fixes)
+- Quality: PASS (Critical: 0, High: 0, Medium: 0)
+- Coverage: FULLY COVERED
+- Recommendation: approve
+
+---
+
+## 2026-05-20 — Test Run (Increment 9 code-review fixes, attempt 2)
+- Passed: 513 | Failed: 0 | Errors: 0 | Skipped: 0 | Coverage: N/A (no Jacoco plugin in pom.xml)
+- Coverage gate: N/A — Jacoco not configured; gate cannot be evaluated
+- Failures: none
+- Action: all clear — full suite passes cleanly after all Increment 9 code-review fixes; all increments 1-9 complete

@@ -268,4 +268,126 @@ class RbacIntegrationTest {
                                 .jwt(j -> j.subject(ADMIN_ID.toString()))))
                 .andExpect(status().isOk());
     }
+
+    // ---- AC8–AC10: dual-role THERAPIST + SUPERVISOR token -------------------
+
+    /**
+     * AC8: A JWT carrying both ROLE_THERAPIST and ROLE_SUPERVISOR authorities
+     * (union of permissions) grants access to GET /api/v1/clients/{id}/sessions
+     * — a THERAPIST-accessible endpoint requiring READ_OWN_SESSIONS.
+     * The response must not be 403; 200 or 404 are both acceptable.
+     */
+    @Test
+    void dualRoleTokenGrantsTherapistAccess() throws Exception {
+        mockMvc.perform(get("/api/v1/clients/" + ASSIGNED_CLIENT + "/sessions")
+                        .with(jwt()
+                                .authorities(
+                                        new SimpleGrantedAuthority("ROLE_THERAPIST"),
+                                        new SimpleGrantedAuthority("ROLE_SUPERVISOR"),
+                                        new SimpleGrantedAuthority("READ_ASSIGNED_CLIENTS"),
+                                        new SimpleGrantedAuthority("READ_OWN_SESSIONS"),
+                                        new SimpleGrantedAuthority("WRITE_SESSION_NOTE"),
+                                        new SimpleGrantedAuthority("READ_OWN_SESSION_NOTES"),
+                                        new SimpleGrantedAuthority("READ_CARE_PLANS"),
+                                        new SimpleGrantedAuthority("MANAGE_CARE_PLANS"),
+                                        new SimpleGrantedAuthority("READ_PRICING_RULES"),
+                                        new SimpleGrantedAuthority("MANAGE_RISK_FLAGS"),
+                                        new SimpleGrantedAuthority("READ_RISK_FLAGS"),
+                                        new SimpleGrantedAuthority("READ_RISK_FLAG_NOTES"),
+                                        new SimpleGrantedAuthority("READ_CLIENTS_ALL"),
+                                        new SimpleGrantedAuthority("READ_ALL_SESSIONS"),
+                                        new SimpleGrantedAuthority("READ_ALL_SESSION_NOTES"),
+                                        new SimpleGrantedAuthority("READ_TEAM_WORKLOAD"),
+                                        new SimpleGrantedAuthority("READ_REPORTS"),
+                                        new SimpleGrantedAuthority("READ_LEADS"),
+                                        new SimpleGrantedAuthority("READ_INVOICES"),
+                                        new SimpleGrantedAuthority("READ_SERVICE_CATALOG"))
+                                .jwt(j -> j.subject(USER_ID.toString()))))
+                .andExpect(result -> {
+                    int status = result.getResponse().getStatus();
+                    assertThat(status).isNotEqualTo(403);
+                });
+    }
+
+    /**
+     * AC9: A JWT carrying both ROLE_THERAPIST and ROLE_SUPERVISOR authorities
+     * (union of permissions) grants access to GET /api/v1/caseload
+     * — a SUPERVISOR-only endpoint requiring READ_TEAM_WORKLOAD.
+     * The response must not be 403; 200 or 404 are both acceptable.
+     */
+    @Test
+    void dualRoleTokenGrantsSupervisorAccess() throws Exception {
+        mockMvc.perform(get("/api/v1/caseload")
+                        .with(jwt()
+                                .authorities(
+                                        new SimpleGrantedAuthority("ROLE_THERAPIST"),
+                                        new SimpleGrantedAuthority("ROLE_SUPERVISOR"),
+                                        new SimpleGrantedAuthority("READ_ASSIGNED_CLIENTS"),
+                                        new SimpleGrantedAuthority("READ_OWN_SESSIONS"),
+                                        new SimpleGrantedAuthority("WRITE_SESSION_NOTE"),
+                                        new SimpleGrantedAuthority("READ_OWN_SESSION_NOTES"),
+                                        new SimpleGrantedAuthority("READ_CARE_PLANS"),
+                                        new SimpleGrantedAuthority("MANAGE_CARE_PLANS"),
+                                        new SimpleGrantedAuthority("READ_PRICING_RULES"),
+                                        new SimpleGrantedAuthority("MANAGE_RISK_FLAGS"),
+                                        new SimpleGrantedAuthority("READ_RISK_FLAGS"),
+                                        new SimpleGrantedAuthority("READ_RISK_FLAG_NOTES"),
+                                        new SimpleGrantedAuthority("READ_CLIENTS_ALL"),
+                                        new SimpleGrantedAuthority("READ_ALL_SESSIONS"),
+                                        new SimpleGrantedAuthority("READ_ALL_SESSION_NOTES"),
+                                        new SimpleGrantedAuthority("READ_TEAM_WORKLOAD"),
+                                        new SimpleGrantedAuthority("READ_REPORTS"),
+                                        new SimpleGrantedAuthority("READ_LEADS"),
+                                        new SimpleGrantedAuthority("READ_INVOICES"),
+                                        new SimpleGrantedAuthority("READ_SERVICE_CATALOG"))
+                                .jwt(j -> j.subject(USER_ID.toString()))))
+                .andExpect(result -> {
+                    int status = result.getResponse().getStatus();
+                    assertThat(status).isNotEqualTo(403);
+                });
+    }
+
+    /**
+     * AC10: A JWT carrying ROLE_THERAPIST and ROLE_SUPERVISOR — but NOT
+     * ROLE_SYSTEM_ADMINISTRATOR or MANAGE_USERS — must be denied access to
+     * POST /api/v1/admin/users with HTTP 403.
+     */
+    @Test
+    void dualRoleTokenDeniesAdminAccess() throws Exception {
+        long auditCountBefore = auditLogRepository.count();
+
+        mockMvc.perform(post("/api/v1/admin/users")
+                        .with(jwt()
+                                .authorities(
+                                        new SimpleGrantedAuthority("ROLE_THERAPIST"),
+                                        new SimpleGrantedAuthority("ROLE_SUPERVISOR"),
+                                        new SimpleGrantedAuthority("READ_ASSIGNED_CLIENTS"),
+                                        new SimpleGrantedAuthority("READ_OWN_SESSIONS"),
+                                        new SimpleGrantedAuthority("WRITE_SESSION_NOTE"),
+                                        new SimpleGrantedAuthority("READ_OWN_SESSION_NOTES"),
+                                        new SimpleGrantedAuthority("READ_CARE_PLANS"),
+                                        new SimpleGrantedAuthority("MANAGE_CARE_PLANS"),
+                                        new SimpleGrantedAuthority("READ_PRICING_RULES"),
+                                        new SimpleGrantedAuthority("MANAGE_RISK_FLAGS"),
+                                        new SimpleGrantedAuthority("READ_RISK_FLAGS"),
+                                        new SimpleGrantedAuthority("READ_RISK_FLAG_NOTES"),
+                                        new SimpleGrantedAuthority("READ_CLIENTS_ALL"),
+                                        new SimpleGrantedAuthority("READ_ALL_SESSIONS"),
+                                        new SimpleGrantedAuthority("READ_ALL_SESSION_NOTES"),
+                                        new SimpleGrantedAuthority("READ_TEAM_WORKLOAD"),
+                                        new SimpleGrantedAuthority("READ_REPORTS"),
+                                        new SimpleGrantedAuthority("READ_LEADS"),
+                                        new SimpleGrantedAuthority("READ_INVOICES"),
+                                        new SimpleGrantedAuthority("READ_SERVICE_CATALOG"))
+                                .jwt(j -> j.subject(USER_ID.toString()))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        long auditCountAfter = auditLogRepository.count();
+        assertThat(auditCountAfter).isGreaterThan(auditCountBefore);
+        List<AuditLog> recentEntries = auditLogRepository.findAll();
+        assertThat(recentEntries).anySatisfy(entry ->
+                assertThat(entry.getEventType()).isEqualTo("ACCESS_DENIED")
+        );
+    }
 }

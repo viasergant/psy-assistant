@@ -386,7 +386,7 @@ Therapist-related components: these use `UserSummary` and display `user.role`. U
 
 ### Increment 9 — `UserManagementServiceTest` and integration validation
 
-**Status:** pending
+**Status:** completed
 
 **Goal:** Ensure `UserManagementServiceTest` and `AdminUserControllerTest` are fully updated, and that the `RbacIntegrationTest` passes with the new multi-role infrastructure. Add a new integration test proving that a user with `[THERAPIST, SUPERVISOR]` can access both `/api/v1/sessions` and supervisor-only reports.
 
@@ -405,7 +405,7 @@ Therapist-related components: these use `UserSummary` and display `user.role`. U
 
 `RbacIntegrationTest`:
 1. Add test `AC8`: a JWT with `[ROLE_THERAPIST, ROLE_SUPERVISOR]` authorities can `GET /api/v1/clients/{id}/sessions` (therapist access) — HTTP 200.
-2. Add test `AC9`: same JWT can access `GET /api/v1/reporting/team-workload` (supervisor-only permission `READ_TEAM_WORKLOAD`) — HTTP 200.
+2. Add test `AC9`: same JWT can access `GET /api/v1/caseload` (supervisor-only permission `READ_TEAM_WORKLOAD`) — HTTP 200.
 3. Add test `AC10`: same JWT cannot `POST /api/v1/admin/users` (no SYSTEM_ADMINISTRATOR) — HTTP 403.
 
 **Acceptance criteria:**

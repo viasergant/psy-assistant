@@ -18,6 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import org.hibernate.Hibernate;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -98,7 +99,7 @@ public class TherapistProfileService {
             CreateUserRequest userRequest = new CreateUserRequest(
                 email,
                 name,
-                UserRole.THERAPIST
+                Set.of(UserRole.THERAPIST)
             );
             userManagementService.createUser(userRequest, actorId);
         }
@@ -196,7 +197,7 @@ public class TherapistProfileService {
         CreateUserRequest userRequest = new CreateUserRequest(
             email,
             fullName,
-            UserRole.THERAPIST
+            Set.of(UserRole.THERAPIST)
         );
         UserCreationResponseDto userResponse = userManagementService
             .createUserWithTemporaryPassword(userRequest, actorId);

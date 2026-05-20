@@ -5,13 +5,14 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.util.Set;
 
 /**
  * Request body for creating a new internal user account.
  *
  * @param email    unique, valid email address
  * @param fullName display name (1–255 characters)
- * @param role     role to assign; must be a valid {@link UserRole} value
+ * @param roles    set of roles to assign; must contain at least one valid {@link UserRole} value
  */
 public record CreateUserRequest(
 
@@ -24,6 +25,7 @@ public record CreateUserRequest(
         @Size(min = 1, max = 255, message = "fullName must be between 1 and 255 characters")
         String fullName,
 
-        @NotNull(message = "role is required")
-        UserRole role) {
+        @NotNull(message = "roles is required")
+        @Size(min = 1, message = "at least one role is required")
+        Set<@NotNull UserRole> roles) {
 }

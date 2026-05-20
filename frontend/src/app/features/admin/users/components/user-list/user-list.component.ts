@@ -35,8 +35,8 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
   template: `
     <div class="page">
       <header class="page-header">
-        <h1>User Management</h1>
-        <button class="btn-primary" (click)="openCreate()">+ Create user</button>
+        <h1>{{ 'admin.users.list.pageTitle' | transloco }}</h1>
+        <button class="btn-primary" (click)="openCreate()">{{ 'admin.users.list.createButton' | transloco }}</button>
       </header>
 
       <!-- Filters -->
@@ -44,15 +44,15 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
         <div class="filter-group">
           <label for="roleFilter">{{ 'admin.users.list.roleLabel' | transloco }}</label>
           <select id="roleFilter" [(ngModel)]="roleFilter" (change)="applyFilters()">
-            <option value="">All roles</option>
-            <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
+            <option value="">{{ 'admin.users.list.filterAllRoles' | transloco }}</option>
+            <option *ngFor="let r of assignableRoles" [value]="r">{{ 'roles.' + r | transloco }}</option>
           </select>
         </div>
 
         <div class="filter-group">
           <label for="statusFilter">{{ 'admin.users.list.statusLabel' | transloco }}</label>
           <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
-            <option value="">All statuses</option>
+            <option value="">{{ 'admin.users.list.filterAllStatuses' | transloco }}</option>
             <option value="true">{{ 'admin.users.list.statusActive' | transloco }}</option>
             <option value="false">{{ 'admin.users.list.statusInactive' | transloco }}</option>
           </select>
@@ -60,14 +60,14 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
       </div>
 
       <!-- Loading / empty / error states -->
-      <div *ngIf="loading" class="state-msg" aria-live="polite">Loading…</div>
+      <div *ngIf="loading" class="state-msg" aria-live="polite">{{ 'admin.users.list.loading' | transloco }}</div>
       <div *ngIf="!loading && loadError" class="alert-error" role="alert">{{ loadError }}</div>
       <div *ngIf="!loading && errorMessage" class="alert-error" role="alert">
         {{ errorMessage }}
         <button class="close-btn" (click)="errorMessage = null" [attr.aria-label]="'admin.users.list.closeError' | transloco">&times;</button>
       </div>
       <div *ngIf="!loading && !loadError && users.length === 0" class="state-msg">
-        No users match the current filters.
+        {{ 'admin.users.list.noResults' | transloco }}
       </div>
 
       <!-- Table -->
@@ -78,21 +78,21 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
               <th scope="col">
                 <button class="sort-btn" (click)="sort('fullName')" type="button"
                         [attr.aria-sort]="ariaSort('fullName')">
-                  Name
+                  {{ 'admin.users.list.tableHeaders.name' | transloco }}
                 </button>
               </th>
               <th scope="col">{{ 'admin.users.list.tableHeaders.email' | transloco }}</th>
               <th scope="col">
                 <button class="sort-btn" (click)="sort('role')" type="button"
                         [attr.aria-sort]="ariaSort('role')">
-                  Role
+                  {{ 'admin.users.list.tableHeaders.role' | transloco }}
                 </button>
               </th>
               <th scope="col">{{ 'admin.users.list.tableHeaders.status' | transloco }}</th>
               <th scope="col">
                 <button class="sort-btn" (click)="sort('createdAt')" type="button"
                         [attr.aria-sort]="ariaSort('createdAt')">
-                  Created
+                  {{ 'admin.users.list.tableHeaders.created' | transloco }}
                 </button>
               </th>
               <th scope="col"><span class="sr-only">{{ 'admin.users.list.tableHeaders.actions' | transloco }}</span></th>
@@ -104,36 +104,40 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
                 <button 
                   class="name-link" 
                   (click)="navigateToProfile(u)"
-                  [attr.aria-label]="'View profile for ' + (u.fullName ?? u.email)">
+                  [attr.aria-label]="'admin.users.list.viewProfileAria' | transloco: { name: (u.fullName ?? u.email) }">
                   {{ u.fullName ?? '—' }}
                 </button>
               </td>
               <td>{{ u.email }}</td>
               <td>
-                <span class="badge" [class.badge-admin]="u.role === 'SYSTEM_ADMINISTRATOR' || u.role === 'ADMIN'">
-                  {{ roleLabels[u.role] || u.role }}
+                <span
+                  *ngFor="let r of (u.roles ?? [u.role]); let last = last"
+                  class="badge"
+                  [class.badge-admin]="r === 'SYSTEM_ADMINISTRATOR' || r === 'ADMIN'"
+                  [style.margin-right]="last ? '0' : '4px'">
+                  {{ 'roles.' + r | transloco }}
                 </span>
               </td>
               <td>
                 <span class="badge" [class.badge-active]="u.active" [class.badge-inactive]="!u.active">
-                  {{ u.active ? 'Active' : 'Inactive' }}
+                  {{ u.active ? ('admin.users.list.statusActive' | transloco) : ('admin.users.list.statusInactive' | transloco) }}
                 </span>
               </td>
               <td>{{ u.createdAt | date:'dd MMM yyyy' }}</td>
               <td class="actions-cell">
-                <button class="btn-action" (click)="openEdit(u)" aria-label="Edit {{ u.email }}">
-                  Edit
+                <button class="btn-action" (click)="openEdit(u)" [attr.aria-label]="'admin.users.list.editAria' | transloco: { email: u.email }">
+                  {{ 'admin.users.list.editAction' | transloco }}
                 </button>
                 <button class="btn-action" (click)="openPasswordReset(u)"
-                        aria-label="Reset password for {{ u.email }}">
-                  Reset pwd
+                        [attr.aria-label]="'admin.users.list.resetPwdAria' | transloco: { email: u.email }">
+                  {{ 'admin.users.list.resetPwdAction' | transloco }}
                 </button>
                 <button
                   class="btn-action"
                   [class.btn-danger]="u.active"
                   (click)="toggleActive(u)"
-                  [attr.aria-label]="(u.active ? 'Deactivate ' : 'Reactivate ') + u.email">
-                  {{ u.active ? 'Deactivate' : 'Reactivate' }}
+                  [attr.aria-label]="(u.active ? ('admin.users.list.deactivateAria' | transloco: { email: u.email }) : ('admin.users.list.reactivateAria' | transloco: { email: u.email }))">
+                  {{ u.active ? ('admin.users.list.deactivateAction' | transloco) : ('admin.users.list.reactivateAction' | transloco) }}
                 </button>
               </td>
             </tr>
@@ -147,14 +151,14 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
                 [attr.aria-label]="'common.pagination.previousPage' | transloco">
           &lsaquo;
         </button>
-        <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+        <span>{{ 'admin.users.list.paginationText' | transloco: { current: currentPage + 1, total: totalPages } }}</span>
         <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages - 1"
                 [attr.aria-label]="'common.pagination.nextPage' | transloco">
           &rsaquo;
         </button>
       </nav>
       <p class="total-count" *ngIf="!loading">
-        {{ totalElements }} user{{ totalElements !== 1 ? 's' : '' }} found
+        {{ 'admin.users.list.usersFound' | transloco: { count: totalElements } }}
       </p>
     </div>
 
@@ -576,11 +580,12 @@ export class UserListComponent implements OnInit {
   navigateToProfile(user: UserSummary): void {
     // Clear any previous error messages
     this.errorMessage = null;
-    
-    // Normalize role handling for legacy values
-    const role = user.role === 'USER' ? 'THERAPIST' : user.role;
-    
-    if (role === 'THERAPIST') {
+
+    // Use the roles array when available; fall back to the legacy single role field
+    const allRoles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
+    const normalizedRoles = allRoles.map(r => r === 'USER' ? 'THERAPIST' : r);
+
+    if (normalizedRoles.includes('THERAPIST')) {
       // Look up therapist profile by email and navigate to their profile
       this.therapistService.getTherapistByEmail(user.email).subscribe({
         next: (therapist) => {
@@ -595,7 +600,7 @@ export class UserListComponent implements OnInit {
       // For other roles, you could navigate to a general user profile page
       // or show user details in a dialog. For now, we'll just do nothing.
       // Future enhancement: navigate to a user detail page
-      this.errorMessage = `Profile view is only available for therapists. User ${user.fullName ?? user.email} has role: ${role}.`;
+      this.errorMessage = `Profile view is only available for therapists. User ${user.fullName ?? user.email} has role(s): ${normalizedRoles.join(', ')}.`;
     }
   }
 

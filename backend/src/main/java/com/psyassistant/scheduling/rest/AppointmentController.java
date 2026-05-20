@@ -198,7 +198,7 @@ public class AppointmentController {
         LOG.debug("Fetching appointment: id={}", appointmentId);
 
         final Appointment appointment = appointmentService.getAppointment(appointmentId);
-        final AppointmentResponse response = appointmentMapper.toResponse(appointment);
+        final AppointmentResponse response = appointmentMapper.toDetailResponse(appointment);
 
         return ResponseEntity.ok(response);
     }

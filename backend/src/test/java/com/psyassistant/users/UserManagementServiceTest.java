@@ -15,8 +15,13 @@ import com.psyassistant.users.dto.PatchUserRequest;
 import com.psyassistant.users.dto.UserPageResponse;
 import com.psyassistant.users.dto.UserSummaryDto;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,11 +91,13 @@ class UserManagementServiceTest {
                 .thenAnswer(inv -> inv.getArgument(0));
 
         UserSummaryDto dto = service.createUser(
-                new CreateUserRequest("new@example.com", "Alice Smith", UserRole.THERAPIST), adminId);
+                new CreateUserRequest("new@example.com", "Alice Smith", Set.of(UserRole.THERAPIST)),
+                adminId);
 
         assertThat(dto.email()).isEqualTo("new@example.com");
         assertThat(dto.fullName()).isEqualTo("Alice Smith");
         assertThat(dto.active()).isTrue();
+        assertThat(dto.roles()).containsExactly(UserRole.THERAPIST);
         verify(resetTokenRepository).save(any(PasswordResetToken.class));
         verify(auditLogService).record(any());
     }
@@ -101,7 +108,8 @@ class UserManagementServiceTest {
 
         assertThatThrownBy(() ->
                 service.createUser(
-                        new CreateUserRequest("dup@example.com", "Bob", UserRole.THERAPIST), adminId))
+                        new CreateUserRequest("dup@example.com", "Bob", Set.of(UserRole.THERAPIST)),
+                        adminId))
                 .isInstanceOf(DuplicateEmailException.class)
                 .hasMessageContaining("dup@example.com");
 
@@ -119,34 +127,98 @@ class UserManagementServiceTest {
                 .thenAnswer(inv -> inv.getArgument(0));
 
         UserSummaryDto dto = service.createUser(
-                new CreateUserRequest("legacy-admin@example.com", "Legacy Admin", UserRole.ADMIN),
+                new CreateUserRequest("legacy-admin@example.com", "Legacy Admin",
+                        Set.of(UserRole.ADMIN)),
                 adminId);
 
         assertThat(dto.role()).isEqualTo(UserRole.SYSTEM_ADMINISTRATOR);
+        assertThat(dto.roles()).containsExactly(UserRole.SYSTEM_ADMINISTRATOR);
         assertThat(userCaptor.getValue().getRole()).isEqualTo(UserRole.SYSTEM_ADMINISTRATOR);
     }
 
-    // ---- updateUser — role -----------------------------------------------
+    @Test
+    void createUserWithEmptyRolesThrowsValidationError() {
+        // Arrange
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            Validator validator = factory.getValidator();
+            CreateUserRequest request = new CreateUserRequest(
+                    "valid@example.com", "Valid Name", Set.of());
+
+            // Act
+            Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertThat(violations).isNotEmpty();
+            assertThat(violations).anyMatch(v -> v.getMessage().contains("at least one role"));
+        }
+    }
 
     @Test
-    void updateUserChangesRoleAndAudits() {
+    void updateUserWithEmptyRolesThrowsValidationError() {
+        // Arrange
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            Validator validator = factory.getValidator();
+            PatchUserRequest request = new PatchUserRequest(null, Set.of(), null);
+
+            // Act
+            Set<ConstraintViolation<PatchUserRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertThat(violations).hasSize(1);
+            assertThat(violations.iterator().next().getPropertyPath().toString())
+                    .isEqualTo("roles");
+        }
+    }
+
+    @Test
+    void createUserWithMultipleRolesPersistsAllRoles() {
+        // Arrange
+        when(userRepository.existsByEmail("multi@example.com")).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed");
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        when(userRepository.save(userCaptor.capture())).thenAnswer(inv -> inv.getArgument(0));
+        when(resetTokenRepository.save(any(PasswordResetToken.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        Set<UserRole> requestedRoles = Set.of(UserRole.THERAPIST, UserRole.SUPERVISOR);
+
+        // Act
+        UserSummaryDto dto = service.createUser(
+                new CreateUserRequest("multi@example.com", "Multi Role", requestedRoles),
+                adminId);
+
+        // Assert
+        assertThat(dto.roles()).containsExactlyInAnyOrder(UserRole.THERAPIST, UserRole.SUPERVISOR);
+        assertThat(userCaptor.getValue().getRoles())
+                .containsExactlyInAnyOrder(UserRole.THERAPIST, UserRole.SUPERVISOR);
+    }
+
+    // ---- updateUser — roles -----------------------------------------------
+
+    @Test
+    void updateUserChangesRolesAndAudits() {
         when(userRepository.findById(targetId)).thenReturn(Optional.of(activeUser));
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         UserSummaryDto dto = service.updateUser(
-                targetId, new PatchUserRequest(null, UserRole.SYSTEM_ADMINISTRATOR, null), adminId);
+                targetId,
+                new PatchUserRequest(null, Set.of(UserRole.SYSTEM_ADMINISTRATOR), null),
+                adminId);
 
         assertThat(dto.role()).isEqualTo(UserRole.SYSTEM_ADMINISTRATOR);
+        assertThat(dto.roles()).containsExactly(UserRole.SYSTEM_ADMINISTRATOR);
         verify(auditLogService).record(any());
     }
 
     @Test
-    void updateUserDoesNotAuditWhenRoleUnchanged() {
+    void updateUserDoesNotAuditWhenRolesUnchanged() {
         when(userRepository.findById(targetId)).thenReturn(Optional.of(activeUser));
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Same role — no audit expected
-        service.updateUser(targetId, new PatchUserRequest(null, UserRole.THERAPIST, null), adminId);
+        service.updateUser(targetId, new PatchUserRequest(null, Set.of(UserRole.THERAPIST), null),
+                adminId);
 
         verify(auditLogService, never()).record(any());
     }
@@ -157,10 +229,30 @@ class UserManagementServiceTest {
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         UserSummaryDto dto = service.updateUser(
-                targetId, new PatchUserRequest(null, UserRole.ADMIN, null), adminId);
+                targetId, new PatchUserRequest(null, Set.of(UserRole.ADMIN), null), adminId);
 
         assertThat(dto.role()).isEqualTo(UserRole.SYSTEM_ADMINISTRATOR);
+        assertThat(dto.roles()).containsExactly(UserRole.SYSTEM_ADMINISTRATOR);
         assertThat(activeUser.getRole()).isEqualTo(UserRole.SYSTEM_ADMINISTRATOR);
+        verify(auditLogService).record(any());
+    }
+
+    @Test
+    void updateUserWithMultipleRolesPersistsAllRoles() {
+        // Arrange
+        when(userRepository.findById(targetId)).thenReturn(Optional.of(activeUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Set<UserRole> newRoles = Set.of(UserRole.THERAPIST, UserRole.SUPERVISOR);
+
+        // Act
+        UserSummaryDto dto = service.updateUser(
+                targetId, new PatchUserRequest(null, newRoles, null), adminId);
+
+        // Assert
+        assertThat(dto.roles()).containsExactlyInAnyOrder(UserRole.THERAPIST, UserRole.SUPERVISOR);
+        assertThat(activeUser.getRoles())
+                .containsExactlyInAnyOrder(UserRole.THERAPIST, UserRole.SUPERVISOR);
         verify(auditLogService).record(any());
     }
 
@@ -303,6 +395,28 @@ class UserManagementServiceTest {
         service.listUsers(UserRole.SYSTEM_ADMINISTRATOR, true, PageRequest.of(0, 20));
 
         // Specification is passed down — verified by confirming the repository was called
+        verify(userRepository).findAll(any(Specification.class), any(PageRequest.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void listUsersRoleFilterMatchesUsersWithRoleAmongMany() {
+        // Arrange: user has both THERAPIST and SUPERVISOR roles
+        User multiRoleUser = new User("multi@example.com", "hashed", "Multi User",
+                Set.of(UserRole.THERAPIST, UserRole.SUPERVISOR), true);
+        ReflectionTestUtils.setField(multiRoleUser, "id", targetId);
+
+        Page<User> page = new PageImpl<>(List.of(multiRoleUser), PageRequest.of(0, 20), 1);
+        when(userRepository.findAll(any(Specification.class), any(PageRequest.class)))
+                .thenReturn(page);
+
+        // Act: filter by THERAPIST — multi-role user should appear
+        UserPageResponse response = service.listUsers(UserRole.THERAPIST, null, PageRequest.of(0, 20));
+
+        // Assert
+        assertThat(response.totalElements()).isEqualTo(1);
+        assertThat(response.content().get(0).roles())
+                .containsExactlyInAnyOrder(UserRole.THERAPIST, UserRole.SUPERVISOR);
         verify(userRepository).findAll(any(Specification.class), any(PageRequest.class));
     }
 

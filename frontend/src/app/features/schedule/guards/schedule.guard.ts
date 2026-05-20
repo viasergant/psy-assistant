@@ -55,20 +55,21 @@ export const scheduleGuard: CanActivateFn = () => {
 };
 
 /**
- * Helper to get current user role from JWT
- * Extracts the primary role from the roles array (strips ROLE_ prefix)
+ * Helper to get all current user roles from JWT
+ * Returns all roles stripped of the ROLE_ prefix
  */
-export function getCurrentUserRole(authService: AuthService): string | null {
+export function getCurrentUserRole(authService: AuthService): string[] {
   const token = authService.token;
-  if (!token) return null;
+  if (!token) return [];
 
   try {
     const decoded = jwtDecode<JwtPayload>(token);
-    const roleEntry = decoded.roles?.find(r => r.startsWith('ROLE_'));
-    return roleEntry ? roleEntry.replace('ROLE_', '') : null;
+    return (decoded.roles ?? [])
+      .filter(r => r.startsWith('ROLE_'))
+      .map(r => r.replace('ROLE_', ''));
   } catch (error) {
     console.error('Error decoding JWT:', error);
-    return null;
+    return [];
   }
 }
 
@@ -94,8 +95,7 @@ export function getCurrentTherapistProfileId(
  * Helper to check if current user is system administrator
  */
 export function isSystemAdmin(authService: AuthService): boolean {
-  const role = getCurrentUserRole(authService);
-  return role === 'SYSTEM_ADMINISTRATOR';
+  return getCurrentUserRole(authService).includes('SYSTEM_ADMINISTRATOR');
 }
 
 /**
@@ -108,14 +108,14 @@ export function canEditSchedule(
   authService: AuthService,
   targetTherapistId?: string
 ): boolean {
-  const role = getCurrentUserRole(authService);
+  const roles = getCurrentUserRole(authService);
   const currentTherapistId = getCurrentTherapistProfileId(authService);
 
-  if (role === 'SYSTEM_ADMINISTRATOR') {
+  if (roles.includes('SYSTEM_ADMINISTRATOR')) {
     return true;
   }
 
-  if (role === 'RECEPTION_ADMIN_STAFF' && targetTherapistId) {
+  if (roles.includes('RECEPTION_ADMIN_STAFF') && targetTherapistId) {
     return currentTherapistId === targetTherapistId;
   }
 

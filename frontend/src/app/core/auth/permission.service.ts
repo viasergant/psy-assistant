@@ -17,10 +17,9 @@ export class PermissionService {
         if (!token) return [];
         try {
           const claims = jwtDecode<JwtClaims>(token);
-          // Backend emits roles as ["ROLE_THERAPIST", ...permissions]
-          const roleEntry = claims.roles?.find(r => r.startsWith('ROLE_'));
-          const role = roleEntry?.replace('ROLE_', '') as AppRole | undefined;
-          return role ? [role] : [];
+          // Backend emits multiple ROLE_X entries for multi-role users
+          return (claims.roles?.filter(r => r.startsWith('ROLE_'))
+            .map(r => r.replace('ROLE_', '') as AppRole)) ?? [];
         } catch {
           return [];
         }

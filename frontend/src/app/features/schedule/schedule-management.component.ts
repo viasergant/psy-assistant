@@ -924,7 +924,7 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
   }
 
   private initializeComponent(): void {
-    const role = getCurrentUserRole(this.authService);
+    const roles = getCurrentUserRole(this.authService);
     const currentProfileId = getCurrentTherapistProfileId(this.authService);
 
     this.isAdmin = isSystemAdmin(this.authService);
@@ -933,7 +933,7 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
       // Admin can select any therapist - load therapist list
       this.canEdit = true;
       this.loadTherapists();
-    } else if (role === 'THERAPIST' || role === 'RECEPTION_ADMIN_STAFF') {
+    } else if (roles.includes('THERAPIST') || roles.includes('RECEPTION_ADMIN_STAFF')) {
       // Therapist views their own schedule
       this.therapistProfileId = currentProfileId;
       this.canEdit = canEditSchedule(this.authService, currentProfileId ?? undefined);

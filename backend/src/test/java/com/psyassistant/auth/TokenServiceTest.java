@@ -10,6 +10,7 @@ import com.psyassistant.users.UserRole;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,10 +40,10 @@ class TokenServiceTest {
 
     @BeforeEach
     void setUp() {
-        sysAdminUser = new User("admin@example.com", "hash", UserRole.SYSTEM_ADMINISTRATOR, true);
+        sysAdminUser = new User("admin@example.com", "hash", Set.of(UserRole.SYSTEM_ADMINISTRATOR), true);
         setUserId(sysAdminUser, UUID.randomUUID());
 
-        therapistUser = new User("user@example.com", "hash", UserRole.THERAPIST, true);
+        therapistUser = new User("user@example.com", "hash", Set.of(UserRole.THERAPIST), true);
         setUserId(therapistUser, UUID.randomUUID());
     }
 
@@ -128,31 +129,31 @@ class TokenServiceTest {
 
     @Test
     void systemAdminRefreshTtlIs24Hours() {
-        Duration ttl = tokenService.refreshTtlFor(UserRole.SYSTEM_ADMINISTRATOR);
+        Duration ttl = tokenService.refreshTtlFor(Set.of(UserRole.SYSTEM_ADMINISTRATOR));
         assertThat(ttl).isEqualTo(Duration.ofHours(24));
     }
 
     @Test
     void therapistRefreshTtlIs15Days() {
-        Duration ttl = tokenService.refreshTtlFor(UserRole.THERAPIST);
+        Duration ttl = tokenService.refreshTtlFor(Set.of(UserRole.THERAPIST));
         assertThat(ttl).isEqualTo(Duration.ofDays(15));
     }
 
     @Test
     void receptionAdminStaffRefreshTtlIs15Days() {
-        Duration ttl = tokenService.refreshTtlFor(UserRole.RECEPTION_ADMIN_STAFF);
+        Duration ttl = tokenService.refreshTtlFor(Set.of(UserRole.RECEPTION_ADMIN_STAFF));
         assertThat(ttl).isEqualTo(Duration.ofDays(15));
     }
 
     @Test
     void financeRefreshTtlIs15Days() {
-        Duration ttl = tokenService.refreshTtlFor(UserRole.FINANCE);
+        Duration ttl = tokenService.refreshTtlFor(Set.of(UserRole.FINANCE));
         assertThat(ttl).isEqualTo(Duration.ofDays(15));
     }
 
     @Test
     void supervisorRefreshTtlIs15Days() {
-        Duration ttl = tokenService.refreshTtlFor(UserRole.SUPERVISOR);
+        Duration ttl = tokenService.refreshTtlFor(Set.of(UserRole.SUPERVISOR));
         assertThat(ttl).isEqualTo(Duration.ofDays(15));
     }
 
@@ -189,6 +190,53 @@ class TokenServiceTest {
         assertThatThrownBy(svc::init)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("32 bytes");
+    }
+
+    @Test
+    void buildAccessTokenForUserWithTwoRolesContainsBothRoleClaimsAndUnionPermissions() {
+        // Arrange: user with THERAPIST + SUPERVISOR
+        User multiRoleUser = new User("multi@example.com", "hash",
+                Set.of(UserRole.THERAPIST, UserRole.SUPERVISOR), true);
+        setUserId(multiRoleUser, UUID.randomUUID());
+
+        // Act
+        String token = tokenService.buildAccessToken(multiRoleUser);
+        var jwt = jwtDecoder.decode(token);
+        List<String> claims = jwt.getClaimAsStringList("roles");
+
+        // Assert: both ROLE_ entries present
+        assertThat(claims).contains("ROLE_THERAPIST", "ROLE_SUPERVISOR");
+
+        // Assert: union of permissions from both roles is present
+        Set<Permission> therapistPerms = RolePermissions.permissionsFor(UserRole.THERAPIST);
+        Set<Permission> supervisorPerms = RolePermissions.permissionsFor(UserRole.SUPERVISOR);
+        for (Permission p : therapistPerms) {
+            assertThat(claims).contains(p.name());
+        }
+        for (Permission p : supervisorPerms) {
+            assertThat(claims).contains(p.name());
+        }
+
+        // Assert: no duplicate entries in the claim
+        assertThat(claims).doesNotHaveDuplicates();
+
+        // Assert: size equals 2 role prefixes + union of distinct permissions
+        Set<Permission> unionPerms = new java.util.HashSet<>(therapistPerms);
+        unionPerms.addAll(supervisorPerms);
+        int expectedSize = 2 + unionPerms.size();
+        assertThat(claims).hasSize(expectedSize);
+    }
+
+    @Test
+    void accessTtlUsesAdminTtlWhenOneRoleIsSysAdmin() {
+        // Arrange: user with THERAPIST + SYSTEM_ADMINISTRATOR
+        Set<UserRole> roles = Set.of(UserRole.THERAPIST, UserRole.SYSTEM_ADMINISTRATOR);
+
+        // Act
+        Duration ttl = tokenService.accessTtlFor(roles);
+
+        // Assert: admin TTL (15 min) applies because SYSTEM_ADMINISTRATOR is present
+        assertThat(ttl).isEqualTo(Duration.ofMinutes(15));
     }
 
     // ---- helpers -------------------------------------------------------

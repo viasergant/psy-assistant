@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
+import { TranslocoTestingModule } from '@jsverse/transloco';
 import { PermissionService } from './permission.service';
 import { AuthService } from './auth.service';
 
@@ -21,58 +22,92 @@ describe('PermissionService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
+      imports: [
+        TranslocoTestingModule.forRoot({
+          langs: { en: {} },
+          translocoConfig: { availableLangs: ['en'], defaultLang: 'en' }
+        })
+      ],
       providers: [provideHttpClient(), provideRouter([])]
     });
     service     = TestBed.inject(PermissionService);
     authService = TestBed.inject(AuthService);
   });
 
-  it('roles is empty when no token is set', () => {
+  it('shouldReturnEmptyRoles_whenNoTokenIsSet', () => {
     expect(service.roles()).toEqual([]);
   });
 
-  it('roles returns [THERAPIST] for a THERAPIST JWT', () => {
-    authService.setToken(makeFakeJwt({ sub: '1', role: 'THERAPIST', exp: 9999999999 }));
+  it('shouldReturnTherapistRole_whenJwtContainsRoleTherapist', () => {
+    authService.setToken(makeFakeJwt({ sub: '1', roles: ['ROLE_THERAPIST', 'WRITE_SESSION_NOTE'], exp: 9999999999 }));
     expect(service.roles()).toEqual(['THERAPIST']);
   });
 
-  it('roles returns [ADMIN] for an ADMIN JWT', () => {
-    authService.setToken(makeFakeJwt({ sub: '2', role: 'ADMIN', exp: 9999999999 }));
-    expect(service.roles()).toEqual(['ADMIN']);
+  it('shouldReturnSystemAdministratorRole_whenJwtContainsRoleSysAdmin', () => {
+    authService.setToken(makeFakeJwt({ sub: '2', roles: ['ROLE_SYSTEM_ADMINISTRATOR', 'MANAGE_USERS'], exp: 9999999999 }));
+    expect(service.roles()).toEqual(['SYSTEM_ADMINISTRATOR']);
   });
 
-  it('roles is empty when token is invalid', () => {
+  it('shouldReturnEmptyRoles_whenTokenIsInvalid', () => {
     authService.setToken('not.a.valid.jwt');
     expect(service.roles()).toEqual([]);
   });
 
-  it('hasAnyRole returns true when user role is in allowed list', () => {
-    authService.setToken(makeFakeJwt({ sub: '1', role: 'THERAPIST', exp: 9999999999 }));
-    expect(service.hasAnyRole(['THERAPIST', 'ADMIN'])).toBeTrue();
+  it('shouldReturnAllRoles_whenJwtContainsMultipleRoleEntries', () => {
+    authService.setToken(makeFakeJwt({
+      sub: '3',
+      roles: ['ROLE_THERAPIST', 'ROLE_SUPERVISOR', 'WRITE_SESSION_NOTE', 'READ_TEAM_WORKLOAD'],
+      exp: 9999999999
+    }));
+    expect(service.roles()).toEqual(['THERAPIST', 'SUPERVISOR']);
   });
 
-  it('hasAnyRole returns false when user role is not in allowed list', () => {
-    authService.setToken(makeFakeJwt({ sub: '1', role: 'FINANCE', exp: 9999999999 }));
-    expect(service.hasAnyRole(['THERAPIST', 'ADMIN'])).toBeFalse();
+  it('shouldReturnEmptyRoles_whenJwtHasNoRoleXEntries', () => {
+    authService.setToken(makeFakeJwt({ sub: '4', roles: ['WRITE_SESSION_NOTE'], exp: 9999999999 }));
+    expect(service.roles()).toEqual([]);
   });
 
-  it('hasPermission returns true for VIEW_SESSION_NOTES when THERAPIST', () => {
-    authService.setToken(makeFakeJwt({ sub: '1', role: 'THERAPIST', exp: 9999999999 }));
+  it('shouldReturnEmptyRoles_whenJwtHasNoRolesClaim', () => {
+    authService.setToken(makeFakeJwt({ sub: '5', exp: 9999999999 }));
+    expect(service.roles()).toEqual([]);
+  });
+
+  it('shouldReturnTrue_whenHasAnyRoleAndUserRoleIsInAllowedList', () => {
+    authService.setToken(makeFakeJwt({ sub: '1', roles: ['ROLE_THERAPIST'], exp: 9999999999 }));
+    expect(service.hasAnyRole(['THERAPIST', 'SYSTEM_ADMINISTRATOR'])).toBeTrue();
+  });
+
+  it('shouldReturnFalse_whenHasAnyRoleAndUserRoleIsNotInAllowedList', () => {
+    authService.setToken(makeFakeJwt({ sub: '1', roles: ['ROLE_FINANCE'], exp: 9999999999 }));
+    expect(service.hasAnyRole(['THERAPIST', 'SYSTEM_ADMINISTRATOR'])).toBeFalse();
+  });
+
+  it('shouldReturnTrue_whenHasAnyRoleAndOneOfMultipleRolesMatchesAllowedList', () => {
+    authService.setToken(makeFakeJwt({
+      sub: '1',
+      roles: ['ROLE_THERAPIST', 'ROLE_SUPERVISOR'],
+      exp: 9999999999
+    }));
+    expect(service.hasAnyRole(['SUPERVISOR', 'FINANCE'])).toBeTrue();
+  });
+
+  it('shouldReturnTrue_whenHasPermissionViewSessionNotesAndUserIsTherapist', () => {
+    authService.setToken(makeFakeJwt({ sub: '1', roles: ['ROLE_THERAPIST'], exp: 9999999999 }));
     expect(service.hasPermission('VIEW_SESSION_NOTES')).toBeTrue();
   });
 
-  it('hasPermission returns false for VIEW_BILLING_ACTIONS when THERAPIST', () => {
-    authService.setToken(makeFakeJwt({ sub: '1', role: 'THERAPIST', exp: 9999999999 }));
+  it('shouldReturnFalse_whenHasPermissionViewBillingActionsAndUserIsTherapist', () => {
+    authService.setToken(makeFakeJwt({ sub: '1', roles: ['ROLE_THERAPIST'], exp: 9999999999 }));
     expect(service.hasPermission('VIEW_BILLING_ACTIONS')).toBeFalse();
   });
 
-  it('hasPermission returns true for VIEW_BILLING_ACTIONS when FINANCE', () => {
-    authService.setToken(makeFakeJwt({ sub: '2', role: 'FINANCE', exp: 9999999999 }));
+  it('shouldReturnTrue_whenHasPermissionViewBillingActionsAndUserIsFinance', () => {
+    authService.setToken(makeFakeJwt({ sub: '2', roles: ['ROLE_FINANCE'], exp: 9999999999 }));
     expect(service.hasPermission('VIEW_BILLING_ACTIONS')).toBeTrue();
   });
 
-  it('hasPermission returns true for all permissions when ADMIN', () => {
-    authService.setToken(makeFakeJwt({ sub: '3', role: 'ADMIN', exp: 9999999999 }));
+  it('shouldReturnTrue_whenHasPermissionAllAndUserIsSysAdmin', () => {
+    authService.setToken(makeFakeJwt({ sub: '3', roles: ['ROLE_SYSTEM_ADMINISTRATOR'], exp: 9999999999 }));
     expect(service.hasPermission('VIEW_BILLING_ACTIONS')).toBeTrue();
     expect(service.hasPermission('VIEW_SESSION_NOTES')).toBeTrue();
     expect(service.hasPermission('BOOK_APPOINTMENT')).toBeTrue();
@@ -80,11 +115,29 @@ describe('PermissionService', () => {
     expect(service.hasPermission('VIEW_REPORTS')).toBeTrue();
   });
 
-  it('roles updates reactively when token changes', () => {
-    authService.setToken(makeFakeJwt({ sub: '1', role: 'THERAPIST', exp: 9999999999 }));
+  it('shouldGrantViewReportsPermission_whenUserHasTherapistAndSupervisorRoles', () => {
+    authService.setToken(makeFakeJwt({
+      sub: '4',
+      roles: ['ROLE_THERAPIST', 'ROLE_SUPERVISOR'],
+      exp: 9999999999
+    }));
+    expect(service.hasPermission('VIEW_REPORTS')).toBeTrue();
+  });
+
+  it('shouldDenyAdminRouteAccess_whenUserHasTherapistAndSupervisorRoles', () => {
+    authService.setToken(makeFakeJwt({
+      sub: '4',
+      roles: ['ROLE_THERAPIST', 'ROLE_SUPERVISOR'],
+      exp: 9999999999
+    }));
+    expect(service.hasAnyRole(['SYSTEM_ADMINISTRATOR'])).toBeFalse();
+  });
+
+  it('shouldUpdateRolesReactively_whenTokenChanges', () => {
+    authService.setToken(makeFakeJwt({ sub: '1', roles: ['ROLE_THERAPIST'], exp: 9999999999 }));
     expect(service.roles()).toEqual(['THERAPIST']);
 
-    authService.setToken(makeFakeJwt({ sub: '1', role: 'FINANCE', exp: 9999999999 }));
+    authService.setToken(makeFakeJwt({ sub: '1', roles: ['ROLE_FINANCE'], exp: 9999999999 }));
     expect(service.roles()).toEqual(['FINANCE']);
   });
 });

@@ -164,12 +164,12 @@ public class AuthService {
 
         String rawToken = tokenService.generateRawRefreshToken();
         String hash = tokenService.hashRefreshToken(rawToken);
-        Instant expiresAt = Instant.now().plus(tokenService.refreshTtlFor(user.getRole()));
+        Instant expiresAt = Instant.now().plus(tokenService.refreshTtlFor(user.getRoles()));
         refreshTokenRepository.save(new RefreshToken(user, hash, expiresAt));
 
         // For therapists, look up their profile ID to include in the JWT
         UUID therapistProfileId = null;
-        if (user.getRole() == UserRole.THERAPIST) {
+        if (user.hasRole(UserRole.THERAPIST)) {
             therapistProfileId = therapistProfileRepository.findByEmailIgnoreCase(user.getEmail())
                     .map(profile -> profile.getId())
                     .orElse(null);
@@ -183,7 +183,7 @@ public class AuthService {
         }
 
         String accessToken = tokenService.buildAccessToken(user, therapistProfileId);
-        Instant expiresAtAccess = tokenService.accessTokenExpiresAt(user.getRole());
+        Instant expiresAtAccess = tokenService.accessTokenExpiresAt(user.getRoles());
 
         auditLogService.record(new AuditLog.Builder(EVENT_LOGIN_SUCCESS)
                 .userId(user.getId())
@@ -196,8 +196,8 @@ public class AuthService {
         LOG.info("event=LOGIN_SUCCESS userId={} requestId={}", user.getId(), requestId);
 
         LoginResponse response = new LoginResponse(accessToken, expiresAtAccess, "Bearer");
-        return new AuthResult(response, rawToken, user.getRole(),
-                tokenService.refreshTtlFor(user.getRole()));
+        return new AuthResult(response, rawToken, user.getRoles(),
+                tokenService.refreshTtlFor(user.getRoles()));
     }
 
     /**
@@ -242,19 +242,19 @@ public class AuthService {
 
         String newRawToken = tokenService.generateRawRefreshToken();
         String newHash = tokenService.hashRefreshToken(newRawToken);
-        Instant newExpiry = Instant.now().plus(tokenService.refreshTtlFor(user.getRole()));
+        Instant newExpiry = Instant.now().plus(tokenService.refreshTtlFor(user.getRoles()));
         refreshTokenRepository.save(new RefreshToken(user, newHash, newExpiry));
 
         // For therapists, look up their profile ID to include in the JWT
         UUID therapistProfileId = null;
-        if (user.getRole() == UserRole.THERAPIST) {
+        if (user.hasRole(UserRole.THERAPIST)) {
             therapistProfileId = therapistProfileRepository.findByEmailIgnoreCase(user.getEmail())
                     .map(profile -> profile.getId())
                     .orElse(null);
         }
 
         String accessToken = tokenService.buildAccessToken(user, therapistProfileId);
-        Instant accessExpiry = tokenService.accessTokenExpiresAt(user.getRole());
+        Instant accessExpiry = tokenService.accessTokenExpiresAt(user.getRoles());
 
         auditLogService.record(new AuditLog.Builder(EVENT_TOKEN_REFRESH)
                 .userId(user.getId())
@@ -266,8 +266,8 @@ public class AuthService {
         LOG.info("event=TOKEN_REFRESH userId={} requestId={}", user.getId(), requestId);
 
         LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer");
-        return new AuthResult(response, newRawToken, user.getRole(),
-                tokenService.refreshTtlFor(user.getRole()));
+        return new AuthResult(response, newRawToken, user.getRoles(),
+                tokenService.refreshTtlFor(user.getRoles()));
     }
 
     /**
@@ -346,20 +346,20 @@ public class AuthService {
         // Issue new authentication tokens
         String rawToken = tokenService.generateRawRefreshToken();
         String hash = tokenService.hashRefreshToken(rawToken);
-        Instant expiresAt = Instant.now().plus(tokenService.refreshTtlFor(user.getRole()));
+        Instant expiresAt = Instant.now().plus(tokenService.refreshTtlFor(user.getRoles()));
         RefreshToken refreshToken = new RefreshToken(user, hash, expiresAt);
         refreshTokenRepository.save(refreshToken);
 
         // For therapists, look up their profile ID to include in the JWT
         UUID therapistProfileId = null;
-        if (user.getRole() == UserRole.THERAPIST) {
+        if (user.hasRole(UserRole.THERAPIST)) {
             therapistProfileId = therapistProfileRepository.findByEmailIgnoreCase(user.getEmail())
                     .map(profile -> profile.getId())
                     .orElse(null);
         }
 
         String accessToken = tokenService.buildAccessToken(user, therapistProfileId);
-        Instant accessExpiry = tokenService.accessTokenExpiresAt(user.getRole());
+        Instant accessExpiry = tokenService.accessTokenExpiresAt(user.getRoles());
 
         auditLogService.record(new AuditLog.Builder(EVENT_PASSWORD_CHANGED)
                 .userId(user.getId())
@@ -373,8 +373,8 @@ public class AuthService {
                 user.getId(), requestId);
 
         LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer");
-        return new AuthResult(response, rawToken, user.getRole(),
-                tokenService.refreshTtlFor(user.getRole()));
+        return new AuthResult(response, rawToken, user.getRoles(),
+                tokenService.refreshTtlFor(user.getRoles()));
     }
 
     // ---- private helpers -----------------------------------------------
@@ -426,8 +426,8 @@ public class AuthService {
     }
 
     private void enforceSessionCap(final User user) {
-        boolean isAdminRole = user.getRole() == UserRole.SYSTEM_ADMINISTRATOR
-                || user.getRole() == UserRole.ADMIN;
+        boolean isAdminRole = user.getRoles().stream()
+                .anyMatch(r -> r == UserRole.SYSTEM_ADMINISTRATOR || r == UserRole.ADMIN);
         int cap = isAdminRole ? maxAdminSessions : maxUserSessions;
         long active = refreshTokenRepository.countActiveSessions(user.getId());
 

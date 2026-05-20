@@ -46,6 +46,17 @@ interface StatusOption {
             </div>
           </div>
 
+          <!-- Risk Flag Indicators -->
+          <div class="form-section" *ngIf="appointment.activeRiskFlagTypes && appointment.activeRiskFlagTypes.length > 0">
+            <div class="form-label">{{ 'schedule.appointment.edit.riskFlagsLabel' | transloco }}</div>
+            <div class="risk-flag-chips">
+              <span
+                *ngFor="let flagType of appointment.activeRiskFlagTypes"
+                class="risk-flag-chip"
+              >{{ flagType }}</span>
+            </div>
+          </div>
+
           <!-- Status Selection -->
           <div class="form-section">
             <div class="form-field">
@@ -277,6 +288,22 @@ interface StatusOption {
     .error-banner svg {
       flex-shrink: 0;
       margin-top: 0.125rem;
+    }
+
+    .risk-flag-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin-top: 0.375rem;
+    }
+
+    .risk-flag-chip {
+      background: #FEE2E2;
+      color: #991B1B;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 500;
     }
 
     .dialog-footer {

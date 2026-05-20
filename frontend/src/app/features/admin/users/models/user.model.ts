@@ -35,12 +35,27 @@ export function normalizeRole(role: string): UserRole {
   return role as UserRole;
 }
 
+/**
+ * Normalise an array of raw role strings from the API (may include legacy aliases).
+ * Falls back to `['THERAPIST']` when the input is empty or undefined.
+ */
+export function normalizeRoles(roles: string[] | undefined): UserRole[] {
+  if (!roles || roles.length === 0) { return []; }
+  return roles.map(normalizeRole);
+}
+
 /** Read-only summary of a user account. */
 export interface UserSummary {
   id: string;
   email: string;
   fullName: string | null;
+  /**
+   * @deprecated Use `roles` instead. Retained for backward-compat with
+   * API responses that still include a single `role` field.
+   */
   role: UserRole;
+  /** All roles assigned to this user. Use `roles ?? [role]` to handle both old and new shapes. */
+  roles?: UserRole[];
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -54,7 +69,12 @@ export interface UserCreationResponse {
   id: string;
   email: string;
   fullName: string | null;
+  /**
+   * @deprecated Use `roles` instead.
+   */
   role: UserRole;
+  /** All roles assigned to the created user. */
+  roles?: UserRole[];
   temporaryPassword: string;
 }
 
@@ -80,12 +100,14 @@ export interface UserListParams {
 export interface CreateUserPayload {
   email: string;
   fullName: string;
-  role: UserRole;
+  /** One or more roles to assign. At least one role is required. */
+  roles: UserRole[];
 }
 
 /** Request body for a partial user update. */
 export interface PatchUserPayload {
   fullName?: string;
-  role?: UserRole;
+  /** Replaces the user's role set. Must have at least one element when provided. */
+  roles?: UserRole[];
   active?: boolean;
 }

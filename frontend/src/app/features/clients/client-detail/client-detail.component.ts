@@ -15,8 +15,10 @@ import { getCurrentTherapistProfileId, getCurrentUserRole } from '../../schedule
 import { AppointmentBookingDialogComponent } from '../../schedule/components/appointment-booking-dialog/appointment-booking-dialog.component';
 import { TherapistManagementService } from '../../admin/therapists/services/therapist-management.service';
 import { TherapistProfile } from '../../admin/therapists/models/therapist.model';
+import { jwtDecode } from 'jwt-decode';
 import { CarePlanListComponent } from '../care-plans/care-plan-list/care-plan-list.component';
 import { ClientPackagesComponent } from '../components/client-packages/client-packages.component';
+import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-panel/risk-flags-panel.component';
 
 /**
  * Client profile page for PA-23 slice-one read and update flow.
@@ -24,7 +26,7 @@ import { ClientPackagesComponent } from '../components/client-packages/client-pa
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ClientTimelineComponent, AppointmentBookingDialogComponent, CarePlanListComponent, ClientPackagesComponent],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ClientTimelineComponent, AppointmentBookingDialogComponent, CarePlanListComponent, ClientPackagesComponent, RiskFlagsPanelComponent],
   template: `
     <div class="page">
       <a class="back-link" routerLink="/leads">&larr; Back to leads</a>
@@ -343,6 +345,14 @@ import { ClientPackagesComponent } from '../components/client-packages/client-pa
         </div>
 
         <app-client-packages [clientId]="client.id" />
+
+        <div class="section">
+          <app-risk-flags-panel
+            [clientId]="client.id"
+            [canManage]="hasPermission('MANAGE_RISK_FLAGS')"
+            [canReadNotes]="hasPermission('READ_RISK_FLAG_NOTES')">
+          </app-risk-flags-panel>
+        </div>
       </div>
     </div>
 
@@ -494,7 +504,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   therapistProfileId: string | null = null;
   availableTherapists: TherapistProfile[] = [];
   selectedAdminTherapistId = '';
-  private _userRole: string | null = null;
+  private _userRole: string[] = [];
   private photoObjectUrl: string | null = null;
 
   profileForm: FormGroup;
@@ -590,9 +600,8 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   }
 
   get needsTherapistPicker(): boolean {
-    const role = this._userRole;
     return !this.therapistProfileId &&
-      (role === 'SYSTEM_ADMINISTRATOR' || role === 'RECEPTION_ADMIN_STAFF');
+      (this._userRole.includes('SYSTEM_ADMINISTRATOR') || this._userRole.includes('RECEPTION_ADMIN_STAFF'));
   }
 
   get effectiveTherapistId(): string | null {
@@ -781,6 +790,17 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
         target.value = '';
       },
     });
+  }
+
+  hasPermission(authority: string): boolean {
+    const token = this.authService.token;
+    if (!token) return false;
+    try {
+      const decoded = jwtDecode<{ roles: string[] }>(token);
+      return (decoded.roles || []).includes(authority);
+    } catch {
+      return false;
+    }
   }
 
   private patchForm(c: ClientDetail): void {

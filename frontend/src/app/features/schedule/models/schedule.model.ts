@@ -265,6 +265,8 @@ export interface Appointment {
   seriesId?: number;
   recurrenceIndex?: number;
   isModified?: boolean;
+  // Risk flag indicators (PA-27) — populated only on detail endpoint, empty on list endpoints
+  activeRiskFlagTypes: string[];
 }
 
 /**

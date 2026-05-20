@@ -4,6 +4,7 @@ import com.psyassistant.scheduling.domain.AppointmentStatus;
 import com.psyassistant.scheduling.domain.CancellationType;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -40,7 +41,9 @@ public record AppointmentResponse(
         // ===== Recurring series fields (PA-33) =====
         Long seriesId,
         Integer recurrenceIndex,
-        boolean isModified
+        boolean isModified,
+        // ===== Risk flag fields (PA-27) =====
+        List<String> activeRiskFlagTypes
 ) {
     /**
      * Nested session type information.

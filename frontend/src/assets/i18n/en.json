@@ -329,6 +329,13 @@
       "THERAPIST_CANCELLATION": "Therapist cancelled"
     }
   },
+  "roles": {
+    "RECEPTION_ADMIN_STAFF": "Reception / Admin Staff",
+    "THERAPIST": "Therapist",
+    "SUPERVISOR": "Supervisor",
+    "FINANCE": "Finance",
+    "SYSTEM_ADMINISTRATOR": "System Administrator"
+  },
   "specializations": {
     "names": {
       "adhd": "ADHD",
@@ -584,7 +591,8 @@
         "notesPlaceholder": "Optional notes about status change",
         "characters": "characters",
         "updateButton": "Update Appointment",
-        "updatingInProgress": "Updating..."
+        "updatingInProgress": "Updating...",
+        "riskFlagsLabel": "Risk Flags"
       },
       "cancellationType": {
         "clientInitiated": "Client Initiated",
@@ -661,29 +669,71 @@
       "therapists": "Therapists",
       "leaveRequests": "Pending Requests",
       "serviceCatalog": "Service Catalog",
-      "notificationTemplates": "Notification Templates"
+      "notificationTemplates": "Notification Templates",
+      "riskFlagTypes": "Risk Flag Types"
     },
     "users": {
       "list": {
+        "pageTitle": "User Management",
+        "createButton": "+ Create user",
         "roleLabel": "Role",
         "statusLabel": "Status",
         "statusActive": "Active",
         "statusInactive": "Inactive",
+        "filterAllRoles": "All roles",
+        "filterAllStatuses": "All statuses",
+        "loading": "Loading\u2026",
+        "noResults": "No users match the current filters.",
         "ariaFilters": "User filters",
         "ariaList": "User list",
         "ariaPagination": "User list pagination",
         "tableHeaders": {
+          "name": "Name",
           "email": "Email",
+          "role": "Role",
           "status": "Status",
+          "created": "Created",
           "actions": "Actions"
         },
+        "viewProfileAria": "View profile for {{name}}",
+        "editAction": "Edit",
+        "resetPwdAction": "Reset pwd",
+        "deactivateAction": "Deactivate",
+        "reactivateAction": "Reactivate",
+        "editAria": "Edit {{email}}",
+        "resetPwdAria": "Reset password for {{email}}",
+        "deactivateAria": "Deactivate {{email}}",
+        "reactivateAria": "Reactivate {{email}}",
+        "paginationText": "Page {{current}} of {{total}}",
+        "usersFound": "{{count}} users found",
         "closeError": "Close error message"
       },
       "create": {
+        "title": "Create User",
+        "emailLabel": "Email",
+        "emailInvalid": "Enter a valid email address.",
+        "fullNameLabel": "Full name",
+        "fullNameRequired": "Full name is required.",
+        "roleLabel": "Role",
+        "selectPlaceholder": "\u2014 select \u2014",
+        "roleRequired": "Select a role.",
+        "createButton": "Create user",
+        "creatingLabel": "Creating\u2026",
+        "successTitle": "User Created Successfully",
+        "successMessage": "{{name}} has been created.",
+        "successInfoText": "Please share the temporary password below with the user. They will be required to change it on first login.",
+        "tempPasswordLabel": "Temporary Password",
+        "copyButton": "Copy",
+        "copiedButton": "Copied!",
+        "warningText": "Make sure to copy and share this password securely. You won't be able to see it again.",
         "done": "Done"
       },
       "edit": {
         "roleLabel": "Role"
+      },
+      "roles": {
+        "label": "Roles",
+        "required": "At least one role is required."
       }
     },
     "therapists": {
@@ -697,6 +747,8 @@
         "filterAllRoles": "All roles",
         "filterAllStatuses": "All statuses",
         "employmentStatusLabel": "Employment Status",
+        "therapistsFound": "{{count}} therapist found",
+        "therapistsFoundPlural": "{{count}} therapists found",
         "loading": "Loading…",
         "noResults": "No therapists match the current filters.",
         "editAction": "Edit",
@@ -742,6 +794,11 @@
         "phoneLabel": "Phone Number",
         "phonePlaceholder": "+1 (555) 123-4567",
         "employmentStatusLabel": "Employment Status",
+        "employmentStatuses": {
+          "ACTIVE": "Active",
+          "ON_LEAVE": "On Leave",
+          "INACTIVE": "Inactive"
+        },
         "selectPlaceholder": "— select —",
         "employmentStatusRequired": "Select an employment status.",
         "primarySpecializationLabel": "Primary Specialization",
@@ -762,8 +819,23 @@
         }
       },
       "edit": {
-        "bioLabel": "Professional Bio",
-        "bioPlaceholder": "Brief professional biography..."
+        "title": "Edit Therapist Profile",
+        "fullNameLabel": "Full name",
+        "fullNameRequired": "Full name is required.",
+        "emailLabel": "Email",
+        "emailInvalid": "Enter a valid email address.",
+        "phoneLabel": "Phone number",
+        "employmentStatusLabel": "Employment Status",
+        "selectPlaceholder": "\u2014 select \u2014",
+        "employmentStatusRequired": "Select an employment status.",
+        "bioLabel": "Biography / About",
+        "bioPlaceholder": "Brief professional biography...",
+        "specializationsTitle": "Current Specializations",
+        "languagesTitle": "Current Languages",
+        "noneAssigned": "None assigned",
+        "specializationsHelp": "Specializations and languages are managed separately.",
+        "saveButton": "Save changes",
+        "savingLabel": "Saving\u2026"
       },
       "accountCreated": {
         "title": "Therapist Account Successfully Created",
@@ -873,6 +945,33 @@
         "error": "Failed to load preview.",
         "chars": "characters",
         "sampleNote": "Preview uses sample data. Actual values will vary per recipient."
+      }
+    },
+    "riskFlagTypes": {
+      "title": "Risk Flag Types",
+      "list": {
+        "createButton": "Add Flag Type",
+        "loading": "Loading flag types...",
+        "empty": "No flag types found.",
+        "ariaList": "Risk flag type list",
+        "colName": "Name",
+        "colDisplayOrder": "Display Order",
+        "colActive": "Active",
+        "colActions": "Actions",
+        "statusYes": "Yes",
+        "statusNo": "No",
+        "actionDeactivate": "Deactivate"
+      },
+      "form": {
+        "title": "Add Flag Type",
+        "name": "Name",
+        "namePlaceholder": "e.g. Self-Harm Risk",
+        "nameRequired": "Name is required (max 100 characters).",
+        "displayOrder": "Display Order",
+        "displayOrderRequired": "Display order is required (must be 0 or greater).",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving..."
       }
     }
   },

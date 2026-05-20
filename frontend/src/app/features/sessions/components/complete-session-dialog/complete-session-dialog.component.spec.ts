@@ -6,7 +6,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { of, throwError } from 'rxjs';
 import { CompleteSessionDialogComponent } from './complete-session-dialog.component';
 import { SessionService } from '../../services/session.service';
-import { SessionRecord, SessionStatus } from '../../models/session.model';
+import { SessionRecord, SessionStatus, RecordKind } from '../../models/session.model';
 
 describe('CompleteSessionDialogComponent', () => {
   let component: CompleteSessionDialogComponent;
@@ -15,11 +15,12 @@ describe('CompleteSessionDialogComponent', () => {
   let messageService: jasmine.SpyObj<MessageService>;
 
   const mockSession: SessionRecord = {
-    id: 1,
-    appointmentId: 101,
-    clientId: 201,
+    id: 'uuid-1',
+    appointmentId: 'uuid-101',
+    recordKind: RecordKind.INDIVIDUAL,
+    clientId: 'uuid-201',
     clientName: 'John Doe',
-    therapistId: 301,
+    therapistId: 'uuid-301',
     sessionDate: '2026-04-15',
     scheduledStartTime: '10:00:00',
     sessionType: {
@@ -30,6 +31,7 @@ describe('CompleteSessionDialogComponent', () => {
     },
     plannedDuration: 60,
     status: SessionStatus.IN_PROGRESS,
+    participants: [],
     createdAt: '2026-04-01T08:00:00Z',
     updatedAt: '2026-04-01T08:00:00Z',
   };
@@ -162,12 +164,12 @@ describe('CompleteSessionDialogComponent', () => {
     expect(sessionService.completeSession).not.toHaveBeenCalled();
   });
 
-  it('should emit cancelled event when cancel is clicked', () => {
-    spyOn(component.cancelled, 'emit');
+  it('should emit closed event when close is clicked', () => {
+    spyOn(component.closed, 'emit');
 
-    component.cancel();
+    component.close();
 
-    expect(component.cancelled.emit).toHaveBeenCalled();
+    expect(component.closed.emit).toHaveBeenCalled();
   });
 
   it('should correctly determine if field is invalid', () => {

@@ -271,7 +271,7 @@ Existing single-role tokens issued before this migration will decode correctly: 
 
 ### Increment 6 — `PermissionService`: read all roles from JWT
 
-**Status:** pending
+**Status:** completed
 
 **Goal:** Update the Angular `PermissionService` to collect all `ROLE_X` entries from the JWT `roles` claim instead of only the first one. Update `JwtClaims` model as needed. All route guards and permission checks continue to work as before.
 

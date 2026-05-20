@@ -6,7 +6,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { of, throwError } from 'rxjs';
 import { SessionListComponent } from './session-list.component';
 import { SessionService } from '../../services/session.service';
-import { SessionRecord, SessionStatus } from '../../models/session.model';
+import { SessionRecord, SessionStatus, RecordKind } from '../../models/session.model';
 
 describe('SessionListComponent', () => {
   let component: SessionListComponent;
@@ -16,11 +16,12 @@ describe('SessionListComponent', () => {
 
   const mockSessions: SessionRecord[] = [
     {
-      id: 1,
-      appointmentId: 101,
-      clientId: 201,
+      id: 'uuid-1',
+      appointmentId: 'uuid-101',
+      recordKind: RecordKind.INDIVIDUAL,
+      clientId: 'uuid-201',
       clientName: 'John Doe',
-      therapistId: 301,
+      therapistId: 'uuid-301',
       sessionDate: '2026-04-15',
       scheduledStartTime: '10:00:00',
       sessionType: {
@@ -31,15 +32,17 @@ describe('SessionListComponent', () => {
       },
       plannedDuration: 60,
       status: SessionStatus.PENDING,
+      participants: [],
       createdAt: '2026-04-01T08:00:00Z',
       updatedAt: '2026-04-01T08:00:00Z',
     },
     {
-      id: 2,
-      appointmentId: 102,
-      clientId: 202,
+      id: 'uuid-2',
+      appointmentId: 'uuid-102',
+      recordKind: RecordKind.INDIVIDUAL,
+      clientId: 'uuid-202',
       clientName: 'Jane Smith',
-      therapistId: 301,
+      therapistId: 'uuid-301',
       sessionDate: '2026-04-16',
       scheduledStartTime: '14:00:00',
       sessionType: {
@@ -50,6 +53,7 @@ describe('SessionListComponent', () => {
       },
       plannedDuration: 90,
       status: SessionStatus.IN_PROGRESS,
+      participants: [],
       createdAt: '2026-04-01T09:00:00Z',
       updatedAt: '2026-04-01T09:00:00Z',
     },

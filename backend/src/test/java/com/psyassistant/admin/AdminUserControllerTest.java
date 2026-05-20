@@ -206,6 +206,61 @@ class AdminUserControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    // ---- createTherapistWithTemporaryPassword --------------------------------
+
+    @Test
+    void createTherapistReturns400WhenRolesDoNotIncludeTherapist() throws Exception {
+        // Arrange: roles contain FINANCE but not THERAPIST — endpoint must reject with 400
+        mockMvc.perform(post(BASE + "/therapists")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
+                                .jwt(j -> j.subject(ADMIN_ID.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"finance@example.com\","
+                                + "\"fullName\":\"Finance User\","
+                                + "\"roles\":[\"FINANCE\"]}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createTherapistReturns201WhenRolesContainOnlyTherapist() throws Exception {
+        // Arrange: roles contain only THERAPIST — the primary use case of this endpoint
+        UserCreationResponseDto dto = new UserCreationResponseDto(
+                USER_ID, "therapist@example.com", "Dr Jones",
+                Set.of(UserRole.THERAPIST), UserRole.THERAPIST, "tmp-pass-789");
+        when(userManagementService.createUserWithTemporaryPassword(any(), any())).thenReturn(dto);
+
+        mockMvc.perform(post(BASE + "/therapists")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
+                                .jwt(j -> j.subject(ADMIN_ID.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"therapist@example.com\","
+                                + "\"fullName\":\"Dr Jones\","
+                                + "\"roles\":[\"THERAPIST\"]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("therapist@example.com"))
+                .andExpect(jsonPath("$.roles[0]").value("THERAPIST"));
+    }
+
+    @Test
+    void createTherapistReturns201WhenRolesIncludeTherapistAndOtherRoles() throws Exception {
+        // Arrange: roles include THERAPIST plus SUPERVISOR — endpoint must accept (contains semantics)
+        UserCreationResponseDto dto = new UserCreationResponseDto(
+                USER_ID, "therapist@example.com", "Dr Smith",
+                Set.of(UserRole.THERAPIST, UserRole.SUPERVISOR),
+                UserRole.THERAPIST, "tmp-pass-456");
+        when(userManagementService.createUserWithTemporaryPassword(any(), any())).thenReturn(dto);
+
+        mockMvc.perform(post(BASE + "/therapists")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMINISTRATOR"))
+                                .jwt(j -> j.subject(ADMIN_ID.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"therapist@example.com\","
+                                + "\"fullName\":\"Dr Smith\","
+                                + "\"roles\":[\"THERAPIST\",\"SUPERVISOR\"]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("therapist@example.com"));
+    }
+
     // ---- updateUser -------------------------------------------------------
 
     @Test

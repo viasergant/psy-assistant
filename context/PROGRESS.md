@@ -246,3 +246,68 @@
 - Quality: PASS (Critical: 0, High: 0, Medium: 2)
 - Coverage: FULLY COVERED
 - Recommendation: approve
+
+---
+
+## 2026-05-20 — Increment 5: `AdminUserController` OpenAPI annotation updates and therapist endpoint tests
+
+- **What was completed:** Updated `@Operation` and `@ApiResponse` Swagger descriptions to replace "role" (singular) with "roles" (plural). Confirmed `!request.roles().contains(UserRole.THERAPIST)` `contains` semantics are correct (a request with `[THERAPIST, SUPERVISOR]` is accepted). Added two new tests to `AdminUserControllerTest` covering the therapist endpoint validation.
+- **Interfaces/methods created:** none (no new public APIs; annotation text only)
+- **Files created/modified:**
+  - `backend/src/main/java/com/psyassistant/admin/AdminUserController.java` (modified — Javadoc and `@Operation`/`@ApiResponse` descriptions updated)
+  - `backend/src/test/java/com/psyassistant/admin/AdminUserControllerTest.java` (modified — two new tests added)
+  - `context/PROGRESS.md` (updated)
+  - `context/PLAN.md` (increment 5 status → completed)
+- **Decisions made:**
+  - `contains` semantics confirmed as correct: the therapist endpoint creates accounts where THERAPIST is one of the roles, so `[THERAPIST, SUPERVISOR]` should be accepted.
+  - The `@Operation` description for `createTherapistWithTemporaryPassword` was expanded to explicitly state that additional roles beyond THERAPIST are allowed.
+  - The validation logic (`!request.roles().contains(UserRole.THERAPIST)`) was already applied in Increment 4 and required no further changes.
+  - The `updateUser` `@Operation` description was updated from "role, full name, or active status" to "roles, full name, or active status".
+- **Tests:** 508 passing / 0 failures
+
+---
+
+## 2026-05-20 — Test Run (Increment 5, attempt 1)
+- Passed: 508 | Failed: 0 | Skipped: 0 | Coverage: N/A (no Jacoco plugin in pom.xml)
+- Coverage gate: N/A — Jacoco not configured; gate cannot be evaluated
+- Failures: none
+- Action: all clear — full suite passes cleanly; increments 1-5 complete
+
+---
+
+## 2026-05-20 — Code Review (Increment 5)
+- Quality: FAIL (Critical: 0, High: 1, Medium: 1)
+- Coverage: GAPS FOUND (1 item: no test for THERAPIST-only roles returning 201 — the base-case acceptance criterion from PLAN.md)
+- Recommendation: fix and re-review
+
+---
+
+## 2026-05-20 — Code Review Fixes (Increment 5)
+
+- **What was completed:** Applied two code-review fixes — replaced the generic `IllegalArgumentException` with a typed domain exception and added the missing THERAPIST-only base-case test.
+- **Fixes applied:**
+  1. **Fix 1 (High) — Typed domain exception:** Created `RoleValidationException` in `com.psyassistant.users`, registered a `handleRoleValidation` handler in `GlobalExceptionHandler` (returns 400, code `ROLE_VALIDATION_ERROR`). Replaced `throw new IllegalArgumentException(...)` in `AdminUserController.createTherapistWithTemporaryPassword` with `throw new RoleValidationException(...)`. Added `import com.psyassistant.users.RoleValidationException` to `AdminUserController`. Removed the inline comment `// Validate that roles include THERAPIST` that restated the code.
+  2. **Fix 2 (Coverage) — THERAPIST-only base case test:** Added `createTherapistReturns201WhenRolesContainOnlyTherapist` to `AdminUserControllerTest`. Sends `{"roles":["THERAPIST"]}` with all required fields to `POST /api/v1/admin/users/therapists` and asserts HTTP 201, `$.email`, and `$.roles[0]`.
+- **Files created/modified:**
+  - `backend/src/main/java/com/psyassistant/users/RoleValidationException.java` (created)
+  - `backend/src/main/java/com/psyassistant/common/exception/GlobalExceptionHandler.java` (modified — import + new `handleRoleValidation` handler)
+  - `backend/src/main/java/com/psyassistant/admin/AdminUserController.java` (modified — import + `IllegalArgumentException` → `RoleValidationException`, inline comment removed)
+  - `backend/src/test/java/com/psyassistant/admin/AdminUserControllerTest.java` (modified — new test added)
+  - `context/PROGRESS.md` (updated)
+- **Decisions made:**
+  - `RoleValidationException` was placed in `com.psyassistant.users` (not `com.psyassistant.admin`) following the established pattern of `SelfDeactivationException`, which is also a user-domain business-rule exception that maps to 400.
+  - The `GlobalExceptionHandler` already had a fallback `IllegalArgumentException` handler that conditionally returned 400 or 404 based on message text. The new typed handler eliminates the need for that text inspection for this specific error path.
+- **Tests:** 509 passing / 0 failures
+
+---
+
+## 2026-05-20 — Test Run (Increment 5 code-review fixes, attempt 2)
+- Passed: 509 | Failed: 0 | Skipped: 0 | Coverage: N/A (no Jacoco plugin in pom.xml)
+- Coverage gate: N/A — Jacoco not configured; gate cannot be evaluated
+- Failures: none
+- Action: all clear — full suite passes cleanly; increments 1-5 (including all code-review fixes) complete
+
+## 2026-05-20 — Code Review (Increment 5, re-review after fixes)
+- Quality: PASS (Critical: 0, High: 0, Medium: 1)
+- Coverage: FULLY COVERED
+- Recommendation: approve

@@ -1,6 +1,7 @@
 package com.psyassistant.admin;
 
 import com.psyassistant.common.exception.ErrorResponse;
+import com.psyassistant.users.RoleValidationException;
 import com.psyassistant.users.UserManagementService;
 import com.psyassistant.users.UserRole;
 import com.psyassistant.users.dto.CreateUserRequest;
@@ -122,15 +123,16 @@ public class AdminUserController {
      * <p>The created user has {@code mustChangePassword=true} and will be redirected
      * to the password change screen on first login.</p>
      *
-     * @param request validated creation payload (role must be THERAPIST)
+     * @param request validated creation payload (roles must include THERAPIST)
      * @return 201 with {@link UserCreationResponseDto} including temporary password
      */
     @Operation(summary = "Create therapist with temporary password",
-            description = "Creates a therapist account with a secure temporary password for admin handoff")
+            description = "Creates a therapist account with a secure temporary password for admin handoff."
+                    + " The request roles must include THERAPIST; additional roles (e.g. SUPERVISOR) are allowed.")
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "Therapist created with temporary password",
             content = @Content(schema = @Schema(implementation = UserCreationResponseDto.class))),
-        @ApiResponse(responseCode = "400", description = "Validation error or non-therapist role",
+        @ApiResponse(responseCode = "400", description = "Validation error or roles do not include THERAPIST",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
         @ApiResponse(responseCode = "409", description = "Email already registered",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -139,9 +141,8 @@ public class AdminUserController {
     public ResponseEntity<UserCreationResponseDto> createTherapistWithTemporaryPassword(
             @Valid @RequestBody final CreateUserRequest request) {
 
-        // Validate that roles include THERAPIST
         if (!request.roles().contains(UserRole.THERAPIST)) {
-            throw new IllegalArgumentException("This endpoint is only for creating therapist accounts");
+            throw new RoleValidationException("This endpoint is only for creating therapist accounts");
         }
 
         UUID actorId = UserManagementService.currentPrincipalId();
@@ -160,7 +161,7 @@ public class AdminUserController {
      * @return 200 with the updated {@link UserSummaryDto}
      */
     @Operation(summary = "Update user",
-            description = "Partial update: role, full name, or active status")
+            description = "Partial update: roles, full name, or active status")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "User updated",
             content = @Content(schema = @Schema(implementation = UserSummaryDto.class))),

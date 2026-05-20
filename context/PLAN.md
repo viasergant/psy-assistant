@@ -248,7 +248,7 @@ Existing single-role tokens issued before this migration will decode correctly: 
 
 ### Increment 5 — `AdminUserController`: update endpoint to accept `roles`
 
-**Status:** pending
+**Status:** completed
 
 **Goal:** Align the controller with the updated DTOs. The existing `/api/v1/admin/users/therapists` endpoint is checked to confirm it still works — it creates a user with a single role and now passes `Set.of(UserRole.THERAPIST)` internally.
 

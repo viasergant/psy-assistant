@@ -36,7 +36,7 @@ import { ASSIGNABLE_ROLES, normalizeRole, ROLE_LABELS, UserSummary } from '../..
           <div class="field">
             <label for="role">{{ 'admin.users.edit.roleLabel' | transloco }}</label>
             <select id="role" formControlName="role">
-              <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
+              <option *ngFor="let r of assignableRoles" [value]="r">{{ 'roles.' + r | transloco }}</option>
             </select>
           </div>
 

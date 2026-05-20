@@ -49,7 +49,7 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
           <label for="roleFilter">{{ 'admin.therapists.list.roleLabel' | transloco }}</label>
           <select id="roleFilter" [(ngModel)]="roleFilter" (change)="onRoleFilterChange()">
             <option value="">{{ 'admin.therapists.list.filterAllRoles' | transloco }}</option>
-            <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
+            <option *ngFor="let r of assignableRoles" [value]="r">{{ 'roles.' + r | transloco }}</option>
           </select>
         </div>
 
@@ -67,7 +67,7 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
           <select id="employmentFilter" [(ngModel)]="employmentFilter" (change)="applyFilters()">
             <option value="">{{ 'admin.therapists.list.filterAllStatuses' | transloco }}</option>
             <option *ngFor="let status of employmentStatuses" [value]="status">
-              {{ statusLabels[status] }}
+              {{ 'admin.therapists.create.employmentStatuses.' + status | transloco }}
             </option>
           </select>
         </div>
@@ -102,7 +102,7 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
               <td>{{ t.phone || '—' }}</td>
               <td>
                 <span class="badge" [class.badge-active]="t.employmentStatus === 'ACTIVE'">
-                  {{ statusLabels[t.employmentStatus] }}
+                  {{ 'admin.therapists.create.employmentStatuses.' + t.employmentStatus | transloco }}
                 </span>
               </td>
               <td class="specs-cell">
@@ -147,7 +147,7 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
         </button>
       </nav>
       <p class="total-count" *ngIf="!loading">
-        {{ totalElements }} therapist{{ totalElements !== 1 ? 's' : '' }} found
+        {{ totalElements !== 1 ? ('admin.therapists.list.therapistsFoundPlural' | transloco: { count: totalElements }) : ('admin.therapists.list.therapistsFound' | transloco: { count: totalElements }) }}
       </p>
     </div>
 

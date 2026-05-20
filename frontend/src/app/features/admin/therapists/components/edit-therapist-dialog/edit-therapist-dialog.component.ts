@@ -26,13 +26,13 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-therapist-title">
       <div class="dialog">
         <div class="dialog-header">
-          <h2 id="edit-therapist-title">Edit Therapist Profile</h2>
+          <h2 id="edit-therapist-title">{{ 'admin.therapists.edit.title' | transloco }}</h2>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
           <div class="field">
-            <label for="name">Full name <span class="required" aria-hidden="true">*</span></label>
+            <label for="name">{{ 'admin.therapists.edit.fullNameLabel' | transloco }} <span class="required" aria-hidden="true">*</span></label>
             <input
               id="name"
               type="text"
@@ -41,12 +41,12 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
               aria-required="true"
             />
             <span *ngIf="isInvalid('name')" class="error-msg" role="alert">
-              Full name is required.
+              {{ 'admin.therapists.edit.fullNameRequired' | transloco }}
             </span>
           </div>
 
           <div class="field">
-            <label for="email">Email <span class="required" aria-hidden="true">*</span></label>
+            <label for="email">{{ 'admin.therapists.edit.emailLabel' | transloco }} <span class="required" aria-hidden="true">*</span></label>
             <input
               id="email"
               type="email"
@@ -56,12 +56,12 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
               aria-required="true"
             />
             <span *ngIf="isInvalid('email')" class="error-msg" role="alert">
-              Enter a valid email address.
+              {{ 'admin.therapists.edit.emailInvalid' | transloco }}
             </span>
           </div>
 
           <div class="field">
-            <label for="phone">Phone number</label>
+            <label for="phone">{{ 'admin.therapists.edit.phoneLabel' | transloco }}</label>
             <input
               id="phone"
               type="tel"
@@ -71,24 +71,24 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
           </div>
 
           <div class="field">
-            <label for="employmentStatus">Employment Status <span class="required" aria-hidden="true">*</span></label>
+            <label for="employmentStatus">{{ 'admin.therapists.edit.employmentStatusLabel' | transloco }} <span class="required" aria-hidden="true">*</span></label>
             <select
               id="employmentStatus"
               formControlName="employmentStatus"
               [attr.aria-invalid]="isInvalid('employmentStatus')"
               aria-required="true">
-              <option value="">— select —</option>
+              <option value="">{{ 'admin.therapists.edit.selectPlaceholder' | transloco }}</option>
               <option *ngFor="let status of employmentStatuses" [value]="status">
-                {{ statusLabels[status] }}
+                {{ 'admin.therapists.create.employmentStatuses.' + status | transloco }}
               </option>
             </select>
             <span *ngIf="isInvalid('employmentStatus')" class="error-msg" role="alert">
-              Select an employment status.
+              {{ 'admin.therapists.edit.employmentStatusRequired' | transloco }}
             </span>
           </div>
 
           <div class="field">
-            <label for="bio">Biography / About</label>
+            <label for="bio">{{ 'admin.therapists.edit.bioLabel' | transloco }}</label>
             <textarea
               id="bio"
               formControlName="bio"
@@ -98,28 +98,28 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
           </div>
 
           <div class="info-section">
-            <h3>Current Specializations</h3>
+            <h3>{{ 'admin.therapists.edit.specializationsTitle' | transloco }}</h3>
             <div class="chip-list">
               <span *ngFor="let spec of therapist.specializations" class="chip">
                 {{ spec.name | translateSpecialization }}
               </span>
               <span *ngIf="therapist.specializations.length === 0" class="empty-text">
-                None assigned
+                {{ 'admin.therapists.edit.noneAssigned' | transloco }}
               </span>
             </div>
             <p class="help-text">
-              Specializations and languages are managed separately (Phase 2).
+              {{ 'admin.therapists.edit.specializationsHelp' | transloco }}
             </p>
           </div>
 
           <div class="info-section">
-            <h3>Current Languages</h3>
+            <h3>{{ 'admin.therapists.edit.languagesTitle' | transloco }}</h3>
             <div class="chip-list">
               <span *ngFor="let lang of therapist.languages" class="chip">
                 {{ lang.name }}
               </span>
               <span *ngIf="therapist.languages.length === 0" class="empty-text">
-                None assigned
+                {{ 'admin.therapists.edit.noneAssigned' | transloco }}
               </span>
             </div>
           </div>
@@ -133,7 +133,7 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
               {{ 'common.actions.cancel' | transloco }}
             </button>
             <button type="submit" class="btn-primary" [disabled]="saving">
-              {{ saving ? 'Saving…' : 'Save changes' }}
+              {{ saving ? ('admin.therapists.edit.savingLabel' | transloco) : ('admin.therapists.edit.saveButton' | transloco) }}
             </button>
           </div>
         </form>

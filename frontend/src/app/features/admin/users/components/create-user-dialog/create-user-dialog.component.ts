@@ -22,25 +22,25 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserCreationResponse } from '.
       <div class="dialog">
         <!-- Success screen after creation -->
         <div *ngIf="createdUser" class="success-view">
-          <h2 id="success-title">User Created Successfully</h2>
+          <h2 id="success-title">{{ 'admin.users.create.successTitle' | transloco }}</h2>
           
           <div class="success-message">
-            <p><strong>{{ createdUser.fullName || createdUser.email }}</strong> has been created.</p>
-            <p class="info-text">Please share the temporary password below with the user. They will be required to change it on first login.</p>
+            <p>{{ 'admin.users.create.successMessage' | transloco: { name: (createdUser.fullName || createdUser.email) } }}</p>
+            <p class="info-text">{{ 'admin.users.create.successInfoText' | transloco }}</p>
           </div>
 
           <div class="password-display">
-            <label>Temporary Password</label>
+            <label>{{ 'admin.users.create.tempPasswordLabel' | transloco }}</label>
             <div class="password-box">
               <code>{{ createdUser.temporaryPassword }}</code>
-              <button type="button" class="copy-btn" (click)="copyPassword()" [attr.aria-label]="'Copy password'">
-                {{ passwordCopied ? 'Copied!' : 'Copy' }}
+              <button type="button" class="copy-btn" (click)="copyPassword()" [attr.aria-label]="'admin.users.create.copyButton' | transloco">
+                {{ passwordCopied ? ('admin.users.create.copiedButton' | transloco) : ('admin.users.create.copyButton' | transloco) }}
               </button>
             </div>
           </div>
 
           <div class="warning-box">
-            ⚠️ Make sure to copy and share this password securely. You won't be able to see it again.
+            ⚠️ {{ 'admin.users.create.warningText' | transloco }}
           </div>
 
           <div class="actions">
@@ -50,12 +50,12 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserCreationResponse } from '.
 
         <!-- Creation form -->
         <div *ngIf="!createdUser">
-          <h2 id="create-user-title">Create User</h2>
+          <h2 id="create-user-title">{{ 'admin.users.create.title' | transloco }}</h2>
 
           <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
             <div class="field">
-              <label for="email">Email <span aria-hidden="true">*</span></label>
+              <label for="email">{{ 'admin.users.create.emailLabel' | transloco }} <span aria-hidden="true">*</span></label>
               <input
                 id="email"
                 type="email"
@@ -65,12 +65,12 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserCreationResponse } from '.
                 aria-required="true"
               />
               <span *ngIf="isInvalid('email')" class="error-msg" role="alert">
-                Enter a valid email address.
+                {{ 'admin.users.create.emailInvalid' | transloco }}
               </span>
             </div>
 
             <div class="field">
-              <label for="fullName">Full name <span aria-hidden="true">*</span></label>
+              <label for="fullName">{{ 'admin.users.create.fullNameLabel' | transloco }} <span aria-hidden="true">*</span></label>
               <input
                 id="fullName"
                 type="text"
@@ -79,22 +79,22 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserCreationResponse } from '.
                 aria-required="true"
               />
               <span *ngIf="isInvalid('fullName')" class="error-msg" role="alert">
-                Full name is required.
+                {{ 'admin.users.create.fullNameRequired' | transloco }}
               </span>
             </div>
 
             <div class="field">
-              <label for="role">Role <span aria-hidden="true">*</span></label>
+              <label for="role">{{ 'admin.users.create.roleLabel' | transloco }} <span aria-hidden="true">*</span></label>
               <select
                 id="role"
                 formControlName="role"
                 [attr.aria-invalid]="isInvalid('role')"
                 aria-required="true">
-                <option value="">— select —</option>
-                <option *ngFor="let r of assignableRoles" [value]="r">{{ roleLabels[r] }}</option>
+                <option value="">{{ 'admin.users.create.selectPlaceholder' | transloco }}</option>
+                <option *ngFor="let r of assignableRoles" [value]="r">{{ 'roles.' + r | transloco }}</option>
               </select>
               <span *ngIf="isInvalid('role')" class="error-msg" role="alert">
-                Select a role.
+                {{ 'admin.users.create.roleRequired' | transloco }}
               </span>
             </div>
 
@@ -105,7 +105,7 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserCreationResponse } from '.
             <div class="actions">
               <button type="button" (click)="cancel()" [disabled]="saving">{{ 'common.actions.cancel' | transloco }}</button>
               <button type="submit" [disabled]="saving">
-                {{ saving ? 'Creating…' : 'Create user' }}
+                {{ saving ? ('admin.users.create.creatingLabel' | transloco) : ('admin.users.create.createButton' | transloco) }}
               </button>
             </div>
           </form>

@@ -15,7 +15,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { IdNamePair } from '../../admin/therapists/models/therapist.model';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 /**
  * Multi-step wizard for therapists to complete their profile after first login.
@@ -83,7 +83,8 @@ export class TherapistProfileWizardComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private http: HttpClient,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private transloco: TranslocoService
   ) {
     this.initializeForms();
   }
@@ -132,7 +133,10 @@ export class TherapistProfileWizardComponent implements OnInit {
       languages: this.http.get<IdNamePair[]>('/api/v1/languages')
     }).subscribe({
       next: (data) => {
-        this.specializations = data.specializations;
+        this.specializations = data.specializations.map(spec => ({
+          id: spec.id,
+          name: this.translateSpecializationName(spec.name)
+        }));
         this.languages = data.languages;
       },
       error: (error) => {
@@ -144,6 +148,15 @@ export class TherapistProfileWizardComponent implements OnInit {
         });
       }
     });
+  }
+
+  private translateSpecializationName(name: string): string {
+    const key = `specializations.names.${name
+      .split(/[\s\-]+/)
+      .map((word, i) => i === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join('')}`;
+    const translated = this.transloco.translate(key);
+    return translated === key ? name : translated;
   }
 
   /**

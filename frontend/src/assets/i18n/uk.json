@@ -329,6 +329,13 @@
       "THERAPIST_CANCELLATION": "Скасовано терапевтом"
     }
   },
+  "roles": {
+    "RECEPTION_ADMIN_STAFF": "Рецепція / Адміністративний персонал",
+    "THERAPIST": "Терапевт",
+    "SUPERVISOR": "Супервізор",
+    "FINANCE": "Фінанси",
+    "SYSTEM_ADMINISTRATOR": "Системний адміністратор"
+  },
   "specializations": {
     "names": {
       "adhd": "СДУГ",
@@ -667,21 +674,58 @@
     },
     "users": {
       "list": {
+        "pageTitle": "Управління користувачами",
+        "createButton": "+ Створити користувача",
         "roleLabel": "Роль",
         "statusLabel": "Статус",
         "statusActive": "Активний",
         "statusInactive": "Неактивний",
+        "filterAllRoles": "Всі ролі",
+        "filterAllStatuses": "Всі статуси",
+        "loading": "Завантаження\u2026",
+        "noResults": "Користувачів за поточними фільтрами не знайдено.",
         "ariaFilters": "Фільтри користувачів",
         "ariaList": "Список користувачів",
         "ariaPagination": "Пагінація списку користувачів",
         "tableHeaders": {
+          "name": "Ім’я",
           "email": "Електронна пошта",
+          "role": "Роль",
           "status": "Статус",
+          "created": "Створено",
           "actions": "Дії"
         },
+        "viewProfileAria": "Переглянути профіль {{name}}",
+        "editAction": "Редагувати",
+        "resetPwdAction": "Скинути пароль",
+        "deactivateAction": "Деактивувати",
+        "reactivateAction": "Реактивувати",
+        "editAria": "Редагувати {{email}}",
+        "resetPwdAria": "Скинути пароль для {{email}}",
+        "deactivateAria": "Деактивувати {{email}}",
+        "reactivateAria": "Реактивувати {{email}}",
+        "paginationText": "Сторінка {{current}} з {{total}}",
+        "usersFound": "Знайдено користувачів: {{count}}",
         "closeError": "Закрити повідомлення про помилку"
       },
       "create": {
+        "title": "Створити користувача",
+        "emailLabel": "Електронна пошта",
+        "emailInvalid": "Введіть дійсну адресу електронної пошти.",
+        "fullNameLabel": "Повне ім’я",
+        "fullNameRequired": "Повне ім’я є обов’язковим.",
+        "roleLabel": "Роль",
+        "selectPlaceholder": "\u2014 оберіть \u2014",
+        "roleRequired": "Оберіть роль.",
+        "createButton": "Створити користувача",
+        "creatingLabel": "Створення\u2026",
+        "successTitle": "Користувача успішно створено",
+        "successMessage": "{{name}} створено.",
+        "successInfoText": "Будь ласка, поділіться тимчасовим паролем нижче з користувачем. При першому вході йому буде запропоновано змінити його.",
+        "tempPasswordLabel": "Тимчасовий пароль",
+        "copyButton": "Копіювати",
+        "copiedButton": "Скопійовано!",
+        "warningText": "Переконайтесь, що скопіювали та безпечно поділились цим паролем. Більше його побачити буде неможливо.",
         "done": "Готово"
       },
       "edit": {
@@ -699,6 +743,8 @@
         "filterAllRoles": "Всі ролі",
         "filterAllStatuses": "Всі статуси",
         "employmentStatusLabel": "Статус зайнятості",
+        "therapistsFound": "Знайдено терапевтів: {{count}}",
+        "therapistsFoundPlural": "Знайдено терапевтів: {{count}}",
         "loading": "Завантаження…",
         "noResults": "Терапевтів за поточними фільтрами не знайдено.",
         "editAction": "Редагувати",
@@ -744,6 +790,11 @@
         "phoneLabel": "Номер телефону",
         "phonePlaceholder": "+380 (XX) XXX-XX-XX",
         "employmentStatusLabel": "Статус зайнятості",
+        "employmentStatuses": {
+          "ACTIVE": "Активний",
+          "ON_LEAVE": "У відпустці",
+          "INACTIVE": "Неактивний"
+        },
         "selectPlaceholder": "— оберіть —",
         "employmentStatusRequired": "Оберіть статус зайнятості.",
         "primarySpecializationLabel": "Основна спеціалізація",
@@ -764,8 +815,23 @@
         }
       },
       "edit": {
-        "bioLabel": "Професійна біографія",
-        "bioPlaceholder": "Коротка професійна біографія..."
+        "title": "Редагувати профіль терапевта",
+        "fullNameLabel": "Повне ім’я",
+        "fullNameRequired": "Повне ім’я є обов’язковим.",
+        "emailLabel": "Електронна пошта",
+        "emailInvalid": "Введіть дійсну адресу електронної пошти.",
+        "phoneLabel": "Номер телефону",
+        "employmentStatusLabel": "Статус зайнятості",
+        "selectPlaceholder": "\u2014 оберіть \u2014",
+        "employmentStatusRequired": "Оберіть статус зайнятості.",
+        "bioLabel": "Біографія / Про",
+        "bioPlaceholder": "Коротка професійна біографія...",
+        "specializationsTitle": "Поточні спеціалізації",
+        "languagesTitle": "Поточні мови",
+        "noneAssigned": "Не призначено",
+        "specializationsHelp": "Спеціалізації та мови управляються окремо.",
+        "saveButton": "Зберегти зміни",
+        "savingLabel": "Збереження\u2026"
       },
       "accountCreated": {
         "title": "Обліковий запис терапевта успішно створено",

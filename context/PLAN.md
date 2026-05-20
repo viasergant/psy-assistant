@@ -351,7 +351,7 @@ Therapist-related components: these use `UserSummary` and display `user.role`. U
 
 ### Increment 8 — `AuthService` and `AuthController` wiring + tests
 
-**Status:** pending
+**Status:** completed
 
 **Goal:** Verify the full authentication flow (login, refresh, first-login password change) works end-to-end with multi-role users. Fix the `AuthController` cookie max-age computation to use `result.roles()`. Add integration tests covering multi-role login.
 

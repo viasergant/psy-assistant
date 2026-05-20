@@ -152,6 +152,35 @@ class AuthControllerTest {
     }
 
     /**
+     * Multi-role login: a user with [THERAPIST, SUPERVISOR] roles produces a 200 response.
+     *
+     * <p>In the @WebMvcTest layer the JWT content is determined by the mocked AuthService.
+     * This test verifies that the controller correctly routes the multi-role AuthResult —
+     * returning the access token in the body and setting the refresh-token cookie with the
+     * TTL from {@code result.refreshTtl()}.
+     */
+    @Test
+    void loginWithMultiRoleUserReturnsBothRolesInToken() throws Exception {
+        LoginResponse resp = new LoginResponse(
+                "multi-role-jwt", Instant.now().plusSeconds(900), "Bearer");
+        AuthResult result = new AuthResult(
+                resp, "raw-refresh-uuid",
+                Set.of(UserRole.THERAPIST, UserRole.SUPERVISOR),
+                Duration.ofDays(15));
+        when(authService.authenticate(any(), anyString())).thenReturn(result);
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new LoginRequest("multi@example.com", "ValidPass1!"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("multi-role-jwt"))
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(cookie().httpOnly("refreshToken", true))
+                .andExpect(cookie().maxAge("refreshToken", (int) Duration.ofDays(15).toSeconds()));
+    }
+
+    /**
      * BCrypt DoS protection: password longer than 72 chars returns 400.
      */
     @Test

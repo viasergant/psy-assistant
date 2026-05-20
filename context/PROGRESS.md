@@ -470,3 +470,35 @@
 - Quality: FAIL (Critical: 0, High: 1, Medium: 3, Suggestion: 2)
 - Coverage: GAPS FOUND (2 items)
 - Recommendation: fix and re-review
+
+---
+
+## 2026-05-20 — Increment 8: `AuthService` and `AuthController` wiring + tests
+
+- **What was completed:** Confirmed `AuthController` already uses `result.refreshTtl()` directly (no `result.role()` call). Confirmed `AuthServiceTest` already contains both required multi-role tests added during Increment 3 code-review. Confirmed all `AuthResult` constructions in `AuthControllerTest` already use `Set.of(UserRole.X)`. Added the missing `loginWithMultiRoleUserReturnsBothRolesInToken` integration test to `AuthControllerTest`.
+- **Interfaces/methods created:** none (no new public APIs; test addition only)
+- **Files created/modified:**
+  - `backend/src/test/java/com/psyassistant/auth/AuthControllerTest.java` (modified — `loginWithMultiRoleUserReturnsBothRolesInToken` test added)
+  - `context/PROGRESS.md` (updated)
+  - `context/PLAN.md` (increment 8 status → completed)
+- **Decisions made:**
+  - `AuthController.setRefreshCookie` already uses `result.refreshTtl()` (a `Duration`) via `.maxAge(result.refreshTtl())` — no `result.role()` call was ever present; documented as no-op confirmation.
+  - `AuthServiceTest` already had `authenticateUserWithTwoRolesReturnsAuthResultWithBothRoles` (Increment 3) and `authenticateUserWithSysAdminRoleUsesAdminTtl` (Increment 3 code-review fix); no new tests added there.
+  - `loginWithMultiRoleUserReturnsBothRolesInToken` tests the controller layer in a `@WebMvcTest` context: stubs `authService.authenticate` with `Set.of(THERAPIST, SUPERVISOR)`, asserts HTTP 200, the mocked access token in the body, `httpOnly` cookie, and cookie `max-age` matching `Duration.ofDays(15).toSeconds()`. This confirms the controller correctly routes multi-role `AuthResult` through to cookie and response.
+- **Tests:** 510 passing / 0 failures (+1 from 509)
+
+---
+
+## 2026-05-20 — Test Run (Increment 8, attempt 1)
+- Passed: 510 | Failed: 0 | Skipped: 0 | Coverage: N/A (no Jacoco plugin in pom.xml)
+- Coverage gate: N/A — Jacoco not configured; gate cannot be evaluated
+- Duration: 11s
+- Failures: none
+- Action: all clear — full suite passes cleanly; increments 1-8 complete
+
+---
+
+## 2026-05-20 — Code Review (Increment 8)
+- Quality: PASS (Critical: 0, High: 0, Medium: 1, Suggestion: 1)
+- Coverage: FULLY COVERED
+- Recommendation: approve

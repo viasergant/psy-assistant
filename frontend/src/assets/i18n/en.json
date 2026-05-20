@@ -730,6 +730,10 @@
       },
       "edit": {
         "roleLabel": "Role"
+      },
+      "roles": {
+        "label": "Roles",
+        "required": "At least one role is required."
       }
     },
     "therapists": {

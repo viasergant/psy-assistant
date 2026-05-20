@@ -296,7 +296,7 @@ Existing single-role tokens issued before this migration will decode correctly: 
 
 ### Increment 7 — Frontend: user model and admin dialogs for multi-role
 
-**Status:** pending
+**Status:** completed
 
 **Goal:** Update the Angular user model interfaces and the create/edit user dialogs to support multiple roles.
 

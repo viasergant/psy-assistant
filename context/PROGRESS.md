@@ -408,6 +408,38 @@
 
 ---
 
+## 2026-05-20 — Increment 7: Frontend user model and admin dialogs for multi-role
+
+- **What was completed:** Updated the Angular `UserSummary`, `UserCreationResponse`, `CreateUserPayload`, and `PatchUserPayload` interfaces to support multiple roles. Replaced single-role `<select>` with a checkbox group in both create and edit user dialogs. Updated the user list table to display all roles. Updated `navigateToProfile` to use the `roles` array. Added `normalizeRoles()` helper. Added translation keys in both i18n files. Wrote unit tests for the model helper and both dialog components.
+- **Interfaces/methods created:**
+  - `normalizeRoles(roles: string[] | undefined): UserRole[]` — maps each entry via `normalizeRole`; returns `[]` for undefined/empty
+  - `UserSummary.roles?: UserRole[]` — multi-role field; `role: UserRole` retained as deprecated backward-compat field
+  - `UserCreationResponse.roles?: UserRole[]` — same pattern
+  - `CreateUserPayload.roles: UserRole[]` — replaces `role: UserRole`
+  - `PatchUserPayload.roles?: UserRole[]` — replaces `role?: UserRole`
+  - `CreateUserDialogComponent.isRoleSelected(role)` / `toggleRole(role, event)` — checkbox helpers
+  - `EditUserDialogComponent.isRoleSelected(role)` / `toggleRole(role, event)` / `isInvalid(field)` — checkbox + validation helpers
+- **Files created/modified:**
+  - `frontend/src/app/features/admin/users/models/user.model.ts` (modified)
+  - `frontend/src/app/features/admin/users/models/user.model.spec.ts` (created)
+  - `frontend/src/app/features/admin/users/components/create-user-dialog/create-user-dialog.component.ts` (modified)
+  - `frontend/src/app/features/admin/users/components/create-user-dialog/create-user-dialog.component.spec.ts` (created)
+  - `frontend/src/app/features/admin/users/components/edit-user-dialog/edit-user-dialog.component.ts` (modified)
+  - `frontend/src/app/features/admin/users/components/edit-user-dialog/edit-user-dialog.component.spec.ts` (created)
+  - `frontend/src/app/features/admin/users/components/user-list/user-list.component.ts` (modified)
+  - `frontend/src/assets/i18n/en.json` (modified — added `admin.users.roles.label`, `admin.users.roles.required`)
+  - `frontend/src/assets/i18n/uk.json` (modified — added same keys in Ukrainian)
+  - `context/PROGRESS.md` (updated)
+  - `context/PLAN.md` (increment 7 status → completed)
+- **Decisions made:**
+  - Therapist-related components (`create-therapist-dialog`, `edit-therapist-dialog`, `therapist-list`) do not access `user.role`/`user.roles` in their templates — they work with `TherapistProfile` directly and needed no template changes. Model changes are additive and non-breaking.
+  - `rolesRequiredValidator` defined as a module-level `const ValidatorFn` (not a class method) to be reusable in both dialog components.
+  - The inline `<fieldset>` + `<legend>` pattern was chosen over Angular Material `mat-checkbox` because the project's dialog components consistently use plain HTML with custom CSS (no Angular Material imports in these components).
+  - `isInvalid('roles')` checks `dirty || touched` so the validation error only appears after the user interacts with the form, matching the existing pattern in the create-user dialog.
+  - `navigateToProfile` in `user-list` now uses `user.roles ?? [user.role]` (the full roles array when present, otherwise the deprecated single field) to decide whether to route to the therapist detail page.
+- **Build result:** `ng build --configuration production` — zero TypeScript errors. Pre-existing CSS budget warnings and CommonJS notice present (unrelated).
+- **Tests:** TypeScript compiles clean (`tsc --noEmit`) for both `tsconfig.app.json` and `tsconfig.spec.json`. 24 new unit tests written across 3 spec files.
+
 ## 2026-05-20 — Frontend Test Run (attempt 2)
 - Passed: unknown (browser disconnected after 90–162 of 276 tests executed; suite never completed)
 - Failed: at minimum 75 distinct failures confirmed across two disconnected runs
@@ -418,3 +450,23 @@
   2. **SessionService#getSessions assertion** — `Expected $[0].plannedDuration = 1 to equal 60`. Service `parseDurationToMinutes` treats value `60` as seconds → returns 1 minute; test expects raw `60`. Pre-existing mismatch (spec from commit `fa89d6c`).
   3. **Browser disconnect** — Chrome disconnects after 90–162 tests with `no message in 30000 ms`, preventing remaining 114–186 tests from running.
 - Action: all failures are pre-existing and unrelated to the multi-role changes on this branch; no new regressions introduced
+
+---
+
+## 2026-05-20 — Frontend Test Run (Increment 7, attempt 3 — targeted spec run)
+- Passed: 67 | Failed: 0 | Skipped: 0 | Coverage: N/A (karma-coverage not configured for targeted runs)
+- Coverage gate: N/A — no coverage gate configured for frontend
+- TypeScript: `tsc --project tsconfig.spec.json --noEmit` exits 0 — zero errors
+- Spec results:
+  - `user.model.spec.ts`: 9/9 pass
+  - `create-user-dialog.component.spec.ts`: 17/17 pass
+  - `edit-user-dialog.component.spec.ts`: 17/17 pass
+  - `permission.service.spec.ts`: 17/17 pass (regression check)
+  - `role.guard.spec.ts`: 7/7 pass (regression check)
+- Failures: none
+- Action: all clear — all Increment 7 spec files pass; existing auth specs unaffected
+
+## 2026-05-20 — Code Review (Increment 7)
+- Quality: FAIL (Critical: 0, High: 1, Medium: 3, Suggestion: 2)
+- Coverage: GAPS FOUND (2 items)
+- Recommendation: fix and re-review

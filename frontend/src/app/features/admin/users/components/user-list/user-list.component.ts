@@ -110,8 +110,12 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
               </td>
               <td>{{ u.email }}</td>
               <td>
-                <span class="badge" [class.badge-admin]="u.role === 'SYSTEM_ADMINISTRATOR' || u.role === 'ADMIN'">
-                  {{ ('roles.' + u.role | transloco) || u.role }}
+                <span
+                  *ngFor="let r of (u.roles ?? [u.role]); let last = last"
+                  class="badge"
+                  [class.badge-admin]="r === 'SYSTEM_ADMINISTRATOR' || r === 'ADMIN'"
+                  [style.margin-right]="last ? '0' : '4px'">
+                  {{ 'roles.' + r | transloco }}
                 </span>
               </td>
               <td>
@@ -576,11 +580,12 @@ export class UserListComponent implements OnInit {
   navigateToProfile(user: UserSummary): void {
     // Clear any previous error messages
     this.errorMessage = null;
-    
-    // Normalize role handling for legacy values
-    const role = user.role === 'USER' ? 'THERAPIST' : user.role;
-    
-    if (role === 'THERAPIST') {
+
+    // Use the roles array when available; fall back to the legacy single role field
+    const allRoles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
+    const normalizedRoles = allRoles.map(r => r === 'USER' ? 'THERAPIST' : r);
+
+    if (normalizedRoles.includes('THERAPIST')) {
       // Look up therapist profile by email and navigate to their profile
       this.therapistService.getTherapistByEmail(user.email).subscribe({
         next: (therapist) => {
@@ -595,7 +600,7 @@ export class UserListComponent implements OnInit {
       // For other roles, you could navigate to a general user profile page
       // or show user details in a dialog. For now, we'll just do nothing.
       // Future enhancement: navigate to a user detail page
-      this.errorMessage = `Profile view is only available for therapists. User ${user.fullName ?? user.email} has role: ${role}.`;
+      this.errorMessage = `Profile view is only available for therapists. User ${user.fullName ?? user.email} has role(s): ${normalizedRoles.join(', ')}.`;
     }
   }
 

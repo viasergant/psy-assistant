@@ -1,10 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { UserManagementService } from '../../services/user-management.service';
 import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserCreationResponse } from '../../models/user.model';
+
+/** Validates that at least one role checkbox is selected. */
+const rolesRequiredValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const value = control.value as UserRole[];
+  return Array.isArray(value) && value.length >= 1 ? null : { rolesRequired: true };
+};
 
 /**
  * Modal dialog for creating a new user account.
@@ -84,18 +90,23 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserCreationResponse } from '.
             </div>
 
             <div class="field">
-              <label for="role">{{ 'admin.users.create.roleLabel' | transloco }} <span aria-hidden="true">*</span></label>
-              <select
-                id="role"
-                formControlName="role"
-                [attr.aria-invalid]="isInvalid('role')"
-                aria-required="true">
-                <option value="">{{ 'admin.users.create.selectPlaceholder' | transloco }}</option>
-                <option *ngFor="let r of assignableRoles" [value]="r">{{ 'roles.' + r | transloco }}</option>
-              </select>
-              <span *ngIf="isInvalid('role')" class="error-msg" role="alert">
-                {{ 'admin.users.create.roleRequired' | transloco }}
-              </span>
+              <fieldset class="roles-fieldset" [class.roles-invalid]="isInvalid('roles')">
+                <legend>{{ 'admin.users.roles.label' | transloco }} <span aria-hidden="true">*</span></legend>
+                <div class="roles-checkboxes">
+                  <label *ngFor="let r of assignableRoles" class="role-checkbox-label">
+                    <input
+                      type="checkbox"
+                      [value]="r"
+                      [checked]="isRoleSelected(r)"
+                      (change)="toggleRole(r, $event)"
+                    />
+                    {{ 'roles.' + r | transloco }}
+                  </label>
+                </div>
+                <span *ngIf="isInvalid('roles')" class="error-msg" role="alert">
+                  {{ 'admin.users.roles.required' | transloco }}
+                </span>
+              </fieldset>
             </div>
 
             <div *ngIf="serverError" class="alert-error" role="alert">
@@ -244,6 +255,40 @@ import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserCreationResponse } from '.
       text-align: left;
       line-height: 1.5;
     }
+    .roles-fieldset {
+      border: 1.5px solid #D1D5DB;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      margin: 0;
+    }
+    .roles-fieldset.roles-invalid {
+      border-color: #DC2626;
+    }
+    .roles-fieldset legend {
+      font-weight: 500;
+      font-size: .9375rem;
+      padding: 0 .25rem;
+    }
+    .roles-checkboxes {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      margin-top: .5rem;
+    }
+    .role-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-weight: 400;
+      font-size: .9375rem;
+      cursor: pointer;
+    }
+    .role-checkbox-label input[type="checkbox"] {
+      width: 1rem;
+      height: 1rem;
+      cursor: pointer;
+      accent-color: #0EA5A0;
+    }
   `]
 })
 export class CreateUserDialogComponent {
@@ -267,7 +312,7 @@ export class CreateUserDialogComponent {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
       fullName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(255)]],
-      role: ['' as UserRole | '', Validators.required]
+      roles: [[] as UserRole[], rolesRequiredValidator]
     });
   }
 
@@ -277,15 +322,36 @@ export class CreateUserDialogComponent {
     return !!ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched);
   }
 
+  /** Returns true when the given role is in the current selection. */
+  isRoleSelected(role: UserRole): boolean {
+    const current = this.form.get('roles')?.value as UserRole[];
+    return Array.isArray(current) && current.includes(role);
+  }
+
+  /** Adds or removes a role from the `roles` form control value on checkbox change. */
+  toggleRole(role: UserRole, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const ctrl = this.form.get('roles')!;
+    const current: UserRole[] = Array.isArray(ctrl.value) ? [...ctrl.value] : [];
+    if (checked) {
+      if (!current.includes(role)) {
+        ctrl.setValue([...current, role]);
+      }
+    } else {
+      ctrl.setValue(current.filter(r => r !== role));
+    }
+    ctrl.markAsTouched();
+  }
+
   /** Submits the form to the API. */
   submit(): void {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
 
-    const formValue = this.form.value;
+    const formValue = this.form.value as { email: string; fullName: string; roles: UserRole[] };
 
-    // If THERAPIST role selected, redirect to therapist creation wizard
-    if (formValue.role === 'THERAPIST') {
+    // If THERAPIST is among the selected roles, redirect to therapist creation wizard
+    if (formValue.roles.includes('THERAPIST')) {
       this.redirectToTherapistWizard.emit({
         fullName: formValue.fullName,
         email: formValue.email
@@ -297,7 +363,11 @@ export class CreateUserDialogComponent {
     this.saving = true;
     this.serverError = null;
 
-    this.userService.createUser(formValue).subscribe({
+    this.userService.createUser({
+      email: formValue.email,
+      fullName: formValue.fullName,
+      roles: formValue.roles
+    }).subscribe({
       next: (response) => {
         this.saving = false;
         this.createdUser = response;

@@ -3,6 +3,7 @@ import {
   Component,
   Input,
   OnChanges,
+  OnInit,
   SimpleChanges,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -35,7 +36,7 @@ import { NoteVersionHistoryDialogComponent } from '../note-version-history-dialo
   templateUrl: './session-notes-panel.component.html',
   styleUrls: ['./session-notes-panel.component.scss'],
 })
-export class SessionNotesPanelComponent implements OnChanges {
+export class SessionNotesPanelComponent implements OnInit, OnChanges {
   @Input() sessionId!: string;
   @Input() active = false;
   @Input() readonly = false;
@@ -52,21 +53,35 @@ export class SessionNotesPanelComponent implements OnChanges {
 
   constructor(private noteService: SessionNoteService) {}
 
+  ngOnInit(): void {
+    if (this.sessionId) {
+      this.loadNotes();
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['active'] && this.active) {
+    // Initial load is handled by ngOnInit to avoid races with p-dialog's visible binding.
+    const activeChange = changes['active'];
+    const sessionIdChange = changes['sessionId'];
+    if (activeChange?.firstChange || sessionIdChange?.firstChange) return;
+
+    if ((activeChange || sessionIdChange) && this.active && this.sessionId) {
       this.loadNotes();
     }
   }
 
   loadNotes(): void {
+    console.log('[SessionNotesPanel] loadNotes — sessionId=%s', this.sessionId);
     this.loading = true;
     this.forbidden = false;
     this.noteService.getNotes(this.sessionId).subscribe({
       next: notes => {
+        console.log('[SessionNotesPanel] loaded %d note(s) for sessionId=%s', notes.length, this.sessionId);
         this.notes = notes;
         this.loading = false;
       },
       error: err => {
+        console.error('[SessionNotesPanel] failed to load notes for sessionId=%s', this.sessionId, err);
         this.loading = false;
         if (this.noteService.isForbiddenError(err)) {
           this.forbidden = true;

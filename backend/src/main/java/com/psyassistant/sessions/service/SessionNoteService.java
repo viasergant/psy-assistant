@@ -267,11 +267,20 @@ public class SessionNoteService {
             // THERAPIST: own notes only, all visibility levels
             notes = noteRepository.findBySessionRecordIdAndAuthorIdOrderByCreatedAtAsc(
                     sessionRecordId, principal);
-        } else {
-            // SUPERVISOR / SYS_ADMIN: SUPERVISOR_VISIBLE notes from any author
+        } else if (!hasReadOwn && hasReadAll) {
+            // SUPERVISOR: SUPERVISOR_VISIBLE notes from any author
             notes = noteRepository.findBySessionRecordIdOrderByCreatedAtAsc(sessionRecordId)
                     .stream()
                     .filter(n -> n.getVisibility() == NoteVisibility.SUPERVISOR_VISIBLE)
+                    .toList();
+        } else {
+            // SYS_ADMIN (hasReadOwn + hasReadAll): own notes regardless of visibility,
+            // plus SUPERVISOR_VISIBLE notes authored by others
+            final String ownPrincipal = principal;
+            notes = noteRepository.findBySessionRecordIdOrderByCreatedAtAsc(sessionRecordId)
+                    .stream()
+                    .filter(n -> ownPrincipal.equals(n.getAuthorId())
+                            || n.getVisibility() == NoteVisibility.SUPERVISOR_VISIBLE)
                     .toList();
         }
 
@@ -322,10 +331,18 @@ public class SessionNoteService {
 
         // Apply same visibility filtering as list operation
         if (hasReadOwn && !hasReadAll && !note.getAuthorId().equals(principal)) {
+            // THERAPIST: own notes only
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found");
         }
-        if (hasReadAll && !hasReadOwn
+        if (!hasReadOwn && hasReadAll
                 && note.getVisibility() != NoteVisibility.SUPERVISOR_VISIBLE) {
+            // SUPERVISOR: SUPERVISOR_VISIBLE only
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found");
+        }
+        if (hasReadOwn && hasReadAll
+                && !note.getAuthorId().equals(principal)
+                && note.getVisibility() != NoteVisibility.SUPERVISOR_VISIBLE) {
+            // SYS_ADMIN: own notes + SUPERVISOR_VISIBLE notes from others
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found");
         }
 

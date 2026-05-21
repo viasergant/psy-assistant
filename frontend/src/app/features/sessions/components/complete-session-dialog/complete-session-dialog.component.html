@@ -30,6 +30,16 @@
       </div>
     </div>
 
+    <!-- Clinical Notes from this session (read-only review before completing) -->
+    <div class="session-details-card">
+      <h3>{{ 'sessions.dialog.clinicalNotes' | transloco }}</h3>
+      <app-session-notes-panel
+        [sessionId]="session.id"
+        [active]="visible"
+        [readonly]="true"
+      />
+    </div>
+
     <!-- Session Notes -->
     <div class="field">
       <label for="sessionNotes">

@@ -76,6 +76,12 @@
       </div>
     </div>
 
+    <!-- Completion Notes (summary written when completing the session) -->
+    <div class="session-details-card" *ngIf="session.status === SessionStatus.COMPLETED && session.sessionNotes">
+      <h4 class="section-title">{{ 'sessions.dialog.completionNotes' | transloco }}</h4>
+      <p class="session-notes-content">{{ session.sessionNotes }}</p>
+    </div>
+
     <!-- Clinical Notes (shared group notes + per-client notes via noteScope) -->
     <div class="session-details-card">
       <h4 class="section-title">{{ 'sessions.dialog.sessionNotes' | transloco }}</h4>

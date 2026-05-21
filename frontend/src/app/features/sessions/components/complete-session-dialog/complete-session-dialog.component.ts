@@ -10,6 +10,7 @@ import { Textarea } from 'primeng/textarea';
 import { Subject, takeUntil } from 'rxjs';
 import { CompleteSessionRequest, SessionRecord } from '../../models/session.model';
 import { SessionService } from '../../services/session.service';
+import { SessionNotesPanelComponent } from '../session-notes-panel/session-notes-panel.component';
 
 function trimmedMinLength(min: number): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -32,6 +33,7 @@ function trimmedMinLength(min: number): ValidatorFn {
     Button,
     Textarea,
     DatePicker,
+    SessionNotesPanelComponent,
   ],
   templateUrl: './complete-session-dialog.component.html',
   styleUrls: ['./complete-session-dialog.component.scss'],

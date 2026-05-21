@@ -1031,7 +1031,9 @@
       "minutes": "хвилин",
       "createdAt": "Створено",
       "updatedAt": "Оновлено",
-      "noNotesYet": "Нотаток для цієї сесії ще немає."
+      "noNotesYet": "Нотаток для цієї сесії ще немає.",
+      "completionNotes": "Нотатки завершення",
+      "clinicalNotes": "Клінічні нотатки"
     },
     "messages": {
       "sessionStarted": "Сесію успішно розпочато",

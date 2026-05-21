@@ -9,7 +9,8 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
 import { Dialog } from 'primeng/dialog';
@@ -73,7 +74,11 @@ export class NoteEditorDialogComponent implements OnInit, OnChanges {
 
   noteTypeOptions: NoteTypeOption[] = [];
 
-  constructor(private noteService: SessionNoteService) {}
+  constructor(
+    private noteService: SessionNoteService,
+    private messageService: MessageService,
+    private transloco: TranslocoService,
+  ) {}
 
   ngOnInit(): void {
     this.noteTypeOptions = [
@@ -93,10 +98,20 @@ export class NoteEditorDialogComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible'] && this.visible) {
-      this.resetForm();
+      // Always synchronise form state whenever the dialog opens
+      if (this.existingNote) {
+        this.populateFromExistingNote();
+      } else {
+        this.resetForm();
+      }
     }
-    if (changes['existingNote'] && this.existingNote) {
-      this.populateFromExistingNote();
+    // Handle existingNote arriving/changing while dialog is already open
+    if (changes['existingNote'] && !changes['visible'] && this.visible) {
+      if (this.existingNote) {
+        this.populateFromExistingNote();
+      } else {
+        this.resetForm();
+      }
     }
   }
 
@@ -146,7 +161,13 @@ export class NoteEditorDialogComponent implements OnInit, OnChanges {
       }
       this.noteService.updateNote(this.sessionId, this.existingNote.id, req).subscribe({
         next: note => this.handleSaved(note),
-        error: () => { this.saving = false; },
+        error: () => {
+          this.saving = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: this.transloco.translate('notes.messages.saveError'),
+          });
+        },
       });
     } else {
       const req: CreateNoteRequest = {
@@ -160,7 +181,13 @@ export class NoteEditorDialogComponent implements OnInit, OnChanges {
       }
       this.noteService.createNote(this.sessionId, req).subscribe({
         next: note => this.handleSaved(note),
-        error: () => { this.saving = false; },
+        error: () => {
+          this.saving = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: this.transloco.translate('notes.messages.saveError'),
+          });
+        },
       });
     }
   }

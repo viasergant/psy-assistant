@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Toolbar } from 'primeng/toolbar';
@@ -11,6 +12,7 @@ import { GlobalSearchComponent } from '../global-search/global-search.component'
   selector: 'app-shell',
   standalone: true,
   imports: [
+    NgClass,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,

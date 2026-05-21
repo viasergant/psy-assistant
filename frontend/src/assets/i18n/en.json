@@ -1031,7 +1031,9 @@
       "minutes": "minutes",
       "createdAt": "Created At",
       "updatedAt": "Updated At",
-      "noNotesYet": "No notes available for this session yet."
+      "noNotesYet": "No notes available for this session yet.",
+      "completionNotes": "Completion Notes",
+      "clinicalNotes": "Clinical Notes"
     },
     "messages": {
       "sessionStarted": "Session started successfully",

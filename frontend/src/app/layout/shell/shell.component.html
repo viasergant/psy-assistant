@@ -18,6 +18,9 @@
       @for (item of visibleNav(); track item.route) {
         <li>
           <a [routerLink]="item.route" routerLinkActive="active">
+            @if (item.icon) {
+              <i class="pi" [ngClass]="item.icon"></i>
+            }
             {{ item.labelKey | transloco }}
           </a>
         </li>

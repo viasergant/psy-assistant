@@ -241,7 +241,7 @@ export class EditUserDialogComponent implements OnInit {
     const formValue = this.form.value as { fullName: string; roles: UserRole[]; active: boolean };
 
     this.userService.updateUser(this.user.id, {
-      fullName: formValue.fullName,
+      fullName: formValue.fullName?.trim() || undefined,
       roles: formValue.roles,
       active: formValue.active
     }).subscribe({

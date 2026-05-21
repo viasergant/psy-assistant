@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
@@ -10,6 +10,13 @@ import { Textarea } from 'primeng/textarea';
 import { Subject, takeUntil } from 'rxjs';
 import { CompleteSessionRequest, SessionRecord } from '../../models/session.model';
 import { SessionService } from '../../services/session.service';
+
+function trimmedMinLength(min: number): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const trimmed = (control.value ?? '').trim();
+    return trimmed.length >= min ? null : { minlength: { requiredLength: min, actualLength: trimmed.length } };
+  };
+}
 
 /**
  * Dialog for completing an in-progress session with notes and optional actual end time
@@ -47,7 +54,7 @@ export class CompleteSessionDialogComponent implements OnInit, OnDestroy {
     private messageService: MessageService
   ) {
     this.completeForm = this.fb.group({
-      sessionNotes: ['', [Validators.required, Validators.minLength(10)]],
+      sessionNotes: ['', [Validators.required, trimmedMinLength(10)]],
       actualEndTime: [null],
     });
   }
@@ -118,6 +125,6 @@ export class CompleteSessionDialogComponent implements OnInit, OnDestroy {
   }
 
   get notesLength(): number {
-    return this.completeForm.get('sessionNotes')?.value?.length || 0;
+    return this.completeForm.get('sessionNotes')?.value?.trim()?.length || 0;
   }
 }

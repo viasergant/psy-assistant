@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import {
   TherapistManagementService,
@@ -15,7 +16,7 @@ import { ClientService } from '../services/client.service';
 @Component({
   selector: 'app-client-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslocoPipe, Select],
+  imports: [CommonModule, FormsModule, TranslocoPipe, Select, TableModule],
   template: `
     <div class="cl-page">
 
@@ -91,192 +92,117 @@ import { ClientService } from '../services/client.service';
           </div>
         </div>
 
-        <!-- Sort controls -->
-        <div class="cl-filter-group cl-sort-group">
-          <label class="cl-filter-label">{{ 'clients.list.sortLabel' | transloco }}</label>
-          <div class="cl-sort-row">
-            <p-select
-              [(ngModel)]="sortField"
-              [options]="sortFieldOptions"
-              optionLabel="label"
-              optionValue="value"
-              (onChange)="applyFilters()"
-              styleClass="w-full"
-            />
-            <button
-              class="cl-sort-dir"
-              type="button"
-              (click)="toggleSortDir()"
-              [attr.aria-label]="sortDir === 'asc' ? ('clients.list.sortAscending' | transloco) : ('clients.list.sortDescending' | transloco)">
-              <svg *ngIf="sortDir === 'asc'" width="14" height="14" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M12 19V5M5 12l7-7 7 7"/>
-              </svg>
-              <svg *ngIf="sortDir === 'desc'" width="14" height="14" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M12 5v14M5 12l7 7 7-7"/>
-              </svg>
-            </button>
-          </div>
-        </div>
 
       </div>
 
-      <!-- State messages -->
-      <div *ngIf="loading" class="cl-state" aria-live="polite">
-        <span class="cl-spinner"></span>
-        {{ 'clients.list.loading' | transloco }}
-      </div>
-      <div *ngIf="!loading && loadError" class="cl-alert" role="alert">
+      <!-- Error state -->
+      <div *ngIf="loadError" class="cl-alert" role="alert">
         {{ loadError }}
-      </div>
-      <div *ngIf="!loading && !loadError && clients.length === 0" class="cl-state">
-        {{ 'clients.list.noClients' | transloco }}
       </div>
 
       <!-- Table -->
-      <div class="cl-table-wrap" *ngIf="!loading && !loadError && clients.length > 0">
-        <table [attr.aria-label]="'clients.list.ariaList' | transloco">
-          <thead>
-            <tr>
-              <th scope="col" class="col-name">
-                <button class="cl-sort-btn" (click)="sortByField('fullName')" type="button"
-                        [class.active]="sortField === 'fullName'"
-                        [attr.aria-sort]="ariaSort('fullName')">
-                  {{ 'clients.list.tableHeaders.name' | transloco }}
-                  <span class="cl-sort-indicator" *ngIf="sortField === 'fullName'">
-                    {{ sortDir === 'asc' ? '↑' : '↓' }}
-                  </span>
-                </button>
-              </th>
-              <th scope="col" class="col-contact">{{ 'clients.list.tableHeaders.contact' | transloco }}</th>
-              <th scope="col" class="col-city">{{ 'clients.list.tableHeaders.city' | transloco }}</th>
-              <th scope="col" class="col-therapist">{{ 'clients.list.tableHeaders.therapist' | transloco }}</th>
-              <th scope="col" class="col-tags">{{ 'clients.list.tableHeaders.tags' | transloco }}</th>
-              <th scope="col" class="col-created">
-                <button class="cl-sort-btn" (click)="sortByField('createdAt')" type="button"
-                        [class.active]="sortField === 'createdAt'"
-                        [attr.aria-sort]="ariaSort('createdAt')">
-                  {{ 'clients.list.tableHeaders.created' | transloco }}
-                  <span class="cl-sort-indicator" *ngIf="sortField === 'createdAt'">
-                    {{ sortDir === 'asc' ? '↑' : '↓' }}
-                  </span>
-                </button>
-              </th>
-              <th scope="col" class="col-actions">
-                <span class="sr-only">{{ 'clients.list.tableHeaders.actions' | transloco }}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              *ngFor="let client of clients"
-              class="cl-row"
+      <p-table
+        [value]="clients"
+        [lazy]="true"
+        (onLazyLoad)="onLazyLoad($event)"
+        [paginator]="true"
+        [rows]="pageSize"
+        [first]="first"
+        [totalRecords]="totalElements"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [showCurrentPageReport]="true"
+        [sortField]="sortField"
+        [sortOrder]="sortOrder"
+        [loading]="loading"
+        responsiveLayout="scroll"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="fullName" class="col-name">
+              {{ 'clients.list.tableHeaders.name' | transloco }}
+              <p-sortIcon field="fullName" />
+            </th>
+            <th class="col-contact">{{ 'clients.list.tableHeaders.contact' | transloco }}</th>
+            <th class="col-city">{{ 'clients.list.tableHeaders.city' | transloco }}</th>
+            <th class="col-therapist">{{ 'clients.list.tableHeaders.therapist' | transloco }}</th>
+            <th class="col-tags">{{ 'clients.list.tableHeaders.tags' | transloco }}</th>
+            <th pSortableColumn="createdAt" class="col-created">
+              {{ 'clients.list.tableHeaders.created' | transloco }}
+              <p-sortIcon field="createdAt" />
+            </th>
+            <th class="col-actions"><span class="sr-only">{{ 'clients.list.tableHeaders.actions' | transloco }}</span></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-client>
+          <tr class="cl-row"
               (click)="openClient(client)"
               [attr.aria-label]="'Open ' + client.fullName"
               tabindex="0"
               (keydown.enter)="openClient(client)"
               (keydown.space)="openClient(client)">
-              <!-- Name + Code -->
-              <td class="col-name">
-                <div class="cl-name-cell">
-                  <span class="cl-avatar" [style.background]="avatarColor(client.fullName)">
-                    {{ avatarInitial(client.fullName) }}
-                  </span>
-                  <div class="cl-name-info">
-                    <span class="cl-name">{{ client.fullName }}</span>
-                    <span class="cl-code" *ngIf="client.clientCode">{{ client.clientCode }}</span>
-                  </div>
-                </div>
-              </td>
-              <!-- Contact -->
-              <td class="col-contact">
-                <div class="cl-contact-stack">
-                  <span class="cl-contact-line" *ngIf="client.email">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                      <rect x="2" y="4" width="20" height="16" rx="2"/>
-                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                    </svg>
-                    {{ client.email }}
-                  </span>
-                  <span class="cl-contact-line" *ngIf="client.phone">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.19h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.76a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/>
-                    </svg>
-                    {{ client.phone }}
-                  </span>
-                  <span class="cl-empty" *ngIf="!client.email && !client.phone">—</span>
-                </div>
-              </td>
-              <!-- City -->
-              <td class="col-city">{{ client.city || '—' }}</td>
-              <!-- Therapist -->
-              <td class="col-therapist">
-                <span *ngIf="client.assignedTherapistId">
-                  {{ therapistName(client.assignedTherapistId) }}
+            <td class="col-name">
+              <div class="cl-name-cell">
+                <span class="cl-avatar" [style.background]="avatarColor(client.fullName)">
+                  {{ avatarInitial(client.fullName) }}
                 </span>
-                <span class="cl-empty" *ngIf="!client.assignedTherapistId">—</span>
-              </td>
-              <!-- Tags -->
-              <td class="col-tags">
-                <span class="cl-tags-wrap" *ngIf="client.tags.length > 0">
-                  <span class="cl-tag" *ngFor="let tag of client.tags.slice(0, 3)">{{ tag }}</span>
-                  <span class="cl-tag cl-tag-more" *ngIf="client.tags.length > 3">
-                    +{{ client.tags.length - 3 }}
-                  </span>
+                <div class="cl-name-info">
+                  <span class="cl-name">{{ client.fullName }}</span>
+                  <span class="cl-code" *ngIf="client.clientCode">{{ client.clientCode }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="col-contact">
+              <div class="cl-contact-stack">
+                <span class="cl-contact-line" *ngIf="client.email">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  </svg>
+                  {{ client.email }}
                 </span>
-                <span class="cl-empty" *ngIf="client.tags.length === 0">—</span>
-              </td>
-              <!-- Created -->
-              <td class="col-created">{{ client.createdAt | date:'dd MMM yyyy' }}</td>
-              <!-- Open action -->
-              <td class="col-actions">
-                <svg class="cl-row-arrow" width="16" height="16" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div class="cl-pagination" *ngIf="!loading && totalPages > 1"
-           [attr.aria-label]="'clients.list.ariaPagination' | transloco">
-        <button
-          class="cl-page-btn"
-          (click)="goToPage(currentPage - 1)"
-          [disabled]="currentPage === 0"
-          aria-label="Previous page">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.5">
-            <path d="M15 18l-6-6 6-6"/>
-          </svg>
-        </button>
-        <div class="cl-page-numbers">
-          <button
-            *ngFor="let p of pageNumbers()"
-            class="cl-page-num"
-            [class.active]="p === currentPage"
-            [disabled]="p < 0"
-            (click)="p >= 0 && goToPage(p)">
-            {{ p < 0 ? '…' : p + 1 }}
-          </button>
-        </div>
-        <button
-          class="cl-page-btn"
-          (click)="goToPage(currentPage + 1)"
-          [disabled]="currentPage >= totalPages - 1"
-          aria-label="Next page">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.5">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </button>
-      </div>
+                <span class="cl-contact-line" *ngIf="client.phone">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.19h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.76a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/>
+                  </svg>
+                  {{ client.phone }}
+                </span>
+                <span class="cl-empty" *ngIf="!client.email && !client.phone">—</span>
+              </div>
+            </td>
+            <td class="col-city">{{ client.city || '—' }}</td>
+            <td class="col-therapist">
+              <span *ngIf="client.assignedTherapistId">
+                {{ therapistName(client.assignedTherapistId) }}
+              </span>
+              <span class="cl-empty" *ngIf="!client.assignedTherapistId">—</span>
+            </td>
+            <td class="col-tags">
+              <span class="cl-tags-wrap" *ngIf="client.tags.length > 0">
+                <span class="cl-tag" *ngFor="let tag of client.tags.slice(0, 3)">{{ tag }}</span>
+                <span class="cl-tag cl-tag-more" *ngIf="client.tags.length > 3">
+                  +{{ client.tags.length - 3 }}
+                </span>
+              </span>
+              <span class="cl-empty" *ngIf="client.tags.length === 0">—</span>
+            </td>
+            <td class="col-created">{{ client.createdAt | date:'dd MMM yyyy' }}</td>
+            <td class="col-actions">
+              <svg class="cl-row-arrow" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="cl-state">{{ 'clients.list.noClients' | transloco }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
 
     </div>
   `,
@@ -461,53 +387,6 @@ import { ClientService } from '../services/client.service';
     @keyframes cl-spin { to { transform: rotate(360deg); } }
 
     /* ─── Table ──────────────────────────────────────────────────────── */
-    .cl-table-wrap {
-      overflow-x: auto;
-      border: 1px solid var(--color-border, #E5E7EB);
-      border-radius: var(--radius-lg, 12px);
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .9rem;
-    }
-    thead {
-      background: #F8FAFC;
-      border-bottom: 1.5px solid var(--color-border, #E5E7EB);
-    }
-    th {
-      padding: .7rem 1rem;
-      text-align: left;
-      font-size: .75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      color: var(--color-text-secondary, #6B7280);
-      white-space: nowrap;
-    }
-    .cl-sort-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: inherit;
-      text-transform: uppercase;
-      letter-spacing: inherit;
-      padding: 0;
-      color: var(--color-text-secondary, #6B7280);
-      display: flex;
-      align-items: center;
-      gap: .25rem;
-      transition: color .12s ease;
-    }
-    .cl-sort-btn:hover, .cl-sort-btn.active { color: #0D9488; }
-    .cl-sort-indicator { font-size: .8rem; }
-    td {
-      padding: .875rem 1rem;
-      border-bottom: 1px solid #F1F5F9;
-      vertical-align: middle;
-    }
     .cl-row {
       cursor: pointer;
       transition: background .1s ease;
@@ -515,7 +394,7 @@ import { ClientService } from '../services/client.service';
     }
     .cl-row:hover { background: #F8FAFC; }
     .cl-row:focus-visible { outline: 2px solid #0EA5A0; outline-offset: -2px; }
-    tbody tr:last-child td { border-bottom: none; }
+
 
     /* Name cell */
     .cl-name-cell {
@@ -611,66 +490,6 @@ import { ClientService } from '../services/client.service';
     .col-created { white-space: nowrap; min-width: 110px; }
     .col-actions { width: 40px; text-align: center; }
 
-    /* ─── Pagination ─────────────────────────────────────────────────── */
-    .cl-pagination {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: .4rem;
-      margin-top: 1.5rem;
-    }
-    .cl-page-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 2.125rem;
-      height: 2.125rem;
-      border: 1.5px solid var(--color-border, #E5E7EB);
-      border-radius: var(--radius-md, 8px);
-      background: #fff;
-      color: #374151;
-      cursor: pointer;
-      transition: background .12s ease, border-color .12s ease;
-    }
-    .cl-page-btn:hover:not(:disabled) { background: #F9FAFB; border-color: #9CA3AF; }
-    .cl-page-btn:disabled { opacity: .3; cursor: not-allowed; }
-    .cl-page-numbers {
-      display: flex;
-      align-items: center;
-      gap: .25rem;
-    }
-    .cl-page-num {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 2.125rem;
-      height: 2.125rem;
-      border: 1.5px solid transparent;
-      border-radius: var(--radius-md, 8px);
-      background: none;
-      font-size: .875rem;
-      font-family: inherit;
-      color: #374151;
-      cursor: pointer;
-      transition: background .12s ease, color .12s ease, border-color .12s ease;
-    }
-    .cl-page-num:hover:not([disabled]):not(.active) {
-      background: #F9FAFB;
-      border-color: #E5E7EB;
-    }
-    .cl-page-num.active {
-      background: #0EA5A0;
-      color: #fff;
-      border-color: #0EA5A0;
-      font-weight: 700;
-      cursor: default;
-    }
-    .cl-page-num[disabled] {
-      cursor: default;
-      pointer-events: none;
-      color: #9CA3AF;
-    }
-
     .sr-only {
       position: absolute; width: 1px; height: 1px;
       padding: 0; margin: -1px; overflow: hidden;
@@ -684,10 +503,15 @@ export class ClientListComponent implements OnInit, OnDestroy {
   totalElements = 0;
   totalPages = 0;
   currentPage = 0;
-  readonly pageSize = 20;
+  pageSize = 20;
 
   sortField = 'fullName';
   sortDir = 'asc';
+  first = 0;
+
+  get sortOrder(): number {
+    return this.sortDir === 'asc' ? 1 : -1;
+  }
 
   searchQuery = '';
   selectedTherapistId = '';
@@ -698,7 +522,6 @@ export class ClientListComponent implements OnInit, OnDestroy {
 
   therapistFilterOptions: { label: string; value: string }[] = [];
   tagFilterOptions: { label: string; value: string }[] = [];
-  sortFieldOptions: { label: string; value: string }[] = [];
 
   loading = false;
   loadError: string | null = null;
@@ -720,21 +543,17 @@ export class ClientListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.sortFieldOptions = [
-      { label: this.transloco.translate('clients.list.sortByName'), value: 'fullName' },
-      { label: this.transloco.translate('clients.list.sortByCreated'), value: 'createdAt' },
-    ];
     // Debounce text search
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       takeUntil(this.destroy$),
     ).subscribe(() => {
+      this.first = 0;
       this.currentPage = 0;
       this.loadClients();
     });
 
-    this.loadClients();
     this.loadTags();
     this.loadTherapists();
   }
@@ -744,35 +563,24 @@ export class ClientListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.first = event.first ?? 0;
+    this.pageSize = event.rows ?? this.pageSize;
+    this.currentPage = Math.floor(this.first / this.pageSize);
+    if (event.sortField) {
+      this.sortField = Array.isArray(event.sortField) ? event.sortField[0] : event.sortField as string;
+      this.sortDir = (event.sortOrder ?? 1) === 1 ? 'asc' : 'desc';
+    }
+    this.loadClients();
+  }
+
   onSearchChange(value: string): void {
     this.searchSubject.next(value);
   }
 
   applyFilters(): void {
+    this.first = 0;
     this.currentPage = 0;
-    this.loadClients();
-  }
-
-  toggleSortDir(): void {
-    this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-    this.currentPage = 0;
-    this.loadClients();
-  }
-
-  sortByField(field: string): void {
-    if (this.sortField === field) {
-      this.toggleSortDir();
-    } else {
-      this.sortField = field;
-      this.sortDir = 'asc';
-      this.currentPage = 0;
-      this.loadClients();
-    }
-  }
-
-  goToPage(page: number): void {
-    if (page < 0 || page >= this.totalPages) return;
-    this.currentPage = page;
     this.loadClients();
   }
 
@@ -793,11 +601,6 @@ export class ClientListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/clients', client.id]);
   }
 
-  ariaSort(field: string): string {
-    if (this.sortField !== field) return 'none';
-    return this.sortDir === 'asc' ? 'ascending' : 'descending';
-  }
-
   avatarInitial(name: string): string {
     return name ? name.trim().charAt(0).toUpperCase() : '?';
   }
@@ -814,25 +617,6 @@ export class ClientListComponent implements OnInit, OnDestroy {
 
   therapistName(id: string): string {
     return this.therapists.find(t => t.id === id)?.name ?? id.substring(0, 8) + '…';
-  }
-
-  /** Build a compact page-number list: first, last, current ±1, with ellipsis gaps. */
-  pageNumbers(): number[] {
-    if (this.totalPages <= 7) {
-      return Array.from({ length: this.totalPages }, (_, i) => i);
-    }
-    const p = this.currentPage;
-    const last = this.totalPages - 1;
-    const pages = new Set<number>([0, last, p]);
-    if (p > 0) pages.add(p - 1);
-    if (p < last) pages.add(p + 1);
-    const sorted = [...pages].sort((a, b) => a - b);
-    const result: number[] = [];
-    for (let i = 0; i < sorted.length; i++) {
-      if (i > 0 && sorted[i] - sorted[i - 1] > 1) result.push(-1); // ellipsis sentinel
-      result.push(sorted[i]);
-    }
-    return result;
   }
 
   private loadClients(): void {
@@ -853,6 +637,7 @@ export class ClientListComponent implements OnInit, OnDestroy {
         this.clients = page.content;
         this.totalElements = page.totalElements;
         this.totalPages = page.totalPages;
+        this.first = this.currentPage * this.pageSize;
         this.loading = false;
       },
       error: () => {

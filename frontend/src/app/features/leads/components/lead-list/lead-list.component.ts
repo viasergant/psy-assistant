@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import {
   ALL_STATUSES,
   LeadDetail,
@@ -34,6 +35,7 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
     CreateLeadDialogComponent,
     EditLeadDialogComponent,
     Select,
+    TableModule,
   ],
   template: `
     <div class="page">
@@ -70,79 +72,83 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
         </div>
       </div>
 
-      <!-- Loading / empty / error states -->
-      <div *ngIf="loading" class="state-msg" aria-live="polite">{{ 'leads.list.loading' | transloco }}</div>
-      <div *ngIf="!loading && loadError" class="alert-error" role="alert">{{ loadError }}</div>
-      <div *ngIf="!loading && !loadError && leads.length === 0" class="state-msg">
-        {{ 'leads.list.noLeadsFiltered' | transloco }}
-      </div>
+      <!-- Error State -->
+      <div *ngIf="loadError" class="alert-error" role="alert">{{ loadError }}</div>
 
       <!-- Table -->
-      <div class="table-wrapper" *ngIf="!loading && leads.length > 0">
-        <table [attr.aria-label]="'leads.list.ariaList' | transloco">
-          <thead>
-            <tr>
-              <th scope="col">
-                <button class="sort-btn" (click)="sortBy('fullName')" type="button"
-                        [attr.aria-sort]="ariaSort('fullName')">{{ 'leads.list.tableHeaders.name' | transloco }}</button>
-              </th>
-              <th scope="col">{{ 'leads.list.tableHeaders.contact' | transloco }}</th>
-              <th scope="col">{{ 'leads.list.tableHeaders.source' | transloco }}</th>
-              <th scope="col">
-                <button class="sort-btn" (click)="sortBy('status')" type="button"
-                        [attr.aria-sort]="ariaSort('status')">{{ 'leads.list.tableHeaders.status' | transloco }}</button>
-              </th>
-              <th scope="col">{{ 'leads.list.tableHeaders.owner' | transloco }}</th>
-              <th scope="col">{{ 'leads.list.lastContact' | transloco }}</th>
-              <th scope="col">
-                <button class="sort-btn" (click)="sortBy('createdAt')" type="button"
-                        [attr.aria-sort]="ariaSort('createdAt')">{{ 'leads.list.tableHeaders.created' | transloco }}</button>
-              </th>
-              <th scope="col"><span class="sr-only">{{ 'leads.list.tableHeaders.actions' | transloco }}</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let lead of leads" [class.row-archived]="lead.status === 'INACTIVE'">
-              <td>{{ lead.fullName }}</td>
-              <td>{{ lead.primaryContact ?? '—' }}</td>
-              <td>{{ lead.source ?? '—' }}</td>
-              <td>
-                <span class="badge" [class]="'badge-' + lead.status.toLowerCase()">
-                  {{ statusTransKeys[lead.status] | transloco }}
-                </span>
-              </td>
-              <td>{{ lead.ownerName ?? '—' }}</td>
-              <td>{{ lead.lastContactDate ? (lead.lastContactDate | date:'dd MMM yyyy') : '—' }}</td>
-              <td>{{ lead.createdAt | date:'dd MMM yyyy' }}</td>
-              <td class="actions-cell">
-                <button class="btn-action" (click)="openEdit(lead.id)"
-                        [attr.aria-label]="'leads.list.editAriaLabel' | transloco:{name: lead.fullName}">
-                  {{ 'leads.list.edit' | transloco }}
-                </button>
-                <button
-                  class="btn-action btn-danger"
-                  *ngIf="lead.status !== 'INACTIVE' && lead.status !== 'CONVERTED'"
-                  (click)="archive(lead)"
-                  [attr.aria-label]="'leads.list.archiveAriaLabel' | transloco:{name: lead.fullName}">
-                  {{ 'leads.list.archive' | transloco }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <p-table
+        [value]="leads"
+        [lazy]="true"
+        (onLazyLoad)="onLazyLoad($event)"
+        [paginator]="true"
+        [rows]="pageSize"
+        [first]="first"
+        [totalRecords]="totalElements"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [showCurrentPageReport]="true"
+        [sortField]="sortField"
+        [sortOrder]="sortOrder"
+        [loading]="loading"
+        responsiveLayout="scroll"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="fullName">
+              {{ 'leads.list.tableHeaders.name' | transloco }}
+              <p-sortIcon field="fullName" />
+            </th>
+            <th>{{ 'leads.list.tableHeaders.contact' | transloco }}</th>
+            <th>{{ 'leads.list.tableHeaders.source' | transloco }}</th>
+            <th pSortableColumn="status">
+              {{ 'leads.list.tableHeaders.status' | transloco }}
+              <p-sortIcon field="status" />
+            </th>
+            <th>{{ 'leads.list.tableHeaders.owner' | transloco }}</th>
+            <th>{{ 'leads.list.lastContact' | transloco }}</th>
+            <th pSortableColumn="createdAt">
+              {{ 'leads.list.tableHeaders.created' | transloco }}
+              <p-sortIcon field="createdAt" />
+            </th>
+            <th><span class="sr-only">{{ 'leads.list.tableHeaders.actions' | transloco }}</span></th>
+          </tr>
+        </ng-template>
 
-      <!-- Pagination -->
-      <nav class="pagination" [attr.aria-label]="'leads.list.ariaPagination' | transloco" *ngIf="totalPages > 1">
-        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
-                [attr.aria-label]="'common.pagination.previousPage' | transloco">&lsaquo;</button>
-        <span>Page {{ currentPage }} of {{ totalPages }}</span>
-        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages"
-                [attr.aria-label]="'common.pagination.nextPage' | transloco">&rsaquo;</button>
-      </nav>
-      <p class="total-count" *ngIf="!loading">
-        {{ 'leads.list.leadsFound' | transloco:{count: totalElements} }}
-      </p>
+        <ng-template pTemplate="body" let-lead>
+          <tr [class.row-archived]="lead.status === 'INACTIVE'">
+            <td>{{ lead.fullName }}</td>
+            <td>{{ lead.primaryContact ?? '—' }}</td>
+            <td>{{ lead.source ?? '—' }}</td>
+            <td>
+              <span class="badge" [class]="'badge-' + lead.status.toLowerCase()">
+                {{ statusKey(lead.status) | transloco }}
+              </span>
+            </td>
+            <td>{{ lead.ownerName ?? '—' }}</td>
+            <td>{{ lead.lastContactDate ? (lead.lastContactDate | date:'dd MMM yyyy') : '—' }}</td>
+            <td>{{ lead.createdAt | date:'dd MMM yyyy' }}</td>
+            <td class="actions-cell">
+              <button class="btn-action" (click)="openEdit(lead.id)"
+                      [attr.aria-label]="'leads.list.editAriaLabel' | transloco:{name: lead.fullName}">
+                {{ 'leads.list.edit' | transloco }}
+              </button>
+              <button
+                class="btn-action btn-danger"
+                *ngIf="lead.status !== 'INACTIVE' && lead.status !== 'CONVERTED'"
+                (click)="archive(lead)"
+                [attr.aria-label]="'leads.list.archiveAriaLabel' | transloco:{name: lead.fullName}">
+                {{ 'leads.list.archive' | transloco }}
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8" class="state-msg">{{ 'leads.list.noLeadsFiltered' | transloco }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
 
     <!-- Dialogs -->
@@ -192,20 +198,6 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
       border: 1px solid #FECACA; border-radius: 8px;
       color: #DC2626; margin-bottom: 1rem; font-size: .875rem;
     }
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-    th {
-      text-align: left; padding: .75rem 1rem;
-      background: #f7fafc; border-bottom: 2px solid #e2e8f0; white-space: nowrap;
-    }
-    td { padding: .75rem 1rem; border-bottom: 1px solid #e2e8f0; }
-    tr:last-child td { border-bottom: none; }
-    tr.row-archived td { color: #94A3B8; }
-    .sort-btn {
-      background: none; border: none; cursor: pointer;
-      font-weight: 600; font-size: inherit; padding: 0; color: #0F172A;
-    }
-    .sort-btn:hover { color: #0EA5A0; }
     .badge {
       display: inline-block; padding: .2rem .6rem;
       border-radius: 999px; font-size: .8rem; font-weight: 500;
@@ -227,18 +219,13 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
     .btn-action:hover { background: #F9FAFB; border-color: #9CA3AF; }
     .btn-danger { border-color: #FECACA; color: #DC2626; }
     .btn-danger:hover { background: #FEF2F2; border-color: #FCA5A5; }
-    .pagination { display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; }
-    .pagination button {
-      padding: .4rem .9rem; border: 1.5px solid #D1D5DB;
-      border-radius: 6px; background: #fff; cursor: pointer; font-size: 1.1rem; color: #374151;
-    }
-    .pagination button:hover:not(:disabled) { background: #F9FAFB; border-color: #9CA3AF; }
-    .pagination button:disabled { opacity: .35; cursor: not-allowed; }
-    .total-count { color: #64748B; font-size: .875rem; margin-top: .5rem; }
     .sr-only {
       position: absolute; width: 1px; height: 1px;
       padding: 0; margin: -1px; overflow: hidden;
       clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+    :host ::ng-deep .p-datatable .p-datatable-tbody > tr.row-archived > td {
+      color: #94A3B8 !important;
     }
   `]
 })
@@ -260,6 +247,11 @@ export class LeadListComponent implements OnInit {
   pageSize = 20;
   sortField = 'createdAt';
   sortDir = 'desc';
+  first = 0;
+
+  get sortOrder(): number {
+    return this.sortDir === 'asc' ? 1 : -1;
+  }
 
   statusFilter: LeadStatus | '' = '';
   includeArchived = false;
@@ -278,33 +270,26 @@ export class LeadListComponent implements OnInit {
       { label: this.transloco.translate('leads.list.statusAll'), value: '' },
       ...this.allStatuses.map(s => ({ label: this.transloco.translate(this.statusTransKeys[s]), value: s })),
     ];
+  }
+
+  statusKey(status: string): string {
+    return this.statusTransKeys[status as LeadStatus] ?? status;
+  }
+
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.first = event.first ?? 0;
+    this.pageSize = event.rows ?? 20;
+    this.currentPage = Math.floor(this.first / this.pageSize);
+    if (event.sortField) {
+      this.sortField = Array.isArray(event.sortField) ? event.sortField[0] : event.sortField as string;
+      this.sortDir = (event.sortOrder ?? -1) === 1 ? 'asc' : 'desc';
+    }
     this.loadPage();
   }
 
   applyFilters(): void {
+    this.first = 0;
     this.currentPage = 0;
-    this.loadPage();
-  }
-
-  sortBy(field: string): void {
-    if (this.sortField === field) {
-      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortField = field;
-      this.sortDir = 'asc';
-    }
-    this.currentPage = 0;
-    this.loadPage();
-  }
-
-  ariaSort(field: string): 'ascending' | 'descending' | 'none' {
-    if (this.sortField !== field) return 'none';
-    return this.sortDir === 'asc' ? 'ascending' : 'descending';
-  }
-
-  goToPage(page: number): void {
-    if (page < 0 || page >= this.totalPages) return;
-    this.currentPage = page;
     this.loadPage();
   }
 
@@ -380,6 +365,7 @@ export class LeadListComponent implements OnInit {
         this.totalElements = page.totalElements;
         this.totalPages = page.totalPages;
         this.currentPage = page.page;
+        this.first = page.page * this.pageSize;
       },
       error: () => {
         this.loading = false;

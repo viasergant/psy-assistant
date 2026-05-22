@@ -315,6 +315,67 @@ button {
   }
 }
 
+// ── PrimeNG DataTable — matches admin users table design ─────────────────────
+.p-datatable {
+  background: #FFFFFF !important;
+  color: var(--color-text-primary, #0F172A) !important;
+  border-radius: 12px !important;
+  border: 1.5px solid var(--color-border, #E2E8F0) !important;
+  overflow: hidden !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04) !important;
+
+  .p-datatable-table {
+    background: #FFFFFF !important;
+  }
+
+  .p-datatable-thead > tr > th {
+    background: #F8FAFC !important;
+    color: var(--color-text-secondary, #64748B) !important;
+    border-bottom: 1.5px solid var(--color-border, #E2E8F0) !important;
+    padding: .875rem 1rem !important;
+    font-size: .8125rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .03em !important;
+    white-space: nowrap !important;
+  }
+
+  .p-datatable-tbody > tr {
+    background: #FFFFFF !important;
+    color: var(--color-text-primary, #0F172A) !important;
+
+    &:hover {
+      background: #FAFBFC !important;
+    }
+
+    > td {
+      color: var(--color-text-primary, #0F172A) !important;
+      border-bottom: 1px solid #F1F5F9 !important;
+      padding: 1rem !important;
+      font-size: .9375rem !important;
+      vertical-align: middle !important;
+    }
+
+    &:last-child > td {
+      border-bottom: none !important;
+    }
+  }
+
+  .p-paginator {
+    background: #FFFFFF !important;
+    color: var(--color-text-primary, #0F172A) !important;
+    border-top: 1px solid var(--color-border, #E2E8F0) !important;
+
+    .p-paginator-page,
+    .p-paginator-prev,
+    .p-paginator-next,
+    .p-paginator-first,
+    .p-paginator-last {
+      color: var(--color-text-primary, #0F172A) !important;
+    }
+  }
+}
+
 // MultiSelect header checkbox
 .p-multiselect-overlay .p-checkbox .p-checkbox-box {
   background: #FFFFFF !important;

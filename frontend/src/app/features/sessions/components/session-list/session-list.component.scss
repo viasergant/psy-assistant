@@ -30,60 +30,42 @@
       width: 100%;
     }
 
-    // Select dropdown background and height
+    // Select dropdown height
     .p-select {
-      background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       min-height: 42px;
-      
+
       .p-select-label {
         padding: 0.625rem 0.75rem;
-        background: var(--color-surface);
-        color: var(--color-text-primary);
-      }
-
-      .p-select-dropdown {
-        background: var(--color-surface);
       }
     }
 
-    // MultiSelect dropdown background and height
+    // MultiSelect dropdown height
     .p-multiselect {
-      background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       min-height: 42px;
-      
+
       .p-multiselect-label {
         padding: 0.625rem 0.75rem;
-        background: var(--color-surface);
-        color: var(--color-text-primary);
-      }
-
-      .p-multiselect-dropdown {
-        background: var(--color-surface);
       }
     }
 
-    // Datepicker input background and height
+    // Datepicker input height
     .p-datepicker {
       input {
         padding: 0.625rem 0.75rem;
-        background: var(--color-surface);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-md);
-        color: var(--color-text-primary);
         min-height: 42px;
       }
     }
 
-    // Text input background and height - matching other inputs
+    // Text input height
     .p-inputtext {
-      background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
-      color: var(--color-text-primary);
       padding: 0.625rem 0.75rem;
       min-height: 42px;
       font-size: 0.875rem;
@@ -217,23 +199,14 @@
 
         // Rows per page dropdown
         .p-select {
-          background: var(--color-surface);
           border: 1px solid var(--color-border);
-          color: var(--color-text-primary);
           border-radius: var(--radius-md);
           height: 2.5rem;
           min-width: 4rem;
 
           .p-select-label {
-            background: var(--color-surface);
-            color: var(--color-text-primary);
             padding: 0.5rem 0.75rem;
             font-size: 0.875rem;
-          }
-
-          .p-select-dropdown {
-            background: var(--color-surface);
-            color: var(--color-text-primary);
           }
 
           &:hover {

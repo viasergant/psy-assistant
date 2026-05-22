@@ -106,7 +106,7 @@
         <h4 class="section-title">{{ 'sessions.attendance.sectionTitle' | transloco }}</h4>
         <p-button
           [label]="'sessions.attendance.record' | transloco"
-          severity="secondary"
+          severity="primary"
           size="small"
           (onClick)="openAttendanceDialog()"
         />
@@ -128,7 +128,7 @@
         <h4 class="section-title">{{ 'sessions.attendance.sectionTitle' | transloco }}</h4>
         <p-button
           [label]="(showGroupAttendancePanel ? 'common.actions.cancel' : 'sessions.attendance.record') | transloco"
-          severity="secondary"
+          severity="primary"
           size="small"
           (onClick)="openAttendanceDialog()"
         />
@@ -159,6 +159,7 @@
       <p-button
         [label]="'common.actions.close' | transloco"
         severity="secondary"
+        [outlined]="true"
         (onClick)="close()"
       />
     </div>

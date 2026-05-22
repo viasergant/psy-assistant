@@ -284,6 +284,48 @@ button {
   backdrop-filter: blur(var(--dialog-backdrop-blur)) !important;
 }
 
+// ── PrimeNG Select trigger (input) background ────────────────────────────────
+// Force white background on the p-select wrapper and its label
+.p-select {
+  background: #FFFFFF !important;
+  border-color: var(--color-border) !important;
+
+  &:hover {
+    border-color: #9CA3AF !important;
+  }
+
+  .p-select-label {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+}
+
+// ── PrimeNG MultiSelect trigger background ───────────────────────────────────
+.p-multiselect {
+  background: #FFFFFF !important;
+  border-color: var(--color-border) !important;
+
+  &:hover {
+    border-color: #9CA3AF !important;
+  }
+
+  .p-multiselect-label {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+}
+
+// MultiSelect header checkbox
+.p-multiselect-overlay .p-checkbox .p-checkbox-box {
+  background: #FFFFFF !important;
+  border-color: var(--color-border) !important;
+
+  &.p-checkbox-checked {
+    background: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+  }
+}
+
 // ── PrimeNG Dropdown panels (v20 class names) ────────────────────────────────
 // Global styling for all dropdown overlays (select, multiselect, paginator)
 .p-select-overlay {

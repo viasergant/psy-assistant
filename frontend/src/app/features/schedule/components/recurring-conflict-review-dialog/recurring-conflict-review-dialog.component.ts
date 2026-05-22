@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { TableModule } from 'primeng/table';
 import {
   ConflictResolution,
   RecurringConflictCheckResponse
@@ -18,7 +19,7 @@ import {
 @Component({
   selector: 'app-recurring-conflict-review-dialog',
   standalone: true,
-  imports: [CommonModule, TranslocoPipe],
+  imports: [CommonModule, TranslocoPipe, TableModule],
   template: `
     <div
       class="dialog-overlay"
@@ -62,49 +63,46 @@ import {
           </div>
 
           <!-- Slot table -->
-          <div class="table-wrapper" role="region" aria-label="Generated appointment slots">
-            <table aria-describedby="conflict-review-title">
-              <caption class="sr-only">
-                Recurring appointment slots with conflict status
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">{{ 'schedule.recurringConflict.columnDate' | transloco }}</th>
-                  <th scope="col">{{ 'schedule.recurringConflict.columnStatus' | transloco }}</th>
-                  <th scope="col">{{ 'schedule.recurringConflict.columnConflict' | transloco }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  *ngFor="let slot of response.generatedSlots"
-                  [class.row-conflict]="slot.hasConflict"
-                >
-                  <td>{{ slot.index + 1 }}</td>
-                  <td>{{ formatSlotTime(slot.startTime) }}</td>
-                  <td>
-                    <span
-                      class="status-chip"
-                      [class.chip-clean]="!slot.hasConflict"
-                      [class.chip-conflict]="slot.hasConflict"
-                      [attr.aria-label]="slot.hasConflict ? 'Has conflict' : 'Available'"
-                    >
-                      {{ slot.hasConflict
-                          ? ('schedule.recurringConflict.statusConflict' | transloco)
-                          : ('schedule.recurringConflict.statusClean' | transloco) }}
-                    </span>
-                  </td>
-                  <td class="conflict-detail">
-                    <span *ngIf="slot.hasConflict && slot.conflictDetails">
-                      {{ slot.conflictDetails.clientName || ('schedule.recurringConflict.unknownClient' | transloco) }}
-                      — {{ formatSlotTime(slot.conflictDetails.startTime) }}
-                    </span>
-                    <span *ngIf="!slot.hasConflict" class="text-muted">—</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <p-table
+            [value]="response.generatedSlots"
+            styleClass="p-datatable-sm"
+            responsiveLayout="scroll"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>#</th>
+                <th>{{ 'schedule.recurringConflict.columnDate' | transloco }}</th>
+                <th>{{ 'schedule.recurringConflict.columnStatus' | transloco }}</th>
+                <th>{{ 'schedule.recurringConflict.columnConflict' | transloco }}</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-slot>
+              <tr [ngClass]="{'row-conflict': slot.hasConflict}">
+                <td>{{ slot.index + 1 }}</td>
+                <td>{{ formatSlotTime(slot.startTime) }}</td>
+                <td>
+                  <span
+                    class="status-chip"
+                    [class.chip-clean]="!slot.hasConflict"
+                    [class.chip-conflict]="slot.hasConflict"
+                    [attr.aria-label]="slot.hasConflict ? 'Has conflict' : 'Available'"
+                  >
+                    {{ slot.hasConflict
+                        ? ('schedule.recurringConflict.statusConflict' | transloco)
+                        : ('schedule.recurringConflict.statusClean' | transloco) }}
+                  </span>
+                </td>
+                <td class="conflict-detail">
+                  <span *ngIf="slot.hasConflict && slot.conflictDetails">
+                    {{ slot.conflictDetails.clientName || ('schedule.recurringConflict.unknownClient' | transloco) }}
+                    — {{ formatSlotTime(slot.conflictDetails.startTime) }}
+                  </span>
+                  <span *ngIf="!slot.hasConflict" class="text-muted">—</span>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
 
           <!-- Info message if no conflicts -->
           <div *ngIf="response.conflictCount === 0" class="no-conflict-msg" role="status">

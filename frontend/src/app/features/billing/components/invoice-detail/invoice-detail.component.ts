@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TableModule } from 'primeng/table';
 import { Invoice } from '../../models/invoice.model';
 import { InvoiceService } from '../../services/invoice.service';
 import { CancelInvoiceRequest } from '../../models/invoice.model';
@@ -11,7 +12,7 @@ import { PaymentHistoryComponent } from '../payment-history/payment-history.comp
 @Component({
   selector: 'app-invoice-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, TranslocoModule, PaymentHistoryComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, TranslocoModule, TableModule, PaymentHistoryComponent],
   template: `
     <div class="page-container">
 
@@ -69,18 +70,23 @@ import { PaymentHistoryComponent } from '../payment-history/payment-history.comp
         <div class="card">
           <h2 class="card-title">{{ 'billing.invoices.detail.lineItems' | transloco }}</h2>
 
-          <table class="data-table">
-            <thead>
+          <p-table
+            [value]="invoice.lineItems"
+            styleClass="p-datatable-sm"
+            responsiveLayout="scroll"
+          >
+            <ng-template pTemplate="header">
               <tr>
-                <th scope="col">{{ 'billing.invoices.table.description' | transloco }}</th>
-                <th scope="col" class="col-right">{{ 'billing.invoices.table.qty' | transloco }}</th>
-                <th scope="col" class="col-right">{{ 'billing.invoices.table.unitPrice' | transloco }}</th>
-                <th scope="col" class="col-right">{{ 'billing.invoices.table.lineTotal' | transloco }}</th>
-                <th scope="col" *ngIf="invoice.status === 'DRAFT'"></th>
+                <th>{{ 'billing.invoices.table.description' | transloco }}</th>
+                <th class="col-right">{{ 'billing.invoices.table.qty' | transloco }}</th>
+                <th class="col-right">{{ 'billing.invoices.table.unitPrice' | transloco }}</th>
+                <th class="col-right">{{ 'billing.invoices.table.lineTotal' | transloco }}</th>
+                <th *ngIf="invoice.status === 'DRAFT'"></th>
               </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of invoice.lineItems">
+            </ng-template>
+
+            <ng-template pTemplate="body" let-item>
+              <tr>
                 <td>{{ item.description }}</td>
                 <td class="col-right">{{ item.quantity | number:'1.2-2' }}</td>
                 <td class="col-right">{{ item.unitPrice | number:'1.2-2' }}</td>
@@ -91,8 +97,9 @@ import { PaymentHistoryComponent } from '../payment-history/payment-history.comp
                           (click)="removeLineItem(item.id)">✕</button>
                 </td>
               </tr>
-            </tbody>
-            <tfoot>
+            </ng-template>
+
+            <ng-template pTemplate="footer">
               <!-- Totals -->
               <tr class="totals-tr">
                 <td colspan="2" class="totals-spacer"></td>
@@ -142,8 +149,8 @@ import { PaymentHistoryComponent } from '../payment-history/payment-history.comp
                   </button>
                 </td>
               </tr>
-            </tfoot>
-          </table>
+            </ng-template>
+          </p-table>
         </div>
 
         <!-- Notes -->

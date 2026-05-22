@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
+import { TableModule } from 'primeng/table';
 import { CreatePackageDefinitionRequest, PackageDefinition, PackageDefinitionStatus } from '../../models/package.model';
 import { PackageService } from '../../services/package.service';
 import { PackageDefinitionFormComponent } from '../package-definition-form/package-definition-form.component';
@@ -10,7 +11,7 @@ import { PackageDefinitionFormComponent } from '../package-definition-form/packa
 @Component({
   selector: 'app-package-definition-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslocoModule, PackageDefinitionFormComponent, Select],
+  imports: [CommonModule, FormsModule, TranslocoModule, PackageDefinitionFormComponent, Select, TableModule],
   template: `
     <div class="page-container">
 
@@ -32,63 +33,68 @@ import { PackageDefinitionFormComponent } from '../package-definition-form/packa
         />
       </div>
 
-      <div *ngIf="loading" class="state-msg" aria-live="polite">
-        {{ 'billing.packages.list.loading' | transloco }}
-      </div>
-
       <div *ngIf="loadError" class="alert-error" role="alert">{{ loadError }}</div>
 
-      <div *ngIf="!loading && !loadError && definitions.length === 0" class="empty-state">
-        <p>{{ 'billing.packages.list.empty' | transloco }}</p>
-        <button type="button" class="btn-primary" (click)="openCreate()">
-          + {{ 'billing.packages.actions.create' | transloco }}
-        </button>
-      </div>
+      <p-table
+        [value]="definitions"
+        [loading]="loading"
+        styleClass="p-datatable-sm"
+        responsiveLayout="scroll"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'billing.packages.fields.name' | transloco }}</th>
+            <th>{{ 'billing.packages.fields.serviceType' | transloco }}</th>
+            <th class="col-right">{{ 'billing.packages.fields.sessionQty' | transloco }}</th>
+            <th class="col-right">{{ 'billing.packages.fields.price' | transloco }}</th>
+            <th class="col-right">{{ 'billing.packages.fields.perSession' | transloco }}</th>
+            <th>{{ 'billing.packages.fields.status' | transloco }}</th>
+            <th>{{ 'billing.catalog.fields.actions' | transloco }}</th>
+          </tr>
+        </ng-template>
 
-      <div *ngIf="!loading && definitions.length > 0" class="table-wrapper">
-        <table class="data-table table-hoverable" role="table"
-               [attr.aria-label]="'billing.packages.title' | transloco">
-          <thead>
-            <tr>
-              <th scope="col">{{ 'billing.packages.fields.name' | transloco }}</th>
-              <th scope="col">{{ 'billing.packages.fields.serviceType' | transloco }}</th>
-              <th scope="col" class="col-right">{{ 'billing.packages.fields.sessionQty' | transloco }}</th>
-              <th scope="col" class="col-right">{{ 'billing.packages.fields.price' | transloco }}</th>
-              <th scope="col" class="col-right">{{ 'billing.packages.fields.perSession' | transloco }}</th>
-              <th scope="col">{{ 'billing.packages.fields.status' | transloco }}</th>
-              <th scope="col">{{ 'billing.catalog.fields.actions' | transloco }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let pkg of definitions">
-              <td class="fw-medium">{{ pkg.name }}</td>
-              <td>{{ 'billing.catalog.serviceTypes.' + pkg.serviceType | transloco }}</td>
-              <td class="col-right">{{ pkg.sessionQty }}</td>
-              <td class="col-right price-cell">{{ pkg.price | number:'1.2-2' }}</td>
-              <td class="col-right muted">{{ pkg.perSessionDisplay | number:'1.2-2' }}</td>
-              <td>
-                <span class="badge"
-                      [class.badge-active]="pkg.status === 'ACTIVE'"
-                      [class.badge-inactive]="pkg.status === 'ARCHIVED'">
-                  {{ 'billing.packages.status.' + pkg.status | transloco }}
-                </span>
-              </td>
-              <td class="action-cell">
-                <button *ngIf="pkg.status === 'ACTIVE'"
-                        type="button" class="btn-link btn-sm text-danger"
-                        (click)="archive(pkg)">
-                  {{ 'billing.packages.actions.archive' | transloco }}
+        <ng-template pTemplate="body" let-pkg>
+          <tr>
+            <td class="fw-medium">{{ pkg.name }}</td>
+            <td>{{ 'billing.catalog.serviceTypes.' + pkg.serviceType | transloco }}</td>
+            <td class="col-right">{{ pkg.sessionQty }}</td>
+            <td class="col-right price-cell">{{ pkg.price | number:'1.2-2' }}</td>
+            <td class="col-right muted">{{ pkg.perSessionDisplay | number:'1.2-2' }}</td>
+            <td>
+              <span class="badge"
+                    [class.badge-active]="pkg.status === 'ACTIVE'"
+                    [class.badge-inactive]="pkg.status === 'ARCHIVED'">
+                {{ 'billing.packages.status.' + pkg.status | transloco }}
+              </span>
+            </td>
+            <td class="action-cell">
+              <button *ngIf="pkg.status === 'ACTIVE'"
+                      type="button" class="btn-link btn-sm text-danger"
+                      (click)="archive(pkg)">
+                {{ 'billing.packages.actions.archive' | transloco }}
+              </button>
+              <button *ngIf="pkg.status === 'ARCHIVED'"
+                      type="button" class="btn-link btn-sm"
+                      (click)="restore(pkg)">
+                {{ 'billing.packages.actions.restore' | transloco }}
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <p>{{ 'billing.packages.list.empty' | transloco }}</p>
+                <button type="button" class="btn-primary" (click)="openCreate()">
+                  + {{ 'billing.packages.actions.create' | transloco }}
                 </button>
-                <button *ngIf="pkg.status === 'ARCHIVED'"
-                        type="button" class="btn-link btn-sm"
-                        (click)="restore(pkg)">
-                  {{ 'billing.packages.actions.restore' | transloco }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
 
       <app-package-definition-form
         *ngIf="showForm"

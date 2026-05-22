@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
+import { TableModule } from 'primeng/table';
 import {
   PriceHistoryEntry,
   ServiceCatalogItem,
@@ -21,6 +22,7 @@ import { TherapistOverrideDialogComponent, OverrideSubmission } from '../therapi
     CommonModule,
     RouterModule,
     TranslocoModule,
+    TableModule,
     ServiceCatalogFormComponent,
     UpdatePriceDialogComponent,
     TherapistOverrideDialogComponent,
@@ -108,36 +110,39 @@ import { TherapistOverrideDialogComponent, OverrideSubmission } from '../therapi
             {{ 'common.status.loading' | transloco }}
           </div>
 
-          <div *ngIf="!loadingHistory && priceHistory.length === 0" class="empty-hint">
-            {{ 'billing.catalog.priceHistory.empty' | transloco }}
-          </div>
-
-          <div *ngIf="!loadingHistory && priceHistory.length > 0" class="table-wrapper">
-            <table class="data-table table-compact"
-                   [attr.aria-label]="'billing.catalog.priceHistory.title' | transloco">
-              <thead>
-                <tr>
-                  <th scope="col" class="col-right">{{ 'billing.catalog.priceHistory.price' | transloco }}</th>
-                  <th scope="col">{{ 'billing.catalog.priceHistory.effectiveFrom' | transloco }}</th>
-                  <th scope="col">{{ 'billing.catalog.priceHistory.effectiveTo' | transloco }}</th>
-                  <th scope="col">{{ 'billing.catalog.priceHistory.changedBy' | transloco }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let entry of priceHistory">
-                  <td class="col-right price-cell">{{ entry.price | number:'1.2-2' }}</td>
-                  <td>{{ entry.effectiveFrom | date:'mediumDate' }}</td>
-                  <td>
-                    <span *ngIf="entry.effectiveTo">{{ entry.effectiveTo | date:'mediumDate' }}</span>
-                    <span *ngIf="!entry.effectiveTo" class="badge badge-accent badge-sm">
-                      {{ 'billing.catalog.priceHistory.current' | transloco }}
-                    </span>
-                  </td>
-                  <td>{{ entry.changedBy }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <p-table
+            [value]="priceHistory"
+            [loading]="loadingHistory"
+            styleClass="p-datatable-sm"
+            responsiveLayout="scroll"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="col-right">{{ 'billing.catalog.priceHistory.price' | transloco }}</th>
+                <th>{{ 'billing.catalog.priceHistory.effectiveFrom' | transloco }}</th>
+                <th>{{ 'billing.catalog.priceHistory.effectiveTo' | transloco }}</th>
+                <th>{{ 'billing.catalog.priceHistory.changedBy' | transloco }}</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-entry>
+              <tr>
+                <td class="col-right price-cell">{{ entry.price | number:'1.2-2' }}</td>
+                <td>{{ entry.effectiveFrom | date:'mediumDate' }}</td>
+                <td>
+                  <span *ngIf="entry.effectiveTo">{{ entry.effectiveTo | date:'mediumDate' }}</span>
+                  <span *ngIf="!entry.effectiveTo" class="badge badge-accent badge-sm">
+                    {{ 'billing.catalog.priceHistory.current' | transloco }}
+                  </span>
+                </td>
+                <td>{{ entry.changedBy }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="empty-hint">{{ 'billing.catalog.priceHistory.empty' | transloco }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
         </section>
 
         <!-- Therapist Overrides section -->
@@ -157,48 +162,51 @@ import { TherapistOverrideDialogComponent, OverrideSubmission } from '../therapi
             {{ 'common.status.loading' | transloco }}
           </div>
 
-          <div *ngIf="!loadingOverrides && overrides.length === 0" class="empty-hint">
-            {{ 'billing.catalog.override.empty' | transloco }}
-          </div>
-
-          <div *ngIf="!loadingOverrides && overrides.length > 0" class="table-wrapper">
-            <table class="data-table table-compact"
-                   [attr.aria-label]="'billing.catalog.override.sectionTitle' | transloco">
-              <thead>
-                <tr>
-                  <th scope="col">{{ 'billing.catalog.override.therapist' | transloco }}</th>
-                  <th scope="col" class="col-right">{{ 'billing.catalog.override.price' | transloco }}</th>
-                  <th scope="col">{{ 'billing.catalog.fields.actions' | transloco }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let ov of overrides">
-                  <td>{{ ov.therapistName }}</td>
-                  <td class="col-right price-cell">{{ ov.price | number:'1.2-2' }}</td>
-                  <td>
-                    <div class="row-actions">
-                      <button type="button" class="btn-ghost btn-sm"
-                              (click)="openEditOverrideDialog(ov)"
-                              [attr.aria-label]="'common.actions.edit' | transloco">
-                        {{ 'common.actions.edit' | transloco }}
-                      </button>
-                      <button type="button" class="btn-ghost btn-sm text-danger"
-                              [disabled]="removingOverrideId === ov.therapistId"
-                              (click)="removeOverride(ov)"
-                              [attr.aria-label]="'billing.catalog.override.remove' | transloco">
-                        <ng-container *ngIf="removingOverrideId !== ov.therapistId">
-                          {{ 'billing.catalog.override.remove' | transloco }}
-                        </ng-container>
-                        <ng-container *ngIf="removingOverrideId === ov.therapistId">
-                          {{ 'common.status.loading' | transloco }}
-                        </ng-container>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <p-table
+            [value]="overrides"
+            [loading]="loadingOverrides"
+            styleClass="p-datatable-sm"
+            responsiveLayout="scroll"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>{{ 'billing.catalog.override.therapist' | transloco }}</th>
+                <th class="col-right">{{ 'billing.catalog.override.price' | transloco }}</th>
+                <th>{{ 'billing.catalog.fields.actions' | transloco }}</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-ov>
+              <tr>
+                <td>{{ ov.therapistName }}</td>
+                <td class="col-right price-cell">{{ ov.price | number:'1.2-2' }}</td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" class="btn-ghost btn-sm"
+                            (click)="openEditOverrideDialog(ov)"
+                            [attr.aria-label]="'common.actions.edit' | transloco">
+                      {{ 'common.actions.edit' | transloco }}
+                    </button>
+                    <button type="button" class="btn-ghost btn-sm text-danger"
+                            [disabled]="removingOverrideId === ov.therapistId"
+                            (click)="removeOverride(ov)"
+                            [attr.aria-label]="'billing.catalog.override.remove' | transloco">
+                      <ng-container *ngIf="removingOverrideId !== ov.therapistId">
+                        {{ 'billing.catalog.override.remove' | transloco }}
+                      </ng-container>
+                      <ng-container *ngIf="removingOverrideId === ov.therapistId">
+                        {{ 'common.status.loading' | transloco }}
+                      </ng-container>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="3" class="empty-hint">{{ 'billing.catalog.override.empty' | transloco }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
         </section>
 
       </ng-container>

@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
+import { TableModule } from 'primeng/table';
 import { NotificationTemplateService } from '../../services/notification-template.service';
 import {
   NotificationTemplate,
@@ -27,6 +28,7 @@ import { TemplatePreviewDialogComponent } from '../template-preview-dialog/templ
     TemplateFormDialogComponent,
     TemplatePreviewDialogComponent,
     Select,
+    TableModule,
   ],
   styleUrl: './template-list.component.scss',
   template: `
@@ -90,80 +92,83 @@ import { TemplatePreviewDialogComponent } from '../template-preview-dialog/templ
         </div>
       </div>
 
-      <!-- States -->
-      <div *ngIf="loading" class="state-msg" aria-live="polite">
-        {{ 'admin.notificationTemplates.list.loading' | transloco }}
-      </div>
-      <div *ngIf="!loading && loadError" class="alert-error" role="alert">{{ loadError }}</div>
-      <div *ngIf="!loading && !loadError && templates.length === 0" class="state-msg">
-        {{ 'admin.notificationTemplates.list.empty' | transloco }}
-      </div>
+      <!-- Error state -->
+      <div *ngIf="loadError" class="alert-error" role="alert">{{ loadError }}</div>
 
       <!-- Table -->
-      <div class="table-wrapper table-hoverable" *ngIf="!loading && !loadError && templates.length > 0">
-        <table [attr.aria-label]="'admin.notificationTemplates.list.ariaList' | transloco">
-          <thead>
-            <tr>
-              <th scope="col">{{ 'admin.notificationTemplates.list.colEventType' | transloco }}</th>
-              <th scope="col">{{ 'admin.notificationTemplates.list.colChannel' | transloco }}</th>
-              <th scope="col">{{ 'admin.notificationTemplates.list.colLanguage' | transloco }}</th>
-              <th scope="col">{{ 'admin.notificationTemplates.list.colStatus' | transloco }}</th>
-              <th scope="col">{{ 'admin.notificationTemplates.list.colUpdated' | transloco }}</th>
-              <th scope="col" class="table-actions">
-                <span class="sr-only">{{ 'admin.notificationTemplates.list.colActions' | transloco }}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let t of templates">
-              <td>{{ 'admin.notificationTemplates.eventTypes.' + t.eventType | transloco }}</td>
-              <td>
-                <span class="badge" [ngClass]="t.channel === 'EMAIL' ? 'badge-info' : 'badge-warning'">
-                  {{ 'admin.notificationTemplates.channels.' + t.channel | transloco }}
-                </span>
-              </td>
-              <td>{{ 'admin.notificationTemplates.languages.' + t.language | transloco }}</td>
-              <td>
-                <span class="badge" [ngClass]="t.status === 'ACTIVE' ? 'badge-active' : 'badge-inactive'">
-                  {{ 'admin.notificationTemplates.statuses.' + t.status | transloco }}
-                </span>
-                <span *ngIf="t.hasUnknownVariables" class="badge badge-warning unknown-vars-badge"
-                      [title]="'admin.notificationTemplates.list.unknownVarsTooltip' | transloco">
-                  ⚠
-                </span>
-              </td>
-              <td>{{ t.updatedAt | date:'dd MMM yyyy, HH:mm' }}</td>
-              <td class="table-actions">
-                <button class="btn-table-action" (click)="openPreview(t)"
-                        [title]="'admin.notificationTemplates.list.actionPreview' | transloco">
-                  👁
-                </button>
-                <button class="btn-table-action" (click)="openEdit(t)"
-                        [disabled]="t.status === 'ACTIVE'"
-                        [title]="'admin.notificationTemplates.list.actionEdit' | transloco">
-                  ✏️
-                </button>
-                <button *ngIf="t.status === 'INACTIVE'" class="btn-table-action text-success"
-                        (click)="activate(t)"
-                        [title]="'admin.notificationTemplates.list.actionActivate' | transloco">
-                  ✓
-                </button>
-                <button *ngIf="t.status === 'ACTIVE'" class="btn-table-action text-muted"
-                        (click)="deactivate(t)"
-                        [title]="'admin.notificationTemplates.list.actionDeactivate' | transloco">
-                  ✕
-                </button>
-                <button class="btn-table-action text-danger"
-                        [disabled]="t.status === 'ACTIVE'"
-                        (click)="confirmDelete(t)"
-                        [title]="'admin.notificationTemplates.list.actionDelete' | transloco">
-                  🗑
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <p-table
+        [value]="templates"
+        [loading]="loading"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'admin.notificationTemplates.list.colEventType' | transloco }}</th>
+            <th>{{ 'admin.notificationTemplates.list.colChannel' | transloco }}</th>
+            <th>{{ 'admin.notificationTemplates.list.colLanguage' | transloco }}</th>
+            <th>{{ 'admin.notificationTemplates.list.colStatus' | transloco }}</th>
+            <th>{{ 'admin.notificationTemplates.list.colUpdated' | transloco }}</th>
+            <th class="table-actions">
+              <span class="sr-only">{{ 'admin.notificationTemplates.list.colActions' | transloco }}</span>
+            </th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-t>
+          <tr>
+            <td>{{ 'admin.notificationTemplates.eventTypes.' + t.eventType | transloco }}</td>
+            <td>
+              <span class="badge" [ngClass]="t.channel === 'EMAIL' ? 'badge-info' : 'badge-warning'">
+                {{ 'admin.notificationTemplates.channels.' + t.channel | transloco }}
+              </span>
+            </td>
+            <td>{{ 'admin.notificationTemplates.languages.' + t.language | transloco }}</td>
+            <td>
+              <span class="badge" [ngClass]="t.status === 'ACTIVE' ? 'badge-active' : 'badge-inactive'">
+                {{ 'admin.notificationTemplates.statuses.' + t.status | transloco }}
+              </span>
+              <span *ngIf="t.hasUnknownVariables" class="badge badge-warning unknown-vars-badge"
+                    [title]="'admin.notificationTemplates.list.unknownVarsTooltip' | transloco">
+                ⚠
+              </span>
+            </td>
+            <td>{{ t.updatedAt | date:'dd MMM yyyy, HH:mm' }}</td>
+            <td class="table-actions">
+              <button class="btn-table-action" (click)="openPreview(t)"
+                      [title]="'admin.notificationTemplates.list.actionPreview' | transloco">
+                👁
+              </button>
+              <button class="btn-table-action" (click)="openEdit(t)"
+                      [disabled]="t.status === 'ACTIVE'"
+                      [title]="'admin.notificationTemplates.list.actionEdit' | transloco">
+                ✏️
+              </button>
+              <button *ngIf="t.status === 'INACTIVE'" class="btn-table-action text-success"
+                      (click)="activate(t)"
+                      [title]="'admin.notificationTemplates.list.actionActivate' | transloco">
+                ✓
+              </button>
+              <button *ngIf="t.status === 'ACTIVE'" class="btn-table-action text-muted"
+                      (click)="deactivate(t)"
+                      [title]="'admin.notificationTemplates.list.actionDeactivate' | transloco">
+                ✕
+              </button>
+              <button class="btn-table-action text-danger"
+                      [disabled]="t.status === 'ACTIVE'"
+                      (click)="confirmDelete(t)"
+                      [title]="'admin.notificationTemplates.list.actionDelete' | transloco">
+                🗑
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="state-msg">{{ 'admin.notificationTemplates.list.empty' | transloco }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
 
       <!-- Deactivation warning banner -->
       <div *ngIf="deactivationWarning" class="alert-warning" role="alert">

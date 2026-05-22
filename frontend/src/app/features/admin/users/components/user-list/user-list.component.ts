@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { UserManagementService } from '../../services/user-management.service';
 import { TherapistManagementService } from '../../../therapists/services/therapist-management.service';
 import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserSummary, UserPage } from '../../models/user.model';
@@ -33,6 +34,7 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
     PasswordResetDialogComponent,
     CreateTherapistDialogComponent,
     Select,
+    TableModule,
   ],
   template: `
     <div class="page">
@@ -70,107 +72,101 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
         </div>
       </div>
 
-      <!-- Loading / empty / error states -->
-      <div *ngIf="loading" class="state-msg" aria-live="polite">{{ 'admin.users.list.loading' | transloco }}</div>
-      <div *ngIf="!loading && loadError" class="alert-error" role="alert">{{ loadError }}</div>
-      <div *ngIf="!loading && errorMessage" class="alert-error" role="alert">
+      <!-- Error states -->
+      <div *ngIf="loadError" class="alert-error" role="alert">{{ loadError }}</div>
+      <div *ngIf="errorMessage" class="alert-error" role="alert">
         {{ errorMessage }}
         <button class="close-btn" (click)="errorMessage = null" [attr.aria-label]="'admin.users.list.closeError' | transloco">&times;</button>
       </div>
-      <div *ngIf="!loading && !loadError && users.length === 0" class="state-msg">
-        {{ 'admin.users.list.noResults' | transloco }}
-      </div>
 
       <!-- Table -->
-      <div class="table-wrapper" *ngIf="!loading && users.length > 0">
-        <table [attr.aria-label]="'admin.users.list.ariaList' | transloco">
-          <thead>
-            <tr>
-              <th scope="col">
-                <button class="sort-btn" (click)="sort('fullName')" type="button"
-                        [attr.aria-sort]="ariaSort('fullName')">
-                  {{ 'admin.users.list.tableHeaders.name' | transloco }}
-                </button>
-              </th>
-              <th scope="col">{{ 'admin.users.list.tableHeaders.email' | transloco }}</th>
-              <th scope="col">
-                <button class="sort-btn" (click)="sort('role')" type="button"
-                        [attr.aria-sort]="ariaSort('role')">
-                  {{ 'admin.users.list.tableHeaders.role' | transloco }}
-                </button>
-              </th>
-              <th scope="col">{{ 'admin.users.list.tableHeaders.status' | transloco }}</th>
-              <th scope="col">
-                <button class="sort-btn" (click)="sort('createdAt')" type="button"
-                        [attr.aria-sort]="ariaSort('createdAt')">
-                  {{ 'admin.users.list.tableHeaders.created' | transloco }}
-                </button>
-              </th>
-              <th scope="col"><span class="sr-only">{{ 'admin.users.list.tableHeaders.actions' | transloco }}</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let u of users">
-              <td>
-                <button 
-                  class="name-link" 
-                  (click)="navigateToProfile(u)"
-                  [attr.aria-label]="'admin.users.list.viewProfileAria' | transloco: { name: (u.fullName ?? u.email) }">
-                  {{ u.fullName ?? '—' }}
-                </button>
-              </td>
-              <td>{{ u.email }}</td>
-              <td>
-                <span
-                  *ngFor="let r of (u.roles ?? [u.role]); let last = last"
-                  class="badge"
-                  [class.badge-admin]="r === 'SYSTEM_ADMINISTRATOR' || r === 'ADMIN'"
-                  [style.margin-right]="last ? '0' : '4px'">
-                  {{ 'roles.' + r | transloco }}
-                </span>
-              </td>
-              <td>
-                <span class="badge" [class.badge-active]="u.active" [class.badge-inactive]="!u.active">
-                  {{ u.active ? ('admin.users.list.statusActive' | transloco) : ('admin.users.list.statusInactive' | transloco) }}
-                </span>
-              </td>
-              <td>{{ u.createdAt | date:'dd MMM yyyy' }}</td>
-              <td class="actions-cell">
-                <button class="btn-action" (click)="openEdit(u)" [attr.aria-label]="'admin.users.list.editAria' | transloco: { email: u.email }">
-                  {{ 'admin.users.list.editAction' | transloco }}
-                </button>
-                <button class="btn-action" (click)="openPasswordReset(u)"
-                        [attr.aria-label]="'admin.users.list.resetPwdAria' | transloco: { email: u.email }">
-                  {{ 'admin.users.list.resetPwdAction' | transloco }}
-                </button>
-                <button
-                  class="btn-action"
-                  [class.btn-danger]="u.active"
-                  (click)="toggleActive(u)"
-                  [attr.aria-label]="(u.active ? ('admin.users.list.deactivateAria' | transloco: { email: u.email }) : ('admin.users.list.reactivateAria' | transloco: { email: u.email }))">
-                  {{ u.active ? ('admin.users.list.deactivateAction' | transloco) : ('admin.users.list.reactivateAction' | transloco) }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <p-table
+        [value]="users"
+        [lazy]="true"
+        (onLazyLoad)="onLazyLoad($event)"
+        [paginator]="true"
+        [rows]="pageSize"
+        [first]="first"
+        [totalRecords]="totalElements"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [showCurrentPageReport]="true"
+        [sortField]="sortField"
+        [sortOrder]="sortDir === 'asc' ? 1 : -1"
+        [loading]="loading"
+        responsiveLayout="scroll"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="fullName">
+              {{ 'admin.users.list.tableHeaders.name' | transloco }}
+              <p-sortIcon field="fullName" />
+            </th>
+            <th>{{ 'admin.users.list.tableHeaders.email' | transloco }}</th>
+            <th pSortableColumn="role">
+              {{ 'admin.users.list.tableHeaders.role' | transloco }}
+              <p-sortIcon field="role" />
+            </th>
+            <th>{{ 'admin.users.list.tableHeaders.status' | transloco }}</th>
+            <th pSortableColumn="createdAt">
+              {{ 'admin.users.list.tableHeaders.created' | transloco }}
+              <p-sortIcon field="createdAt" />
+            </th>
+            <th><span class="sr-only">{{ 'admin.users.list.tableHeaders.actions' | transloco }}</span></th>
+          </tr>
+        </ng-template>
 
-      <!-- Pagination -->
-      <nav class="pagination" [attr.aria-label]="'admin.users.list.ariaPagination' | transloco" *ngIf="totalPages > 1">
-        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
-                [attr.aria-label]="'common.pagination.previousPage' | transloco">
-          &lsaquo;
-        </button>
-        <span>{{ 'admin.users.list.paginationText' | transloco: { current: currentPage + 1, total: totalPages } }}</span>
-        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages - 1"
-                [attr.aria-label]="'common.pagination.nextPage' | transloco">
-          &rsaquo;
-        </button>
-      </nav>
-      <p class="total-count" *ngIf="!loading">
-        {{ 'admin.users.list.usersFound' | transloco: { count: totalElements } }}
-      </p>
+        <ng-template pTemplate="body" let-u>
+          <tr>
+            <td>
+              <button
+                class="name-link"
+                (click)="navigateToProfile(u)"
+                [attr.aria-label]="'admin.users.list.viewProfileAria' | transloco: { name: (u.fullName ?? u.email) }">
+                {{ u.fullName ?? '—' }}
+              </button>
+            </td>
+            <td>{{ u.email }}</td>
+            <td>
+              <span
+                *ngFor="let r of (u.roles ?? [u.role]); let last = last"
+                class="badge"
+                [class.badge-admin]="r === 'SYSTEM_ADMINISTRATOR' || r === 'ADMIN'"
+                [style.margin-right]="last ? '0' : '4px'">
+                {{ 'roles.' + r | transloco }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [class.badge-active]="u.active" [class.badge-inactive]="!u.active">
+                {{ u.active ? ('admin.users.list.statusActive' | transloco) : ('admin.users.list.statusInactive' | transloco) }}
+              </span>
+            </td>
+            <td>{{ u.createdAt | date:'dd MMM yyyy' }}</td>
+            <td class="actions-cell">
+              <button class="btn-action" (click)="openEdit(u)" [attr.aria-label]="'admin.users.list.editAria' | transloco: { email: u.email }">
+                {{ 'admin.users.list.editAction' | transloco }}
+              </button>
+              <button class="btn-action" (click)="openPasswordReset(u)"
+                      [attr.aria-label]="'admin.users.list.resetPwdAria' | transloco: { email: u.email }">
+                {{ 'admin.users.list.resetPwdAction' | transloco }}
+              </button>
+              <button
+                class="btn-action"
+                [class.btn-danger]="u.active"
+                (click)="toggleActive(u)"
+                [attr.aria-label]="(u.active ? ('admin.users.list.deactivateAria' | transloco: { email: u.email }) : ('admin.users.list.reactivateAria' | transloco: { email: u.email }))">
+                {{ u.active ? ('admin.users.list.deactivateAction' | transloco) : ('admin.users.list.reactivateAction' | transloco) }}
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="state-msg">{{ 'admin.users.list.noResults' | transloco }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
 
     <!-- Dialogs (rendered outside table for z-index) -->
@@ -489,6 +485,7 @@ export class UserListComponent implements OnInit {
   totalPages = 0;
   currentPage = 0;
   pageSize = 20;
+  first = 0;
   sortField = 'createdAt';
   sortDir = 'desc';
 
@@ -540,6 +537,17 @@ export class UserListComponent implements OnInit {
   }
 
   /** Reload page when a filter changes. */
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.currentPage = (event.first ?? 0) / (event.rows ?? this.pageSize);
+    this.pageSize = event.rows ?? this.pageSize;
+    this.first = event.first ?? 0;
+    if (event.sortField) {
+      this.sortField = event.sortField as string;
+    }
+    this.sortDir = event.sortOrder === 1 ? 'asc' : 'desc';
+    this.loadPage();
+  }
+
   applyFilters(): void {
     // If therapist role is selected, navigate to dedicated therapist management page
     if (this.roleFilter === 'THERAPIST') {
@@ -550,27 +558,10 @@ export class UserListComponent implements OnInit {
       this.router.navigate(['/admin/therapists'], { queryParams });
       return;
     }
-    
-    this.currentPage = 0;
-    this.loadPage();
-  }
 
-  /** Toggle sort direction or switch sort field. */
-  sort(field: string): void {
-    if (this.sortField === field) {
-      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortField = field;
-      this.sortDir = 'asc';
-    }
     this.currentPage = 0;
+    this.first = 0;
     this.loadPage();
-  }
-
-  /** Returns the aria-sort attribute value for a column. */
-  ariaSort(field: string): 'ascending' | 'descending' | 'none' {
-    if (this.sortField !== field) return 'none';
-    return this.sortDir === 'asc' ? 'ascending' : 'descending';
   }
 
   /** Navigate to a specific page. */

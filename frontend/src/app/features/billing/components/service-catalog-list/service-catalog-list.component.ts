@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
+import { TableModule } from 'primeng/table';
 import {
   CreateServiceRequest,
   ServiceCatalogItem,
@@ -22,6 +23,7 @@ import { ServiceCatalogFormComponent } from '../service-catalog-form/service-cat
     TranslocoModule,
     ServiceCatalogFormComponent,
     Select,
+    TableModule,
   ],
   template: `
     <div class="page-container">
@@ -55,86 +57,89 @@ import { ServiceCatalogFormComponent } from '../service-catalog-form/service-cat
         </div>
       </div>
 
-      <!-- Loading -->
-      <div *ngIf="loading" class="state-msg" aria-live="polite">
-        {{ 'billing.catalog.list.loading' | transloco }}
-      </div>
-
       <!-- Error -->
       <div *ngIf="loadError" class="alert-error" role="alert">{{ loadError }}</div>
 
-      <!-- Empty state -->
-      <div *ngIf="!loading && !loadError && services.length === 0" class="empty-state">
-        <p>{{ 'billing.catalog.list.empty' | transloco }}</p>
-        <button type="button" class="btn-primary" (click)="openCreateDialog()">
-          + {{ 'billing.catalog.actions.addService' | transloco }}
-        </button>
-      </div>
-
       <!-- Table -->
-      <div *ngIf="!loading && services.length > 0" class="table-wrapper">
-        <table class="data-table table-hoverable" role="table"
-               [attr.aria-label]="'billing.catalog.title' | transloco">
-          <thead>
-            <tr>
-              <th scope="col">{{ 'billing.catalog.fields.name' | transloco }}</th>
-              <th scope="col">{{ 'billing.catalog.fields.category' | transloco }}</th>
-              <th scope="col">{{ 'billing.catalog.fields.serviceType' | transloco }}</th>
-              <th scope="col" class="col-right">{{ 'billing.catalog.fields.durationMin' | transloco }}</th>
-              <th scope="col" class="col-right">{{ 'billing.catalog.fields.currentPrice' | transloco }}</th>
-              <th scope="col">{{ 'billing.catalog.fields.status' | transloco }}</th>
-              <th scope="col">{{ 'billing.catalog.fields.actions' | transloco }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let svc of services">
-              <td>
-                <a [routerLink]="[svc.id]" class="link-primary">
-                  {{ svc.name }}
+      <p-table
+        [value]="services"
+        [loading]="loading"
+        styleClass="p-datatable-sm"
+        responsiveLayout="scroll"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'billing.catalog.fields.name' | transloco }}</th>
+            <th>{{ 'billing.catalog.fields.category' | transloco }}</th>
+            <th>{{ 'billing.catalog.fields.serviceType' | transloco }}</th>
+            <th class="col-right">{{ 'billing.catalog.fields.durationMin' | transloco }}</th>
+            <th class="col-right">{{ 'billing.catalog.fields.currentPrice' | transloco }}</th>
+            <th>{{ 'billing.catalog.fields.status' | transloco }}</th>
+            <th>{{ 'billing.catalog.fields.actions' | transloco }}</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-svc>
+          <tr>
+            <td>
+              <a [routerLink]="[svc.id]" class="link-primary">
+                {{ svc.name }}
+              </a>
+            </td>
+            <td>{{ svc.category }}</td>
+            <td>{{ 'sessions.types.' + svc.sessionType.code | transloco }}</td>
+            <td class="col-right">{{ svc.durationMin }} {{ 'billing.catalog.fields.min' | transloco }}</td>
+            <td class="col-right price-cell">{{ svc.currentPrice | number:'1.2-2' }}</td>
+            <td>
+              <span class="badge"
+                    [class.badge-active]="svc.status === 'ACTIVE'"
+                    [class.badge-inactive]="svc.status === 'INACTIVE'">
+                {{ 'billing.catalog.status.' + svc.status | transloco }}
+              </span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <a [routerLink]="[svc.id]"
+                   class="btn-ghost btn-sm"
+                   [attr.aria-label]="'billing.catalog.actions.view' | transloco">
+                  {{ 'billing.catalog.actions.view' | transloco }}
                 </a>
-              </td>
-              <td>{{ svc.category }}</td>
-              <td>{{ 'sessions.types.' + svc.sessionType.code | transloco }}</td>
-              <td class="col-right">{{ svc.durationMin }} {{ 'billing.catalog.fields.min' | transloco }}</td>
-              <td class="col-right price-cell">{{ svc.currentPrice | number:'1.2-2' }}</td>
-              <td>
-                <span class="badge"
-                      [class.badge-active]="svc.status === 'ACTIVE'"
-                      [class.badge-inactive]="svc.status === 'INACTIVE'">
-                  {{ 'billing.catalog.status.' + svc.status | transloco }}
-                </span>
-              </td>
-              <td>
-                <div class="row-actions">
-                  <a [routerLink]="[svc.id]"
-                     class="btn-ghost btn-sm"
-                     [attr.aria-label]="'billing.catalog.actions.view' | transloco">
-                    {{ 'billing.catalog.actions.view' | transloco }}
-                  </a>
-                  <button type="button" class="btn-ghost btn-sm"
-                          (click)="openEditDialog(svc)"
-                          [attr.aria-label]="'common.actions.edit' | transloco">
-                    {{ 'common.actions.edit' | transloco }}
-                  </button>
-                  <button type="button"
-                          class="btn-ghost btn-sm"
-                          [class.text-danger]="svc.status === 'ACTIVE'"
-                          (click)="toggleStatus(svc)"
-                          [disabled]="togglingId === svc.id"
-                          [attr.aria-label]="(svc.status === 'ACTIVE' ? 'billing.catalog.actions.deactivate' : 'billing.catalog.actions.activate') | transloco">
-                    <ng-container *ngIf="togglingId !== svc.id">
-                      {{ (svc.status === 'ACTIVE' ? 'billing.catalog.actions.deactivate' : 'billing.catalog.actions.activate') | transloco }}
-                    </ng-container>
-                    <ng-container *ngIf="togglingId === svc.id">
-                      {{ 'common.status.loading' | transloco }}
-                    </ng-container>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                <button type="button" class="btn-ghost btn-sm"
+                        (click)="openEditDialog(svc)"
+                        [attr.aria-label]="'common.actions.edit' | transloco">
+                  {{ 'common.actions.edit' | transloco }}
+                </button>
+                <button type="button"
+                        class="btn-ghost btn-sm"
+                        [class.text-danger]="svc.status === 'ACTIVE'"
+                        (click)="toggleStatus(svc)"
+                        [disabled]="togglingId === svc.id"
+                        [attr.aria-label]="(svc.status === 'ACTIVE' ? 'billing.catalog.actions.deactivate' : 'billing.catalog.actions.activate') | transloco">
+                  <ng-container *ngIf="togglingId !== svc.id">
+                    {{ (svc.status === 'ACTIVE' ? 'billing.catalog.actions.deactivate' : 'billing.catalog.actions.activate') | transloco }}
+                  </ng-container>
+                  <ng-container *ngIf="togglingId === svc.id">
+                    {{ 'common.status.loading' | transloco }}
+                  </ng-container>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <p>{{ 'billing.catalog.list.empty' | transloco }}</p>
+                <button type="button" class="btn-primary" (click)="openCreateDialog()">
+                  + {{ 'billing.catalog.actions.addService' | transloco }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
 
     </div>
 

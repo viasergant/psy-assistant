@@ -332,7 +332,7 @@ button {
     background: #F8FAFC !important;
     color: var(--color-text-secondary, #64748B) !important;
     border-bottom: 1.5px solid var(--color-border, #E2E8F0) !important;
-    padding: .875rem 1rem !important;
+    padding: .583rem .667rem !important;
     font-size: .8125rem !important;
     font-weight: 600 !important;
     text-transform: uppercase !important;
@@ -351,7 +351,7 @@ button {
     > td {
       color: var(--color-text-primary, #0F172A) !important;
       border-bottom: 1px solid #F1F5F9 !important;
-      padding: 1rem !important;
+      padding: .667rem 1rem !important;
       font-size: .9375rem !important;
       vertical-align: middle !important;
     }

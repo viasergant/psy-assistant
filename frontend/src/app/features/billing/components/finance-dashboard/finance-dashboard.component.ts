@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
+import { TableModule } from 'primeng/table';
 import { FinanceDashboard } from '../../models/finance-dashboard.model';
 import { FinanceDashboardService } from '../../services/finance-dashboard.service';
 
 @Component({
   selector: 'app-finance-dashboard',
   standalone: true,
-  imports: [CommonModule, TranslocoModule],
+  imports: [CommonModule, TranslocoModule, TableModule],
   template: `
     <div class="page-container">
       <h1 class="page-title">{{ 'billing.dashboard.title' | transloco }}</h1>
@@ -40,30 +41,24 @@ import { FinanceDashboardService } from '../../services/finance-dashboard.servic
           <h2 id="aging-heading" class="section-title">
             {{ 'billing.dashboard.aging.title' | transloco }}
           </h2>
-          <div class="table-wrapper">
-            <table aria-label="{{ 'billing.dashboard.aging.title' | transloco }}">
-              <thead>
-                <tr>
-                  <th scope="col">{{ 'billing.dashboard.aging.title' | transloco }}</th>
-                  <th scope="col" class="text-right">{{ 'billing.dashboard.aging.amount' | transloco }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{{ 'billing.dashboard.aging.current030' | transloco }}</td>
-                  <td class="text-right">{{ dashboard.aging.current030 | number:'1.2-2' }}</td>
-                </tr>
-                <tr>
-                  <td>{{ 'billing.dashboard.aging.past3160' | transloco }}</td>
-                  <td class="text-right">{{ dashboard.aging.past3160 | number:'1.2-2' }}</td>
-                </tr>
-                <tr>
-                  <td>{{ 'billing.dashboard.aging.past60plus' | transloco }}</td>
-                  <td class="text-right">{{ dashboard.aging.past60plus | number:'1.2-2' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <p-table
+            [value]="agingRows"
+            styleClass="p-datatable-sm"
+            responsiveLayout="scroll"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>{{ 'billing.dashboard.aging.title' | transloco }}</th>
+                <th class="text-right">{{ 'billing.dashboard.aging.amount' | transloco }}</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.label | transloco }}</td>
+                <td class="text-right">{{ row.amount | number:'1.2-2' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
         </section>
 
         <!-- As-of timestamp -->
@@ -78,6 +73,15 @@ export class FinanceDashboardComponent implements OnInit {
   dashboard: FinanceDashboard | null = null;
   loading = false;
   error: string | null = null;
+
+  get agingRows(): { label: string; amount: number }[] {
+    if (!this.dashboard) return [];
+    return [
+      { label: 'billing.dashboard.aging.current030', amount: this.dashboard.aging.current030 },
+      { label: 'billing.dashboard.aging.past3160', amount: this.dashboard.aging.past3160 },
+      { label: 'billing.dashboard.aging.past60plus', amount: this.dashboard.aging.past60plus },
+    ];
+  }
 
   constructor(private dashboardService: FinanceDashboardService) {}
 

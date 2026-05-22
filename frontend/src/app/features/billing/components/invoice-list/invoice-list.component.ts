@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { InvoiceListItem, InvoiceStatus } from '../../models/invoice.model';
 import { InvoiceService } from '../../services/invoice.service';
 
 @Component({
   selector: 'app-invoice-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslocoModule, Select],
+  imports: [CommonModule, FormsModule, RouterModule, TranslocoModule, Select, TableModule],
   template: `
     <div class="page-container">
       <div class="page-header">
@@ -32,75 +33,68 @@ import { InvoiceService } from '../../services/invoice.service';
         />
       </div>
 
-      <!-- Loading -->
-      <div *ngIf="loading" class="state-msg" aria-live="polite">
-        {{ 'billing.invoices.list.loading' | transloco }}
-      </div>
-
       <!-- Error -->
       <div *ngIf="error" class="alert-error" role="alert">{{ error }}</div>
 
-      <!-- Empty -->
-      <div *ngIf="!loading && !error && invoices.length === 0" class="empty-state">
-        {{ 'billing.invoices.list.empty' | transloco }}
-      </div>
-
       <!-- Invoice table -->
-      <div *ngIf="!loading && invoices.length > 0" class="table-wrapper">
-        <table class="data-table" role="table">
-          <thead>
-            <tr>
-              <th scope="col">{{ 'billing.invoices.table.number' | transloco }}</th>
-              <th scope="col">{{ 'billing.invoices.table.client' | transloco }}</th>
-              <th scope="col">{{ 'billing.invoices.table.source' | transloco }}</th>
-              <th scope="col">{{ 'billing.invoices.table.status' | transloco }}</th>
-              <th scope="col">{{ 'billing.invoices.table.issuedDate' | transloco }}</th>
-              <th scope="col">{{ 'billing.invoices.table.dueDate' | transloco }}</th>
-              <th scope="col" class="col-right">{{ 'billing.invoices.table.total' | transloco }}</th>
-              <th scope="col">{{ 'billing.invoices.table.actions' | transloco }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let invoice of invoices">
-              <td>
-                <a [routerLink]="['/billing/invoices', invoice.id]" class="link-primary">
-                  {{ invoice.invoiceNumber }}
-                </a>
-              </td>
-              <td>{{ invoice.clientId }}</td>
-              <td>{{ 'billing.invoices.source.' + invoice.source | transloco }}</td>
-              <td>
-                <span class="status-badge" [ngClass]="'status-' + invoice.status.toLowerCase()">
-                  {{ 'billing.invoices.status.' + invoice.status | transloco }}
-                </span>
-              </td>
-              <td>{{ invoice.issuedDate | date:'mediumDate' }}</td>
-              <td>{{ invoice.dueDate | date:'mediumDate' }}</td>
-              <td class="col-right">{{ invoice.total | number:'1.2-2' }}</td>
-              <td>
-                <a [routerLink]="['/billing/invoices', invoice.id]" class="btn-link">
-                  {{ 'common.actions.view' | transloco }}
-                </a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <p-table
+        [value]="invoices"
+        [lazy]="true"
+        (onLazyLoad)="onLazyLoad($event)"
+        [paginator]="true"
+        [rows]="pageSize"
+        [first]="first"
+        [totalRecords]="totalRecords"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [showCurrentPageReport]="true"
+        [loading]="loading"
+        responsiveLayout="scroll"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'billing.invoices.table.number' | transloco }}</th>
+            <th>{{ 'billing.invoices.table.client' | transloco }}</th>
+            <th>{{ 'billing.invoices.table.source' | transloco }}</th>
+            <th>{{ 'billing.invoices.table.status' | transloco }}</th>
+            <th>{{ 'billing.invoices.table.issuedDate' | transloco }}</th>
+            <th>{{ 'billing.invoices.table.dueDate' | transloco }}</th>
+            <th class="col-right">{{ 'billing.invoices.table.total' | transloco }}</th>
+            <th>{{ 'billing.invoices.table.actions' | transloco }}</th>
+          </tr>
+        </ng-template>
 
-        <!-- Pagination -->
-        <div class="pagination-bar" *ngIf="totalPages > 1">
-          <button type="button" class="btn-secondary"
-                  [disabled]="currentPage === 0"
-                  (click)="loadPage(currentPage - 1)">
-            {{ 'common.actions.previous' | transloco }}
-          </button>
-          <span class="page-info">{{ currentPage + 1 }} / {{ totalPages }}</span>
-          <button type="button" class="btn-secondary"
-                  [disabled]="currentPage >= totalPages - 1"
-                  (click)="loadPage(currentPage + 1)">
-            {{ 'common.actions.next' | transloco }}
-          </button>
-        </div>
-      </div>
+        <ng-template pTemplate="body" let-invoice>
+          <tr>
+            <td>
+              <a [routerLink]="['/billing/invoices', invoice.id]" class="link-primary">
+                {{ invoice.invoiceNumber }}
+              </a>
+            </td>
+            <td>{{ invoice.clientId }}</td>
+            <td>{{ 'billing.invoices.source.' + invoice.source | transloco }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="'status-' + invoice.status.toLowerCase()">
+                {{ 'billing.invoices.status.' + invoice.status | transloco }}
+              </span>
+            </td>
+            <td>{{ invoice.issuedDate | date:'mediumDate' }}</td>
+            <td>{{ invoice.dueDate | date:'mediumDate' }}</td>
+            <td class="col-right">{{ invoice.total | number:'1.2-2' }}</td>
+            <td>
+              <a [routerLink]="['/billing/invoices', invoice.id]" class="btn-link">
+                {{ 'common.actions.view' | transloco }}
+              </a>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8" class="empty-state">{{ 'billing.invoices.list.empty' | transloco }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
   `,
   styles: [`
@@ -149,6 +143,8 @@ export class InvoiceListComponent implements OnInit {
   statusFilter: InvoiceStatus | '' = '';
   currentPage = 0;
   totalPages = 0;
+  totalRecords = 0;
+  first = 0;
   readonly pageSize = 20;
 
   constructor(
@@ -170,7 +166,15 @@ export class InvoiceListComponent implements OnInit {
   }
 
   applyFilter(): void {
+    this.currentPage = 0;
+    this.first = 0;
     this.loadPage(0);
+  }
+
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.currentPage = (event.first ?? 0) / (event.rows ?? this.pageSize);
+    this.first = event.first ?? 0;
+    this.loadPage(this.currentPage);
   }
 
   loadPage(page: number): void {
@@ -185,6 +189,7 @@ export class InvoiceListComponent implements OnInit {
         this.invoices = response.content;
         this.currentPage = response.number;
         this.totalPages = response.totalPages;
+        this.totalRecords = response.totalElements ?? response.totalPages * this.pageSize;
         this.loading = false;
       },
       error: (err) => {

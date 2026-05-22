@@ -7,6 +7,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
+import { TableModule } from 'primeng/table';
 import { Invoice } from '../../models/invoice.model';
 import { Payment, Refund } from '../../models/payment.model';
 import { PaymentService } from '../../services/payment.service';
@@ -19,6 +20,7 @@ import { RegisterRefundDialogComponent } from '../register-refund-dialog/registe
   imports: [
     CommonModule,
     TranslocoModule,
+    TableModule,
     RegisterPaymentDialogComponent,
     RegisterRefundDialogComponent,
   ],
@@ -52,60 +54,62 @@ import { RegisterRefundDialogComponent } from '../register-refund-dialog/registe
       </div>
 
       <!-- Payments table -->
-      <div *ngIf="loadingPayments" class="state-msg" aria-live="polite">
-        {{ 'common.loading' | transloco }}
-      </div>
+      <p-table
+        [value]="payments"
+        [loading]="loadingPayments"
+        styleClass="p-datatable-sm"
+        responsiveLayout="scroll"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'billing.payment.date' | transloco }}</th>
+            <th>{{ 'billing.payment.method' | transloco }}</th>
+            <th>{{ 'billing.payment.amount' | transloco }}</th>
+            <th>{{ 'billing.payment.reference' | transloco }}</th>
+            <th>{{ 'billing.invoices.table.actions' | transloco }}</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-p>
+          <tr>
+            <td>{{ p.paymentDate | date:'mediumDate' }}</td>
+            <td>{{ 'billing.payment.methods.' + p.paymentMethod | transloco }}</td>
+            <td>{{ p.amount | number:'1.2-2' }}</td>
+            <td>{{ p.reference || '—' }}</td>
+            <td>{{ p.createdBy }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="empty-msg">{{ 'billing.payment.noPayments' | transloco }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
 
-      <div *ngIf="!loadingPayments">
-        <div *ngIf="payments.length === 0" class="empty-msg">
-          {{ 'billing.payment.noPayments' | transloco }}
-        </div>
-
-        <div *ngIf="payments.length > 0" class="table-wrapper">
-          <table aria-label="{{ 'billing.payment.paymentHistory' | transloco }}">
-            <thead>
-              <tr>
-                <th scope="col">{{ 'billing.payment.date' | transloco }}</th>
-                <th scope="col">{{ 'billing.payment.method' | transloco }}</th>
-                <th scope="col">{{ 'billing.payment.amount' | transloco }}</th>
-                <th scope="col">{{ 'billing.payment.reference' | transloco }}</th>
-                <th scope="col">{{ 'billing.invoices.table.actions' | transloco }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let p of payments">
-                <td>{{ p.paymentDate | date:'mediumDate' }}</td>
-                <td>{{ 'billing.payment.methods.' + p.paymentMethod | transloco }}</td>
-                <td>{{ p.amount | number:'1.2-2' }}</td>
-                <td>{{ p.reference || '—' }}</td>
-                <td>{{ p.createdBy }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Refunds section -->
-      <div *ngIf="refunds.length > 0" class="table-wrapper" style="margin-top: var(--spacing-lg)">
+      <!-- Refunds table -->
+      <div *ngIf="refunds.length > 0" style="margin-top: var(--spacing-lg)">
         <h3 class="subsection-title">{{ 'billing.payment.refunds' | transloco }}</h3>
-        <table aria-label="{{ 'billing.payment.refunds' | transloco }}">
-          <thead>
+        <p-table
+          [value]="refunds"
+          styleClass="p-datatable-sm"
+          responsiveLayout="scroll"
+        >
+          <ng-template pTemplate="header">
             <tr>
-              <th scope="col">{{ 'billing.payment.date' | transloco }}</th>
-              <th scope="col">{{ 'billing.payment.amount' | transloco }}</th>
-              <th scope="col">{{ 'billing.payment.refundReason' | transloco }}</th>
-              <th scope="col">{{ 'billing.invoices.table.actions' | transloco }}</th>
+              <th>{{ 'billing.payment.date' | transloco }}</th>
+              <th>{{ 'billing.payment.amount' | transloco }}</th>
+              <th>{{ 'billing.payment.refundReason' | transloco }}</th>
+              <th>{{ 'billing.invoices.table.actions' | transloco }}</th>
             </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let r of refunds">
+          </ng-template>
+          <ng-template pTemplate="body" let-r>
+            <tr>
               <td>{{ r.refundDate | date:'mediumDate' }}</td>
               <td>{{ r.amount | number:'1.2-2' }}</td>
               <td>{{ r.reason }}</td>
               <td>{{ r.createdBy }}</td>
             </tr>
-          </tbody>
-        </table>
+          </ng-template>
+        </p-table>
       </div>
     </section>
 

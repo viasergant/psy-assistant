@@ -8,27 +8,16 @@
       <h2 class="section-title">{{ 'settings.language.title' | transloco }}</h2>
       <p class="section-description">{{ 'settings.language.description' | transloco }}</p>
 
-      <div class="language-options" role="radiogroup" [attr.aria-label]="'settings.language.title' | transloco">
+      <select
+        class="language-select"
+        [value]="currentLocale()"
+        (change)="selectLanguage($any($event.target).value)"
+        [attr.aria-label]="'settings.language.title' | transloco"
+      >
         @for (lang of languages; track lang.code) {
-          <label
-            class="language-option"
-            [class.selected]="currentLocale() === lang.code"
-          >
-            <input
-              type="radio"
-              name="language"
-              [value]="lang.code"
-              [checked]="currentLocale() === lang.code"
-              (change)="selectLanguage(lang.code)"
-              class="sr-only"
-            />
-            <span class="language-label">{{ lang.labelKey | transloco }}</span>
-            @if (currentLocale() === lang.code) {
-              <span class="checkmark" aria-hidden="true">&#10003;</span>
-            }
-          </label>
+          <option [value]="lang.code">{{ lang.labelKey | transloco }}</option>
         }
-      </div>
+      </select>
 
       <div class="section-actions">
         <button

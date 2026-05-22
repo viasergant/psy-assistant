@@ -1,6 +1,7 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
+import { TableModule } from 'primeng/table';
 import { OutcomeMeasureEntry } from '../../models/care-plan.model';
 import { OutcomeMeasureService } from '../../services/outcome-measure.service';
 import { OutcomeMeasureEntryDialogComponent } from '../outcome-measure-entry-dialog/outcome-measure-entry-dialog.component';
@@ -8,7 +9,7 @@ import { OutcomeMeasureEntryDialogComponent } from '../outcome-measure-entry-dia
 @Component({
   selector: 'app-outcome-measure-list',
   standalone: true,
-  imports: [CommonModule, DatePipe, TranslocoModule, OutcomeMeasureEntryDialogComponent],
+  imports: [CommonModule, DatePipe, TranslocoModule, TableModule, OutcomeMeasureEntryDialogComponent],
   template: `
     <div class="om-section">
 
@@ -26,45 +27,47 @@ import { OutcomeMeasureEntryDialogComponent } from '../outcome-measure-entry-dia
         </button>
       </div>
 
-      <div *ngIf="loading" class="state-msg" aria-live="polite">
-        {{ 'carePlans.outcomeMeasures.loading' | transloco }}
-      </div>
       <div *ngIf="error" class="alert-error" role="alert">{{ error | transloco }}</div>
 
-      <div *ngIf="!loading && entries.length === 0" class="empty-state">
-        {{ 'carePlans.outcomeMeasures.empty' | transloco }}
-      </div>
+      <p-table
+        [value]="entries"
+        [loading]="loading"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'carePlans.outcomeMeasures.measure' | transloco }}</th>
+            <th>{{ 'carePlans.outcomeMeasures.score' | transloco }}</th>
+            <th>{{ 'carePlans.outcomeMeasures.assessmentDate' | transloco }}</th>
+            <th>{{ 'carePlans.outcomeMeasures.recordedBy' | transloco }}</th>
+            <th>{{ 'carePlans.outcomeMeasures.alert' | transloco }}</th>
+          </tr>
+        </ng-template>
 
-      <div *ngIf="!loading && entries.length > 0" class="table-wrapper">
-        <table class="data-table" [attr.aria-label]="'carePlans.outcomeMeasures.tableLabel' | transloco">
-          <thead>
-            <tr>
-              <th scope="col">{{ 'carePlans.outcomeMeasures.measure' | transloco }}</th>
-              <th scope="col">{{ 'carePlans.outcomeMeasures.score' | transloco }}</th>
-              <th scope="col">{{ 'carePlans.outcomeMeasures.assessmentDate' | transloco }}</th>
-              <th scope="col">{{ 'carePlans.outcomeMeasures.recordedBy' | transloco }}</th>
-              <th scope="col">{{ 'carePlans.outcomeMeasures.alert' | transloco }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let entry of entries" [class.row-alert]="entry.thresholdBreached">
-              <td>{{ entry.measureDisplayName }}</td>
-              <td class="score-cell">{{ entry.score }}</td>
-              <td>{{ entry.assessmentDate | date:'shortDate' }}</td>
-              <td>{{ entry.recordedByName }}</td>
-              <td>
-                <span *ngIf="entry.thresholdBreached"
-                      class="threshold-badge"
-                      [class.badge-alert]="entry.alertSeverity === 'ALERT'"
-                      [class.badge-warning]="entry.alertSeverity === 'WARNING'"
-                      [attr.title]="entry.alertLabel">
-                  ⚠ {{ entry.alertLabel }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <ng-template pTemplate="body" let-entry>
+          <tr [ngClass]="{'row-alert': entry.thresholdBreached}">
+            <td>{{ entry.measureDisplayName }}</td>
+            <td class="score-cell">{{ entry.score }}</td>
+            <td>{{ entry.assessmentDate | date:'shortDate' }}</td>
+            <td>{{ entry.recordedByName }}</td>
+            <td>
+              <span *ngIf="entry.thresholdBreached"
+                    class="threshold-badge"
+                    [class.badge-alert]="entry.alertSeverity === 'ALERT'"
+                    [class.badge-warning]="entry.alertSeverity === 'WARNING'"
+                    [attr.title]="entry.alertLabel">
+                ⚠ {{ entry.alertLabel }}
+              </span>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="empty-state">{{ 'carePlans.outcomeMeasures.empty' | transloco }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
 
       <app-outcome-measure-entry-dialog
         [planId]="planId"

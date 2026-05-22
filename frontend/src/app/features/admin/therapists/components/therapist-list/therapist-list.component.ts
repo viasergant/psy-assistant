@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
   TherapistProfile,
@@ -36,6 +37,7 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
     CreateTherapistDialogComponent,
     EditTherapistDialogComponent,
     Select,
+    TableModule,
   ],
   styleUrl: './therapist-list.component.scss',
   template: `
@@ -87,82 +89,80 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
         </div>
       </div>
 
-      <!-- Loading / empty / error states -->
-      <div *ngIf="loading" class="state-msg" aria-live="polite">{{ 'admin.therapists.list.loading' | transloco }}</div>
-      <div *ngIf="!loading && loadError" class="alert-error" role="alert">{{ loadError }}</div>
-      <div *ngIf="!loading && !loadError && therapists.length === 0" class="state-msg">
-        {{ 'admin.therapists.list.noResults' | transloco }}
-      </div>
+      <!-- Error state -->
+      <div *ngIf="loadError" class="alert-error" role="alert">{{ loadError }}</div>
 
       <!-- Table -->
-      <div class="table-wrapper" *ngIf="!loading && therapists.length > 0">
-        <table [attr.aria-label]="'admin.therapists.list.ariaList' | transloco">
-          <thead>
-            <tr>
-              <th scope="col">{{ 'admin.therapists.list.tableHeaders.name' | transloco }}</th>
-              <th scope="col">{{ 'admin.therapists.list.tableHeaders.email' | transloco }}</th>
-              <th scope="col">{{ 'admin.therapists.list.tableHeaders.phone' | transloco }}</th>
-              <th scope="col">{{ 'admin.therapists.list.tableHeaders.employmentStatus' | transloco }}</th>
-              <th scope="col">{{ 'admin.therapists.list.tableHeaders.specializations' | transloco }}</th>
-              <th scope="col">{{ 'admin.therapists.list.tableHeaders.status' | transloco }}</th>
-              <th scope="col">{{ 'admin.therapists.list.tableHeaders.created' | transloco }}</th>
-              <th scope="col"><span class="sr-only">{{ 'admin.therapists.list.tableHeaders.actions' | transloco }}</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let t of therapists">
-              <td class="name-cell">{{ t.name }}</td>
-              <td>{{ t.email }}</td>
-              <td>{{ t.phone || '—' }}</td>
-              <td>
-                <span class="badge" [class.badge-active]="t.employmentStatus === 'ACTIVE'">
-                  {{ 'admin.therapists.create.employmentStatuses.' + t.employmentStatus | transloco }}
-                </span>
-              </td>
-              <td class="specs-cell">
-                <span *ngFor="let spec of t.specializations" class="spec-chip">
-                  {{ spec.name | translateSpecialization }}
-                </span>
-                <span *ngIf="t.specializations.length === 0" class="text-muted">—</span>
-              </td>
-              <td>
-                <span class="badge" [class.badge-active]="t.active" [class.badge-inactive]="!t.active">
-                  {{ t.active ? ('admin.therapists.list.statusActive' | transloco) : ('admin.therapists.list.statusInactive' | transloco) }}
-                </span>
-              </td>
-              <td>{{ t.createdAt | date:'dd MMM yyyy' }}</td>
-              <td class="actions-cell">
-                <button class="btn-action" (click)="openEdit(t)" [attr.aria-label]="('admin.therapists.list.editAction' | transloco) + ' ' + t.name">
-                  {{ 'admin.therapists.list.editAction' | transloco }}
-                </button>
-                <button
-                  class="btn-action"
-                  [class.btn-danger]="t.active"
-                  (click)="toggleActive(t)"
-                  [attr.aria-label]="(t.active ? ('admin.therapists.list.deactivateAction' | transloco) : ('admin.therapists.list.reactivateAction' | transloco)) + ' ' + t.name">
-                  {{ t.active ? ('admin.therapists.list.deactivateAction' | transloco) : ('admin.therapists.list.reactivateAction' | transloco) }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <p-table
+        [value]="therapists"
+        [lazy]="true"
+        (onLazyLoad)="onLazyLoad($event)"
+        [paginator]="true"
+        [rows]="pageSize"
+        [first]="first"
+        [totalRecords]="totalElements"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [showCurrentPageReport]="true"
+        [loading]="loading"
+        responsiveLayout="scroll"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'admin.therapists.list.tableHeaders.name' | transloco }}</th>
+            <th>{{ 'admin.therapists.list.tableHeaders.email' | transloco }}</th>
+            <th>{{ 'admin.therapists.list.tableHeaders.phone' | transloco }}</th>
+            <th>{{ 'admin.therapists.list.tableHeaders.employmentStatus' | transloco }}</th>
+            <th>{{ 'admin.therapists.list.tableHeaders.specializations' | transloco }}</th>
+            <th>{{ 'admin.therapists.list.tableHeaders.status' | transloco }}</th>
+            <th>{{ 'admin.therapists.list.tableHeaders.created' | transloco }}</th>
+            <th><span class="sr-only">{{ 'admin.therapists.list.tableHeaders.actions' | transloco }}</span></th>
+          </tr>
+        </ng-template>
 
-      <!-- Pagination -->
-      <nav class="pagination" [attr.aria-label]="'admin.therapists.list.ariaPagination' | transloco" *ngIf="totalPages > 1">
-        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
-                [attr.aria-label]="'common.pagination.previousPage' | transloco">
-          &lsaquo;
-        </button>
-        <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
-        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages - 1"
-                [attr.aria-label]="'common.pagination.nextPage' | transloco">
-          &rsaquo;
-        </button>
-      </nav>
-      <p class="total-count" *ngIf="!loading">
-        {{ totalElements !== 1 ? ('admin.therapists.list.therapistsFoundPlural' | transloco: { count: totalElements }) : ('admin.therapists.list.therapistsFound' | transloco: { count: totalElements }) }}
-      </p>
+        <ng-template pTemplate="body" let-t>
+          <tr>
+            <td class="name-cell">{{ t.name }}</td>
+            <td>{{ t.email }}</td>
+            <td>{{ t.phone || '—' }}</td>
+            <td>
+              <span class="badge" [class.badge-active]="t.employmentStatus === 'ACTIVE'">
+                {{ 'admin.therapists.create.employmentStatuses.' + t.employmentStatus | transloco }}
+              </span>
+            </td>
+            <td class="specs-cell">
+              <span *ngFor="let spec of t.specializations" class="spec-chip">
+                {{ spec.name | translateSpecialization }}
+              </span>
+              <span *ngIf="t.specializations.length === 0" class="text-muted">—</span>
+            </td>
+            <td>
+              <span class="badge" [class.badge-active]="t.active" [class.badge-inactive]="!t.active">
+                {{ t.active ? ('admin.therapists.list.statusActive' | transloco) : ('admin.therapists.list.statusInactive' | transloco) }}
+              </span>
+            </td>
+            <td>{{ t.createdAt | date:'dd MMM yyyy' }}</td>
+            <td class="actions-cell">
+              <button class="btn-action" (click)="openEdit(t)" [attr.aria-label]="('admin.therapists.list.editAction' | transloco) + ' ' + t.name">
+                {{ 'admin.therapists.list.editAction' | transloco }}
+              </button>
+              <button
+                class="btn-action"
+                [class.btn-danger]="t.active"
+                (click)="toggleActive(t)"
+                [attr.aria-label]="(t.active ? ('admin.therapists.list.deactivateAction' | transloco) : ('admin.therapists.list.reactivateAction' | transloco)) + ' ' + t.name">
+                {{ t.active ? ('admin.therapists.list.deactivateAction' | transloco) : ('admin.therapists.list.reactivateAction' | transloco) }}
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8" class="state-msg">{{ 'admin.therapists.list.noResults' | transloco }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
 
     <!-- Dialogs -->
@@ -196,6 +196,7 @@ export class TherapistListComponent implements OnInit {
   pageSize = 20;
   totalElements = 0;
   totalPages = 0;
+  first = 0;
 
   // Filters
   roleFilter: UserRole | '' = 'THERAPIST'; // Default to THERAPIST since we're on therapist page
@@ -283,8 +284,16 @@ export class TherapistListComponent implements OnInit {
     });
   }
 
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.currentPage = (event.first ?? 0) / (event.rows ?? this.pageSize);
+    this.pageSize = event.rows ?? this.pageSize;
+    this.first = event.first ?? 0;
+    this.loadTherapists();
+  }
+
   applyFilters(): void {
     this.currentPage = 0;
+    this.first = 0;
     this.loadTherapists();
   }
 

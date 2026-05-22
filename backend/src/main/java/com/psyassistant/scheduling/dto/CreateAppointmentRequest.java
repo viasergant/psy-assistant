@@ -34,7 +34,10 @@ public record CreateAppointmentRequest(
 
         String notes,
 
-        Boolean allowConflictOverride
+        Boolean allowConflictOverride,
+
+        /** Optional service catalog item chosen at booking time; used to price the auto-generated invoice. */
+        UUID serviceCatalogItemId
 ) {
     /**
      * Compact constructor for validation.

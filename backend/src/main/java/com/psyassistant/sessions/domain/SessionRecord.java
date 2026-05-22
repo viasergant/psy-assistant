@@ -140,6 +140,15 @@ public class SessionRecord extends BaseEntity {
     private UUID cancellationInitiatorId;
 
     /**
+     * Optional FK to the service catalog item copied from the parent appointment.
+     *
+     * <p>When set, the auto-generated invoice on completion uses this specific item
+     * and its configured price. Immutable snapshot — never updated after creation.
+     */
+    @Column(name = "service_catalog_item_id", updatable = false)
+    private UUID serviceCatalogItemId;
+
+    /**
      * Default constructor for JPA.
      */
     protected SessionRecord() {
@@ -341,5 +350,13 @@ public class SessionRecord extends BaseEntity {
 
     public void setCancellationInitiatorId(final UUID cancellationInitiatorId) {
         this.cancellationInitiatorId = cancellationInitiatorId;
+    }
+
+    public UUID getServiceCatalogItemId() {
+        return serviceCatalogItemId;
+    }
+
+    public void setServiceCatalogItemId(final UUID serviceCatalogItemId) {
+        this.serviceCatalogItemId = serviceCatalogItemId;
     }
 }

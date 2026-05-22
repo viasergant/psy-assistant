@@ -1,0 +1,64 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+## [Unreleased] — 2026-05-22
+
+### Added
+
+- **Service catalog item selector in appointment booking dialog** — an optional "Service" dropdown appears after a session type is chosen and shows only active catalog items that match that session type. Selecting a service pre-fills the duration field from the catalog item's configured `durationMin`.
+- **DB migration V69** — adds nullable `service_catalog_item_id` FK column to both `appointment` and `session_record` tables, referencing `service_catalog`.
+- **Deterministic invoice pricing** — when a booking includes a specific service catalog item, the auto-generated invoice on session completion uses that item's price (including therapist-specific override if present) rather than picking the first active match by session type. Backward-compatible: appointments without a service selection fall through to the existing pricing chain.
+- **Attended checkbox for individual session records** — therapists can mark a session as attended directly from the session list view; translations updated for both English and Ukrainian.
+- **Settings feature** — new `/settings` route with language selection, enabling users to switch between English and Ukrainian UI.
+
+### Changed
+
+- All form `<select>` elements replaced with PrimeNG `p-select` for consistent look, keyboard navigation, and accessible dropdown behaviour.
+- Tables across the Leads, Clients, and other list views migrated to PrimeNG `p-table` with built-in pagination, sortable columns, and uniform row styling.
+- PrimeNG select and multiselect components now share consistent background, border colour, and focus ring variables from the design-system tokens.
+- Button component extended with an `outlined` variant for secondary actions.
+- Session completion dialogs enriched with a dedicated clinical notes section; notes load and display inline without a separate dialog step.
+- User management dialogs now trim whitespace from all text inputs before validation and submission.
+- Comprehensive English and Ukrainian translations added for all previously untranslated screen labels, placeholders, validation messages, and ARIA strings.
+
+### Fixed
+
+- User seed script updated to insert roles via the `user_roles` junction table instead of the deprecated `users.role` column (V68 multi-role migration compatibility).
+
+---
+
+## [2026-05-13]
+
+### Added
+
+- **Risk flag subsystem** — full backend and frontend implementation of structured, role-protected risk flag indicators on client profiles (PA-27).
+- **DB migration V67** — three new tables: `risk_flag_types` (configurable flag types with soft-delete), `client_risk_flags` (per-client flags with status, clinical note, review date, resolve workflow), and `risk_flag_audit_log` (append-only audit trail with no FK on `flag_id`, matching the `care_plan_audit` pattern).
+- **Five seed risk flag types**: Self-Harm Risk, Crisis History, Safeguarding Concern, Domestic Abuse Concern, Suicidal Ideation.
+- **Four new permissions**: `MANAGE_RISK_FLAGS`, `READ_RISK_FLAGS`, `READ_RISK_FLAG_NOTES`, `MANAGE_RISK_FLAG_TYPES` — propagate automatically to JWTs via existing `TokenService`.
+- **`RiskFlagService`** — create, resolve, list (active and all) with THERAPIST assignment enforcement, clinical note stripping for callers lacking `READ_RISK_FLAG_NOTES`, and N+1-safe batch flag type name resolution.
+- **`RiskFlagTypeService`** — list active types (all authenticated staff), full admin CRUD with deterministic `displayOrder`-sorted listing.
+- **REST endpoints** under `/api/v1/clients/{clientId}/risk-flags` (4 endpoints) and `/api/v1/risk-flag-types` + `/api/v1/admin/risk-flag-types` (4 endpoints).
+- **`AppointmentResponse`** extended with `activeRiskFlagTypes: List<String>` — populated only on single-appointment GET (detail view), not on list endpoints.
+- **`AppointmentMapper`** split into `toDetailResponse()` (enriched, batch-safe) and `toResponse()` (slim, `List.of()`) to avoid N+1 on calendar/list views.
+- **Frontend risk flag feature module** at `features/clients/components/risk-flags/` — `RiskFlagsPanelComponent`, `RiskFlagFormDialogComponent`, `RiskFlagResolveDialogComponent` with reactive forms, role-gated clinical note display, and red chip indicators.
+- **Risk flag panel** integrated into `ClientDetailComponent` with `MANAGE_RISK_FLAGS` and `READ_RISK_FLAG_NOTES` permission guards using JWT decode (consistent with `CarePlanListComponent`).
+- **Risk flag chips on appointment detail panel** — red chip row (`#FEE2E2` / `#991B1B`) displayed when `activeRiskFlagTypes` is non-empty.
+- **Admin risk flag type management** at `features/admin/risk-flag-types/` — list table with deactivate action and create dialog; routed under `admin/risk-flag-types`.
+- **i18n keys** for risk flags panel, appointment chips, and admin panel in `en.json` and `uk.json`.
+
+### Changed
+
+- `RolePermissions`: THERAPIST and SUPERVISOR now hold `MANAGE_RISK_FLAGS`, `READ_RISK_FLAGS`, `READ_RISK_FLAG_NOTES`; RECEPTION_ADMIN_STAFF holds `READ_RISK_FLAGS`; SYSTEM_ADMINISTRATOR holds all four new permissions.
+- `AppointmentController.getAppointment()` (GET-by-ID) now calls `appointmentMapper.toDetailResponse()` to include active risk flag types in the single-appointment response; list endpoints remain on `toResponse()` (no change in behaviour).
+- Admin layout nav updated with a "Risk Flag Types" tab.
+
+### Fixed
+
+- Resolved N+1 query in risk flag service (flag type name resolution now uses a single `findAllById` batch call per request).
+- Resolved N+1 query in appointment mapper (risk flag enrichment is skipped entirely on list/calendar endpoints).
+- `actorName` in audit log now stores human-readable display name (fullName → email → UUID fallback) instead of raw JWT subject UUID.

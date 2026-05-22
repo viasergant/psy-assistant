@@ -15,6 +15,8 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { DatePicker } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { ServiceCatalogItem } from '../../../billing/models/service-catalog.model';
+import { ServiceCatalogService } from '../../../billing/services/service-catalog.service';
 import {
   Appointment,
   CheckRecurringConflictsRequest,
@@ -119,7 +121,28 @@ interface ClientOption {
                 {{ 'schedule.appointment.validation.sessionTypeRequired' | transloco }}
               </span>
             </div>
+          </div>
 
+          <!-- Service Selection (full width, filtered by session type) -->
+          <div class="field" *ngIf="filteredCatalogItems.length > 0 || form.value.sessionTypeId">
+            <label for="serviceCatalogItem">
+              {{ 'schedule.appointment.booking.serviceLabel' | transloco }}
+            </label>
+            <p-select
+              inputId="serviceCatalogItem"
+              formControlName="serviceCatalogItemId"
+              [options]="filteredCatalogItems"
+              optionLabel="name"
+              optionValue="id"
+              [placeholder]="'schedule.appointment.booking.servicePlaceholder' | transloco"
+              [showClear]="true"
+              styleClass="w-full"
+              appendTo="body"
+              (onChange)="onServiceSelected($event.value)"
+            />
+          </div>
+
+          <div class="form-grid">
             <!-- Date & Time -->
             <div class="field">
               <label for="startTime">
@@ -914,6 +937,8 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
 
   form!: FormGroup;
   sessionTypes: SessionType[] = [];
+  catalogItems: ServiceCatalogItem[] = [];
+  filteredCatalogItems: ServiceCatalogItem[] = [];
   conflicts: ConflictingAppointment[] = [];
   checkingConflicts = false;
   saving = false;
@@ -940,13 +965,16 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
 
   constructor(
     private fb: FormBuilder,
-    private appointmentService: AppointmentApiService
+    private appointmentService: AppointmentApiService,
+    private serviceCatalogService: ServiceCatalogService
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
     this.loadSessionTypes();
+    this.loadCatalogItems();
     this.setupConflictDetection();
+    this.setupServiceFilter();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -967,6 +995,7 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
     this.form = this.fb.group({
       clientId: ['', Validators.required],
       sessionTypeId: ['', Validators.required],
+      serviceCatalogItemId: [null],
       startTime: [this.initialDateTime || '', [Validators.required, this.pastDateValidator.bind(this)]],
       durationMinutes: [60, [Validators.required, Validators.min(15), Validators.max(480)]],
       notes: [''],
@@ -984,6 +1013,48 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
     const selectedDate = new Date(control.value);
     const now = new Date();
     return selectedDate < now ? { pastDate: true } : null;
+  }
+
+  private loadCatalogItems(): void {
+    this.serviceCatalogService.list('ACTIVE')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (items) => {
+          this.catalogItems = items;
+          // Apply filter in case sessionTypeId is already set
+          this.filterCatalogItems(this.form.value.sessionTypeId);
+        },
+        error: (err) => console.error('Failed to load service catalog items', err)
+      });
+  }
+
+  private setupServiceFilter(): void {
+    this.form.get('sessionTypeId')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((sessionTypeId: string) => {
+        this.filterCatalogItems(sessionTypeId);
+        // Clear service selection when session type changes
+        this.form.patchValue({ serviceCatalogItemId: null }, { emitEvent: false });
+      });
+  }
+
+  private filterCatalogItems(sessionTypeId: string | null): void {
+    if (!sessionTypeId) {
+      this.filteredCatalogItems = [];
+      return;
+    }
+    this.filteredCatalogItems = this.catalogItems.filter(
+      (item) => item.sessionType.id === sessionTypeId
+    );
+  }
+
+  onServiceSelected(catalogItemId: string | null): void {
+    if (catalogItemId) {
+      const item = this.filteredCatalogItems.find((i) => i.id === catalogItemId);
+      if (item) {
+        this.form.patchValue({ durationMinutes: item.durationMin }, { emitEvent: false });
+      }
+    }
   }
 
   private loadSessionTypes(): void {
@@ -1233,7 +1304,8 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
       recurrenceType,
       occurrences,
       notes: notes || undefined,
-      conflictResolution: resolution
+      conflictResolution: resolution,
+      serviceCatalogItemId: this.form.value.serviceCatalogItemId || undefined
     };
 
     this.appointmentService.createRecurringSeries(request)
@@ -1295,7 +1367,8 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
       durationMinutes: this.form.value.durationMinutes,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       notes: this.form.value.notes || undefined,
-      allowConflictOverride: this.form.value.allowConflictOverride || false
+      allowConflictOverride: this.form.value.allowConflictOverride || false,
+      serviceCatalogItemId: this.form.value.serviceCatalogItemId || undefined
     };
 
     this.appointmentService.createAppointment(request)

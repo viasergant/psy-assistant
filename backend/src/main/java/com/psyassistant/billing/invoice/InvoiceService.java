@@ -104,19 +104,64 @@ public class InvoiceService {
 
         UUID sessionTypeId = event.sessionType() != null ? event.sessionType().getId() : null;
         String sessionTypeName = event.sessionType() != null ? event.sessionType().getName() : null;
-        BigDecimal unitPrice = resolveUnitPrice(event.therapistId(), sessionTypeId, event.sessionId());
+
+        // Resolve line-item description: prefer the catalog item name when available
+        String lineItemDesc;
+        BigDecimal unitPrice;
+        if (event.serviceCatalogItemId() != null) {
+            var catalogItem = catalogRepository.findById(event.serviceCatalogItemId());
+            if (catalogItem.isPresent()) {
+                lineItemDesc = catalogItem.get().getName() + " — " + event.sessionDate();
+                unitPrice = resolveUnitPriceByCatalogItem(
+                        event.therapistId(), event.serviceCatalogItemId(), event.sessionId());
+            } else {
+                LOG.warn("Service catalog item {} not found for session {} — falling back to session-type resolution",
+                        event.serviceCatalogItemId(), event.sessionId());
+                lineItemDesc = sessionTypeName != null
+                        ? sessionTypeName + " — " + event.sessionDate()
+                        : "Session — " + event.sessionDate();
+                unitPrice = resolveUnitPrice(event.therapistId(), sessionTypeId, event.sessionId());
+            }
+        } else {
+            lineItemDesc = sessionTypeName != null
+                    ? sessionTypeName + " — " + event.sessionDate()
+                    : "Session — " + event.sessionDate();
+            unitPrice = resolveUnitPrice(event.therapistId(), sessionTypeId, event.sessionId());
+        }
 
         Invoice invoice = new Invoice(event.clientId(), event.therapistId(), InvoiceSource.SESSION);
         invoice.setSessionId(event.sessionId());
-
-        String lineItemDesc = sessionTypeName != null
-                ? sessionTypeName + " — " + event.sessionDate()
-                : "Session — " + event.sessionDate();
         invoice.addLineItem(new InvoiceLineItem(lineItemDesc, BigDecimal.ONE, unitPrice, 0));
 
         assignInvoiceNumber(invoice);
         Invoice saved = invoiceRepository.save(invoice);
         LOG.info("Auto-generated invoice {} for session {}", saved.getInvoiceNumber(), event.sessionId());
+    }
+
+    /**
+     * Resolves the unit price using a specific service catalog item.
+     *
+     * <p>Price resolution priority:
+     * <ol>
+     *   <li>Therapist-specific override for this catalog item</li>
+     *   <li>Catalog item base price (open price history record)</li>
+     *   <li>Zero (WARN logged)</li>
+     * </ol>
+     */
+    private BigDecimal resolveUnitPriceByCatalogItem(final UUID therapistId,
+                                                      final UUID catalogItemId,
+                                                      final UUID sessionId) {
+        var override = overrideRepository.findByServiceCatalogIdAndTherapistId(catalogItemId, therapistId);
+        if (override.isPresent()) {
+            return override.get().getPrice();
+        }
+        var openPrice = priceHistoryRepository.findOpenRecordReadOnly(catalogItemId);
+        if (openPrice.isPresent()) {
+            return openPrice.get().getPrice();
+        }
+        LOG.warn("No price found for catalogItemId={} therapistId={} sessionId={} — using zero price",
+                catalogItemId, therapistId, sessionId);
+        return BigDecimal.ZERO;
     }
 
     /**

@@ -204,6 +204,7 @@ public class RecurringSeriesService {
             if (req.notes() != null && !req.notes().isBlank()) {
                 appt.setNotes(req.notes());
             }
+            appt.setServiceCatalogItemId(req.serviceCatalogItemId());
             saved.add(appointmentRepository.save(appt));
         }
 

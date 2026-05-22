@@ -527,6 +527,8 @@
         "clientPlaceholder": "Select client",
         "sessionTypeLabel": "Session Type",
         "sessionTypePlaceholder": "Select session type",
+        "serviceLabel": "Service",
+        "servicePlaceholder": "Select service (optional)",
         "dateLabel": "Date",
         "datePlaceholder": "Select date",
         "timeLabel": "Time",

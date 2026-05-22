@@ -104,7 +104,8 @@ public class AppointmentService {
                                           final String notes,
                                           final boolean allowConflictOverride,
                                           final UUID actorUserId,
-                                          final String actorName) {
+                                          final String actorName,
+                                          final UUID serviceCatalogItemId) {
 
         // Validate inputs
         validateDuration(durationMinutes);
@@ -137,6 +138,7 @@ public class AppointmentService {
         );
 
         appointment.setNotes(notes);
+        appointment.setServiceCatalogItemId(serviceCatalogItemId);
 
         if (!conflicts.isEmpty() && allowConflictOverride) {
             appointment.setIsConflictOverride(true);

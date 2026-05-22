@@ -527,6 +527,8 @@
         "clientPlaceholder": "Оберіть клієнта",
         "sessionTypeLabel": "Тип сесії",
         "sessionTypePlaceholder": "Оберіть тип сесії",
+        "serviceLabel": "Послуга",
+        "servicePlaceholder": "Оберіть послугу (необов'язково)",
         "dateLabel": "Дата",
         "datePlaceholder": "Оберіть дату",
         "timeLabel": "Час",

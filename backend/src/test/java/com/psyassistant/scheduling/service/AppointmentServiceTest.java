@@ -110,7 +110,8 @@ class AppointmentServiceTest {
                 "Initial consultation",
                 false,
                 actorUserId,
-                "Dr. Smith"
+                "Dr. Smith",
+                null
         );
 
         // Assert
@@ -147,7 +148,8 @@ class AppointmentServiceTest {
                 "Initial consultation",
                 false, // Override NOT allowed
                 actorUserId,
-                "Dr. Smith"
+                "Dr. Smith",
+                null
         ))
                 .isInstanceOf(AppointmentService.ConflictException.class)
                 .hasMessageContaining("Appointment conflicts with existing bookings")
@@ -184,7 +186,8 @@ class AppointmentServiceTest {
                 "Emergency appointment",
                 true, // Override allowed
                 actorUserId,
-                "Dr. Smith"
+                "Dr. Smith",
+                null
         );
 
         // Assert
@@ -215,7 +218,8 @@ class AppointmentServiceTest {
                 null,
                 false,
                 actorUserId,
-                "Dr. Smith"
+                "Dr. Smith",
+                null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Duration must be multiple of 15 minutes");
@@ -237,7 +241,8 @@ class AppointmentServiceTest {
                 null,
                 false,
                 actorUserId,
-                "Dr. Smith"
+                "Dr. Smith",
+                null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Duration cannot exceed 8 hours");
@@ -262,7 +267,8 @@ class AppointmentServiceTest {
                 null,
                 false,
                 actorUserId,
-                "Dr. Smith"
+                "Dr. Smith",
+                null
         ))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Session type not found");

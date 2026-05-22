@@ -701,7 +701,8 @@ class RecurringSeriesServiceTest {
                 RecurrenceType.WEEKLY,
                 occurrences,
                 null,
-                resolution
+                resolution,
+                null
         );
     }
 

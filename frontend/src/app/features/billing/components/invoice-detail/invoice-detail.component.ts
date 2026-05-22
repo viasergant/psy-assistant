@@ -259,6 +259,7 @@ import { PaymentHistoryComponent } from '../payment-history/payment-history.comp
       border-radius: var(--radius-sm); font-size: 0.875rem; resize: vertical;
       margin-bottom: var(--spacing-md); }
     .dialog-actions { display: flex; justify-content: flex-end; gap: var(--spacing-sm); }
+    ::ng-deep .p-datatable-tfoot > tr > td { background: #fff; color: inherit; }
   `]
 })
 export class InvoiceDetailComponent implements OnInit {

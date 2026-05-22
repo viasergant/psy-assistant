@@ -50,7 +50,10 @@ public record CreateRecurringSeriesRequest(
          * or ABORT (save nothing).
          */
         @NotNull(message = "Conflict resolution strategy is required")
-        ConflictResolution conflictResolution
+        ConflictResolution conflictResolution,
+
+        /** Optional service catalog item chosen at booking time; used to price the auto-generated invoice. */
+        UUID serviceCatalogItemId
 ) {
     public CreateRecurringSeriesRequest {
         if (durationMinutes != null && durationMinutes % 15 != 0) {

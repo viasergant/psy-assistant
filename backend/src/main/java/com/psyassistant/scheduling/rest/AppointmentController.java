@@ -138,7 +138,8 @@ public class AppointmentController {
                 request.notes(),
                 request.allowConflictOverride(),
                 actorUserId,
-                actorName
+                actorName,
+                request.serviceCatalogItemId()
         );
 
         final AppointmentResponse response = appointmentMapper.toResponse(appointment);

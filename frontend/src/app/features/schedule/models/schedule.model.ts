@@ -281,6 +281,8 @@ export interface CreateAppointmentRequest {
   timezone: string;
   notes?: string;
   allowConflictOverride?: boolean;
+  /** Optional: links this appointment to a specific service catalog item for invoice generation. */
+  serviceCatalogItemId?: string;
 }
 
 /**
@@ -407,6 +409,8 @@ export interface CreateRecurringSeriesRequest {
   occurrences: number;
   notes?: string;
   conflictResolution: ConflictResolution;
+  /** Optional: links all occurrences to a specific service catalog item for invoice generation. */
+  serviceCatalogItemId?: string;
 }
 
 /**

@@ -15,5 +15,7 @@ public record SessionCompletedEvent(
         UUID clientId,
         UUID therapistId,
         LocalDate sessionDate,
-        SessionType sessionType
+        SessionType sessionType,
+        /** Optional: the specific service catalog item chosen at booking time. */
+        UUID serviceCatalogItemId
 ) { }

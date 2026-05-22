@@ -143,6 +143,17 @@ public class Appointment extends BaseEntity {
     @Column(name = "is_modified", nullable = false)
     private boolean isModified = false;
 
+    // ========== Billing ==========
+
+    /**
+     * Optional FK to the service catalog item chosen at booking time.
+     *
+     * <p>When set, the auto-generated invoice on session completion will use this
+     * specific item and its configured price rather than the first matching catalog entry.
+     */
+    @Column(name = "service_catalog_item_id")
+    private UUID serviceCatalogItemId;
+
     // ========== Optimistic Locking ==========
 
     /**
@@ -404,5 +415,13 @@ public class Appointment extends BaseEntity {
 
     public void setModified(final boolean modified) {
         this.isModified = modified;
+    }
+
+    public UUID getServiceCatalogItemId() {
+        return serviceCatalogItemId;
+    }
+
+    public void setServiceCatalogItemId(final UUID serviceCatalogItemId) {
+        this.serviceCatalogItemId = serviceCatalogItemId;
     }
 }

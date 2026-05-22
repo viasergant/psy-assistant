@@ -14,7 +14,8 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { Invoice } from '../../models/invoice.model';
 import { Payment, PaymentMethod, RegisterPaymentRequest } from '../../models/payment.model';
 import { PaymentService } from '../../services/payment.service';
@@ -32,7 +33,7 @@ function maxAmountValidator(max: number) {
 @Component({
   selector: 'app-register-payment-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true"
          [attr.aria-label]="'billing.payment.registerPayment' | transloco">
@@ -79,13 +80,14 @@ function maxAmountValidator(max: number) {
             <label for="payment-method" class="form-label">
               {{ 'billing.payment.method' | transloco }} <span class="required">*</span>
             </label>
-            <select id="payment-method" formControlName="paymentMethod" class="form-select"
-                    [attr.aria-describedby]="form.get('paymentMethod')?.invalid && form.get('paymentMethod')?.touched ? 'method-error' : null">
-              <option value="" disabled>— {{ 'billing.payment.method' | transloco }} —</option>
-              <option *ngFor="let m of paymentMethods" [value]="m">
-                {{ 'billing.payment.methods.' + m | transloco }}
-              </option>
-            </select>
+            <p-select
+              inputId="payment-method"
+              formControlName="paymentMethod"
+              [options]="paymentMethodOptions"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
             <span *ngIf="form.get('paymentMethod')?.invalid && form.get('paymentMethod')?.touched"
                   id="method-error" class="error-msg" role="alert">
               {{ 'billing.payment.validation.methodRequired' | transloco }}
@@ -153,13 +155,16 @@ export class RegisterPaymentDialogComponent implements OnInit {
   loading = false;
   submitError: string | null = null;
   readonly paymentMethods: PaymentMethod[] = ['CASH', 'BANK_TRANSFER', 'CARD'];
+  paymentMethodOptions: { label: string; value: string }[] = [];
 
   constructor(
     private fb: FormBuilder,
     private paymentService: PaymentService,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
+    this.paymentMethodOptions = this.paymentMethods.map(m => ({ label: this.transloco.translate('billing.payment.methods.' + m), value: m }));
     this.form = this.fb.group({
       amount: [
         null,

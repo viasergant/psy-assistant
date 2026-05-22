@@ -1,7 +1,8 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { Appointment, AppointmentStatus } from '../../models/schedule.model';
 import { AppointmentApiService } from '../../services/appointment-api.service';
 
@@ -14,7 +15,7 @@ interface StatusOption {
 @Component({
   selector: 'app-appointment-edit-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslocoPipe],
+  imports: [CommonModule, FormsModule, TranslocoPipe, Select],
   template: `
     <div class="dialog-overlay" (click)="onCancel()">
       <div class="dialog-container" (click)="$event.stopPropagation()">
@@ -63,20 +64,16 @@ interface StatusOption {
               <label for="status" class="form-label required">
                 {{ 'schedule.appointment.edit.statusLabel' | transloco }}
               </label>
-              <select
-                id="status"
+              <p-select
+                inputId="status"
                 [(ngModel)]="selectedStatus"
-                class="form-select"
+                [options]="statusOptions"
+                optionLabel="label"
+                optionValue="value"
+                optionDisabled="disabled"
                 [attr.aria-label]="'schedule.appointment.edit.statusLabel' | transloco"
-              >
-                <option
-                  *ngFor="let option of statusOptions"
-                  [value]="option.value"
-                  [disabled]="option.disabled"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
+                styleClass="w-full"
+              />
             </div>
 
             <!-- Notes -->
@@ -375,7 +372,10 @@ export class AppointmentEditDialogComponent implements OnInit {
 
   statusOptions: StatusOption[] = [];
 
-  constructor(private appointmentService: AppointmentApiService) {}
+  constructor(
+    private appointmentService: AppointmentApiService,
+    private transloco: TranslocoService,
+  ) {}
 
   ngOnInit(): void {
     this.selectedStatus = this.appointment.status;

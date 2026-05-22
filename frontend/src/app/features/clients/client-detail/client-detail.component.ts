@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import {
   ClientDetail,
   UpdateClientProfilePayload,
@@ -26,7 +27,7 @@ import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-pan
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ClientTimelineComponent, AppointmentBookingDialogComponent, CarePlanListComponent, ClientPackagesComponent, RiskFlagsPanelComponent],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ClientTimelineComponent, AppointmentBookingDialogComponent, CarePlanListComponent, ClientPackagesComponent, RiskFlagsPanelComponent, Select],
   template: `
     <div class="page">
       <a class="back-link" routerLink="/leads">&larr; Back to leads</a>
@@ -52,12 +53,14 @@ import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-pan
         <div class="toolbar">
           <div *ngIf="!editing" class="edit-actions">
             <ng-container *ngIf="needsTherapistPicker">
-              <select class="therapist-select"
-                      [(ngModel)]="selectedAdminTherapistId"
-                      [attr.aria-label]="'clients.detail.selectTherapist' | transloco">
-                <option value="">{{ 'clients.detail.selectTherapistPlaceholder' | transloco }}</option>
-                <option *ngFor="let t of availableTherapists" [value]="t.id">{{ t.name }}</option>
-              </select>
+              <p-select
+                [(ngModel)]="selectedAdminTherapistId"
+                [options]="therapistPickerOptions"
+                optionLabel="label"
+                optionValue="value"
+                [attr.aria-label]="'clients.detail.selectTherapist' | transloco"
+                styleClass="w-full"
+              />
             </ng-container>
             <button *ngIf="canBook"
                     type="button"
@@ -507,6 +510,13 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   private _userRole: string[] = [];
   private photoObjectUrl: string | null = null;
 
+  get therapistPickerOptions(): { label: string; value: string }[] {
+    return [
+      { label: this.transloco.translate('clients.detail.selectTherapistPlaceholder'), value: '' },
+      ...this.availableTherapists.map(t => ({ label: t.name, value: t.id })),
+    ];
+  }
+
   profileForm: FormGroup;
 
   constructor(
@@ -514,7 +524,8 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
     private clientService: ClientService,
     private fb: FormBuilder,
     private authService: AuthService,
-    private therapistManagementService: TherapistManagementService
+    private therapistManagementService: TherapistManagementService,
+    private transloco: TranslocoService,
   ) {
     this.profileForm = this.fb.group({
       fullName: ['', [Validators.required]],

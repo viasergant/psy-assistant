@@ -14,7 +14,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import {
   CreateServiceRequest,
   ServiceCatalogItem,
@@ -26,7 +27,7 @@ import { SessionType } from '../../../schedule/models/schedule.model';
 @Component({
   selector: 'app-service-catalog-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true"
          [attr.aria-labelledby]="'catalog-form-title'">
@@ -80,13 +81,15 @@ import { SessionType } from '../../../schedule/models/schedule.model';
               <label for="cf-type">
                 {{ 'billing.catalog.fields.serviceType' | transloco }} <span class="required">*</span>
               </label>
-              <select id="cf-type" formControlName="sessionTypeId"
-                      [class.is-error]="isInvalid('sessionTypeId')">
-                <option value="" disabled>— {{ 'billing.catalog.fields.serviceTypePlaceholder' | transloco }} —</option>
-                <option *ngFor="let t of sessionTypes" [value]="t.id">
-                  {{ 'sessions.types.' + t.code | transloco }}
-                </option>
-              </select>
+              <p-select
+                inputId="cf-type"
+                formControlName="sessionTypeId"
+                [options]="sessionTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [invalid]="isInvalid('sessionTypeId')"
+                styleClass="w-full"
+              />
               <span *ngIf="isInvalid('sessionTypeId')" class="error-msg" role="alert">
                 {{ 'common.validation.required' | transloco }}
               </span>
@@ -174,13 +177,15 @@ export class ServiceCatalogFormComponent implements OnInit, OnChanges {
 
   form!: FormGroup;
   sessionTypes: SessionType[] = [];
+  sessionTypeOptions: { label: string; value: string }[] = [];
 
-  constructor(private fb: FormBuilder, private appointmentApi: AppointmentApiService) {}
+  constructor(private fb: FormBuilder, private appointmentApi: AppointmentApiService, private transloco: TranslocoService) {}
 
   ngOnInit(): void {
     this.buildForm();
     this.appointmentApi.getSessionTypes().subscribe(types => {
       this.sessionTypes = types;
+      this.sessionTypeOptions = types.map(t => ({ label: this.transloco.translate('sessions.types.' + t.code), value: t.id }));
     });
   }
 

@@ -9,6 +9,7 @@
 - Add/modify corresponding integration tests when changing backend logic
 - Add/modify corresponding scenarios to docs/test-scenarios.md
 - Always add translations for UI text
+- Always use PrimeNG with common styles for UI
 - Always add items to changelog: briefly what was implemented or fixed
 
 ## Build And Test

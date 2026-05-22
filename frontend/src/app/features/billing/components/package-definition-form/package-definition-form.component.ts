@@ -6,7 +6,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { CreatePackageDefinitionRequest, ServiceType } from '../../models/package.model';
 
 export const SERVICE_TYPES: ServiceType[] = [
@@ -19,7 +20,7 @@ export const SERVICE_TYPES: ServiceType[] = [
 @Component({
   selector: 'app-package-definition-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="pkg-form-title">
       <div class="dialog">
@@ -53,13 +54,15 @@ export const SERVICE_TYPES: ServiceType[] = [
               <label for="pkg-serviceType">
                 {{ 'billing.packages.fields.serviceType' | transloco }} <span class="required">*</span>
               </label>
-              <select id="pkg-serviceType" formControlName="serviceType"
-                      [class.is-error]="isInvalid('serviceType')">
-                <option value="">{{ 'billing.packages.fields.serviceTypePlaceholder' | transloco }}</option>
-                <option *ngFor="let t of serviceTypes" [value]="t">
-                  {{ 'billing.catalog.serviceTypes.' + t | transloco }}
-                </option>
-              </select>
+              <p-select
+                inputId="pkg-serviceType"
+                formControlName="serviceType"
+                [options]="serviceTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [invalid]="isInvalid('serviceType')"
+                styleClass="w-full"
+              />
               <span *ngIf="isInvalid('serviceType')" class="error-msg" role="alert">
                 {{ 'common.validation.required' | transloco }}
               </span>
@@ -124,10 +127,12 @@ export class PackageDefinitionFormComponent implements OnInit {
   saving = false;
   submitError = '';
   serviceTypes = SERVICE_TYPES;
+  serviceTypeOptions: { label: string; value: string }[] = [];
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder, private transloco: TranslocoService) {}
 
   ngOnInit(): void {
+    this.serviceTypeOptions = this.serviceTypes.map(t => ({ label: this.transloco.translate('billing.catalog.serviceTypes.' + t), value: t }));
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(200)]],
       serviceType: ['', Validators.required],

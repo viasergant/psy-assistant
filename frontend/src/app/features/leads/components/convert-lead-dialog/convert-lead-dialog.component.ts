@@ -8,7 +8,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import {
   ContactMethodType,
   ConversionErrorBody,
@@ -32,7 +33,7 @@ import { LeadService } from '../../services/lead.service';
 @Component({
   selector: 'app-convert-lead-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true"
          aria-labelledby="convert-lead-title">
@@ -69,10 +70,14 @@ import { LeadService } from '../../services/lead.service';
 
             <div *ngFor="let cm of contactMethods.controls; let i = index"
                  [formGroupName]="i" class="contact-row">
-              <select formControlName="type" [attr.aria-label]="'leads.create.contactTypeAriaLabel' | transloco">
-                <option value="EMAIL">{{ 'leads.create.contactTypeEmail' | transloco }}</option>
-                <option value="PHONE">{{ 'leads.create.contactTypePhone' | transloco }}</option>
-              </select>
+              <p-select
+                formControlName="type"
+                [options]="contactTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [attr.aria-label]="'leads.create.contactTypeAriaLabel' | transloco"
+                styleClass="w-full"
+              />
               <input
                 type="text"
                 formControlName="value"
@@ -211,7 +216,14 @@ export class ConvertLeadDialogComponent implements OnInit {
   /** Set when 409 returns an existingClientId. */
   existingClientId: string | null = null;
 
-  constructor(private fb: FormBuilder, private leadService: LeadService) {}
+  constructor(private fb: FormBuilder, private leadService: LeadService, private transloco: TranslocoService) {}
+
+  get contactTypeOptions(): { label: string; value: string }[] {
+    return [
+      { label: this.transloco.translate('leads.create.contactTypeEmail'), value: 'EMAIL' },
+      { label: this.transloco.translate('leads.create.contactTypePhone'), value: 'PHONE' },
+    ];
+  }
 
   ngOnInit(): void {
     this.form = this.fb.group({

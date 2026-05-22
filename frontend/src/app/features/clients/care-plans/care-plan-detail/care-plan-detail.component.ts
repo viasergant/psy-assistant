@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { jwtDecode } from 'jwt-decode';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { GoalProgressPanelComponent } from '../progress/goal-progress-panel/goal-progress-panel.component';
@@ -16,7 +18,7 @@ interface JwtPayload {
 @Component({
   selector: 'app-care-plan-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslocoModule, GoalProgressPanelComponent, OutcomeMeasureListComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslocoModule, GoalProgressPanelComponent, OutcomeMeasureListComponent, Select],
   template: `
     <div class="page">
       <a class="back-link" [routerLink]="['../']">&larr; {{ 'carePlans.detail.backToPlans' | transloco }}</a>
@@ -91,11 +93,14 @@ interface JwtPayload {
               <div *ngIf="canManage && plan.status === 'ACTIVE'" class="goal-status-actions">
                 <label class="field-inline">
                   <span>{{ 'carePlans.detail.goalStatus' | transloco }}</span>
-                  <select (change)="updateGoalStatus(goal, $any($event.target).value)">
-                    <option *ngFor="let s of goalStatuses" [value]="s" [selected]="goal.status === s">
-                      {{ 'carePlans.goalStatus.' + s.toLowerCase() | transloco }}
-                    </option>
-                  </select>
+                  <p-select
+                    [ngModel]="goal.status"
+                    [options]="goalStatusOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="updateGoalStatus(goal, $event.value)"
+                    styleClass="w-full"
+                  />
                 </label>
               </div>
 
@@ -244,14 +249,17 @@ export class CarePlanDetailComponent implements OnInit {
   ];
 
   readonly goalStatuses: GoalStatus[] = ['PENDING', 'IN_PROGRESS', 'ACHIEVED', 'PAUSED', 'ABANDONED'];
+  goalStatusOptions: { label: string; value: string }[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private carePlanService: CarePlanService,
-    private authService: AuthService
+    private authService: AuthService,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
+    this.goalStatusOptions = this.goalStatuses.map(s => ({ label: this.transloco.translate('carePlans.goalStatus.' + s.toLowerCase()), value: s }));
     this.planId = this.route.snapshot.paramMap.get('planId')!;
     this.canManage = this.hasAuthority('MANAGE_CARE_PLANS');
     this.loadPlan();

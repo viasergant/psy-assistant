@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { UserManagementService } from '../../services/user-management.service';
 import { TherapistManagementService } from '../../../therapists/services/therapist-management.service';
 import { ASSIGNABLE_ROLES, ROLE_LABELS, UserRole, UserSummary, UserPage } from '../../models/user.model';
@@ -31,6 +32,7 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
     EditUserDialogComponent,
     PasswordResetDialogComponent,
     CreateTherapistDialogComponent,
+    Select,
   ],
   template: `
     <div class="page">
@@ -43,19 +45,28 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
       <div class="filters" role="group" [attr.aria-label]="'admin.users.list.ariaFilters' | transloco">
         <div class="filter-group">
           <label for="roleFilter">{{ 'admin.users.list.roleLabel' | transloco }}</label>
-          <select id="roleFilter" [(ngModel)]="roleFilter" (change)="applyFilters()">
-            <option value="">{{ 'admin.users.list.filterAllRoles' | transloco }}</option>
-            <option *ngFor="let r of assignableRoles" [value]="r">{{ 'roles.' + r | transloco }}</option>
-          </select>
+          <p-select
+            inputId="roleFilter"
+            [(ngModel)]="roleFilter"
+            [options]="roleFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="applyFilters()"
+            styleClass="w-full"
+          />
         </div>
 
         <div class="filter-group">
           <label for="statusFilter">{{ 'admin.users.list.statusLabel' | transloco }}</label>
-          <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
-            <option value="">{{ 'admin.users.list.filterAllStatuses' | transloco }}</option>
-            <option value="true">{{ 'admin.users.list.statusActive' | transloco }}</option>
-            <option value="false">{{ 'admin.users.list.statusInactive' | transloco }}</option>
-          </select>
+          <p-select
+            inputId="statusFilter"
+            [(ngModel)]="statusFilter"
+            [options]="statusFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="applyFilters()"
+            styleClass="w-full"
+          />
         </div>
       </div>
 
@@ -483,6 +494,8 @@ export class UserListComponent implements OnInit {
 
   roleFilter: UserRole | '' = '';
   statusFilter: '' | 'true' | 'false' = '';
+  roleFilterOptions: { label: string; value: string }[] = [];
+  statusFilterOptions: { label: string; value: string }[] = [];
 
   loading = false;
   loadError: string | null = null;
@@ -499,10 +512,20 @@ export class UserListComponent implements OnInit {
     private userService: UserManagementService,
     private therapistService: TherapistManagementService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
+    this.roleFilterOptions = [
+      { label: this.transloco.translate('admin.users.list.filterAllRoles'), value: '' },
+      ...this.assignableRoles.map(r => ({ label: this.transloco.translate('roles.' + r), value: r })),
+    ];
+    this.statusFilterOptions = [
+      { label: this.transloco.translate('admin.users.list.filterAllStatuses'), value: '' },
+      { label: this.transloco.translate('admin.users.list.statusActive'), value: 'true' },
+      { label: this.transloco.translate('admin.users.list.statusInactive'), value: 'false' },
+    ];
     // Read initial filter state from query params if present
     this.route.queryParams.subscribe(params => {
       if (params['role']) {

@@ -9,7 +9,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { LeadDetail } from '../../models/lead.model';
 import { LeadService } from '../../services/lead.service';
 
@@ -22,7 +23,7 @@ import { LeadService } from '../../services/lead.service';
 @Component({
   selector: 'app-create-lead-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="create-lead-title">
       <div class="dialog">
@@ -54,10 +55,14 @@ import { LeadService } from '../../services/lead.service';
 
             <div *ngFor="let cm of contactMethods.controls; let i = index"
                  [formGroupName]="i" class="contact-row">
-              <select formControlName="type" [attr.aria-label]="'leads.create.contactTypeAriaLabel' | transloco">
-                <option value="EMAIL">{{ 'leads.create.contactTypeEmail' | transloco }}</option>
-                <option value="PHONE">{{ 'leads.create.contactTypePhone' | transloco }}</option>
-              </select>
+              <p-select
+                formControlName="type"
+                [options]="contactTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [attr.aria-label]="'leads.create.contactTypeAriaLabel' | transloco"
+                styleClass="w-full"
+              />
               <input
                 type="text"
                 formControlName="value"
@@ -185,7 +190,14 @@ export class CreateLeadDialogComponent {
   saving = false;
   serverError: string | null = null;
 
-  constructor(private fb: FormBuilder, private leadService: LeadService) {
+  get contactTypeOptions(): { label: string; value: string }[] {
+    return [
+      { label: this.transloco.translate('leads.create.contactTypeEmail'), value: 'EMAIL' },
+      { label: this.transloco.translate('leads.create.contactTypePhone'), value: 'PHONE' },
+    ];
+  }
+
+  constructor(private fb: FormBuilder, private leadService: LeadService, private transloco: TranslocoService) {
     this.form = this.fb.group({
       fullName: ['', [Validators.required, Validators.maxLength(255)]],
       contactMethods: this.fb.array([this.newContactMethodGroup()]),

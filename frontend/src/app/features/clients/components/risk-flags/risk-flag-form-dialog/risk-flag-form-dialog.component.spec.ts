@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
 import { RiskFlagFormDialogComponent } from './risk-flag-form-dialog.component';
 import { RiskFlagService } from '../services/risk-flag.service';

@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { Leave, LeaveRequest, LeaveType, getLeaveTypeLabel } from '../../models/schedule.model';
 import { LeaveRequestService } from '../../services/leave-request.service';
 
@@ -15,7 +16,7 @@ import { LeaveRequestService } from '../../services/leave-request.service';
 @Component({
   selector: 'app-leave-request-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="leave-request-title">
       <div class="dialog">
@@ -24,17 +25,15 @@ import { LeaveRequestService } from '../../services/leave-request.service';
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="field">
             <label for="leaveType">Leave type <span aria-hidden="true">*</span></label>
-            <select
-              id="leaveType"
+            <p-select
+              inputId="leaveType"
               formControlName="leaveType"
+              [options]="leaveTypeOptions"
+              optionLabel="label"
+              optionValue="value"
               [attr.aria-invalid]="isInvalid('leaveType')"
-              aria-required="true"
-            >
-              <option value="">Select leave type...</option>
-              <option *ngFor="let type of leaveTypes" [value]="type">
-                {{ getLeaveTypeLabel(type) }}
-              </option>
-            </select>
+              styleClass="w-full"
+            />
             <span *ngIf="isInvalid('leaveType')" class="error-msg" role="alert">
               Leave type is required.
             </span>
@@ -240,13 +239,20 @@ export class LeaveRequestDialogComponent implements OnInit {
   saving = false;
   serverError: string | null = null;
   leaveTypes = Object.values(LeaveType);
+  leaveTypeOptions: { label: string; value: string }[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private leaveRequestService: LeaveRequestService
+    private leaveRequestService: LeaveRequestService,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
+    this.leaveTypeOptions = [
+      { label: 'Select leave type...', value: '' },
+      ...this.leaveTypes.map(t => ({ label: getLeaveTypeLabel(t), value: t })),
+    ];
+
     const today = new Date().toISOString().split('T')[0];
 
     this.form = this.fb.group(

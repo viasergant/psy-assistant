@@ -1,14 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { RiskFlagType } from '../models/risk-flag.model';
 import { RiskFlagService } from '../services/risk-flag.service';
 
 @Component({
   selector: 'app-risk-flag-form-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div class="dialog-overlay" (click)="onOverlayClick($event)">
       <div class="dialog" role="dialog" aria-label="Add Risk Flag">
@@ -22,10 +23,13 @@ import { RiskFlagService } from '../services/risk-flag.service';
 
             <div class="field">
               <label>Flag Type <span class="required">*</span></label>
-              <select formControlName="flagTypeId">
-                <option value="">Select flag type…</option>
-                <option *ngFor="let t of flagTypes" [value]="t.id">{{ t.name }}</option>
-              </select>
+              <p-select
+                formControlName="flagTypeId"
+                [options]="flagTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+              />
               <span class="error-msg"
                     *ngIf="form.get('flagTypeId')!.invalid && form.get('flagTypeId')!.touched">
                 Flag type is required.
@@ -122,12 +126,20 @@ export class RiskFlagFormDialogComponent implements OnInit {
   saving = false;
   submitError: string | null = null;
 
+  get flagTypeOptions(): { label: string; value: string }[] {
+    return [
+      { label: 'Select flag type…', value: '' },
+      ...this.flagTypes.map(t => ({ label: t.name, value: t.id })),
+    ];
+  }
+
   /** ISO date for the [min] attribute on the date input (today). */
   readonly today: string = new Date().toISOString().split('T')[0];
 
   constructor(
     private fb: FormBuilder,
-    private riskFlagService: RiskFlagService
+    private riskFlagService: RiskFlagService,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {

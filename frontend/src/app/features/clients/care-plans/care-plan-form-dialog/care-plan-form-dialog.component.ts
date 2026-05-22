@@ -8,7 +8,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { CarePlanService } from '../services/care-plan.service';
 
 interface GoalFormValue {
@@ -23,7 +24,7 @@ interface GoalFormValue {
 @Component({
   selector: 'app-care-plan-form-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div class="dialog-overlay" (click)="onOverlayClick($event)">
       <div class="dialog" role="dialog" [attr.aria-label]="'carePlans.form.title' | transloco">
@@ -100,10 +101,13 @@ interface GoalFormValue {
                   <div *ngFor="let invCtrl of getInterventions(gi).controls; let ii = index"
                        [formGroup]="asGroup(invCtrl)"
                        class="inline-item">
-                    <select formControlName="interventionType">
-                      <option value="">{{ 'carePlans.form.selectType' | transloco }}</option>
-                      <option *ngFor="let t of interventionTypes" [value]="t">{{ t }}</option>
-                    </select>
+                    <p-select
+                      formControlName="interventionType"
+                      [options]="interventionTypeOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      styleClass="w-full"
+                    />
                     <input type="text" formControlName="description"
                            [placeholder]="'carePlans.form.interventionDesc' | transloco" />
                     <input type="text" formControlName="frequency"
@@ -172,10 +176,12 @@ export class CarePlanFormDialogComponent implements OnInit {
   saving = false;
   submitError: string | null = null;
   interventionTypes: string[] = [];
+  interventionTypeOptions: { label: string; value: string }[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private carePlanService: CarePlanService
+    private carePlanService: CarePlanService,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
@@ -186,7 +192,13 @@ export class CarePlanFormDialogComponent implements OnInit {
     });
 
     this.carePlanService.getInterventionTypes().subscribe({
-      next: types => { this.interventionTypes = types; }
+      next: types => {
+        this.interventionTypes = types;
+        this.interventionTypeOptions = [
+          { label: this.transloco.translate('carePlans.form.selectType'), value: '' },
+          ...types.map(t => ({ label: t, value: t })),
+        ];
+      }
     });
   }
 

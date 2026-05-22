@@ -6,14 +6,15 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { PackageDefinition, PackageInstance, SellPackageRequest } from '../../models/package.model';
 import { PackageService } from '../../services/package.service';
 
 @Component({
   selector: 'app-sell-package-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="sell-pkg-title">
       <div class="dialog">
@@ -30,15 +31,16 @@ import { PackageService } from '../../services/package.service';
             <label for="sp-definition">
               {{ 'billing.packages.sell.package' | transloco }} <span class="required">*</span>
             </label>
-            <select id="sp-definition" formControlName="definitionId"
-                    [class.is-error]="isInvalid('definitionId')"
-                    (change)="onDefinitionChange()">
-              <option value="">{{ 'billing.packages.sell.selectPackage' | transloco }}</option>
-              <option *ngFor="let pkg of definitions" [value]="pkg.id">
-                {{ pkg.name }} — {{ pkg.sessionQty }} {{ 'billing.packages.sell.sessions' | transloco }}
-                @ {{ pkg.price | number:'1.2-2' }}
-              </option>
-            </select>
+            <p-select
+              inputId="sp-definition"
+              formControlName="definitionId"
+              [options]="definitionOptions"
+              optionLabel="label"
+              optionValue="value"
+              [invalid]="isInvalid('definitionId')"
+              (onChange)="onDefinitionChange()"
+              styleClass="w-full"
+            />
             <span *ngIf="isInvalid('definitionId')" class="error-msg" role="alert">
               {{ 'common.validation.required' | transloco }}
             </span>
@@ -143,7 +145,18 @@ export class SellPackageDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private packageService: PackageService,
+    private transloco: TranslocoService,
   ) {}
+
+  get definitionOptions(): { label: string; value: string }[] {
+    return [
+      { label: this.transloco.translate('billing.packages.sell.selectPackage'), value: '' },
+      ...this.definitions.map(pkg => ({
+        label: `${pkg.name} — ${pkg.sessionQty} ${this.transloco.translate('billing.packages.sell.sessions')} @ ${Number(pkg.price).toFixed(2)}`,
+        value: pkg.id,
+      })),
+    ];
+  }
 
   ngOnInit(): void {
     this.form = this.fb.group({

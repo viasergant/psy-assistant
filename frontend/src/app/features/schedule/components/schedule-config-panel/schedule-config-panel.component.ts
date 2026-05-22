@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
+import { Select } from 'primeng/select';
 import { ScheduleApiService } from '../../services/schedule-api.service';
 import {
   DayOfWeek,
@@ -23,7 +24,7 @@ interface WeekdaySchedule {
 @Component({
   selector: 'app-schedule-config-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, Select],
   templateUrl: './schedule-config-panel.component.html',
   styleUrls: ['./schedule-config-panel.component.scss'],
   animations: [
@@ -52,6 +53,7 @@ export class ScheduleConfigPanelComponent implements OnInit {
   ];
 
   timeOptions: string[] = [];
+  timeSelectOptions: { label: string; value: string }[] = [];
   overrides: ScheduleOverride[] = [];
   isLoading = false;
   isSaving = false;
@@ -74,6 +76,7 @@ export class ScheduleConfigPanelComponent implements OnInit {
         this.timeOptions.push(timeStr);
       }
     }
+    this.timeSelectOptions = this.timeOptions.map(t => ({ label: t, value: t }));
   }
 
   /**

@@ -12,14 +12,15 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { Payment, Refund, RegisterRefundRequest } from '../../models/payment.model';
 import { PaymentService } from '../../services/payment.service';
 
 @Component({
   selector: 'app-register-refund-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true"
          [attr.aria-label]="'billing.payment.registerRefund' | transloco">
@@ -79,13 +80,14 @@ import { PaymentService } from '../../services/payment.service';
             <label for="related-payment" class="form-label">
               {{ 'billing.payment.relatedPayment' | transloco }}
             </label>
-            <select id="related-payment" formControlName="paymentId" class="form-select">
-              <option [value]="null">— {{ 'billing.payment.noRelatedPayment' | transloco }} —</option>
-              <option *ngFor="let p of payments" [value]="p.id">
-                {{ p.paymentDate }} — {{ p.amount | number:'1.2-2' }}
-                ({{ 'billing.payment.methods.' + p.paymentMethod | transloco }})
-              </option>
-            </select>
+            <p-select
+              inputId="related-payment"
+              formControlName="paymentId"
+              [options]="paymentOptions"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
           </div>
 
           <!-- Reference (optional) -->
@@ -127,7 +129,18 @@ export class RegisterRefundDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private paymentService: PaymentService,
+    private transloco: TranslocoService,
   ) {}
+
+  get paymentOptions(): { label: string; value: string | null }[] {
+    return [
+      { label: '— ' + this.transloco.translate('billing.payment.noRelatedPayment') + ' —', value: null },
+      ...this.payments.map(p => ({
+        label: `${p.paymentDate} — ${Number(p.amount).toFixed(2)} (${this.transloco.translate('billing.payment.methods.' + p.paymentMethod)})`,
+        value: p.id,
+      })),
+    ];
+  }
 
   ngOnInit(): void {
     this.form = this.fb.group({

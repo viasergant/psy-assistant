@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
   TherapistProfile,
@@ -33,7 +34,8 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
     TranslocoPipe,
     TranslateSpecializationPipe,
     CreateTherapistDialogComponent,
-    EditTherapistDialogComponent
+    EditTherapistDialogComponent,
+    Select,
   ],
   styleUrl: './therapist-list.component.scss',
   template: `
@@ -47,29 +49,41 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
       <div class="filters" role="group" [attr.aria-label]="'admin.therapists.list.ariaFilters' | transloco">
         <div class="filter-group">
           <label for="roleFilter">{{ 'admin.therapists.list.roleLabel' | transloco }}</label>
-          <select id="roleFilter" [(ngModel)]="roleFilter" (change)="onRoleFilterChange()">
-            <option value="">{{ 'admin.therapists.list.filterAllRoles' | transloco }}</option>
-            <option *ngFor="let r of assignableRoles" [value]="r">{{ 'roles.' + r | transloco }}</option>
-          </select>
+          <p-select
+            inputId="roleFilter"
+            [(ngModel)]="roleFilter"
+            [options]="roleFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="onRoleFilterChange()"
+            styleClass="w-full"
+          />
         </div>
 
         <div class="filter-group">
           <label for="statusFilter">{{ 'admin.therapists.list.statusLabel' | transloco }}</label>
-          <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
-            <option value="">{{ 'admin.therapists.list.filterAllStatuses' | transloco }}</option>
-            <option value="true">{{ 'admin.therapists.list.statusActive' | transloco }}</option>
-            <option value="false">{{ 'admin.therapists.list.statusInactive' | transloco }}</option>
-          </select>
+          <p-select
+            inputId="statusFilter"
+            [(ngModel)]="statusFilter"
+            [options]="statusFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="applyFilters()"
+            styleClass="w-full"
+          />
         </div>
 
         <div class="filter-group">
           <label for="employmentFilter">{{ 'admin.therapists.list.employmentStatusLabel' | transloco }}</label>
-          <select id="employmentFilter" [(ngModel)]="employmentFilter" (change)="applyFilters()">
-            <option value="">{{ 'admin.therapists.list.filterAllStatuses' | transloco }}</option>
-            <option *ngFor="let status of employmentStatuses" [value]="status">
-              {{ 'admin.therapists.create.employmentStatuses.' + status | transloco }}
-            </option>
-          </select>
+          <p-select
+            inputId="employmentFilter"
+            [(ngModel)]="employmentFilter"
+            [options]="employmentFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="applyFilters()"
+            styleClass="w-full"
+          />
         </div>
       </div>
 
@@ -187,6 +201,9 @@ export class TherapistListComponent implements OnInit {
   roleFilter: UserRole | '' = 'THERAPIST'; // Default to THERAPIST since we're on therapist page
   statusFilter: '' | 'true' | 'false' = '';
   employmentFilter: EmploymentStatus | '' = '';
+  roleFilterOptions: { label: string; value: string }[] = [];
+  statusFilterOptions: { label: string; value: string }[] = [];
+  employmentFilterOptions: { label: string; value: string }[] = [];
 
   // Dialogs
   showCreate = false;
@@ -196,10 +213,24 @@ export class TherapistListComponent implements OnInit {
   constructor(
     private therapistService: TherapistManagementService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
+    this.roleFilterOptions = [
+      { label: this.transloco.translate('admin.therapists.list.filterAllRoles'), value: '' },
+      ...this.assignableRoles.map(r => ({ label: this.transloco.translate('roles.' + r), value: r })),
+    ];
+    this.statusFilterOptions = [
+      { label: this.transloco.translate('admin.therapists.list.filterAllStatuses'), value: '' },
+      { label: this.transloco.translate('admin.therapists.list.statusActive'), value: 'true' },
+      { label: this.transloco.translate('admin.therapists.list.statusInactive'), value: 'false' },
+    ];
+    this.employmentFilterOptions = [
+      { label: this.transloco.translate('admin.therapists.list.filterAllStatuses'), value: '' },
+      ...this.employmentStatuses.map(s => ({ label: this.transloco.translate('admin.therapists.create.employmentStatuses.' + s), value: s })),
+    ];
     // Read initial filter state from query params if present
     this.route.queryParams.subscribe(params => {
       if (params['status']) {

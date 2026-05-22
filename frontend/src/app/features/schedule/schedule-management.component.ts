@@ -15,7 +15,8 @@ import { CalendarFacadeService } from './services/calendar-facade.service';
 import { ScheduleApiService } from './services/schedule-api.service';
 import { AppointmentApiService } from './services/appointment-api.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { TherapistManagementService } from '../admin/therapists/services/therapist-management.service';
 import { ClientService } from '../clients/services/client.service';
 import {
@@ -40,6 +41,7 @@ interface ClientOption {
     CommonModule,
     FormsModule,
     TranslocoPipe,
+    Select,
     ScheduleConfigPanelComponent,
     LeaveRequestDialogComponent,
     AppointmentBookingDialogComponent,
@@ -59,17 +61,15 @@ interface ClientOption {
         </div>
         <div class="header-actions">
           <!-- Admin therapist selector -->
-          <select
+          <p-select
             *ngIf="isAdmin"
             [(ngModel)]="selectedTherapistId"
-            (ngModelChange)="onTherapistChange()"
-            class="therapist-selector"
-          >
-            <option [ngValue]="null">Select a therapist...</option>
-            <option *ngFor="let therapist of therapists" [ngValue]="therapist.id">
-              {{ therapist.name }}
-            </option>
-          </select>
+            (onChange)="onTherapistChange()"
+            [options]="therapistSelectOptions"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="therapist-selector"
+          />
 
           <button
             *ngIf="canEdit"
@@ -672,6 +672,14 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
   clients: ClientOption[] = [];
   isAdmin = false;
   canEdit = false;
+
+  get therapistSelectOptions(): { label: string; value: string | null }[] {
+    return [
+      { label: 'Select a therapist...', value: null },
+      ...this.therapists.map(t => ({ label: t.name, value: t.id })),
+    ];
+  }
+
   loading = false;
   error: string | null = null;
   showConfigPanel = false;
@@ -704,7 +712,8 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
     private clientService: ClientService,
     private authService: AuthService,
     private readonly calendarFacade: CalendarFacadeService,
-    private readonly appointmentApiService: AppointmentApiService
+    private readonly appointmentApiService: AppointmentApiService,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {

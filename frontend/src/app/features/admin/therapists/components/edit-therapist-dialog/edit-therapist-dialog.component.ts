@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
   TherapistProfile,
@@ -20,7 +21,7 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
 @Component({
   selector: 'app-edit-therapist-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, TranslateSpecializationPipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, TranslateSpecializationPipe, Select],
   styleUrls: ['./edit-therapist-dialog.component.scss'],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-therapist-title">
@@ -72,16 +73,15 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
 
           <div class="field">
             <label for="employmentStatus">{{ 'admin.therapists.edit.employmentStatusLabel' | transloco }} <span class="required" aria-hidden="true">*</span></label>
-            <select
-              id="employmentStatus"
+            <p-select
+              inputId="employmentStatus"
               formControlName="employmentStatus"
+              [options]="employmentStatusSelectOptions"
+              optionLabel="label"
+              optionValue="value"
               [attr.aria-invalid]="isInvalid('employmentStatus')"
-              aria-required="true">
-              <option value="">{{ 'admin.therapists.edit.selectPlaceholder' | transloco }}</option>
-              <option *ngFor="let status of employmentStatuses" [value]="status">
-                {{ 'admin.therapists.create.employmentStatuses.' + status | transloco }}
-              </option>
-            </select>
+              styleClass="w-full"
+            />
             <span *ngIf="isInvalid('employmentStatus')" class="error-msg" role="alert">
               {{ 'admin.therapists.edit.employmentStatusRequired' | transloco }}
             </span>
@@ -144,6 +144,7 @@ import { TranslateSpecializationPipe } from '../../pipes/translate-specializatio
 export class EditTherapistDialogComponent implements OnInit {
   readonly employmentStatuses = EMPLOYMENT_STATUS_OPTIONS;
   readonly statusLabels = EMPLOYMENT_STATUS_LABELS;
+  employmentStatusSelectOptions: { label: string; value: string }[] = [];
 
   @Input() therapist!: TherapistProfile;
   @Output() updated = new EventEmitter<TherapistProfile>();
@@ -155,7 +156,8 @@ export class EditTherapistDialogComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private therapistService: TherapistManagementService
+    private therapistService: TherapistManagementService,
+    private transloco: TranslocoService,
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(255)]],
@@ -167,6 +169,13 @@ export class EditTherapistDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.employmentStatusSelectOptions = [
+      { label: this.transloco.translate('admin.therapists.edit.selectPlaceholder'), value: '' },
+      ...this.employmentStatuses.map(s => ({
+        label: this.transloco.translate('admin.therapists.create.employmentStatuses.' + s),
+        value: s,
+      })),
+    ];
     this.form.patchValue({
       name: this.therapist.name,
       email: this.therapist.email,

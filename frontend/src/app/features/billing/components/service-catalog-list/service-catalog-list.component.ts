@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import {
   CreateServiceRequest,
   ServiceCatalogItem,
@@ -20,6 +21,7 @@ import { ServiceCatalogFormComponent } from '../service-catalog-form/service-cat
     RouterModule,
     TranslocoModule,
     ServiceCatalogFormComponent,
+    Select,
   ],
   template: `
     <div class="page-container">
@@ -34,14 +36,14 @@ import { ServiceCatalogFormComponent } from '../service-catalog-form/service-cat
 
       <!-- Filter bar -->
       <div class="filter-bar">
-        <select class="filter-select"
-                [(ngModel)]="statusFilter"
-                (ngModelChange)="loadServices()"
-                [attr.aria-label]="'billing.catalog.filters.statusLabel' | transloco">
-          <option value="">{{ 'billing.catalog.filters.allStatuses' | transloco }}</option>
-          <option value="ACTIVE">{{ 'billing.catalog.status.ACTIVE' | transloco }}</option>
-          <option value="INACTIVE">{{ 'billing.catalog.status.INACTIVE' | transloco }}</option>
-        </select>
+        <p-select
+          [(ngModel)]="statusFilter"
+          [options]="catalogStatusOptions"
+          optionLabel="label"
+          optionValue="value"
+          (ngModelChange)="loadServices()"
+          styleClass="w-full"
+        />
 
         <div class="filter-stats" *ngIf="!loading && services.length > 0">
           <span class="badge badge-active badge-sm">
@@ -194,6 +196,7 @@ export class ServiceCatalogListComponent implements OnInit {
   loadError: string | null = null;
 
   statusFilter: ServiceStatus | '' = '';
+  catalogStatusOptions: { label: string; value: string }[] = [];
 
   showForm = false;
   formMode: 'create' | 'edit' = 'create';
@@ -215,9 +218,15 @@ export class ServiceCatalogListComponent implements OnInit {
     private catalogService: ServiceCatalogService,
     private router: Router,
     private route: ActivatedRoute,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
+    this.catalogStatusOptions = [
+      { label: this.transloco.translate('billing.catalog.filters.allStatuses'), value: '' },
+      { label: this.transloco.translate('billing.catalog.status.ACTIVE'), value: 'ACTIVE' },
+      { label: this.transloco.translate('billing.catalog.status.INACTIVE'), value: 'INACTIVE' },
+    ];
     this.loadServices();
   }
 

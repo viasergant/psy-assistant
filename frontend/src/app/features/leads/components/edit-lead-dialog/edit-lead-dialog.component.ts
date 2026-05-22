@@ -9,7 +9,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import {
   ContactMethod,
   ConvertLeadResponse,
@@ -32,7 +33,7 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
 @Component({
   selector: 'app-edit-lead-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslocoPipe, ConvertLeadDialogComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslocoPipe, ConvertLeadDialogComponent, Select],
   template: `
     <!-- Nested convert dialog (shown when user clicks Convert to Client) -->
     <app-convert-lead-dialog
@@ -96,10 +97,14 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
 
             <div *ngFor="let cm of contactMethods.controls; let i = index"
                  [formGroupName]="i" class="contact-row">
-              <select formControlName="type" [attr.aria-label]="'leads.create.contactTypeAriaLabel' | transloco">
-                <option value="EMAIL">{{ 'leads.create.contactTypeEmail' | transloco }}</option>
-                <option value="PHONE">{{ 'leads.create.contactTypePhone' | transloco }}</option>
-              </select>
+              <p-select
+                formControlName="type"
+                [options]="contactTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [attr.aria-label]="'leads.create.contactTypeAriaLabel' | transloco"
+                styleClass="w-full"
+              />
               <input
                 type="text"
                 formControlName="value"
@@ -132,11 +137,15 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
           <!-- Status transition (non-terminal leads only) -->
           <div class="field" *ngIf="availableTransitions.length > 0">
             <label for="statusTransition">Move to status</label>
-            <select id="statusTransition" [(ngModel)]="selectedTransition"
-                    [ngModelOptions]="{standalone: true}">
-              <option value="">— keep current —</option>
-              <option *ngFor="let s of availableTransitions" [value]="s">{{ statusLabels[s] }}</option>
-            </select>
+            <p-select
+              inputId="statusTransition"
+              [(ngModel)]="selectedTransition"
+              [ngModelOptions]="{standalone: true}"
+              [options]="transitionOptions"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
           </div>
 
           <div *ngIf="serverError" class="alert-error" role="alert">{{ serverError }}</div>
@@ -282,7 +291,21 @@ export class EditLeadDialogComponent implements OnInit {
     return map[this.lead.status] ?? [];
   }
 
-  constructor(private fb: FormBuilder, private leadService: LeadService) {}
+  constructor(private fb: FormBuilder, private leadService: LeadService, private transloco: TranslocoService) {}
+
+  get contactTypeOptions(): { label: string; value: string }[] {
+    return [
+      { label: this.transloco.translate('leads.create.contactTypeEmail'), value: 'EMAIL' },
+      { label: this.transloco.translate('leads.create.contactTypePhone'), value: 'PHONE' },
+    ];
+  }
+
+  get transitionOptions(): { label: string; value: string }[] {
+    return [
+      { label: '— keep current —', value: '' },
+      ...this.availableTransitions.map(s => ({ label: this.statusLabels[s], value: s })),
+    ];
+  }
 
   ngOnInit(): void {
     this.form = this.fb.group({

@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import {
   OutcomeMeasureDefinition,
   OutcomeMeasureEntry,
@@ -12,7 +13,7 @@ import { OutcomeMeasureService } from '../../services/outcome-measure.service';
 @Component({
   selector: 'app-outcome-measure-entry-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div *ngIf="visible" class="dialog-overlay" role="dialog" aria-modal="true"
          [attr.aria-labelledby]="'om-dialog-title'">
@@ -29,14 +30,15 @@ import { OutcomeMeasureService } from '../../services/outcome-measure.service';
               {{ 'carePlans.outcomeMeasures.measure' | transloco }}
               <span class="required" aria-hidden="true">*</span>
             </label>
-            <select id="measureSelect" class="field-select" formControlName="measureDefinitionId">
-              <option value="">{{ 'carePlans.outcomeMeasures.selectMeasure' | transloco }}</option>
-              <optgroup *ngFor="let group of definitionGroups" [label]="group.label">
-                <option *ngFor="let def of group.items" [value]="def.id">
-                  {{ def.displayName }} ({{ def.minScore }}–{{ def.maxScore }})
-                </option>
-              </optgroup>
-            </select>
+            <p-select
+              inputId="measureSelect"
+              formControlName="measureDefinitionId"
+              [options]="groupedDefinitionOptions"
+              optionLabel="label"
+              optionValue="value"
+              [group]="true"
+              styleClass="w-full"
+            />
             <div *ngIf="form.get('measureDefinitionId')?.invalid && form.get('measureDefinitionId')?.touched"
                  class="field-error" role="alert">
               {{ 'carePlans.outcomeMeasures.measureRequired' | transloco }}
@@ -143,10 +145,12 @@ export class OutcomeMeasureEntryDialogComponent implements OnInit {
   today = new Date().toISOString().split('T')[0];
 
   definitionGroups: { label: string; items: OutcomeMeasureDefinition[] }[] = [];
+  groupedDefinitionOptions: { label: string; items: { label: string; value: string }[] }[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private outcomeMeasureService: OutcomeMeasureService
+    private outcomeMeasureService: OutcomeMeasureService,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
@@ -161,6 +165,13 @@ export class OutcomeMeasureEntryDialogComponent implements OnInit {
       next: (defs) => {
         this.definitions = defs;
         this.definitionGroups = this.groupDefinitions(defs);
+        this.groupedDefinitionOptions = this.definitionGroups.map(g => ({
+          label: g.label,
+          items: g.items.map(def => ({
+            label: `${def.displayName} (${def.minScore}–${def.maxScore})`,
+            value: def.id,
+          })),
+        }));
       }
     });
   }

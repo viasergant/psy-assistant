@@ -2,14 +2,15 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { InvoiceListItem, InvoiceStatus } from '../../models/invoice.model';
 import { InvoiceService } from '../../services/invoice.service';
 
 @Component({
   selector: 'app-invoice-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslocoModule],
+  imports: [CommonModule, FormsModule, RouterModule, TranslocoModule, Select],
   template: `
     <div class="page-container">
       <div class="page-header">
@@ -21,17 +22,14 @@ import { InvoiceService } from '../../services/invoice.service';
 
       <!-- Filters -->
       <div class="filter-bar">
-        <select class="filter-select"
-                [(ngModel)]="statusFilter"
-                (ngModelChange)="applyFilter()"
-                [attr.aria-label]="'billing.invoices.filters.status' | transloco">
-          <option value="">{{ 'billing.invoices.filters.allStatuses' | transloco }}</option>
-          <option value="DRAFT">{{ 'billing.invoices.status.DRAFT' | transloco }}</option>
-          <option value="ISSUED">{{ 'billing.invoices.status.ISSUED' | transloco }}</option>
-          <option value="OVERDUE">{{ 'billing.invoices.status.OVERDUE' | transloco }}</option>
-          <option value="PAID">{{ 'billing.invoices.status.PAID' | transloco }}</option>
-          <option value="CANCELLED">{{ 'billing.invoices.status.CANCELLED' | transloco }}</option>
-        </select>
+        <p-select
+          [(ngModel)]="statusFilter"
+          [options]="invoiceStatusOptions"
+          optionLabel="label"
+          optionValue="value"
+          (ngModelChange)="applyFilter()"
+          styleClass="w-full"
+        />
       </div>
 
       <!-- Loading -->
@@ -145,6 +143,7 @@ import { InvoiceService } from '../../services/invoice.service';
 })
 export class InvoiceListComponent implements OnInit {
   invoices: InvoiceListItem[] = [];
+  invoiceStatusOptions: { label: string; value: string }[] = [];
   loading = false;
   error: string | null = null;
   statusFilter: InvoiceStatus | '' = '';
@@ -154,10 +153,19 @@ export class InvoiceListComponent implements OnInit {
 
   constructor(
     private invoiceService: InvoiceService,
-    private router: Router
+    private router: Router,
+    private transloco: TranslocoService
   ) {}
 
   ngOnInit(): void {
+    this.invoiceStatusOptions = [
+      { label: this.transloco.translate('billing.invoices.filters.allStatuses'), value: '' },
+      { label: this.transloco.translate('billing.invoices.status.DRAFT'), value: 'DRAFT' },
+      { label: this.transloco.translate('billing.invoices.status.ISSUED'), value: 'ISSUED' },
+      { label: this.transloco.translate('billing.invoices.status.OVERDUE'), value: 'OVERDUE' },
+      { label: this.transloco.translate('billing.invoices.status.PAID'), value: 'PAID' },
+      { label: this.transloco.translate('billing.invoices.status.CANCELLED'), value: 'CANCELLED' },
+    ];
     this.loadPage(0);
   }
 

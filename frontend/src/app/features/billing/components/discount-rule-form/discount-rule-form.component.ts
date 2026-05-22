@@ -6,14 +6,15 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { CreateDiscountRuleRequest, DiscountScope, DiscountType } from '../../models/discount.model';
 import { ServiceCatalogItem } from '../../models/service-catalog.model';
 
 @Component({
   selector: 'app-discount-rule-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="dr-form-title">
       <div class="dialog">
@@ -46,11 +47,15 @@ import { ServiceCatalogItem } from '../../models/service-catalog.model';
               <label for="dr-type">
                 {{ 'billing.discounts.fields.type' | transloco }} <span class="required">*</span>
               </label>
-              <select id="dr-type" formControlName="type" [class.is-error]="isInvalid('type')">
-                <option value="">{{ 'billing.discounts.fields.typePlaceholder' | transloco }}</option>
-                <option value="PERCENTAGE">{{ 'billing.discounts.types.PERCENTAGE' | transloco }}</option>
-                <option value="FIXED_AMOUNT">{{ 'billing.discounts.types.FIXED_AMOUNT' | transloco }}</option>
-              </select>
+              <p-select
+                inputId="dr-type"
+                formControlName="type"
+                [options]="discountTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [invalid]="isInvalid('type')"
+                styleClass="w-full"
+              />
               <span *ngIf="isInvalid('type')" class="error-msg" role="alert">
                 {{ 'common.validation.required' | transloco }}
               </span>
@@ -79,13 +84,16 @@ import { ServiceCatalogItem } from '../../models/service-catalog.model';
             <label for="dr-scope">
               {{ 'billing.discounts.fields.scope' | transloco }} <span class="required">*</span>
             </label>
-            <select id="dr-scope" formControlName="scope"
-                    [class.is-error]="isInvalid('scope')"
-                    (change)="onScopeChange()">
-              <option value="">{{ 'billing.discounts.fields.scopePlaceholder' | transloco }}</option>
-              <option value="CLIENT">{{ 'billing.discounts.scopes.CLIENT' | transloco }}</option>
-              <option value="SERVICE">{{ 'billing.discounts.scopes.SERVICE' | transloco }}</option>
-            </select>
+            <p-select
+              inputId="dr-scope"
+              formControlName="scope"
+              [options]="discountScopeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [invalid]="isInvalid('scope')"
+              (onChange)="onScopeChange()"
+              styleClass="w-full"
+            />
             <span *ngIf="isInvalid('scope')" class="error-msg" role="alert">
               {{ 'common.validation.required' | transloco }}
             </span>
@@ -110,13 +118,15 @@ import { ServiceCatalogItem } from '../../models/service-catalog.model';
             <label for="dr-serviceId">
               {{ 'billing.discounts.fields.serviceCatalogId' | transloco }} <span class="required">*</span>
             </label>
-            <select id="dr-serviceId" formControlName="serviceCatalogId"
-                    [class.is-error]="isInvalid('serviceCatalogId')">
-              <option value="">{{ 'billing.discounts.fields.servicePlaceholder' | transloco }}</option>
-              <option *ngFor="let svc of services" [value]="svc.id">
-                {{ svc.name }}
-              </option>
-            </select>
+            <p-select
+              inputId="dr-serviceId"
+              formControlName="serviceCatalogId"
+              [options]="serviceOptions"
+              optionLabel="label"
+              optionValue="value"
+              [invalid]="isInvalid('serviceCatalogId')"
+              styleClass="w-full"
+            />
             <span *ngIf="isInvalid('serviceCatalogId')" class="error-msg" role="alert">
               {{ 'common.validation.required' | transloco }}
             </span>
@@ -147,10 +157,29 @@ export class DiscountRuleFormComponent implements OnInit {
   form!: FormGroup;
   saving = false;
   submitError = '';
+  discountTypeOptions: { label: string; value: string }[] = [];
+  discountScopeOptions: { label: string; value: string }[] = [];
 
-  constructor(private fb: FormBuilder) {}
+  get serviceOptions(): { label: string; value: string }[] {
+    return [
+      { label: this.transloco.translate('billing.discounts.fields.servicePlaceholder'), value: '' },
+      ...this.services.map(svc => ({ label: svc.name, value: svc.id })),
+    ];
+  }
+
+  constructor(private fb: FormBuilder, private transloco: TranslocoService) {}
 
   ngOnInit(): void {
+    this.discountTypeOptions = [
+      { label: this.transloco.translate('billing.discounts.fields.typePlaceholder'), value: '' },
+      { label: this.transloco.translate('billing.discounts.types.PERCENTAGE'), value: 'PERCENTAGE' },
+      { label: this.transloco.translate('billing.discounts.types.FIXED_AMOUNT'), value: 'FIXED_AMOUNT' },
+    ];
+    this.discountScopeOptions = [
+      { label: this.transloco.translate('billing.discounts.fields.scopePlaceholder'), value: '' },
+      { label: this.transloco.translate('billing.discounts.scopes.CLIENT'), value: 'CLIENT' },
+      { label: this.transloco.translate('billing.discounts.scopes.SERVICE'), value: 'SERVICE' },
+    ];
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(200)]],
       type: ['', Validators.required],

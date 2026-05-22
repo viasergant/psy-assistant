@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import {
   ALL_STATUSES,
   LeadDetail,
@@ -32,6 +33,7 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
     TranslocoPipe,
     CreateLeadDialogComponent,
     EditLeadDialogComponent,
+    Select,
   ],
   template: `
     <div class="page">
@@ -44,10 +46,15 @@ import { EditLeadDialogComponent } from '../edit-lead-dialog/edit-lead-dialog.co
       <div class="filters" role="group" [attr.aria-label]="'leads.list.ariaFilters' | transloco">
         <div class="filter-group">
           <label for="statusFilter">{{ 'leads.list.statusLabel' | transloco }}</label>
-          <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
-            <option value="">{{ 'leads.list.statusAll' | transloco }}</option>
-            <option *ngFor="let s of allStatuses" [value]="s">{{ statusTransKeys[s] | transloco }}</option>
-          </select>
+          <p-select
+            inputId="statusFilter"
+            [(ngModel)]="statusFilter"
+            [options]="statusFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="applyFilters()"
+            styleClass="w-full"
+          />
         </div>
 
         <div class="filter-group filter-group-toggle">
@@ -256,6 +263,7 @@ export class LeadListComponent implements OnInit {
 
   statusFilter: LeadStatus | '' = '';
   includeArchived = false;
+  statusFilterOptions: { label: string; value: string }[] = [];
 
   loading = false;
   loadError: string | null = null;
@@ -263,9 +271,13 @@ export class LeadListComponent implements OnInit {
   showCreate = false;
   editTarget: LeadDetail | null = null;
 
-  constructor(private leadService: LeadService) {}
+  constructor(private leadService: LeadService, private transloco: TranslocoService) {}
 
   ngOnInit(): void {
+    this.statusFilterOptions = [
+      { label: this.transloco.translate('leads.list.statusAll'), value: '' },
+      ...this.allStatuses.map(s => ({ label: this.transloco.translate(this.statusTransKeys[s]), value: s })),
+    ];
     this.loadPage();
   }
 

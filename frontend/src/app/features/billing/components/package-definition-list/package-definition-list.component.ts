@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { CreatePackageDefinitionRequest, PackageDefinition, PackageDefinitionStatus } from '../../models/package.model';
 import { PackageService } from '../../services/package.service';
 import { PackageDefinitionFormComponent } from '../package-definition-form/package-definition-form.component';
@@ -9,7 +10,7 @@ import { PackageDefinitionFormComponent } from '../package-definition-form/packa
 @Component({
   selector: 'app-package-definition-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslocoModule, PackageDefinitionFormComponent],
+  imports: [CommonModule, FormsModule, TranslocoModule, PackageDefinitionFormComponent, Select],
   template: `
     <div class="page-container">
 
@@ -21,14 +22,14 @@ import { PackageDefinitionFormComponent } from '../package-definition-form/packa
       </div>
 
       <div class="filter-bar">
-        <select class="filter-select"
-                [(ngModel)]="statusFilter"
-                (ngModelChange)="loadDefinitions()"
-                [attr.aria-label]="'billing.packages.filters.statusLabel' | transloco">
-          <option value="">{{ 'billing.packages.filters.allStatuses' | transloco }}</option>
-          <option value="ACTIVE">{{ 'billing.packages.status.ACTIVE' | transloco }}</option>
-          <option value="ARCHIVED">{{ 'billing.packages.status.ARCHIVED' | transloco }}</option>
-        </select>
+        <p-select
+          [(ngModel)]="statusFilter"
+          [options]="pkgStatusOptions"
+          optionLabel="label"
+          optionValue="value"
+          (ngModelChange)="loadDefinitions()"
+          styleClass="w-full"
+        />
       </div>
 
       <div *ngIf="loading" class="state-msg" aria-live="polite">
@@ -103,10 +104,16 @@ export class PackageDefinitionListComponent implements OnInit {
   loadError = '';
   showForm = false;
   statusFilter: PackageDefinitionStatus | '' = '';
+  pkgStatusOptions: { label: string; value: string }[] = [];
 
-  constructor(private packageService: PackageService) {}
+  constructor(private packageService: PackageService, private transloco: TranslocoService) {}
 
   ngOnInit(): void {
+    this.pkgStatusOptions = [
+      { label: this.transloco.translate('billing.packages.filters.allStatuses'), value: '' },
+      { label: this.transloco.translate('billing.packages.status.ACTIVE'), value: 'ACTIVE' },
+      { label: this.transloco.translate('billing.packages.status.ARCHIVED'), value: 'ARCHIVED' },
+    ];
     this.loadDefinitions();
   }
 

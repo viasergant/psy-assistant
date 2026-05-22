@@ -26,25 +26,25 @@
           </label>
           
           <div class="time-pickers" *ngIf="day.enabled">
-            <select 
-              class="time-select"
+            <p-select 
               [(ngModel)]="day.startTime"
-              [disabled]="!day.enabled">
-              <option *ngFor="let time of timeOptions" [value]="time">
-                {{ time }}
-              </option>
-            </select>
+              [options]="timeSelectOptions"
+              optionLabel="label"
+              optionValue="value"
+              [disabled]="!day.enabled"
+              styleClass="time-select"
+            />
             
             <span class="time-separator">—</span>
             
-            <select 
-              class="time-select"
+            <p-select 
               [(ngModel)]="day.endTime"
-              [disabled]="!day.enabled">
-              <option *ngFor="let time of timeOptions" [value]="time">
-                {{ time }}
-              </option>
-            </select>
+              [options]="timeSelectOptions"
+              optionLabel="label"
+              optionValue="value"
+              [disabled]="!day.enabled"
+              styleClass="time-select"
+            />
           </div>
           
           <span class="unavailable-label" *ngIf="!day.enabled">

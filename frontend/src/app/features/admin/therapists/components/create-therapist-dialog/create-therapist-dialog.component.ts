@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { TherapistManagementService } from '../../services/therapist-management.service';
 import {
   EMPLOYMENT_STATUS_OPTIONS,
@@ -33,7 +34,7 @@ interface TherapistWithAccountResponseDto {
 @Component({
   selector: 'app-create-therapist-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, TranslateSpecializationPipe, TherapistAccountCreatedModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, TranslateSpecializationPipe, TherapistAccountCreatedModalComponent, Select],
   styleUrl: './create-therapist-dialog.component.scss',
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="create-therapist-title">
@@ -87,16 +88,15 @@ interface TherapistWithAccountResponseDto {
 
           <div class="field">
             <label for="employmentStatus">{{ 'admin.therapists.create.employmentStatusLabel' | transloco }} <span aria-hidden="true">*</span></label>
-            <select
-              id="employmentStatus"
+            <p-select
+              inputId="employmentStatus"
               formControlName="employmentStatus"
+              [options]="employmentStatusSelectOptions"
+              optionLabel="label"
+              optionValue="value"
               [attr.aria-invalid]="isInvalid('employmentStatus')"
-              aria-required="true">
-              <option value="">{{ 'admin.therapists.create.selectPlaceholder' | transloco }}</option>
-              <option *ngFor="let status of employmentStatuses" [value]="status">
-                {{ 'admin.therapists.create.employmentStatuses.' + status | transloco }}
-              </option>
-            </select>
+              styleClass="w-full"
+            />
             <span *ngIf="isInvalid('employmentStatus')" class="error-msg" role="alert">
               {{ 'admin.therapists.create.employmentStatusRequired' | transloco }}
             </span>
@@ -104,16 +104,15 @@ interface TherapistWithAccountResponseDto {
 
           <div class="field">
             <label for="primarySpecialization">{{ 'admin.therapists.create.primarySpecializationLabel' | transloco }} <span aria-hidden="true">*</span></label>
-            <select
-              id="primarySpecialization"
+            <p-select
+              inputId="primarySpecialization"
               formControlName="primarySpecializationId"
+              [options]="specializationSelectOptions"
+              optionLabel="label"
+              optionValue="value"
               [attr.aria-invalid]="isInvalid('primarySpecializationId')"
-              aria-required="true">
-              <option value="">{{ 'admin.therapists.create.selectPlaceholder' | transloco }}</option>
-              <option *ngFor="let spec of availableSpecializations" [value]="spec.id">
-                {{ spec.name | translateSpecialization }}
-              </option>
-            </select>
+              styleClass="w-full"
+            />
             <span *ngIf="isInvalid('primarySpecializationId')" class="error-msg" role="alert">
               {{ 'admin.therapists.create.primarySpecializationRequired' | transloco }}
             </span>
@@ -158,6 +157,8 @@ interface TherapistWithAccountResponseDto {
 export class CreateTherapistDialogComponent implements OnInit {
   readonly employmentStatuses = EMPLOYMENT_STATUS_OPTIONS;
   readonly statusLabels = EMPLOYMENT_STATUS_LABELS;
+  employmentStatusSelectOptions: { label: string; value: string }[] = [];
+  specializationSelectOptions: { label: string; value: string }[] = [];
 
   /** Optional prefilled data from user creation wizard redirect */
   @Input() prefilledData?: { fullName: string; email: string };
@@ -190,6 +191,13 @@ export class CreateTherapistDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.employmentStatusSelectOptions = [
+      { label: this.transloco.translate('admin.therapists.create.selectPlaceholder'), value: '' },
+      ...this.employmentStatuses.map(s => ({
+        label: this.transloco.translate('admin.therapists.create.employmentStatuses.' + s),
+        value: s,
+      })),
+    ];
     // Apply prefilled data if provided
     if (this.prefilledData) {
       this.form.patchValue({
@@ -204,6 +212,13 @@ export class CreateTherapistDialogComponent implements OnInit {
     this.therapistService.getSpecializations().subscribe({
       next: (data) => {
         this.availableSpecializations = data;
+        this.specializationSelectOptions = [
+          { label: this.transloco.translate('admin.therapists.create.selectPlaceholder'), value: '' },
+          ...data.map(spec => ({
+            label: this.translateSpecializationName(spec.name),
+            value: spec.id,
+          })),
+        ];
       },
       error: () => {
         this.serverError = this.transloco.translate('admin.therapists.create.errors.loadSpecializationsFailed');
@@ -215,6 +230,21 @@ export class CreateTherapistDialogComponent implements OnInit {
   isInvalid(field: string): boolean {
     const ctrl = this.form.get(field);
     return !!ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched);
+  }
+
+  private translateSpecializationName(name: string): string {
+    if (!name) return name;
+    const key = name
+      .split(/[\s\-]+/)
+      .map((word, index) =>
+        index === 0
+          ? word.toLowerCase()
+          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      )
+      .join('');
+    const i18nKey = `specializations.names.${key}`;
+    const translated = this.transloco.translate(i18nKey);
+    return translated === i18nKey ? name : translated;
   }
 
   /** Submits the form to create therapist with temporary password and profile. */

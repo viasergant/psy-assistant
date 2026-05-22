@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import {
   TherapistManagementService,
@@ -14,7 +15,7 @@ import { ClientService } from '../services/client.service';
 @Component({
   selector: 'app-client-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslocoPipe],
+  imports: [CommonModule, FormsModule, TranslocoPipe, Select],
   template: `
     <div class="cl-page">
 
@@ -52,14 +53,15 @@ import { ClientService } from '../services/client.service';
           <label class="cl-filter-label" for="therapistFilter">
             {{ 'clients.list.therapistFilterLabel' | transloco }}
           </label>
-          <select
-            id="therapistFilter"
-            class="cl-select"
+          <p-select
+            inputId="therapistFilter"
             [(ngModel)]="selectedTherapistId"
-            (change)="applyFilters()">
-            <option value="">{{ 'clients.list.therapistAll' | transloco }}</option>
-            <option *ngFor="let t of therapists" [value]="t.id">{{ t.name }}</option>
-          </select>
+            [options]="therapistFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="applyFilters()"
+            styleClass="w-full"
+          />
         </div>
 
         <!-- Tag filter -->
@@ -76,18 +78,16 @@ import { ClientService } from '../services/client.service';
                 {{ tag }} <span class="cl-tag-remove">×</span>
               </span>
             </div>
-            <select
-              class="cl-select cl-select-tag"
-              (change)="addTag($event)"
-              [disabled]="availableTags.length === 0">
-              <option value="">{{ 'clients.list.tagFilterPlaceholder' | transloco }}</option>
-              <option
-                *ngFor="let tag of availableTags"
-                [value]="tag"
-                [disabled]="selectedTags.includes(tag)">
-                {{ tag }}
-              </option>
-            </select>
+            <p-select
+              [(ngModel)]="tagSelectValue"
+              [options]="tagFilterOptions"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="addTag($event.value)"
+              [disabled]="availableTags.length === 0"
+              [placeholder]="'clients.list.tagFilterPlaceholder' | transloco"
+              styleClass="w-full"
+            />
           </div>
         </div>
 
@@ -95,10 +95,14 @@ import { ClientService } from '../services/client.service';
         <div class="cl-filter-group cl-sort-group">
           <label class="cl-filter-label">{{ 'clients.list.sortLabel' | transloco }}</label>
           <div class="cl-sort-row">
-            <select class="cl-select" [(ngModel)]="sortField" (change)="applyFilters()">
-              <option value="fullName">{{ 'clients.list.sortByName' | transloco }}</option>
-              <option value="createdAt">{{ 'clients.list.sortByCreated' | transloco }}</option>
-            </select>
+            <p-select
+              [(ngModel)]="sortField"
+              [options]="sortFieldOptions"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="applyFilters()"
+              styleClass="w-full"
+            />
             <button
               class="cl-sort-dir"
               type="button"
@@ -690,6 +694,11 @@ export class ClientListComponent implements OnInit, OnDestroy {
   selectedTags: string[] = [];
   availableTags: string[] = [];
   therapists: TherapistProfile[] = [];
+  tagSelectValue = '';
+
+  therapistFilterOptions: { label: string; value: string }[] = [];
+  tagFilterOptions: { label: string; value: string }[] = [];
+  sortFieldOptions: { label: string; value: string }[] = [];
 
   loading = false;
   loadError: string | null = null;
@@ -707,9 +716,14 @@ export class ClientListComponent implements OnInit, OnDestroy {
     private readonly clientService: ClientService,
     private readonly therapistService: TherapistManagementService,
     private readonly router: Router,
+    private readonly transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
+    this.sortFieldOptions = [
+      { label: this.transloco.translate('clients.list.sortByName'), value: 'fullName' },
+      { label: this.transloco.translate('clients.list.sortByCreated'), value: 'createdAt' },
+    ];
     // Debounce text search
     this.searchSubject.pipe(
       debounceTime(300),
@@ -762,14 +776,12 @@ export class ClientListComponent implements OnInit, OnDestroy {
     this.loadClients();
   }
 
-  addTag(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    const tag = select.value;
-    if (tag && !this.selectedTags.includes(tag)) {
-      this.selectedTags = [...this.selectedTags, tag];
+  addTag(tagValue: string): void {
+    if (tagValue && !this.selectedTags.includes(tagValue)) {
+      this.selectedTags = [...this.selectedTags, tagValue];
       this.applyFilters();
     }
-    select.value = '';
+    this.tagSelectValue = '';
   }
 
   removeTag(tag: string): void {
@@ -852,14 +864,23 @@ export class ClientListComponent implements OnInit, OnDestroy {
 
   private loadTags(): void {
     this.clientService.getAllTags().subscribe({
-      next: tags => { this.availableTags = tags; },
+      next: tags => {
+        this.availableTags = tags;
+        this.tagFilterOptions = tags.map(tag => ({ label: tag, value: tag }));
+      },
       error: () => { /* non-critical */ },
     });
   }
 
   private loadTherapists(): void {
     this.therapistService.getTherapists(0, 100, undefined, true).subscribe({
-      next: page => { this.therapists = page.content; },
+      next: page => {
+        this.therapists = page.content;
+        this.therapistFilterOptions = [
+          { label: this.transloco.translate('clients.list.therapistAll'), value: '' },
+          ...page.content.map(t => ({ label: t.name, value: t.id })),
+        ];
+      },
       error: () => { /* non-critical */ },
     });
   }

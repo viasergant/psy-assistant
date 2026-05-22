@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { NotificationTemplateService } from '../../services/notification-template.service';
 import {
   NotificationTemplate,
@@ -18,7 +19,7 @@ import {
 @Component({
   selector: 'app-template-form-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslocoPipe],
+  imports: [CommonModule, FormsModule, TranslocoPipe, Select],
   styleUrl: './template-form-dialog.component.scss',
   template: `
     <div class="dialog-overlay" role="dialog"
@@ -43,36 +44,49 @@ import {
                   {{ 'admin.notificationTemplates.form.eventType' | transloco }}
                   <span class="required">*</span>
                 </label>
-                <select id="eventType" name="eventType" [(ngModel)]="eventType" required>
-                  <option value="">— {{ 'admin.notificationTemplates.form.select' | transloco }} —</option>
-                  <option *ngFor="let e of eventTypeOptions" [value]="e">
-                    {{ 'admin.notificationTemplates.eventTypes.' + e | transloco }}
-                  </option>
-                </select>
+                <p-select
+                  inputId="eventType"
+                  name="eventType"
+                  [(ngModel)]="eventType"
+                  [options]="eventTypeSelectOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  required
+                  styleClass="w-full"
+                />
               </div>
               <div class="field">
                 <label for="channel">
                   {{ 'admin.notificationTemplates.form.channel' | transloco }}
                   <span class="required">*</span>
                 </label>
-                <select id="channel" name="channel" [(ngModel)]="channel" required (change)="onChannelChange()">
-                  <option value="">— {{ 'admin.notificationTemplates.form.select' | transloco }} —</option>
-                  <option *ngFor="let c of channelOptions" [value]="c">
-                    {{ 'admin.notificationTemplates.channels.' + c | transloco }}
-                  </option>
-                </select>
+                <p-select
+                  inputId="channel"
+                  name="channel"
+                  [(ngModel)]="channel"
+                  [options]="channelSelectOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  required
+                  (onChange)="onChannelChange()"
+                  styleClass="w-full"
+                />
               </div>
               <div class="field">
                 <label for="language">
                   {{ 'admin.notificationTemplates.form.language' | transloco }}
                   <span class="required">*</span>
                 </label>
-                <select id="language" name="language" [(ngModel)]="language" required>
-                  <option value="">— {{ 'admin.notificationTemplates.form.select' | transloco }} —</option>
-                  <option *ngFor="let l of languageOptions" [value]="l">
-                    {{ 'admin.notificationTemplates.languages.' + l | transloco }}
-                  </option>
-                </select>
+                <p-select
+                  inputId="language"
+                  name="language"
+                  [(ngModel)]="language"
+                  [options]="languageSelectOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  required
+                  styleClass="w-full"
+                />
               </div>
             </div>
 
@@ -178,10 +192,25 @@ export class TemplateFormDialogComponent implements OnInit, OnChanges {
   readonly languageOptions = LANGUAGE_OPTIONS;
   readonly supportedVariables = SUPPORTED_VARIABLES;
   readonly smsSegmentSize = SMS_SINGLE_SEGMENT;
+  eventTypeSelectOptions: { label: string; value: string }[] = [];
+  channelSelectOptions: { label: string; value: string }[] = [];
+  languageSelectOptions: { label: string; value: string }[] = [];
 
-  constructor(private svc: NotificationTemplateService) {}
+  constructor(private svc: NotificationTemplateService, private transloco: TranslocoService) {}
 
   ngOnInit(): void {
+    this.eventTypeSelectOptions = [
+      { label: '— ' + this.transloco.translate('admin.notificationTemplates.form.select') + ' —', value: '' },
+      ...this.eventTypeOptions.map(e => ({ label: this.transloco.translate('admin.notificationTemplates.eventTypes.' + e), value: e })),
+    ];
+    this.channelSelectOptions = [
+      { label: '— ' + this.transloco.translate('admin.notificationTemplates.form.select') + ' —', value: '' },
+      ...this.channelOptions.map(c => ({ label: this.transloco.translate('admin.notificationTemplates.channels.' + c), value: c })),
+    ];
+    this.languageSelectOptions = [
+      { label: '— ' + this.transloco.translate('admin.notificationTemplates.form.select') + ' —', value: '' },
+      ...this.languageOptions.map(l => ({ label: this.transloco.translate('admin.notificationTemplates.languages.' + l), value: l })),
+    ];
     this.populate();
   }
 

@@ -12,7 +12,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { TherapistManagementService } from '../../../admin/therapists/services/therapist-management.service';
 import { TherapistProfile } from '../../../admin/therapists/models/therapist.model';
 import { TherapistOverride, UpsertTherapistOverrideRequest } from '../../models/service-catalog.model';
@@ -25,7 +26,7 @@ export interface OverrideSubmission {
 @Component({
   selector: 'app-therapist-override-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true"
          aria-labelledby="override-dialog-title">
@@ -46,13 +47,16 @@ export interface OverrideSubmission {
             <div *ngIf="loadingTherapists" class="state-msg">
               {{ 'common.status.loading' | transloco }}
             </div>
-            <select *ngIf="!loadingTherapists" id="ov-therapist" formControlName="therapistId"
-                    [class.is-error]="isInvalid('therapistId')">
-              <option value="" disabled>— {{ 'billing.catalog.override.selectTherapist' | transloco }} —</option>
-              <option *ngFor="let t of availableTherapists" [value]="t.id">
-                {{ t.name }}
-              </option>
-            </select>
+            <p-select
+              *ngIf="!loadingTherapists"
+              inputId="ov-therapist"
+              formControlName="therapistId"
+              [options]="therapistOptions"
+              optionLabel="label"
+              optionValue="value"
+              [invalid]="isInvalid('therapistId')"
+              styleClass="w-full"
+            />
             <span *ngIf="isInvalid('therapistId')" class="error-msg" role="alert">
               {{ 'common.validation.required' | transloco }}
             </span>
@@ -115,7 +119,15 @@ export class TherapistOverrideDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private therapistService: TherapistManagementService,
+    private transloco: TranslocoService,
   ) {}
+
+  get therapistOptions(): { label: string; value: string }[] {
+    return [
+      { label: '— ' + this.transloco.translate('billing.catalog.override.selectTherapist') + ' —', value: '' },
+      ...this.availableTherapists.map(t => ({ label: t.name, value: t.id })),
+    ];
+  }
 
   ngOnInit(): void {
     this.form = this.fb.group({

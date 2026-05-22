@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { jwtDecode } from 'jwt-decode';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { CarePlanStatus, CarePlanSummary } from '../models/care-plan.model';
@@ -16,21 +17,20 @@ interface JwtPayload {
 @Component({
   selector: 'app-care-plan-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslocoModule, CarePlanFormDialogComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslocoModule, CarePlanFormDialogComponent, Select],
   template: `
     <div class="care-plans-panel">
       <div class="panel-header">
         <h3>{{ 'carePlans.title' | transloco }}</h3>
         <div class="header-actions">
-          <select class="status-filter"
-                  [(ngModel)]="statusFilter"
-                  (ngModelChange)="onFilterChange($event)"
-                  [attr.aria-label]="'carePlans.list.filterByStatus' | transloco">
-            <option value="">{{ 'carePlans.list.allStatuses' | transloco }}</option>
-            <option value="ACTIVE">{{ 'carePlans.status.active' | transloco }}</option>
-            <option value="CLOSED">{{ 'carePlans.status.closed' | transloco }}</option>
-            <option value="ARCHIVED">{{ 'carePlans.status.archived' | transloco }}</option>
-          </select>
+          <p-select
+            [(ngModel)]="statusFilter"
+            [options]="carePlanStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            (ngModelChange)="onFilterChange($event)"
+            styleClass="w-full"
+          />
           <button *ngIf="canManage"
                   type="button"
                   class="btn-primary"
@@ -107,13 +107,22 @@ export class CarePlanListComponent implements OnInit {
   showCreateDialog = false;
   canManage = false;
 
+  carePlanStatusOptions: { label: string; value: string }[] = [];
+
   constructor(
     private carePlanService: CarePlanService,
-    private authService: AuthService
+    private authService: AuthService,
+    private transloco: TranslocoService
   ) {}
 
   ngOnInit(): void {
     this.canManage = this.hasAuthority('MANAGE_CARE_PLANS');
+    this.carePlanStatusOptions = [
+      { label: this.transloco.translate('carePlans.list.allStatuses'), value: '' },
+      { label: this.transloco.translate('carePlans.status.active'), value: 'ACTIVE' },
+      { label: this.transloco.translate('carePlans.status.closed'), value: 'CLOSED' },
+      { label: this.transloco.translate('carePlans.status.archived'), value: 'ARCHIVED' },
+    ];
     this.loadPlans();
   }
 

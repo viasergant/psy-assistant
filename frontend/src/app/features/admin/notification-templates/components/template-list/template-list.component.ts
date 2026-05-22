@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Select } from 'primeng/select';
 import { NotificationTemplateService } from '../../services/notification-template.service';
 import {
   NotificationTemplate,
@@ -24,7 +25,8 @@ import { TemplatePreviewDialogComponent } from '../template-preview-dialog/templ
     FormsModule,
     TranslocoPipe,
     TemplateFormDialogComponent,
-    TemplatePreviewDialogComponent
+    TemplatePreviewDialogComponent,
+    Select,
   ],
   styleUrl: './template-list.component.scss',
   template: `
@@ -40,38 +42,51 @@ import { TemplatePreviewDialogComponent } from '../template-preview-dialog/templ
       <div class="filters" role="group" [attr.aria-label]="'admin.notificationTemplates.list.ariaFilters' | transloco">
         <div class="filter-group">
           <label for="eventTypeFilter">{{ 'admin.notificationTemplates.list.filterEventType' | transloco }}</label>
-          <select id="eventTypeFilter" [(ngModel)]="filterEventType" (change)="load()">
-            <option value="">{{ 'admin.notificationTemplates.list.filterAll' | transloco }}</option>
-            <option *ngFor="let e of eventTypeOptions" [value]="e">
-              {{ 'admin.notificationTemplates.eventTypes.' + e | transloco }}
-            </option>
-          </select>
+          <p-select
+            inputId="eventTypeFilter"
+            [(ngModel)]="filterEventType"
+            [options]="eventTypeFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="load()"
+            styleClass="w-full"
+          />
         </div>
         <div class="filter-group">
           <label for="channelFilter">{{ 'admin.notificationTemplates.list.filterChannel' | transloco }}</label>
-          <select id="channelFilter" [(ngModel)]="filterChannel" (change)="load()">
-            <option value="">{{ 'admin.notificationTemplates.list.filterAll' | transloco }}</option>
-            <option *ngFor="let c of channelOptions" [value]="c">
-              {{ 'admin.notificationTemplates.channels.' + c | transloco }}
-            </option>
-          </select>
+          <p-select
+            inputId="channelFilter"
+            [(ngModel)]="filterChannel"
+            [options]="channelFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="load()"
+            styleClass="w-full"
+          />
         </div>
         <div class="filter-group">
           <label for="languageFilter">{{ 'admin.notificationTemplates.list.filterLanguage' | transloco }}</label>
-          <select id="languageFilter" [(ngModel)]="filterLanguage" (change)="load()">
-            <option value="">{{ 'admin.notificationTemplates.list.filterAll' | transloco }}</option>
-            <option *ngFor="let l of languageOptions" [value]="l">
-              {{ 'admin.notificationTemplates.languages.' + l | transloco }}
-            </option>
-          </select>
+          <p-select
+            inputId="languageFilter"
+            [(ngModel)]="filterLanguage"
+            [options]="languageFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="load()"
+            styleClass="w-full"
+          />
         </div>
         <div class="filter-group">
           <label for="statusFilter">{{ 'admin.notificationTemplates.list.filterStatus' | transloco }}</label>
-          <select id="statusFilter" [(ngModel)]="filterStatus" (change)="load()">
-            <option value="">{{ 'admin.notificationTemplates.list.filterAll' | transloco }}</option>
-            <option value="ACTIVE">{{ 'admin.notificationTemplates.statuses.ACTIVE' | transloco }}</option>
-            <option value="INACTIVE">{{ 'admin.notificationTemplates.statuses.INACTIVE' | transloco }}</option>
-          </select>
+          <p-select
+            inputId="statusFilter"
+            [(ngModel)]="filterStatus"
+            [options]="statusFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="load()"
+            styleClass="w-full"
+          />
         </div>
       </div>
 
@@ -212,6 +227,10 @@ export class TemplateListComponent implements OnInit {
   filterChannel: NotificationChannel | '' = '';
   filterLanguage: NotificationLanguage | '' = '';
   filterStatus: TemplateStatus | '' = '';
+  eventTypeFilterOptions: { label: string; value: string }[] = [];
+  channelFilterOptions: { label: string; value: string }[] = [];
+  languageFilterOptions: { label: string; value: string }[] = [];
+  statusFilterOptions: { label: string; value: string }[] = [];
 
   showForm = false;
   editTarget: NotificationTemplate | null = null;
@@ -223,9 +242,26 @@ export class TemplateListComponent implements OnInit {
   readonly channelOptions = CHANNEL_OPTIONS;
   readonly languageOptions = LANGUAGE_OPTIONS;
 
-  constructor(private svc: NotificationTemplateService) {}
+  constructor(private svc: NotificationTemplateService, private transloco: TranslocoService) {}
 
   ngOnInit(): void {
+    this.eventTypeFilterOptions = [
+      { label: this.transloco.translate('admin.notificationTemplates.list.filterAll'), value: '' },
+      ...this.eventTypeOptions.map(e => ({ label: this.transloco.translate('admin.notificationTemplates.eventTypes.' + e), value: e })),
+    ];
+    this.channelFilterOptions = [
+      { label: this.transloco.translate('admin.notificationTemplates.list.filterAll'), value: '' },
+      ...this.channelOptions.map(c => ({ label: this.transloco.translate('admin.notificationTemplates.channels.' + c), value: c })),
+    ];
+    this.languageFilterOptions = [
+      { label: this.transloco.translate('admin.notificationTemplates.list.filterAll'), value: '' },
+      ...this.languageOptions.map(l => ({ label: this.transloco.translate('admin.notificationTemplates.languages.' + l), value: l })),
+    ];
+    this.statusFilterOptions = [
+      { label: this.transloco.translate('admin.notificationTemplates.list.filterAll'), value: '' },
+      { label: this.transloco.translate('admin.notificationTemplates.statuses.ACTIVE'), value: 'ACTIVE' },
+      { label: this.transloco.translate('admin.notificationTemplates.statuses.INACTIVE'), value: 'INACTIVE' },
+    ];
     this.load();
   }
 

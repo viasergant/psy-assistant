@@ -84,6 +84,18 @@
       />
       <small class="field-hint">{{ 'sessions.hints.actualEndTime' | transloco }}</small>
     </div>
+
+    <!-- Attended checkbox — individual sessions only -->
+    <div class="field" *ngIf="session.recordKind === RecordKind.INDIVIDUAL">
+      <p-checkbox
+        inputId="attended"
+        formControlName="attended"
+        [binary]="true"
+      />
+      <label for="attended" class="checkbox-label">
+        {{ 'sessions.dialog.attended' | transloco }}
+      </label>
+    </div>
   </form>
 
   <ng-template pTemplate="footer">

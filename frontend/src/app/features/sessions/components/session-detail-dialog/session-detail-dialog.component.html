@@ -100,58 +100,6 @@
       </div>
     </div>
 
-    <!-- Attendance Outcome — INDIVIDUAL sessions -->
-    <div class="session-details-card" *ngIf="!isGroupSession">
-      <div class="attendance-header">
-        <h4 class="section-title">{{ 'sessions.attendance.sectionTitle' | transloco }}</h4>
-        <p-button
-          [label]="'sessions.attendance.record' | transloco"
-          severity="primary"
-          size="small"
-          (onClick)="openAttendanceDialog()"
-        />
-      </div>
-      <div *ngIf="session.attendanceOutcome; else noOutcome">
-        <p-tag
-          [value]="getAttendanceOutcomeI18nKey(session.attendanceOutcome) | transloco"
-          [severity]="getAttendanceOutcomeSeverity(session.attendanceOutcome)"
-        />
-      </div>
-      <ng-template #noOutcome>
-        <p class="no-outcome-text">{{ 'sessions.attendance.notRecorded' | transloco }}</p>
-      </ng-template>
-    </div>
-
-    <!-- Attendance Outcome — GROUP sessions: per-client inputs -->
-    <div class="session-details-card" *ngIf="isGroupSession">
-      <div class="attendance-header">
-        <h4 class="section-title">{{ 'sessions.attendance.sectionTitle' | transloco }}</h4>
-        <p-button
-          [label]="(showGroupAttendancePanel ? 'common.actions.cancel' : 'sessions.attendance.record') | transloco"
-          severity="primary"
-          size="small"
-          (onClick)="openAttendanceDialog()"
-        />
-      </div>
-
-      <!-- Participant-level attendance summary -->
-      <div *ngIf="!showGroupAttendancePanel" class="group-attendance-summary">
-        <span *ngFor="let p of activeParticipants" class="participant-attendance-row">
-          <strong>{{ p.clientName }}</strong>:
-          <span *ngIf="p.attendanceOutcome">{{ p.attendanceOutcome }}</span>
-          <em *ngIf="!p.attendanceOutcome">{{ 'sessions.attendance.notRecorded' | transloco }}</em>
-        </span>
-      </div>
-
-      <!-- Inline attendance entry form -->
-      <app-group-attendance-panel
-        *ngIf="showGroupAttendancePanel"
-        [sessionId]="session.id"
-        [participants]="session.participants"
-        (saved)="onGroupAttendanceSaved($event)"
-      ></app-group-attendance-panel>
-    </div>
-
   </div>
 
   <ng-template pTemplate="footer">
@@ -166,11 +114,4 @@
   </ng-template>
 </p-dialog>
 
-<!-- Attendance Recording Dialog — INDIVIDUAL sessions only -->
-<app-record-attendance-dialog
-  *ngIf="session && !isGroupSession && attendanceDialogVisible"
-  [session]="session"
-  [visible]="attendanceDialogVisible"
-  (recorded)="onAttendanceRecorded($event)"
-  (closed)="onAttendanceDialogClosed()"
-/>
+

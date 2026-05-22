@@ -4,11 +4,12 @@ import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validatio
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
+import { Checkbox } from 'primeng/checkbox';
 import { DatePicker } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { Textarea } from 'primeng/textarea';
 import { Subject, takeUntil } from 'rxjs';
-import { CompleteSessionRequest, SessionRecord } from '../../models/session.model';
+import { CompleteSessionRequest, RecordAttendanceRequest, AttendanceOutcome, RecordKind, SessionRecord } from '../../models/session.model';
 import { SessionService } from '../../services/session.service';
 import { SessionNotesPanelComponent } from '../session-notes-panel/session-notes-panel.component';
 
@@ -33,6 +34,7 @@ function trimmedMinLength(min: number): ValidatorFn {
     Button,
     Textarea,
     DatePicker,
+    Checkbox,
     SessionNotesPanelComponent,
   ],
   templateUrl: './complete-session-dialog.component.html',
@@ -46,6 +48,7 @@ export class CompleteSessionDialogComponent implements OnInit, OnDestroy {
 
   completeForm: FormGroup;
   loading = false;
+  RecordKind = RecordKind;
 
   private destroy$ = new Subject<void>();
 
@@ -58,6 +61,7 @@ export class CompleteSessionDialogComponent implements OnInit, OnDestroy {
     this.completeForm = this.fb.group({
       sessionNotes: ['', [Validators.required, trimmedMinLength(10)]],
       actualEndTime: [null],
+      attended: [true],
     });
   }
 
@@ -96,11 +100,15 @@ export class CompleteSessionDialogComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
+          this.loading = false;
+          if (this.session.recordKind === RecordKind.INDIVIDUAL && formValue.attended) {
+            const attendanceRequest: RecordAttendanceRequest = { outcome: AttendanceOutcome.ATTENDED };
+            this.sessionService.recordAttendanceOutcome(this.session.id, attendanceRequest).subscribe();
+          }
           this.messageService.add({
             severity: 'success',
             summary: this.transloco.translate('sessions.messages.sessionCompleted'),
           });
-          this.loading = false;
           this.completed.emit();
         },
         error: () => {

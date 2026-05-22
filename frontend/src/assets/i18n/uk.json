@@ -1034,7 +1034,8 @@
       "updatedAt": "Оновлено",
       "noNotesYet": "Нотаток для цієї сесії ще немає.",
       "completionNotes": "Нотатки завершення",
-      "clinicalNotes": "Клінічні нотатки"
+      "clinicalNotes": "Клінічні нотатки",
+      "attended": "Відвідав"
     },
     "messages": {
       "sessionStarted": "Сесію успішно розпочато",

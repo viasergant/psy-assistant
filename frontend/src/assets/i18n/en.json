@@ -1034,7 +1034,8 @@
       "updatedAt": "Updated At",
       "noNotesYet": "No notes available for this session yet.",
       "completionNotes": "Completion Notes",
-      "clinicalNotes": "Clinical Notes"
+      "clinicalNotes": "Clinical Notes",
+      "attended": "Attended"
     },
     "messages": {
       "sessionStarted": "Session started successfully",

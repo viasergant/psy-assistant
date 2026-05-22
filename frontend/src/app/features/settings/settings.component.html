@@ -1,0 +1,56 @@
+<div class="settings-container">
+  <div class="settings-header">
+    <h1>{{ 'settings.title' | transloco }}</h1>
+  </div>
+
+  <div class="settings-content">
+    <section class="settings-section">
+      <h2 class="section-title">{{ 'settings.language.title' | transloco }}</h2>
+      <p class="section-description">{{ 'settings.language.description' | transloco }}</p>
+
+      <div class="language-options" role="radiogroup" [attr.aria-label]="'settings.language.title' | transloco">
+        @for (lang of languages; track lang.code) {
+          <label
+            class="language-option"
+            [class.selected]="currentLocale() === lang.code"
+          >
+            <input
+              type="radio"
+              name="language"
+              [value]="lang.code"
+              [checked]="currentLocale() === lang.code"
+              (change)="selectLanguage(lang.code)"
+              class="sr-only"
+            />
+            <span class="language-label">{{ lang.labelKey | transloco }}</span>
+            @if (currentLocale() === lang.code) {
+              <span class="checkmark" aria-hidden="true">&#10003;</span>
+            }
+          </label>
+        }
+      </div>
+
+      <div class="section-actions">
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="saveLanguage()"
+          [disabled]="saving()"
+          [attr.aria-busy]="saving()"
+        >
+          @if (saving()) {
+            {{ 'settings.language.saving' | transloco }}
+          } @else {
+            {{ 'settings.language.save' | transloco }}
+          }
+        </button>
+
+        @if (saved()) {
+          <span class="save-confirmation" role="status">
+            {{ 'settings.language.saved' | transloco }}
+          </span>
+        }
+      </div>
+    </section>
+  </div>
+</div>

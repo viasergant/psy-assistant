@@ -8,6 +8,7 @@ export const ROUTE_ROLES: Readonly<Record<string, AppRole[]>> = {
   billing:  ['FINANCE', 'SYSTEM_ADMINISTRATOR'],
   reports:  ['SUPERVISOR', 'FINANCE', 'SYSTEM_ADMINISTRATOR', 'THERAPIST'],
   admin:    ['SYSTEM_ADMINISTRATOR'],
+  settings: ['THERAPIST', 'FINANCE', 'RECEPTION_ADMIN_STAFF', 'SYSTEM_ADMINISTRATOR', 'SUPERVISOR'],
 } as const;
 
 export type PermissionKey =
@@ -40,4 +41,5 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'nav.billing',  route: '/billing',  roles: ROUTE_ROLES['billing'],  icon: 'pi-wallet' },
   { labelKey: 'nav.reports',  route: '/reports',  roles: ROUTE_ROLES['reports'],  icon: 'pi-chart-bar' },
   { labelKey: 'nav.admin',    route: '/admin',    roles: ROUTE_ROLES['admin'],    icon: 'pi-cog' },
+  { labelKey: 'nav.settings', route: '/settings', roles: ROUTE_ROLES['settings'], icon: 'pi-sliders-h' },
 ] as const;

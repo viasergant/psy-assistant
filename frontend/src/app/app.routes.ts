@@ -57,6 +57,11 @@ export const appRoutes: Routes = [
         path: 'admin',
         canActivate: [roleGuard(ROUTE_ROLES['admin'])],
         loadChildren: () => import('./features/admin/admin.routes')
+      },
+      {
+        path: 'settings',
+        canActivate: [roleGuard(ROUTE_ROLES['settings'])],
+        loadChildren: () => import('./features/settings/settings.routes')
       }
     ]
   },

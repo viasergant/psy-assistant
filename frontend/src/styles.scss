@@ -361,6 +361,11 @@ button {
     }
   }
 
+  .p-datatable-tfoot > tr > td {
+    background: #FFFFFF !important;
+    color: var(--color-text-primary, #0F172A) !important;
+  }
+
   .p-paginator {
     background: #FFFFFF !important;
     color: var(--color-text-primary, #0F172A) !important;

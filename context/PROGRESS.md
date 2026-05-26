@@ -17,7 +17,7 @@
 | 3 | `AppMetaController` — `GET /api/v1/meta` | complete | |
 | 4 | `SoloUserInitRunner` — Solo First-Boot User Creation | complete | | |
 | 5 | `ClinicSetupController` — Clinic First-Boot Admin Endpoint | complete | |
-| 6 | Move V3 Admin Seed to `local-seed/` | pending | |
+| 6 | Move V3 Admin Seed to `local-seed/` | complete | |
 | 7 | Angular `core/mode/` Package | pending | |
 | 8 | Apply `@Profile("clinic")` to Clinic-Only Controllers | pending | |
 | 9 | Wire Angular Routes and UI with `ModeGuard` and `*appIfMode` | pending | |
@@ -302,3 +302,35 @@
 - Coverage: FULLY COVERED
 - Recommendation: approve
 - Notes: All 5 previously-identified findings confirmed fixed. @Transactional on createAdmin eliminates race condition. ResponseEntity.created(uri) adds Location header. P3 audit-swallow test (doThrow) passes. @Size(min=8) and both @NotBlank branches each have a dedicated test. ClinicSetupControllerSoloTest covers AC1/AC4 (solo-profile returns 404). NoHandlerFoundException handler in GlobalExceptionHandler is inert in production (triggering properties not set in any main config); no conflict with existing error handling. All 7 acceptance criteria fully covered.
+
+---
+
+## 2026-05-26 — Increment 6: Move V3 Admin Seed to `local-seed/`
+
+- **What was completed:** Created `R__seed_admin_user.sql` in `db/local-seed/` targeting the current schema (no `role` column on `users`; roles in `user_roles` junction table). The file inserts the admin user idempotently and assigns the `SYSTEM_ADMINISTRATOR` role. Confirmed `application-local.yml` already includes `classpath:db/local-seed` in `flyway.locations` (no YAML change needed).
+- **Interfaces/methods created:** None (SQL seed file only)
+- **Files created/modified:**
+  - Created: `backend/src/main/resources/db/local-seed/R__seed_admin_user.sql`
+  - Not modified: `backend/src/main/resources/application-local.yml` — `flyway.locations` already includes `classpath:db/local-seed` from Increment 2
+  - Not modified: `backend/src/main/resources/db/migration/V3__seed_admin_user.sql` — Flyway checksum protection; cannot be touched
+- **Decisions made:**
+  - Used the existing `R__seed_dev_therapist.sql` as structural reference — same pattern of `INSERT INTO users ... ON CONFLICT (email) DO NOTHING` followed by `INSERT INTO user_roles ... SELECT id ... ON CONFLICT (user_id, role) DO NOTHING`.
+  - All non-null columns without suitable defaults are explicitly listed (`active`, `must_change_password`, `language`, `failed_login_attempts`, `created_at`, `updated_at`). Nullable columns (`full_name`, `locked_until`) are omitted.
+  - Same bcrypt hash as V3 (`$2a$12$bzum65qKv3b.9DQSwmhyaeCEOw4Djw6yGFRTQvL5Im9M9gIjVEha6`) — confirmed valid for `Admin1234!` at cost 12.
+  - SQL comment explains V3 still runs in all environments and why this file exists alongside it.
+- **Tests:** No new tests (SQL seed file; no business logic). Full suite: 538 passing / 0 failures — zero regressions.
+
+---
+
+## 2026-05-26 — Code Review (Increment 6)
+- Quality: PASS (Critical: 0, High: 0)
+- Coverage: FULLY COVERED
+- Recommendation: approve
+
+## 2026-05-26 — Test Run (Increment 6, attempt 1)
+- Passed: 538 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured)
+- Coverage gate: N/A — no JaCoCo plugin in pom.xml
+- Duration: ~12.7s
+- Failures: none
+- Increment 6 adds SQL only (R__seed_admin_user.sql); no new tests expected or required
+- Action: all clear — zero regressions; full suite green at 538 tests

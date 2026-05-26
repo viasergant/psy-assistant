@@ -14,7 +14,7 @@
 |---|-------|--------|-------|
 | 1 | V70 Migration — Confirm `must_change_password` Column | complete | `must_change_password` already exists from V18; V70 is a safe no-op `ADD COLUMN IF NOT EXISTS` |
 | 2 | Spring Profile Stubs and `DeploymentModeValidator` | complete | |
-| 3 | `AppMetaController` — `GET /api/v1/meta` | pending | |
+| 3 | `AppMetaController` — `GET /api/v1/meta` | complete | |
 | 4 | `SoloUserInitRunner` — Solo First-Boot User Creation | pending | |
 | 5 | `ClinicSetupController` — Clinic First-Boot Admin Endpoint | pending | |
 | 6 | Move V3 Admin Seed to `local-seed/` | pending | |
@@ -107,3 +107,54 @@
 - Duration: ~11s (two runs; 11.395s on second run)
 - Failures: none
 - Action: all clear — DeploymentModeValidator and 7 new unit tests pass; zero regressions across all @SpringBootTest and @WebMvcTest classes
+
+---
+
+## 2026-05-26 — Increment 3: `AppMetaController` — `GET /api/v1/meta`
+
+- **What was completed:** Created `AppMetaResponse` record, `AppMetaController` (unauthenticated `GET /api/v1/meta`), and `AppMetaControllerTest` with 4 test cases; updated `SecurityConfig` to `permitAll()` for `/api/v1/meta` and `/api/v1/setup/admin`.
+- **Interfaces/methods created:**
+  - `AppMetaResponse(String mode, String version)` — response record in `com.psyassistant.common.mode`
+  - `AppMetaController.getMeta(): AppMetaResponse` — `GET /api/v1/meta`, no auth required, reads active profiles from `Environment`; `solo` wins over `clinic` when both are active
+- **Files created/modified:**
+  - Created: `backend/src/main/java/com/psyassistant/common/mode/AppMetaResponse.java`
+  - Created: `backend/src/main/java/com/psyassistant/common/mode/AppMetaController.java`
+  - Created: `backend/src/test/java/com/psyassistant/common/mode/AppMetaControllerTest.java`
+  - Modified: `backend/src/main/java/com/psyassistant/common/config/SecurityConfig.java` — added two `permitAll()` matchers for `/api/v1/meta` and `/api/v1/setup/admin` immediately after the existing `/api/v1/auth/**` matcher
+- **Decisions made:**
+  - Test uses static nested `@WebMvcTest` classes (`SoloProfileTest`, `ClinicProfileTest`) with distinct `@ActiveProfiles` to exercise mode detection, since `Environment` is a core Spring bean that cannot be mocked via `@MockitoBean`. Surefire discovers these as separate test classes.
+  - The outer `AppMetaControllerTest` class (active profile: `test` only) verifies the default-to-SOLO fallback and the `permitAll()` rule (no Authorization header required).
+  - Version property read order: `spring.application.version` → `build.version` → `"unknown"`.
+- **Tests:** 522 passing / 0 failures (4 new tests; zero regressions)
+
+---
+
+## 2026-05-26 — Test Run (Increment 3, attempt 1)
+- Passed: 522 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured)
+- Coverage gate: N/A — no JaCoCo plugin in pom.xml
+- Duration: ~12.8s
+- Failures: none
+- Security regression check: SecurityConfigTest (2), RbacIntegrationTest (13), AdminUserControllerTest (21), ActuatorSecurityTest (3), AppMetaControllerTest (2) — all 41 pass; the two new permitAll() matchers caused zero regressions in existing auth/security tests
+- Action: all clear — Increment 3 fully green
+
+---
+
+## 2026-05-26 — Code Review (Increment 3)
+- Quality: FAIL (Critical: 0, High: 1, Medium: 1)
+- Coverage: FULLY COVERED
+- Recommendation: fix and re-review
+
+## 2026-05-26 — Code Review Fix (Increment 3): Nested test classes extracted
+
+- **Finding fixed (HIGH):** Maven Surefire does not discover nested static `@WebMvcTest` classes by default; `SoloProfileTest` and `ClinicProfileTest` were silently skipped.
+- **Fix:** Extracted both nested classes to standalone top-level test files:
+  - Created: `backend/src/test/java/com/psyassistant/common/mode/AppMetaControllerSoloTest.java` (`@ActiveProfiles({"solo","test"})`, 1 test)
+  - Created: `backend/src/test/java/com/psyassistant/common/mode/AppMetaControllerClinicTest.java` (`@ActiveProfiles({"clinic","test"})`, 1 test)
+  - Modified: `backend/src/test/java/com/psyassistant/common/mode/AppMetaControllerTest.java` — removed nested static classes; outer class retains its 2 tests unchanged
+- **Tests:** 524 passing / 0 failures (count increased from 522 to 524 — 2 previously-skipped tests now discovered)
+
+## 2026-05-26 — Code Review Re-check (Increment 3)
+- Quality: PASS (Critical: 0, High: 0)
+- Coverage: FULLY COVERED
+- Recommendation: approve
+- Notes: HIGH finding resolved — nested static test classes extracted to top-level `AppMetaControllerSoloTest` and `AppMetaControllerClinicTest`; all 4 tests now Surefire-discoverable; profile assertions and outer-class integrity confirmed; Medium finding (two-pass profile scan) accepted as-is for v1

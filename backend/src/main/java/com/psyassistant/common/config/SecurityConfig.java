@@ -110,6 +110,8 @@ public class SecurityConfig {
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/meta").permitAll()
+                .requestMatchers("/api/v1/setup/admin").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/api/v1/email/webhooks/**").permitAll()
                 .requestMatchers("/actuator/**").authenticated()

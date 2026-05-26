@@ -16,7 +16,7 @@
 | 2 | Spring Profile Stubs and `DeploymentModeValidator` | complete | |
 | 3 | `AppMetaController` — `GET /api/v1/meta` | complete | |
 | 4 | `SoloUserInitRunner` — Solo First-Boot User Creation | complete | | |
-| 5 | `ClinicSetupController` — Clinic First-Boot Admin Endpoint | pending | |
+| 5 | `ClinicSetupController` — Clinic First-Boot Admin Endpoint | complete | |
 | 6 | Move V3 Admin Seed to `local-seed/` | pending | |
 | 7 | Angular `core/mode/` Package | pending | |
 | 8 | Apply `@Profile("clinic")` to Clinic-Only Controllers | pending | |
@@ -218,3 +218,87 @@
 - Coverage: FULLY COVERED
 - Recommendation: approve
 - Notes: Both previously-identified coverage gaps are resolved. `whenSoloPasswordBlankThrowsIllegalStateException` (line 127) correctly isolates the blank-password branch, stubs `count()` to 0, asserts `IllegalStateException`, and verifies `save()` is never called. `whenAuditLogThrowsRunCompletesNormally` (line 144) correctly uses `doThrow` to simulate audit failure, asserts `assertDoesNotThrow` for `run()`, and confirms `save()` was called — validating the P3 audit-swallow pattern end-to-end. Two remaining open mediums (no exception-message assertion on `assertThrows`; blank-credential check ordering in production code) were accepted without fix and are not blocking.
+
+---
+
+## 2026-05-26 — Increment 5: `ClinicSetupController` — Clinic First-Boot Admin Endpoint
+
+- **What was completed:** Created `SetupAlreadyCompleteException` (unchecked), `ClinicSetupRequest` record with validation, `ClinicSetupController` (`@Profile("clinic")`, `POST /api/v1/setup/admin`), added handler for `SetupAlreadyCompleteException` in `GlobalExceptionHandler`, and `ClinicSetupControllerTest` with 4 tests.
+- **Interfaces/methods created:**
+  - `SetupAlreadyCompleteException()` — unchecked exception in `com.psyassistant.common.mode`; message `"Initial setup already completed"`
+  - `ClinicSetupRequest(String email, String password, String fullName)` — record in `com.psyassistant.common.mode` with `@NotBlank @Email` on email, `@NotBlank @Size(min=8)` on password
+  - `ClinicSetupController.createAdmin(ClinicSetupRequest)` — `POST /api/v1/setup/admin`; returns `Map<String, String>` with `{"id": "<uuid>"}` on HTTP 201; throws `SetupAlreadyCompleteException` on HTTP 409 when `userRepository.count() > 0`
+  - `GlobalExceptionHandler.handleSetupAlreadyComplete(SetupAlreadyCompleteException, HttpServletRequest)` — returns HTTP 409 with `code = "SETUP_ALREADY_COMPLETE"`
+- **Files created/modified:**
+  - Created: `backend/src/main/java/com/psyassistant/common/mode/SetupAlreadyCompleteException.java`
+  - Created: `backend/src/main/java/com/psyassistant/common/mode/ClinicSetupRequest.java`
+  - Created: `backend/src/main/java/com/psyassistant/common/mode/ClinicSetupController.java`
+  - Created: `backend/src/test/java/com/psyassistant/common/mode/ClinicSetupControllerTest.java`
+  - Modified: `backend/src/main/java/com/psyassistant/common/exception/GlobalExceptionHandler.java` — added import + `handleSetupAlreadyComplete` handler method
+- **Decisions made:**
+  - `SetupAlreadyCompleteException` approach chosen (over inline `ResponseEntity`) to keep the controller lean and consistent with the codebase's existing exception-per-case pattern in `GlobalExceptionHandler`.
+  - Import order in `GlobalExceptionHandler` fixed to maintain alphabetical order (`com.psyassistant.common.mode` between `com.psyassistant.common.audit` and `com.psyassistant.crm`).
+  - Audit log uses `AuditLog.Builder("CLINIC_ADMIN_CREATED")` with `userId`, `outcome("SUCCESS")`, and `detail` — same pattern as `SoloUserInitRunner`; wrapped in try-catch per P3.
+  - Test uses `@ActiveProfiles({"clinic", "test"})` so the `@Profile("clinic")` guard on the controller is satisfied.
+  - Test method names follow the project's camelCase-only checkstyle rule (no underscores), consistent with Increments 2 and 4.
+- **Tests:** 4 passing / 0 failures (full suite: 533 passing / 0 failures)
+
+---
+
+## 2026-05-26 — Test Run (Increment 5, attempt 1)
+- Passed: 533 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured)
+- Coverage gate: N/A — no JaCoCo plugin in pom.xml
+- Duration: ~12.6s
+- Failures: none
+- ClinicSetupControllerTest confirmed: 4 tests (noUsersExist createsAdmin returns201, usersAlreadyExist returns409WithErrorResponse, invalidEmail returns400WithErrorResponse, noAuth requestAllowed) — all green; active profiles "clinic", "test" confirmed in output
+- Action: all clear — Increment 5 fully green; zero regressions across all 533 tests
+
+---
+
+## 2026-05-26 — Code Review (Increment 5)
+- Quality: FAIL (Critical: 0, High: 1, Medium: 4, Low: 2)
+- Coverage: GAPS FOUND
+- Recommendation: fix and re-review
+- Findings:
+  - HIGH (ClinicSetupController.java:77-85): count()/save() not in a transaction — concurrent first-boot requests can both pass the zero-users gate and create two admin users; @Transactional required
+  - MEDIUM (ClinicSetupController.java:74-76): HTTP 201 returned with no Location header; API design rule requires Location on every 201
+  - MEDIUM (ClinicSetupControllerTest.java): No test for P3 audit-failure swallow — auditLogService.record() throwing should not propagate out of createAdmin()
+  - MEDIUM (ClinicSetupControllerTest.java): No test for @Size(min=8) password violation returning HTTP 400
+  - MEDIUM (ClinicSetupControllerTest.java): No tests for @NotBlank violations (blank email, blank password) returning HTTP 400
+  - MEDIUM (ClinicSetupControllerTest.java): No test for solo-profile-absent negative path (AC1/AC4 — endpoint absent in solo mode, returns 404)
+  - LOW (ClinicSetupControllerTest.java:86): verify(userRepository).save(any(User.class)) does not assert saved User properties; ArgumentCaptor needed to confirm SYSTEM_ADMINISTRATOR role, mustChangePassword=false, active=true
+
+## 2026-05-26 — Code Review Fix (Increment 5): Race condition, Location header, and 5 missing tests
+
+- **Findings fixed:**
+  - HIGH (race condition): Added `@Transactional` to `ClinicSetupController.createAdmin()`. The `count()` check and `save()` now run in a single transaction, preventing concurrent first-boot requests from both passing the zero-users gate. The `email` `UNIQUE` constraint from V2 migration serves as the DB-level backstop.
+  - MEDIUM (Location header): Changed `createAdmin` return type from `Map<String, String>` to `ResponseEntity<Map<String, String>>`. Removed `@ResponseStatus(HttpStatus.CREATED)`. Now returns `ResponseEntity.created(URI.create("/api/v1/setup/admin/" + saved.getId())).body(...)`. Updated `whenNoUsersExistCreatesAdminReturns201` test to assert `header().string("Location", ...)`.
+  - MEDIUM (audit-failure test): Added `whenAuditLogThrowsCreatesAdminReturns201` — stubs `auditLogService.record(any())` to throw `RuntimeException`; asserts HTTP 201 is still returned (P3 swallow confirmed).
+  - MEDIUM (password too short): Added `whenPasswordTooShortReturns400` — posts password `"short"` (5 chars, below `@Size(min=8)`); asserts HTTP 400.
+  - MEDIUM (blank email): Added `whenBlankEmailReturns400` — posts blank email; asserts HTTP 400.
+  - MEDIUM (blank password): Added `whenBlankPasswordReturns400` — posts blank password; asserts HTTP 400.
+  - MEDIUM (solo profile absent): Created separate top-level `ClinicSetupControllerSoloTest.java` with `@ActiveProfiles({"solo","test"})`. The `@Profile("clinic")` guard prevents the controller from registering; `POST /api/v1/setup/admin` returns HTTP 404.
+- **Supporting fix:** Added `@ExceptionHandler(NoHandlerFoundException.class)` to `GlobalExceptionHandler` (returns 404 with `NOT_FOUND` code) and added `@TestPropertySource` (`spring.mvc.throw-exception-if-no-handler-found=true`, `spring.web.resources.add-mappings=false`) to `ClinicSetupControllerSoloTest` so that MockMvc properly raises `NoHandlerFoundException` instead of routing to the error page.
+- **Files created/modified:**
+  - Modified: `backend/src/main/java/com/psyassistant/common/mode/ClinicSetupController.java` — `@Transactional`, `ResponseEntity` return type, `Location` header, removed `@ResponseStatus`
+  - Modified: `backend/src/test/java/com/psyassistant/common/mode/ClinicSetupControllerTest.java` — added `header` and `doThrow` imports; added `Location` header assertion to existing test; added 4 new test methods
+  - Created: `backend/src/test/java/com/psyassistant/common/mode/ClinicSetupControllerSoloTest.java` — solo-profile 404 test
+  - Modified: `backend/src/main/java/com/psyassistant/common/exception/GlobalExceptionHandler.java` — added `NoHandlerFoundException` handler (returns 404)
+- **Tests:** 538 passing / 0 failures (count increased from 533 to 538 — 5 new tests added)
+
+---
+
+## 2026-05-26 — Test Run (Increment 5 fix pass, attempt 1)
+- Passed: 538 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured)
+- Coverage gate: N/A — no JaCoCo plugin in pom.xml
+- Duration: ~13.2s
+- Failures: none
+- ClinicSetupControllerTest confirmed: 8 tests all green (active profiles "clinic", "test")
+- ClinicSetupControllerSoloTest confirmed: 1 test all green (active profiles "solo", "test")
+- Action: all clear — Increment 5 fix pass fully green; zero regressions across all 538 tests
+
+## 2026-05-26 — Code Review Re-check (Increment 5)
+- Quality: PASS (Critical: 0, High: 0)
+- Coverage: FULLY COVERED
+- Recommendation: approve
+- Notes: All 5 previously-identified findings confirmed fixed. @Transactional on createAdmin eliminates race condition. ResponseEntity.created(uri) adds Location header. P3 audit-swallow test (doThrow) passes. @Size(min=8) and both @NotBlank branches each have a dedicated test. ClinicSetupControllerSoloTest covers AC1/AC4 (solo-profile returns 404). NoHandlerFoundException handler in GlobalExceptionHandler is inert in production (triggering properties not set in any main config); no conflict with existing error handling. All 7 acceptance criteria fully covered.

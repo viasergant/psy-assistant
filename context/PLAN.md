@@ -58,10 +58,10 @@ document.
 | # | Title | Status |
 |---|-------|--------|
 | 1 | V70 Migration — Confirm `must_change_password` Column | completed |
-| 2 | Spring Profile Stubs and `DeploymentModeValidator` | pending |
-| 3 | `AppMetaController` — `GET /api/v1/meta` | pending |
-| 4 | `SoloUserInitRunner` — Solo First-Boot User Creation | pending |
-| 5 | `ClinicSetupController` — Clinic First-Boot Admin Endpoint | pending |
+| 2 | Spring Profile Stubs and `DeploymentModeValidator` | completed |
+| 3 | `AppMetaController` — `GET /api/v1/meta` | completed |
+| 4 | `SoloUserInitRunner` — Solo First-Boot User Creation | completed |
+| 5 | `ClinicSetupController` — Clinic First-Boot Admin Endpoint | completed |
 | 6 | Move V3 Admin Seed to `local-seed/` | pending |
 | 7 | Angular `core/mode/` Package | pending |
 | 8 | Apply `@Profile("clinic")` to Clinic-Only Controllers | pending |

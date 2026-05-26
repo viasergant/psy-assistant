@@ -15,7 +15,7 @@
 | 1 | V70 Migration — Confirm `must_change_password` Column | complete | `must_change_password` already exists from V18; V70 is a safe no-op `ADD COLUMN IF NOT EXISTS` |
 | 2 | Spring Profile Stubs and `DeploymentModeValidator` | complete | |
 | 3 | `AppMetaController` — `GET /api/v1/meta` | complete | |
-| 4 | `SoloUserInitRunner` — Solo First-Boot User Creation | pending | |
+| 4 | `SoloUserInitRunner` — Solo First-Boot User Creation | complete | | |
 | 5 | `ClinicSetupController` — Clinic First-Boot Admin Endpoint | pending | |
 | 6 | Move V3 Admin Seed to `local-seed/` | pending | |
 | 7 | Angular `core/mode/` Package | pending | |
@@ -129,6 +129,26 @@
 
 ---
 
+## 2026-05-26 — Increment 4: `SoloUserInitRunner` — Solo First-Boot User Creation
+
+- **What was completed:** Implemented `SoloUserInitRunner` as a `@Component @Profile("solo") ApplicationRunner` that creates the single solo user on first boot when the DB is empty. Reads `SOLO_USERNAME` and `SOLO_PASSWORD` from environment variables, hashes the password, creates a `User` with all 5 roles, sets `mustChangePassword = true`, saves, logs the UUID, and records an audit event wrapped in try-catch.
+- **Interfaces/methods created:**
+  - `SoloUserInitRunner.run(ApplicationArguments)` — idempotent first-boot init; skips if `userRepository.count() > 0`; throws `IllegalStateException` if either env var is blank
+- **Files created/modified:**
+  - Created: `backend/src/main/java/com/psyassistant/common/mode/SoloUserInitRunner.java`
+  - Created: `backend/src/test/java/com/psyassistant/common/mode/SoloUserInitRunnerTest.java`
+  - Modified: `context/PROGRESS.md` (this update), `context/PLAN.md` (status updated)
+- **Decisions made:**
+  - `ALL_ROLES` is an `EnumSet` constant holding all 5 canonical roles: `RECEPTION_ADMIN_STAFF`, `THERAPIST`, `SUPERVISOR`, `FINANCE`, `SYSTEM_ADMINISTRATOR` — matching the exact enum values in `UserRole.java`.
+  - `AuditLogService.record(AuditLog)` is called using `AuditLog.Builder` pattern. The `eventType` is `"SOLO_USER_CREATED"`, `outcome` is `"SUCCESS"`. No email/username is ever passed to the audit log — only `userId`.
+  - `User` constructor used: `User(String email, String passwordHash, Set<UserRole> roles, boolean active)` — the multi-role constructor, `active = true`.
+  - `user.setMustChangePassword(true)` called after construction (constructor defaults `mustChangePassword = false`).
+  - Test uses `ReflectionTestUtils.setField()` to inject `soloUsername` and `soloPassword` without Spring context. The `User.id` field is similarly injected via `ReflectionTestUtils` in the test to give the mock saved user a non-null UUID.
+  - Test method names follow the project's camelCase-only checkstyle rule (no underscores), consistent with Increment 2.
+- **Tests:** 3 passing / 0 failures (full suite: 527 passing / 0 failures)
+
+---
+
 ## 2026-05-26 — Test Run (Increment 3, attempt 1)
 - Passed: 522 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured)
 - Coverage gate: N/A — no JaCoCo plugin in pom.xml
@@ -158,3 +178,43 @@
 - Coverage: FULLY COVERED
 - Recommendation: approve
 - Notes: HIGH finding resolved — nested static test classes extracted to top-level `AppMetaControllerSoloTest` and `AppMetaControllerClinicTest`; all 4 tests now Surefire-discoverable; profile assertions and outer-class integrity confirmed; Medium finding (two-pass profile scan) accepted as-is for v1
+
+---
+
+## 2026-05-26 — Test Run (Increment 4, attempt 1)
+- Passed: 527 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured)
+- Coverage gate: N/A — no JaCoCo plugin in pom.xml
+- Duration: ~11.25s
+- Failures: none
+- SoloUserInitRunner tests confirmed: SoloUserInitRunnerTest (3 tests — noUsersExist createsUser, usersAlreadyExist skips, missingEnvVars throwsIllegalStateException) all green
+- Action: all clear — Increment 4 fully green; zero regressions across all 527 tests
+
+---
+
+## 2026-05-26 — Code Review (Increment 4)
+- Quality: PASS (Critical: 0, High: 0, Medium: 3)
+- Coverage: GAPS FOUND
+- Recommendation: fix and re-review
+- Findings:
+  - MEDIUM (SoloUserInitRunnerTest.java line 109): Only blank-username case tested; no test for blank soloPassword with valid soloUsername — AC3 requires both branches
+  - MEDIUM (SoloUserInitRunnerTest.java): P3 audit-failure try-catch path has no test — auditLogService.record() throwing should not propagate out of run()
+  - MEDIUM (SoloUserInitRunnerTest.java line 115): assertThrows does not assert exception message content
+  - MEDIUM (SoloUserInitRunner.java lines 70-75): Blank-credential check executes after the idempotency count check; misconfigured restart with existing users silently skips rather than warning operator (functionally safe, operationally surprising)
+
+## 2026-05-26 — Code Review Fix (Increment 4): 2 missing tests added
+
+- **Findings fixed (2 MEDIUM coverage gaps):**
+  1. Blank `soloPassword` with valid `soloUsername` — `whenSoloPasswordBlankThrowsIllegalStateException` added; verifies `IllegalStateException` is thrown and `save()` is never called.
+  2. `auditLogService.record()` throws — `whenAuditLogThrowsRunCompletesNormally` added; verifies `run()` completes without re-throwing and `save()` was called (P3 audit swallow pattern confirmed).
+- **Files modified:**
+  - `backend/src/test/java/com/psyassistant/common/mode/SoloUserInitRunnerTest.java` — added `assertDoesNotThrow` and `doThrow` imports; added 2 new `@Test` methods
+- **No production code changed.**
+- **Tests:** 529 passing / 0 failures (count increased from 527 to 529)
+
+---
+
+## 2026-05-26 — Code Review Re-check (Increment 4)
+- Quality: PASS (Critical: 0, High: 0)
+- Coverage: FULLY COVERED
+- Recommendation: approve
+- Notes: Both previously-identified coverage gaps are resolved. `whenSoloPasswordBlankThrowsIllegalStateException` (line 127) correctly isolates the blank-password branch, stubs `count()` to 0, asserts `IllegalStateException`, and verifies `save()` is never called. `whenAuditLogThrowsRunCompletesNormally` (line 144) correctly uses `doThrow` to simulate audit failure, asserts `assertDoesNotThrow` for `run()`, and confirms `save()` was called — validating the P3 audit-swallow pattern end-to-end. Two remaining open mediums (no exception-message assertion on `assertThrows`; blank-credential check ordering in production code) were accepted without fix and are not blocking.

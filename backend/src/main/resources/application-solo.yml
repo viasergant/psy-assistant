@@ -1,0 +1,4 @@
+# Solo-mode profile configuration.
+# This file overrides application.yml defaults when the 'solo' Spring profile is active.
+# Values specific to single-practitioner deployments go here.
+# No overrides required at v1 — defaults in application.yml apply.

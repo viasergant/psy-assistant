@@ -13,7 +13,7 @@
 | # | Title | Status | Notes |
 |---|-------|--------|-------|
 | 1 | V70 Migration — Confirm `must_change_password` Column | complete | `must_change_password` already exists from V18; V70 is a safe no-op `ADD COLUMN IF NOT EXISTS` |
-| 2 | Spring Profile Stubs and `DeploymentModeValidator` | pending | |
+| 2 | Spring Profile Stubs and `DeploymentModeValidator` | complete | |
 | 3 | `AppMetaController` — `GET /api/v1/meta` | pending | |
 | 4 | `SoloUserInitRunner` — Solo First-Boot User Creation | pending | |
 | 5 | `ClinicSetupController` — Clinic First-Boot Admin Endpoint | pending | |
@@ -56,6 +56,28 @@
 
 ---
 
+---
+
+## 2026-05-26 — Increment 2: Spring Profile Stubs and `DeploymentModeValidator`
+
+- **What was completed:** Created `application-solo.yml` and `application-clinic.yml` stub files; implemented `DeploymentModeValidator` as a pure `ApplicationContextInitializer` with no Spring annotations; registered it via the Boot 3.x imports file; wrote 7 unit tests covering all acceptance criteria cases.
+- **Interfaces/methods created:**
+  - `DeploymentModeValidator.initialize(ConfigurableApplicationContext)` — throws `IllegalStateException` with exact message if neither `solo` nor `clinic` profile is active; no-op otherwise.
+- **Files created/modified:**
+  - Created: `backend/src/main/resources/application-solo.yml`
+  - Created: `backend/src/main/resources/application-clinic.yml`
+  - Created: `backend/src/main/java/com/psyassistant/common/mode/DeploymentModeValidator.java`
+  - Created: `backend/src/main/resources/META-INF/spring/org.springframework.context.ApplicationContextInitializer.imports`
+  - Created: `backend/src/test/java/com/psyassistant/common/mode/DeploymentModeValidatorTest.java`
+  - Not modified: `backend/src/main/resources/application-local.yml` — `flyway.locations` already included `classpath:db/local-seed` from a prior change.
+- **Decisions made:**
+  - Error message spans three concatenated string literals in source to satisfy the 120-char line limit enforced by checkstyle; the runtime value is identical to the spec's required string.
+  - Test method names use pure camelCase to comply with the project checkstyle `MethodName` rule (`^[a-z][a-zA-Z0-9]*$`). The spec's `shouldExpectedBehavior_whenCondition` pattern with underscores is incompatible with the project's checkstyle config.
+  - Import order follows the project convention: static imports (alphabetically sorted) with no blank line separator, then regular imports alphabetically — no blank line between groups.
+- **Tests:** 7 passing / 0 failures (full suite: 520 passing / 0 failures)
+
+---
+
 ## 2026-05-26 — Code Review (Increment 1)
 - Quality: PASS (Critical: 0, High: 0)
 - Coverage: FULLY COVERED
@@ -69,3 +91,19 @@
 - Duration: ~12s
 - Failures: none
 - Action: all clear — V70 migration file addition caused zero regressions; full suite green
+
+---
+
+## 2026-05-26 — Code Review (Increment 2)
+- Quality: PASS (Critical: 0, High: 0)
+- Coverage: FULLY COVERED
+- Recommendation: approve
+
+---
+
+## 2026-05-26 — Test Run (Increment 2, attempt 1)
+- Passed: 520 | Failed: 0 | Skipped: 0 | Coverage: N/A (JaCoCo not configured)
+- Coverage gate: N/A — no JaCoCo plugin in pom.xml
+- Duration: ~11s (two runs; 11.395s on second run)
+- Failures: none
+- Action: all clear — DeploymentModeValidator and 7 new unit tests pass; zero regressions across all @SpringBootTest and @WebMvcTest classes

@@ -1,0 +1,4 @@
+# Clinic-mode profile configuration.
+# This file overrides application.yml defaults when the 'clinic' Spring profile is active.
+# Values specific to multi-therapist clinic deployments go here.
+# No overrides required at v1 — defaults in application.yml apply.

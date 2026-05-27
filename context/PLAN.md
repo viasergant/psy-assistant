@@ -62,8 +62,8 @@ document.
 | 3 | `AppMetaController` — `GET /api/v1/meta` | completed |
 | 4 | `SoloUserInitRunner` — Solo First-Boot User Creation | completed |
 | 5 | `ClinicSetupController` — Clinic First-Boot Admin Endpoint | completed |
-| 6 | Move V3 Admin Seed to `local-seed/` | pending |
-| 7 | Angular `core/mode/` Package | pending |
+| 6 | Move V3 Admin Seed to `local-seed/` | completed |
+| 7 | Angular `core/mode/` Package | completed |
 | 8 | Apply `@Profile("clinic")` to Clinic-Only Controllers | pending |
 | 9 | Wire Angular Routes with `ModeGuard` and `*appIfMode` | pending |
 

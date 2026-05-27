@@ -1,6 +1,7 @@
 package com.psyassistant;
 
 import com.psyassistant.billing.invoice.config.InvoiceProperties;
+import com.psyassistant.billing.pkg.BillingPackageProperties;
 import com.psyassistant.careplans.config.CarePlanProperties;
 import com.psyassistant.common.config.SecurityProperties;
 import com.psyassistant.reporting.caseload.CaseloadProperties;
@@ -23,6 +24,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 @EnableScheduling
 @EnableConfigurationProperties({CarePlanProperties.class, CaseloadProperties.class, InvoiceProperties.class,
+        BillingPackageProperties.class,
         com.psyassistant.reporting.reports.ReportProperties.class, SecurityProperties.class,
         AttendanceProperties.class})
 public class PsyAssistantApplication {

@@ -44,6 +44,8 @@ import java.util.Set;
  * READ_RISK_FLAGS          |  Y  |  Y  |  Y  |     |  Y
  * READ_RISK_FLAG_NOTES     |     |  Y  |  Y  |     |  Y
  * MANAGE_RISK_FLAG_TYPES   |     |     |     |     |  Y
+ * MANAGE_PACKAGES          |     |     |     |  Y  |  Y
+ * READ_PACKAGES            |     |     |  Y  |  Y  |  Y
  *
  * RAS = RECEPTION_ADMIN_STAFF, THE = THERAPIST, SUP = SUPERVISOR,
  * FIN = FINANCE,               SYS = SYSTEM_ADMINISTRATOR
@@ -92,6 +94,7 @@ public final class RolePermissions {
                 Permission.READ_INVOICES,
                 Permission.READ_SERVICE_CATALOG,
                 Permission.READ_PRICING_RULES,
+                Permission.READ_PACKAGES,
                 Permission.MANAGE_RISK_FLAGS,
                 Permission.READ_RISK_FLAGS,
                 Permission.READ_RISK_FLAG_NOTES
@@ -108,7 +111,9 @@ public final class RolePermissions {
                 Permission.MANAGE_SERVICE_CATALOG,
                 Permission.READ_SERVICE_CATALOG,
                 Permission.MANAGE_PRICING_RULES,
-                Permission.READ_PRICING_RULES
+                Permission.READ_PRICING_RULES,
+                Permission.MANAGE_PACKAGES,
+                Permission.READ_PACKAGES
         )));
 
         map.put(UserRole.SYSTEM_ADMINISTRATOR, Collections.unmodifiableSet(EnumSet.of(
@@ -140,6 +145,8 @@ public final class RolePermissions {
                 Permission.MANAGE_PRICING_RULES,
                 Permission.READ_PRICING_RULES,
                 Permission.MANAGE_NOTIFICATION_TEMPLATES,
+                Permission.MANAGE_PACKAGES,
+                Permission.READ_PACKAGES,
                 Permission.MANAGE_RISK_FLAGS,
                 Permission.READ_RISK_FLAGS,
                 Permission.READ_RISK_FLAG_NOTES,

@@ -61,6 +61,9 @@ class InvoiceServiceTest {
     @Mock
     private ServiceCatalogTherapistOverrideRepository overrideRepository;
 
+    @Mock
+    private com.psyassistant.billing.pkg.PrepaidPackageInstanceRepository packageInstanceRepository;
+
     private InvoiceService service;
 
     private static final UUID CLIENT_ID = UUID.randomUUID();
@@ -71,7 +74,8 @@ class InvoiceServiceTest {
     void setUp() {
         InvoiceProperties props = new InvoiceProperties(14, "/tmp/invoices");
         service = new InvoiceService(invoiceRepository, seqRepository, sessionRecordRepository, pdfService, props,
-                pricingRuleRepository, catalogRepository, priceHistoryRepository, overrideRepository);
+                pricingRuleRepository, catalogRepository, priceHistoryRepository, overrideRepository,
+                packageInstanceRepository);
     }
 
     // ---- createManual -------------------------------------------------------

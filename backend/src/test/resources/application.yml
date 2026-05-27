@@ -102,3 +102,9 @@ notifications:
       poll-interval-ms: 60000
       batch-size: 10
 
+
+billing:
+  packages:
+    rollover: false
+    grace-period-days: 0
+    expiry-cron: "0 0 1 * * *"

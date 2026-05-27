@@ -112,6 +112,13 @@ public enum Permission {
     /** Create, update, activate, deactivate, and delete notification templates. */
     MANAGE_NOTIFICATION_TEMPLATES,
 
+    // ---- Prepaid packages -----------------------------------------------
+    /** Create and archive package definitions; sell packages to clients. */
+    MANAGE_PACKAGES,
+
+    /** List package definitions and view client package instances. */
+    READ_PACKAGES,
+
     // ---- Risk flags ------------------------------------------------------
     /** Create, update, and resolve risk flags on client profiles. */
     MANAGE_RISK_FLAGS,

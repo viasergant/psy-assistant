@@ -84,6 +84,7 @@ import { SellPackageDialogComponent } from '../../../billing/components/sell-pac
       *ngIf="showSellDialog"
       [clientId]="clientId"
       [definitions]="definitions"
+      [definitionsError]="definitionsError"
       (sold)="onSold($event)"
       (cancel)="showSellDialog = false"
     />
@@ -178,13 +179,17 @@ export class ClientPackagesComponent implements OnInit, OnChanges {
   definitions: PackageDefinition[] = [];
   loading = false;
   loadError = '';
+  definitionsError = false;
   showSellDialog = false;
 
   constructor(private packageService: PackageService) {}
 
   ngOnInit(): void {
     this.loadPackages();
-    this.packageService.listDefinitions('ACTIVE').subscribe((defs) => (this.definitions = defs));
+    this.packageService.listDefinitions('ACTIVE').subscribe({
+      next: (defs) => (this.definitions = defs),
+      error: () => (this.definitionsError = true),
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {

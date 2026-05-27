@@ -41,6 +41,12 @@ import { PackageService } from '../../services/package.service';
               (onChange)="onDefinitionChange()"
               styleClass="w-full"
             />
+            <span *ngIf="definitionsError" class="error-msg" role="alert">
+              {{ 'billing.packages.sell.definitionsLoadError' | transloco }}
+            </span>
+            <span *ngIf="!definitionsError && definitions.length === 0" class="field-hint field-hint--warn" role="status">
+              {{ 'billing.packages.sell.noDefinitions' | transloco }}
+            </span>
             <span *ngIf="isInvalid('definitionId')" class="error-msg" role="alert">
               {{ 'common.validation.required' | transloco }}
             </span>
@@ -128,11 +134,15 @@ import { PackageService } from '../../services/package.service';
       color: var(--color-text-secondary, #64748B);
       font-size: .875rem;
     }
+    .field-hint--warn {
+      color: var(--color-warn, #F59E0B);
+    }
   `],
 })
 export class SellPackageDialogComponent implements OnInit {
   @Input() clientId!: string;
   @Input() definitions: PackageDefinition[] = [];
+  @Input() definitionsError = false;
 
   @Output() sold = new EventEmitter<PackageInstance>();
   @Output() cancel = new EventEmitter<void>();

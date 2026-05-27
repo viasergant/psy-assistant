@@ -173,8 +173,8 @@
       "convertedBannerMessage": "This lead has been converted to a client.",
       "viewClientRecord": "View client record",
       "moveToStatusLabel": "Move to status",
-      "keepCurrentStatus": "\u2014 keep current \u2014",
-      "saving": "Saving\u2026",
+      "keepCurrentStatus": "— keep current —",
+      "saving": "Saving…",
       "saveChanges": "Save changes"
     },
     "convert": {
@@ -244,7 +244,16 @@
         "savingTags": "Saving tags...",
         "suggestions": "Suggestions:",
         "noTags": "No tags yet.",
-        "defaultHints": ["priority", "follow-up", "anxiety", "depression", "family", "adolescent", "trauma", "stress"]
+        "defaultHints": [
+          "priority",
+          "follow-up",
+          "anxiety",
+          "depression",
+          "family",
+          "adolescent",
+          "trauma",
+          "stress"
+        ]
       },
       "photo": {
         "noPhoto": "No photo uploaded",
@@ -718,7 +727,7 @@
         "statusInactive": "Inactive",
         "filterAllRoles": "All roles",
         "filterAllStatuses": "All statuses",
-        "loading": "Loading\u2026",
+        "loading": "Loading…",
         "noResults": "No users match the current filters.",
         "ariaFilters": "User filters",
         "ariaList": "User list",
@@ -751,10 +760,10 @@
         "fullNameLabel": "Full name",
         "fullNameRequired": "Full name is required.",
         "roleLabel": "Role",
-        "selectPlaceholder": "\u2014 select \u2014",
+        "selectPlaceholder": "— select —",
         "roleRequired": "Select a role.",
         "createButton": "Create user",
-        "creatingLabel": "Creating\u2026",
+        "creatingLabel": "Creating…",
         "successTitle": "User Created Successfully",
         "successMessage": "{{name}} has been created.",
         "successInfoText": "Please share the temporary password below with the user. They will be required to change it on first login.",
@@ -862,7 +871,7 @@
         "emailInvalid": "Enter a valid email address.",
         "phoneLabel": "Phone number",
         "employmentStatusLabel": "Employment Status",
-        "selectPlaceholder": "\u2014 select \u2014",
+        "selectPlaceholder": "— select —",
         "employmentStatusRequired": "Select an employment status.",
         "bioLabel": "Biography / About",
         "bioPlaceholder": "Brief professional biography...",
@@ -871,7 +880,7 @@
         "noneAssigned": "None assigned",
         "specializationsHelp": "Specializations and languages are managed separately.",
         "saveButton": "Save changes",
-        "savingLabel": "Saving\u2026"
+        "savingLabel": "Saving…"
       },
       "accountCreated": {
         "title": "Therapist Account Successfully Created",
@@ -1477,7 +1486,9 @@
         "validityDaysHint": "Leave blank for no expiry",
         "invoiceNote": "An invoice will be generated automatically on confirmation.",
         "confirm": "Sell Package",
-        "error": "Failed to sell package. Please try again."
+        "error": "Failed to sell package. Please try again.",
+        "noDefinitions": "No active packages available. Create packages first under Billing → Packages.",
+        "definitionsLoadError": "Failed to load packages."
       }
     },
     "discounts": {

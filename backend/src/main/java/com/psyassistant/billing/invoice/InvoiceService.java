@@ -9,9 +9,12 @@ import com.psyassistant.billing.invoice.dto.AddLineItemRequest;
 import com.psyassistant.billing.invoice.dto.CancelInvoiceRequest;
 import com.psyassistant.billing.invoice.dto.CreateInvoiceFromSessionRequest;
 import com.psyassistant.billing.invoice.dto.CreateManualInvoiceRequest;
+import com.psyassistant.billing.invoice.dto.CreatePackageInvoiceRequest;
 import com.psyassistant.billing.invoice.dto.InvoiceListItemResponse;
 import com.psyassistant.billing.invoice.dto.InvoiceResponse;
 import com.psyassistant.billing.invoice.pdf.InvoicePdfService;
+import com.psyassistant.billing.pkg.PrepaidPackageInstance;
+import com.psyassistant.billing.pkg.PrepaidPackageInstanceRepository;
 import com.psyassistant.sessions.domain.SessionRecord;
 import com.psyassistant.sessions.domain.SessionStatus;
 import com.psyassistant.sessions.event.SessionCompletedEvent;
@@ -57,6 +60,7 @@ public class InvoiceService {
     private final ServiceCatalogRepository catalogRepository;
     private final ServiceCatalogPriceHistoryRepository priceHistoryRepository;
     private final ServiceCatalogTherapistOverrideRepository overrideRepository;
+    private final PrepaidPackageInstanceRepository packageInstanceRepository;
 
     public InvoiceService(
             final InvoiceRepository invoiceRepository,
@@ -67,7 +71,8 @@ public class InvoiceService {
             final TherapistPricingRuleRepository pricingRuleRepository,
             final ServiceCatalogRepository catalogRepository,
             final ServiceCatalogPriceHistoryRepository priceHistoryRepository,
-            final ServiceCatalogTherapistOverrideRepository overrideRepository) {
+            final ServiceCatalogTherapistOverrideRepository overrideRepository,
+            final PrepaidPackageInstanceRepository packageInstanceRepository) {
         this.invoiceRepository = invoiceRepository;
         this.seqRepository = seqRepository;
         this.sessionRecordRepository = sessionRecordRepository;
@@ -77,6 +82,7 @@ public class InvoiceService {
         this.catalogRepository = catalogRepository;
         this.priceHistoryRepository = priceHistoryRepository;
         this.overrideRepository = overrideRepository;
+        this.packageInstanceRepository = packageInstanceRepository;
     }
 
     // =========================================================================
@@ -304,17 +310,45 @@ public class InvoiceService {
     }
 
     /**
-     * Stub: package invoice creation is deferred until PA-49 is implemented.
+     * Creates a DRAFT invoice for a prepaid package purchase.
      *
-     * @throws UnsupportedOperationException always
+     * <p>Links the invoice back to the package instance by setting
+     * {@code PrepaidPackageInstance.invoiceId} after the invoice is saved.
+     *
+     * @param request   the request containing the package instance UUID
+     * @param actorName the authenticated actor performing the action
+     * @return the created invoice
      */
     @Transactional
     @PreAuthorize("hasAuthority('CREATE_INVOICES')")
     public InvoiceResponse createFromPackage(
-            final com.psyassistant.billing.invoice.dto.CreatePackageInvoiceRequest request,
+            final CreatePackageInvoiceRequest request,
             final String actorName) {
-        throw new UnsupportedOperationException(
-                "Package invoice generation is pending PA-49 (Prepaid Packages) integration.");
+
+        PrepaidPackageInstance instance = packageInstanceRepository.findById(request.prepaidPackageId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Package instance not found: " + request.prepaidPackageId()));
+
+        Invoice invoice = new Invoice(instance.getClientId(), null, InvoiceSource.PACKAGE);
+        invoice.setPrepaidPackageId(instance.getId());
+
+        String lineItemDesc = instance.getDefinition().getName()
+                + " — " + instance.getDefinition().getSessionQty() + " sessions";
+        invoice.addLineItem(new InvoiceLineItem(
+                lineItemDesc,
+                BigDecimal.ONE,
+                instance.getDefinition().getPrice(),
+                0));
+
+        assignInvoiceNumber(invoice);
+        Invoice saved = invoiceRepository.save(invoice);
+
+        instance.setInvoiceId(saved.getId());
+        packageInstanceRepository.save(instance);
+
+        LOG.info("Invoice {} created from package instance {} by {}",
+                saved.getInvoiceNumber(), instance.getId(), actorName);
+        return InvoiceResponse.from(saved);
     }
 
     // =========================================================================

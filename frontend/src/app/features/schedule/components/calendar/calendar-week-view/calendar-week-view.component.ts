@@ -127,14 +127,15 @@ interface TimeSlot {
     }
 
     .time-header {
-      padding: var(--spacing-md);
+      padding: 4px 8px;
+      font-size: 0.7rem;
       font-weight: 600;
       border-right: 1px solid var(--color-border);
       background: var(--color-surface);
     }
 
     .day-header {
-      padding: var(--spacing-md);
+      padding: 4px 2px;
       text-align: center;
       border-right: 1px solid var(--color-border);
       background: var(--color-surface);
@@ -147,14 +148,14 @@ interface TimeSlot {
     .day-name {
       font-weight: 600;
       color: var(--color-text-primary);
-      font-size: 0 875rem;
+      font-size: 0.65rem;
+      text-transform: uppercase;
     }
 
     .day-number {
-      font-size: 1.25rem;
+      font-size: 0.9rem;
       font-weight: 700;
       color: var(--color-text-secondary);
-      margin-top: var(--spacing-xs);
     }
 
     .grid-body {
@@ -166,14 +167,14 @@ interface TimeSlot {
     .time-row {
       display: grid;
       grid-template-columns: 80px repeat(7, 1fr);
-      min-height: 60px;
+      min-height: 28px;
       border-bottom: 1px solid var(--color-border-light);
     }
 
     .time-label {
-      padding: var(--spacing-sm);
+      padding: 2px 4px;
       border-right: 1px solid var(--color-border);
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       color: var(--color-text-secondary);
       font-weight: 600;
       text-align: right;
@@ -182,7 +183,7 @@ interface TimeSlot {
     .day-cell {
       border-right: 1px solid var(--color-border-light);
       position: relative;
-      min-height: 60px;
+      min-height: 28px;
     }
 
     .day-cell.current-hour {
@@ -196,10 +197,10 @@ interface TimeSlot {
 
     .therapist-column {
       border-left: 1px solid var(--color-border-light);
-      padding: var(--spacing-xs);
+      padding: 1px 2px;
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-xs);
+      gap: 1px;
     }
 
     .therapist-column:first-child {

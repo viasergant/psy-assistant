@@ -47,21 +47,24 @@ import { CalendarAppointmentBlock, STATUS_COLORS, SESSION_TYPE_COLORS } from '..
   styles: [`
     .appointment-block {
       position: relative;
-      padding: var(--spacing-sm);
+      padding: 2px 6px;
       border-left: 4px solid;
       border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      transition: box-shadow 0.15s ease;
       background: white;
-      min-height: 60px;
+      min-height: 24px;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-xs);
+      gap: 1px;
     }
 
     .appointment-block:hover {
-      transform: translateY(-2px);
+      overflow: visible;
+      z-index: 50;
       box-shadow: var(--shadow-md);
+      min-height: auto;
     }
 
     .appointment-block:focus {
@@ -74,30 +77,44 @@ import { CalendarAppointmentBlock, STATUS_COLORS, SESSION_TYPE_COLORS } from '..
     }
 
     .appointment-time {
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       font-weight: 600;
       color: var(--color-text-secondary);
+      white-space: nowrap;
     }
 
     .appointment-client {
       font-weight: 600;
       color: var(--color-text-primary);
-      font-size: 0.875rem;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .appointment-session-type {
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       color: var(--color-text-secondary);
+      display: none;
+    }
+
+    .appointment-block:hover .appointment-session-type {
+      display: block;
     }
 
     .appointment-status-badge {
-      font-size: 0.65rem;
-      padding: 2px 6px;
+      font-size: 0.6rem;
+      padding: 1px 4px;
       border-radius: var(--radius-xs);
       background: var(--color-surface-secondary);
       width: fit-content;
       text-transform: uppercase;
       font-weight: 600;
+      display: none;
+    }
+
+    .appointment-block:hover .appointment-status-badge {
+      display: block;
     }
 
     .appointment-status-badge.in_progress {

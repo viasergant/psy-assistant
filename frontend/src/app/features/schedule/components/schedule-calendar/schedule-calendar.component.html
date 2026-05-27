@@ -42,9 +42,9 @@
       <!-- Time Slots Grid -->
       <div class="grid-body">
         <div *ngFor="let row of calendarCells; let rowIndex = index" class="grid-row">
-          <!-- Time Label Column -->
+          <!-- Time Label Column: only show label on full-hour rows -->
           <div class="time-label" *ngIf="row[0]">
-            {{ row[0].timeSlot.displayTime }}
+            <span *ngIf="row[0].timeSlot.minute === 0">{{ row[0].timeSlot.displayTime }}</span>
           </div>
 
           <!-- Day Columns -->

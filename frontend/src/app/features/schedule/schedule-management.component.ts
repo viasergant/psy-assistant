@@ -54,13 +54,35 @@ interface ClientOption {
   ],
   template: `
     <div class="schedule-management">
-      <header class="page-header">
-        <div class="header-content">
-          <h1>Schedule Management</h1>
-          <p class="subtitle" *ngIf="therapistName">{{ therapistName }}'s Schedule</p>
+      <!-- Single compact toolbar row: nav + period + view mode + actions -->
+      <div class="page-toolbar">
+        <div class="toolbar-nav">
+          <button
+            type="button"
+            class="nav-button"
+            (click)="onPreviousPeriod()"
+            [attr.aria-label]="'schedule.calendar.previous' | transloco"
+          >←</button>
+          <button
+            type="button"
+            class="nav-button today-button"
+            (click)="onToday()"
+          >{{ 'schedule.calendar.today' | transloco }}</button>
+          <button
+            type="button"
+            class="nav-button"
+            (click)="onNextPeriod()"
+            [attr.aria-label]="'schedule.calendar.next' | transloco"
+          >→</button>
+          <span class="period-label">{{ getCurrentPeriodLabel() }}</span>
         </div>
-        <div class="header-actions">
-          <!-- Admin therapist selector -->
+
+        <div class="toolbar-actions">
+          <div class="view-mode-selector" role="group" [attr.aria-label]="'schedule.calendar.viewMode' | transloco">
+            <button type="button" class="view-button" [class.active]="viewMode === 'day'" (click)="setViewMode('day')">{{ 'schedule.calendar.dayView' | transloco }}</button>
+            <button type="button" class="view-button" [class.active]="viewMode === 'week'" (click)="setViewMode('week')">{{ 'schedule.calendar.weekView' | transloco }}</button>
+            <button type="button" class="view-button" [class.active]="viewMode === 'month'" (click)="setViewMode('month')">{{ 'schedule.calendar.monthView' | transloco }}</button>
+          </div>
           <p-select
             *ngIf="isAdmin"
             [(ngModel)]="selectedTherapistId"
@@ -70,82 +92,15 @@ interface ClientOption {
             optionValue="value"
             styleClass="therapist-selector"
           />
-
-          <button
-            *ngIf="canEdit"
-            type="button"
-            class="btn-primary"
-            (click)="openConfigPanel()"
-          >
+          <button *ngIf="canEdit" type="button" class="btn-primary" (click)="openConfigPanel()">
             {{ 'schedule.configureSchedule' | transloco }}
           </button>
-          <button
-            *ngIf="canEdit && therapistProfileId"
-            type="button"
-            class="btn-primary"
-            (click)="openBookingDialog()"
-          >
+          <button *ngIf="canEdit && therapistProfileId" type="button" class="btn-primary" (click)="openBookingDialog()">
             + {{ 'schedule.appointment.booking.title' | transloco }}
           </button>
-          <button
-            type="button"
-            class="btn-secondary"
-            (click)="openLeaveRequestModal()"
-          >
+          <button type="button" class="btn-secondary" (click)="openLeaveRequestModal()">
             Request Leave
           </button>
-        </div>
-      </header>
-
-      <!-- Calendar Navigation Toolbar -->
-      <div class="calendar-nav-toolbar">
-        <div class="nav-section-left">
-          <div class="date-navigation">
-            <button
-              type="button"
-              class="nav-button"
-              (click)="onPreviousPeriod()"
-              [attr.aria-label]="'schedule.calendar.previous' | transloco"
-            >←</button>
-
-            <button
-              type="button"
-              class="today-button btn-secondary"
-              (click)="onToday()"
-            >{{ 'schedule.calendar.today' | transloco }}</button>
-
-            <button
-              type="button"
-              class="nav-button"
-              (click)="onNextPeriod()"
-              [attr.aria-label]="'schedule.calendar.next' | transloco"
-            >→</button>
-          </div>
-
-          <div class="period-display">
-            <h2>{{ getCurrentPeriodLabel() }}</h2>
-          </div>
-        </div>
-
-        <div class="view-mode-selector" role="group" [attr.aria-label]="'schedule.calendar.viewMode' | transloco">
-          <button
-            type="button"
-            class="view-button"
-            [class.active]="viewMode === 'day'"
-            (click)="setViewMode('day')"
-          >{{ 'schedule.calendar.dayView' | transloco }}</button>
-          <button
-            type="button"
-            class="view-button"
-            [class.active]="viewMode === 'week'"
-            (click)="setViewMode('week')"
-          >{{ 'schedule.calendar.weekView' | transloco }}</button>
-          <button
-            type="button"
-            class="view-button"
-            [class.active]="viewMode === 'month'"
-            (click)="setViewMode('month')"
-          >{{ 'schedule.calendar.monthView' | transloco }}</button>
         </div>
       </div>
 
@@ -305,59 +260,74 @@ interface ClientOption {
         background: var(--color-bg);
       }
 
-      .page-header {
+      .page-toolbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 2rem;
+        padding: 0.375rem 1.25rem;
         background: var(--color-surface);
         border-bottom: 1px solid var(--color-border);
+        gap: 0.75rem;
+        flex-shrink: 0;
       }
 
-      .header-content h1 {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--color-text-primary);
-        margin: 0 0 0.25rem 0;
-      }
-
-      .subtitle {
-        font-size: 0.875rem;
-        color: var(--color-text-secondary);
-        margin: 0;
-      }
-
-      .header-actions {
+      .toolbar-nav {
         display: flex;
-        gap: 1rem;
         align-items: center;
+        gap: 0.375rem;
       }
 
-      .therapist-selector {
-        padding: 0.625rem 1rem;
-        border: 1px solid var(--color-border);
-        border-radius: 6px;
-        background: var(--color-surface);
-        color: var(--color-text-primary);
-        font-size: 0.875rem;
-        cursor: pointer;
-        min-width: 200px;
+      .toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
 
-        &:focus {
-          outline: none;
+      .period-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin-left: 0.25rem;
+        white-space: nowrap;
+      }
+
+      .nav-button {
+        height: 28px;
+        min-width: 28px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 0.5rem;
+        transition: all 0.15s ease;
+        color: var(--color-text-primary);
+
+        &:hover {
+          background: var(--color-bg);
           border-color: var(--color-accent);
         }
       }
 
+      .today-button {
+        padding: 0 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
       .btn-primary,
       .btn-secondary {
-        padding: 0.625rem 1.25rem;
+        padding: 0.3rem 0.875rem;
         border-radius: 6px;
-        font-size: 0.875rem;
+        font-size: 0.8rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
         border: none;
+        white-space: nowrap;
       }
 
       .btn-primary {
@@ -379,70 +349,22 @@ interface ClientOption {
         }
       }
 
-      /* Calendar Navigation Toolbar */
-      .calendar-nav-toolbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.75rem 2rem;
-        background: var(--color-surface);
-        border-bottom: 1px solid var(--color-border);
-        gap: 1rem;
-      }
-
-      .nav-section-left {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-
-      .date-navigation {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-      }
-
-      .nav-button {
-        width: 36px;
-        height: 36px;
-        border: 1px solid var(--color-border);
-        background: var(--color-surface);
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 1.125rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.15s ease;
-
-        &:hover {
-          background: var(--color-bg);
-          border-color: var(--color-accent);
-        }
-      }
-
-      .period-display h2 {
-        margin: 0;
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--color-text-primary);
-      }
-
       .view-mode-selector {
         display: flex;
         border: 1px solid var(--color-border);
-        border-radius: 6px;
+        border-radius: 4px;
         overflow: hidden;
       }
 
       .view-button {
-        padding: 0.5rem 1rem;
+        padding: 0.25rem 0.75rem;
         border: none;
         border-right: 1px solid var(--color-border);
         background: var(--color-surface);
         cursor: pointer;
-        font-size: 0.875rem;
+        font-size: 0.8rem;
         font-weight: 500;
+        color: var(--color-text-primary);
         transition: all 0.15s ease;
 
         &:last-child {
@@ -499,94 +421,6 @@ interface ClientOption {
       .error-message {
         color: var(--color-error);
         margin-bottom: 1rem;
-      }
-
-      /* Calendar navigation toolbar */
-      .calendar-nav-toolbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.75rem 2rem;
-        background: var(--color-surface);
-        border-bottom: 1px solid var(--color-border);
-        gap: 1rem;
-      }
-
-      .nav-section-left {
-        display: flex;
-        align-items: center;
-        gap: 1.25rem;
-      }
-
-      .date-navigation {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-      }
-
-      .nav-button {
-        width: 36px;
-        height: 36px;
-        border: 1px solid var(--color-border);
-        background: var(--color-surface);
-        border-radius: var(--radius-sm, 6px);
-        cursor: pointer;
-        font-size: 1.125rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.15s ease;
-        color: var(--color-text-primary);
-
-        &:hover {
-          background: var(--color-bg);
-          border-color: var(--color-accent);
-        }
-      }
-
-      .today-button {
-        height: 36px;
-        padding: 0 0.875rem;
-        font-size: 0.875rem;
-      }
-
-      .period-display h2 {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--color-text-primary);
-        margin: 0;
-      }
-
-      .view-mode-selector {
-        display: flex;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm, 6px);
-        overflow: hidden;
-      }
-
-      .view-button {
-        padding: 0.5rem 0.875rem;
-        border: none;
-        border-right: 1px solid var(--color-border);
-        background: var(--color-surface);
-        cursor: pointer;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--color-text-primary);
-        transition: all 0.15s ease;
-
-        &:last-child {
-          border-right: none;
-        }
-
-        &:hover {
-          background: var(--color-bg);
-        }
-
-        &.active {
-          background: var(--color-accent);
-          color: white;
-        }
       }
 
       .calendar-view-container {

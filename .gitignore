@@ -4,3 +4,7 @@
 .env
 backend/invoices/
 backend/logs/
+.claude/skills/bmad-*
+_bmad/
+_bmad-*
+

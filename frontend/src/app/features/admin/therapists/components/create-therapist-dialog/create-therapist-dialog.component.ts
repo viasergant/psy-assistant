@@ -12,7 +12,6 @@ import {
 } from '../../models/therapist.model';
 import { UserCreationResponse } from '../../../users/models/user.model';
 import { TherapistAccountCreatedModalComponent } from '../../../components/therapist-account-created-modal/therapist-account-created-modal.component';
-import { TranslateSpecializationPipe } from '../../pipes/translate-specialization.pipe';
 
 interface TherapistWithAccountResponseDto {
   userDetails: UserCreationResponse;
@@ -34,7 +33,7 @@ interface TherapistWithAccountResponseDto {
 @Component({
   selector: 'app-create-therapist-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, TranslateSpecializationPipe, TherapistAccountCreatedModalComponent, Select],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe, TherapistAccountCreatedModalComponent, Select],
   styleUrl: './create-therapist-dialog.component.scss',
   template: `
     <div class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="create-therapist-title">

@@ -9,6 +9,7 @@ import com.psyassistant.careplans.exception.CarePlanNotActiveException;
 import com.psyassistant.careplans.exception.MaxActivePlansExceededException;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.common.mode.SetupAlreadyCompleteException;
 import com.psyassistant.crm.leads.InvalidStatusTransitionException;
 import com.psyassistant.crm.leads.LeadAlreadyConvertedException;
 import com.psyassistant.notifications.template.TemplateNotInactiveException;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 /**
  * Catches all unhandled exceptions and returns a structured {@link ErrorResponse} JSON body.
@@ -178,6 +180,30 @@ public class GlobalExceptionHandler {
                         HttpStatus.CONFLICT.value(),
                         ex.getMessage(),
                         "DUPLICATE_SERVICE",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles clinic setup endpoint calls when users already exist (409).
+     *
+     * <p>Once at least one user is present the setup endpoint is permanently closed.
+     *
+     * @param ex      the setup-already-complete exception
+     * @param request the current HTTP request
+     * @return 409 Conflict with code {@code SETUP_ALREADY_COMPLETE}
+     */
+    @ExceptionHandler(SetupAlreadyCompleteException.class)
+    public ResponseEntity<ErrorResponse> handleSetupAlreadyComplete(
+            final SetupAlreadyCompleteException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage(),
+                        "SETUP_ALREADY_COMPLETE",
                         request.getRequestURI()
                 )
         );
@@ -382,6 +408,32 @@ public class GlobalExceptionHandler {
                         Instant.now(),
                         HttpStatus.NOT_FOUND.value(),
                         ex.getMessage(),
+                        "NOT_FOUND",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles requests for paths that have no registered handler (404).
+     *
+     * <p>Requires {@code spring.mvc.throw-exception-if-no-handler-found=true} and
+     * {@code spring.web.resources.add-mappings=false} to be active so that the
+     * DispatcherServlet throws this exception instead of delegating to a default handler.
+     *
+     * @param ex      the no-handler-found exception
+     * @param request the current HTTP request
+     * @return 404 Not Found
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoHandlerFound(
+            final NoHandlerFoundException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.NOT_FOUND.value(),
+                        "No endpoint " + ex.getHttpMethod() + " " + ex.getRequestURL(),
                         "NOT_FOUND",
                         request.getRequestURI()
                 )

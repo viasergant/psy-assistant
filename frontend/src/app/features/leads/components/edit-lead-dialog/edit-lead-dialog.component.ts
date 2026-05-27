@@ -46,35 +46,35 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
     <div class="dialog-overlay" *ngIf="!showConvertDialog"
          role="dialog" aria-modal="true" aria-labelledby="edit-lead-title">
       <div class="dialog">
-        <h2 id="edit-lead-title">Edit Lead</h2>
+        <h2 id="edit-lead-title">{{ 'leads.edit.title' | transloco }}</h2>
         <p class="sub">
           <span class="status-badge" [class]="'status-' + lead.status.toLowerCase()">
-            {{ statusLabels[lead.status] }}
+            {{ getStatusLabel(lead.status) }}
           </span>
         </p>
 
         <!-- Convert to Client action (QUALIFIED only) -->
         <div *ngIf="lead.status === 'QUALIFIED'" class="convert-banner">
-          <span>This lead is qualified and ready to convert.</span>
+          <span>{{ 'leads.edit.qualifiedBannerMessage' | transloco }}</span>
           <button type="button" class="btn-convert" (click)="openConvertDialog()">
-            Convert to Client
+            {{ 'leads.edit.convertToClient' | transloco }}
           </button>
         </div>
 
         <!-- Already-converted notice -->
         <div *ngIf="lead.status === 'CONVERTED'" class="converted-banner">
-          <span>This lead has been converted to a client.</span>
+          <span>{{ 'leads.edit.convertedBannerMessage' | transloco }}</span>
           <a *ngIf="lead.convertedClientId"
              [href]="'/clients/' + lead.convertedClientId"
              class="client-link">
-            View client record
+            {{ 'leads.edit.viewClientRecord' | transloco }}
           </a>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
           <div class="field">
-            <label for="fullName">Full name <span aria-hidden="true">*</span></label>
+            <label for="fullName">{{ 'leads.create.fullNameLabel' | transloco }} <span aria-hidden="true">*</span></label>
             <input
               id="fullName"
               type="text"
@@ -83,16 +83,16 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
               aria-required="true"
             />
             <span *ngIf="isInvalid('fullName')" class="error-msg" role="alert">
-              Full name is required.
+              {{ 'leads.create.fullNameRequired' | transloco }}
             </span>
           </div>
 
           <!-- Contact methods -->
           <fieldset formArrayName="contactMethods">
-            <legend>Contact methods <span aria-hidden="true">*</span></legend>
+            <legend>{{ 'leads.create.contactMethodsLabel' | transloco }} <span aria-hidden="true">*</span></legend>
             <div *ngIf="contactMethods.touched && contactMethods.length === 0"
                  class="error-msg" role="alert">
-              At least one contact method is required.
+              {{ 'leads.create.contactMethodRequired' | transloco }}
             </div>
 
             <div *ngFor="let cm of contactMethods.controls; let i = index"
@@ -108,19 +108,19 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
               <input
                 type="text"
                 formControlName="value"
-                [attr.aria-label]="'Contact value ' + (i + 1)"
-                placeholder="email or phone"
+                [attr.aria-label]="'leads.create.contactValueAriaLabel' | transloco:{index: i + 1}"
+                [placeholder]="'leads.create.contactValuePlaceholder' | transloco"
               />
               <label class="primary-label">
                 <input type="checkbox" formControlName="isPrimary" />
-                Primary
+                {{ 'leads.create.primaryLabel' | transloco }}
               </label>
               <button type="button" class="btn-remove" (click)="removeContactMethod(i)"
-                      [attr.aria-label]="'Remove contact ' + (i + 1)">✕</button>
+                      [attr.aria-label]="'leads.create.removeContactAriaLabel' | transloco:{index: i + 1}">✕</button>
             </div>
 
             <button type="button" class="btn-add-contact" (click)="addContactMethod()">
-              + Add contact method
+              {{ 'leads.create.addContactMethod' | transloco }}
             </button>
           </fieldset>
 
@@ -136,7 +136,7 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
 
           <!-- Status transition (non-terminal leads only) -->
           <div class="field" *ngIf="availableTransitions.length > 0">
-            <label for="statusTransition">Move to status</label>
+            <label for="statusTransition">{{ 'leads.edit.moveToStatusLabel' | transloco }}</label>
             <p-select
               inputId="statusTransition"
               [(ngModel)]="selectedTransition"
@@ -153,7 +153,7 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
           <div class="actions">
             <button type="button" (click)="cancel()" [disabled]="saving">{{ 'common.actions.cancel' | transloco }}</button>
             <button type="submit" [disabled]="saving">
-              {{ saving ? 'Saving…' : 'Save changes' }}
+              {{ saving ? ('leads.edit.saving' | transloco) : ('leads.edit.saveChanges' | transloco) }}
             </button>
           </div>
         </form>
@@ -302,9 +302,20 @@ export class EditLeadDialogComponent implements OnInit {
 
   get transitionOptions(): { label: string; value: string }[] {
     return [
-      { label: '— keep current —', value: '' },
-      ...this.availableTransitions.map(s => ({ label: this.statusLabels[s], value: s })),
+      { label: this.transloco.translate('leads.edit.keepCurrentStatus'), value: '' },
+      ...this.availableTransitions.map(s => ({ label: this.getStatusLabel(s), value: s })),
     ];
+  }
+
+  getStatusLabel(status: LeadStatus): string {
+    const keyMap: Record<LeadStatus, string> = {
+      NEW: 'leads.list.statusNew',
+      CONTACTED: 'leads.list.statusContacted',
+      QUALIFIED: 'leads.list.statusQualified',
+      CONVERTED: 'leads.list.statusConverted',
+      INACTIVE: 'leads.list.statusInactive',
+    };
+    return this.transloco.translate(keyMap[status]);
   }
 
   ngOnInit(): void {

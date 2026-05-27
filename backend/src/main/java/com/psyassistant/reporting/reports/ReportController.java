@@ -33,6 +33,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
  *   <li>{@code GET /api/v1/reports/{type}/data} — paginated report rows</li>
  *   <li>{@code GET /api/v1/reports/{type}/export} — streamed download (CSV or XLSX)</li>
  * </ul>
+ *
+ * <p>TODO: split THERAPIST_UTILIZATION endpoint to ClinicReportController
  */
 @RestController
 @RequestMapping("/api/v1/reports")

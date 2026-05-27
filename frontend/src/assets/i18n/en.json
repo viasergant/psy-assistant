@@ -167,7 +167,15 @@
       "creating": "Creating…"
     },
     "edit": {
-      "title": "Edit Lead"
+      "title": "Edit Lead",
+      "qualifiedBannerMessage": "This lead is qualified and ready to convert.",
+      "convertToClient": "Convert to Client",
+      "convertedBannerMessage": "This lead has been converted to a client.",
+      "viewClientRecord": "View client record",
+      "moveToStatusLabel": "Move to status",
+      "keepCurrentStatus": "\u2014 keep current \u2014",
+      "saving": "Saving\u2026",
+      "saveChanges": "Save changes"
     },
     "convert": {
       "title": "Convert Lead to Client",
@@ -179,6 +187,7 @@
     "title": "Clients",
     "detail": {
       "badge": "Client",
+      "backToLeads": "Back to leads",
       "editProfile": "Edit profile",
       "bookAppointment": "Book appointment",
       "selectTherapist": "Select therapist",
@@ -195,9 +204,13 @@
         "commPrefs": "Communication Preferences",
         "tags": "Tags",
         "photo": "Profile Photo",
-        "notes": "Profile Notes"
+        "notes": "Profile Notes",
+        "referralLink": "Referral Link",
+        "preConversionHistory": "Pre-conversion history"
       },
+      "viewSourceLeadHistory": "View source lead history",
       "fields": {
+        "fullName": "Full name",
         "preferredName": "Preferred name",
         "dateOfBirth": "Date of birth",
         "pronouns": "Pronouns",
@@ -229,7 +242,14 @@
         "addTagPlaceholder": "Add tag and press Enter",
         "saveTags": "Save tags",
         "savingTags": "Saving tags...",
-        "suggestions": "Suggestions:"
+        "suggestions": "Suggestions:",
+        "noTags": "No tags yet.",
+        "defaultHints": ["priority", "follow-up", "anxiety", "depression", "family", "adolescent", "trauma", "stress"]
+      },
+      "photo": {
+        "noPhoto": "No photo uploaded",
+        "upload": "Upload photo",
+        "uploading": "Uploading..."
       }
     },
     "list": {
@@ -292,7 +312,15 @@
   "timeline": {
     "title": "Activity Timeline",
     "filter": {
-      "placeholder": "All Events"
+      "placeholder": "All Events",
+      "allEvents": "All Events",
+      "appointments": "Appointments",
+      "profileChanges": "Profile Changes",
+      "conversion": "Conversion",
+      "notes": "Notes",
+      "payments": "Payments",
+      "communications": "Communications",
+      "attendance": "Attendance"
     },
     "eventType": {
       "APPOINTMENT": "Appointment",
@@ -304,12 +332,17 @@
       "ATTENDANCE_OUTCOME": "Attendance Outcome"
     },
     "eventSubtype": {
+      "null": "",
       "appointment.scheduled": "Scheduled",
       "appointment.confirmed": "Confirmed",
       "appointment.completed": "Completed",
       "appointment.cancelled": "Cancelled",
       "appointment.no_show": "No Show",
-      "lead.converted": "Converted from Lead"
+      "lead.converted": "Converted from Lead",
+      "attendance.attended": "Attended",
+      "attendance.no_show": "No Show",
+      "attendance.late_cancellation": "Late Cancellation",
+      "attendance.cancelled": "Cancelled"
     },
     "by": "by",
     "empty": "No activity yet",
@@ -950,6 +983,44 @@
         "sampleNote": "Preview uses sample data. Actual values will vary per recipient."
       }
     },
+    "riskFlags": {
+      "title": "Risk Flags",
+      "addFlag": "+ Add Flag",
+      "loading": "Loading risk flags…",
+      "empty": "No active risk flags.",
+      "review": "Review: {{date}}",
+      "clinicalNote": {
+        "label": "Clinical Note",
+        "placeholder": "Optional clinical note…"
+      },
+      "form": {
+        "title": "Add Risk Flag",
+        "flagType": {
+          "label": "Flag Type",
+          "placeholder": "Select flag type…",
+          "required": "Flag type is required."
+        },
+        "reviewDate": {
+          "label": "Review Date",
+          "required": "Review date is required."
+        },
+        "clinicalNote": "Clinical Note",
+        "saving": "Saving…",
+        "submit": "Add Flag"
+      },
+      "resolveDialog": {
+        "title": "Resolve Risk Flag",
+        "description": "Describe how this risk flag has been addressed or resolved.",
+        "resolutionNote": {
+          "label": "Resolution Note",
+          "placeholder": "Describe the resolution…",
+          "required": "Resolution note is required."
+        },
+        "resolving": "Resolving…",
+        "submit": "Resolve Flag"
+      },
+      "resolve": "Resolve"
+    },
     "riskFlagTypes": {
       "title": "Risk Flag Types",
       "list": {
@@ -975,6 +1046,13 @@
         "cancel": "Cancel",
         "save": "Save",
         "saving": "Saving..."
+      },
+      "names": {
+        "self_harm_risk": "Self-Harm Risk",
+        "crisis_history": "Crisis History",
+        "safeguarding_concern": "Safeguarding Concern",
+        "domestic_abuse_concern": "Domestic Abuse Concern",
+        "suicidal_ideation": "Suicidal Ideation"
       }
     }
   },

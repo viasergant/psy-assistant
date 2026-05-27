@@ -13,32 +13,32 @@ import { RiskFlagResolveDialogComponent } from '../risk-flag-resolve-dialog/risk
   template: `
     <div class="risk-flags-panel">
       <div class="panel-header">
-        <h3 class="panel-title">Risk Flags</h3>
+        <h3 class="panel-title">{{ 'admin.riskFlags.title' | transloco }}</h3>
         <button *ngIf="canManage"
                 type="button"
                 class="btn-primary"
                 (click)="openAddDialog()">
-          + Add Flag
+          {{ 'admin.riskFlags.addFlag' | transloco }}
         </button>
       </div>
 
-      <div *ngIf="loading" class="state-msg" aria-live="polite">Loading risk flags…</div>
+      <div *ngIf="loading" class="state-msg" aria-live="polite">{{ 'admin.riskFlags.loading' | transloco }}</div>
 
       <div *ngIf="error" class="alert-error" role="alert">{{ error }}</div>
 
       <div *ngIf="!loading && !error && flags.length === 0" class="empty-state">
-        No active risk flags.
+        {{ 'admin.riskFlags.empty' | transloco }}
       </div>
 
       <div *ngIf="!loading && flags.length > 0" class="flags-list">
         <div *ngFor="let flag of flags" class="flag-card">
           <div class="flag-card-header">
             <span class="flag-type-chip">{{ flag.flagTypeName }}</span>
-            <span class="flag-review-date">Review: {{ flag.reviewDate }}</span>
+            <span class="flag-review-date">{{ 'admin.riskFlags.review' | transloco : { date: flag.reviewDate } }}</span>
           </div>
 
           <div *ngIf="canReadNotes && flag.clinicalNote != null" class="clinical-note-block">
-            <span class="clinical-note-label">Clinical Note</span>
+            <span class="clinical-note-label">{{ 'admin.riskFlags.clinicalNote.label' | transloco }}</span>
             <p class="clinical-note-text">{{ flag.clinicalNote }}</p>
           </div>
 
@@ -47,7 +47,7 @@ import { RiskFlagResolveDialogComponent } from '../risk-flag-resolve-dialog/risk
                     type="button"
                     class="btn-resolve"
                     (click)="openResolveDialog(flag)">
-              Resolve
+              {{ 'admin.riskFlags.resolve' | transloco }}
             </button>
           </div>
         </div>

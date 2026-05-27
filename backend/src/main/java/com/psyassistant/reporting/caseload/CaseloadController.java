@@ -3,6 +3,7 @@ package com.psyassistant.reporting.caseload;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -27,8 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
  * </ul>
  *
  * <p>All access events are written to the audit log by {@link CaseloadService}.
+ *
+ * <p>This controller is only registered in clinic mode ({@code @Profile("clinic")}).
+ * In solo mode these endpoints return HTTP 404.
  */
 @RestController
+@Profile("clinic")
 @RequestMapping("/api/v1/caseload")
 public class CaseloadController {
 

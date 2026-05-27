@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles({"clinic", "test"})
 class RbacIntegrationTest {
 
     @Autowired

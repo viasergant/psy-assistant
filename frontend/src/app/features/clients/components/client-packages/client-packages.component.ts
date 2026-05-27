@@ -23,7 +23,7 @@ import { SellPackageDialogComponent } from '../../../billing/components/sell-pac
         {{ 'clients.packages.loading' | transloco }}
       </div>
 
-      <div *ngIf="loadError" class="alert-error" role="alert">{{ loadError }}</div>
+      <div *ngIf="loadError" class="alert-error" role="alert">{{ loadError | transloco }}</div>
 
       <div *ngIf="!loading && !loadError && packages.length === 0" class="empty-section">
         {{ 'clients.packages.empty' | transloco }}

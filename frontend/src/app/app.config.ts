@@ -19,6 +19,7 @@ import { localeInterceptor } from './core/i18n/locale.interceptor';
 import { TranslocoHttpLoader } from './core/i18n/transloco-loader';
 import { AuthService } from './core/auth/auth.service';
 import { I18nService } from './core/i18n/i18n.service';
+import { AppModeService } from './core/mode/app-mode.service';
 
 /**
  * Initializes i18n on app startup before rendering.
@@ -41,6 +42,14 @@ function initAuth(authService: AuthService): () => Promise<void> {
       .toPromise()
       .then(() => {})
       .catch(() => {});
+}
+
+/**
+ * Fetches the deployment mode from GET /api/v1/meta before the app renders.
+ * Errors are swallowed — the app boots regardless; mode defaults to null.
+ */
+function initMode(modeService: AppModeService): () => Promise<void> {
+  return () => modeService.init();
 }
 
 export const appConfig: ApplicationConfig = {
@@ -75,6 +84,12 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: initAuth,
       deps: [AuthService],
+      multi: true
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initMode,
+      deps: [AppModeService],
       multi: true
     }
   ]

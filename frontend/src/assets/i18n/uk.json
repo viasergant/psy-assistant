@@ -167,7 +167,15 @@
       "creating": "Створення…"
     },
     "edit": {
-      "title": "Редагувати потенційного клієнта"
+      "title": "Редагувати потенційного клієнта",
+      "qualifiedBannerMessage": "Цей лід кваліфікований і готовий до конверсії.",
+      "convertToClient": "Конвертувати в клієнта",
+      "convertedBannerMessage": "Цей лід був конвертований в клієнта.",
+      "viewClientRecord": "Перейти до картки клієнта",
+      "moveToStatusLabel": "Змінити статус",
+      "keepCurrentStatus": "— залишити поточний —",
+      "saving": "Збереження…",
+      "saveChanges": "Зберегти зміни"
     },
     "convert": {
       "title": "Конвертувати в клієнта",
@@ -179,6 +187,7 @@
     "title": "Клієнти",
     "detail": {
       "badge": "Клієнт",
+      "backToLeads": "Назад до лідів",
       "editProfile": "Редагувати профіль",
       "bookAppointment": "Записати на прийом",
       "selectTherapist": "Оберіть терапевта",
@@ -195,9 +204,13 @@
         "commPrefs": "Налаштування зв'язку",
         "tags": "Теги",
         "photo": "Фото профілю",
-        "notes": "Примітки профілю"
+        "notes": "Примітки профілю",
+        "referralLink": "Посилання на джерело",
+        "preConversionHistory": "Історія до конверсії"
       },
+      "viewSourceLeadHistory": "Переглянути історію ліда",
       "fields": {
+        "fullName": "Повне ім'я",
         "preferredName": "Бажане ім'я",
         "dateOfBirth": "Дата народження",
         "pronouns": "Займенники",
@@ -229,7 +242,14 @@
         "addTagPlaceholder": "Додайте тег і натисніть Enter",
         "saveTags": "Зберегти теги",
         "savingTags": "Збереження тегів...",
-        "suggestions": "Пропозиції:"
+        "suggestions": "Пропозиції:",
+        "noTags": "Тегів ще немає.",
+        "defaultHints": ["пріоритет", "повторний прийом", "тривожність", "депресія", "сім'я", "підліток", "травма", "стрес"]
+      },
+      "photo": {
+        "noPhoto": "Фото не завантажено",
+        "upload": "Завантажити фото",
+        "uploading": "Завантаження..."
       }
     },
     "list": {
@@ -292,7 +312,15 @@
   "timeline": {
     "title": "Хронологія активності",
     "filter": {
-      "placeholder": "Всі події"
+      "placeholder": "Всі події",
+      "allEvents": "Всі події",
+      "appointments": "Призначення",
+      "profileChanges": "Зміни профілю",
+      "conversion": "Конверсія",
+      "notes": "Примітки",
+      "payments": "Платежі",
+      "communications": "Комунікації",
+      "attendance": "Відвідування"
     },
     "eventType": {
       "APPOINTMENT": "Призначення",
@@ -304,12 +332,17 @@
       "ATTENDANCE_OUTCOME": "Результат відвідування"
     },
     "eventSubtype": {
+      "null": "",
       "appointment.scheduled": "Заплановано",
       "appointment.confirmed": "Підтверджено",
       "appointment.completed": "Завершено",
       "appointment.cancelled": "Скасовано",
       "appointment.no_show": "Не з'явився",
-      "lead.converted": "Конвертовано з ліда"
+      "lead.converted": "Конвертовано з ліда",
+      "attendance.attended": "Присутній",
+      "attendance.no_show": "Не з'явився",
+      "attendance.late_cancellation": "Пізнє скасування",
+      "attendance.cancelled": "Скасовано"
     },
     "by": "від",
     "empty": "Поки немає активності",
@@ -950,6 +983,44 @@
         "sampleNote": "Перегляд використовує зразкові дані. Фактичні значення будуть відрізнятись для кожного отримувача."
       }
     },
+    "riskFlags": {
+      "title": "Прапорці ризику",
+      "addFlag": "+ Додати прапорець",
+      "loading": "Завантаження прапорців ризику…",
+      "empty": "Активних прапорців ризику немає.",
+      "review": "Огляд: {{date}}",
+      "clinicalNote": {
+        "label": "Клінічна примітка",
+        "placeholder": "Необов'язкова клінічна примітка…"
+      },
+      "form": {
+        "title": "Додати прапорець ризику",
+        "flagType": {
+          "label": "Тип прапорця",
+          "placeholder": "Оберіть тип прапорця…",
+          "required": "Тип прапорця є обов'язковим."
+        },
+        "reviewDate": {
+          "label": "Дата огляду",
+          "required": "Дата огляду є обов'язковою."
+        },
+        "clinicalNote": "Клінічна примітка",
+        "saving": "Збереження…",
+        "submit": "Додати прапорець"
+      },
+      "resolveDialog": {
+        "title": "Вирішити прапорець ризику",
+        "description": "Опишіть, як цей прапорець ризику було усунуто або вирішено.",
+        "resolutionNote": {
+          "label": "Примітка щодо вирішення",
+          "placeholder": "Опишіть вирішення…",
+          "required": "Примітка щодо вирішення є обов'язковою."
+        },
+        "resolving": "Вирішення…",
+        "submit": "Вирішити прапорець"
+      },
+      "resolve": "Вирішити"
+    },
     "riskFlagTypes": {
       "title": "Типи прапорців ризику",
       "list": {
@@ -975,6 +1046,13 @@
         "cancel": "Скасувати",
         "save": "Зберегти",
         "saving": "Збереження..."
+      },
+      "names": {
+        "self_harm_risk": "Ризик самоушкодження",
+        "crisis_history": "Кризова історія",
+        "safeguarding_concern": "Занепокоєння щодо захисту",
+        "domestic_abuse_concern": "Занепокоєння щодо домашнього насильства",
+        "suicidal_ideation": "Суїцидальні думки"
       }
     }
   },

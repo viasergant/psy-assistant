@@ -12,17 +12,17 @@ import { RiskFlagService } from '../services/risk-flag.service';
   imports: [CommonModule, ReactiveFormsModule, TranslocoModule, Select],
   template: `
     <div class="dialog-overlay" (click)="onOverlayClick($event)">
-      <div class="dialog" role="dialog" aria-label="Add Risk Flag">
+      <div class="dialog" role="dialog" [attr.aria-label]="'admin.riskFlags.form.title' | transloco">
         <div class="dialog-header">
-          <h2>Add Risk Flag</h2>
-          <button type="button" class="dialog-close" (click)="cancelled.emit()" aria-label="Close">&#x2715;</button>
+          <h2>{{ 'admin.riskFlags.form.title' | transloco }}</h2>
+          <button type="button" class="dialog-close" (click)="cancelled.emit()" [attr.aria-label]="'common.actions.close' | transloco">&#x2715;</button>
         </div>
 
         <div class="dialog-content">
           <form [formGroup]="form" (ngSubmit)="submit()">
 
             <div class="field">
-              <label>Flag Type <span class="required">*</span></label>
+              <label>{{ 'admin.riskFlags.form.flagType.label' | transloco }} <span class="required">*</span></label>
               <p-select
                 formControlName="flagTypeId"
                 [options]="flagTypeOptions"
@@ -32,34 +32,34 @@ import { RiskFlagService } from '../services/risk-flag.service';
               />
               <span class="error-msg"
                     *ngIf="form.get('flagTypeId')!.invalid && form.get('flagTypeId')!.touched">
-                Flag type is required.
+                {{ 'admin.riskFlags.form.flagType.required' | transloco }}
               </span>
             </div>
 
             <div class="field">
-              <label>Review Date <span class="required">*</span></label>
+              <label>{{ 'admin.riskFlags.form.reviewDate.label' | transloco }} <span class="required">*</span></label>
               <input type="date" formControlName="reviewDate" [min]="today" />
               <span class="error-msg"
                     *ngIf="form.get('reviewDate')!.invalid && form.get('reviewDate')!.touched">
-                Review date is required.
+                {{ 'admin.riskFlags.form.reviewDate.required' | transloco }}
               </span>
             </div>
 
             <div class="field">
-              <label>Clinical Note</label>
+              <label>{{ 'admin.riskFlags.form.clinicalNote' | transloco }}</label>
               <textarea formControlName="clinicalNote" rows="4"
-                        placeholder="Optional clinical note…"></textarea>
+                        [placeholder]="'admin.riskFlags.clinicalNote.placeholder' | transloco"></textarea>
             </div>
 
             <div *ngIf="submitError" class="alert-error" role="alert">{{ submitError }}</div>
 
             <div class="dialog-actions">
               <button type="button" class="btn-secondary" (click)="cancelled.emit()">
-                Cancel
+                {{ 'common.actions.cancel' | transloco }}
               </button>
               <button type="submit" class="btn-primary"
                       [disabled]="form.invalid || saving">
-                {{ saving ? 'Saving…' : 'Add Flag' }}
+                {{ saving ? ('admin.riskFlags.form.saving' | transloco) : ('admin.riskFlags.form.submit' | transloco) }}
               </button>
             </div>
           </form>
@@ -128,9 +128,15 @@ export class RiskFlagFormDialogComponent implements OnInit {
 
   get flagTypeOptions(): { label: string; value: string }[] {
     return [
-      { label: 'Select flag type…', value: '' },
-      ...this.flagTypes.map(t => ({ label: t.name, value: t.id })),
+      { label: this.transloco.translate('admin.riskFlags.form.flagType.placeholder'), value: '' },
+      ...this.flagTypes.map(t => ({ label: this.localizeTypeName(t.name), value: t.id })),
     ];
+  }
+
+  private localizeTypeName(name: string): string {
+    const key = `admin.riskFlagTypes.names.${name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
+    const translated = this.transloco.translate(key);
+    return translated === key ? name : translated;
   }
 
   /** ISO date for the [min] attribute on the date input (today). */

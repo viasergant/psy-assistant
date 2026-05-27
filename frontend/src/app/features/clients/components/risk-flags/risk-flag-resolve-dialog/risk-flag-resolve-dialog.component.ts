@@ -10,26 +10,26 @@ import { RiskFlagService } from '../services/risk-flag.service';
   imports: [CommonModule, ReactiveFormsModule, TranslocoModule],
   template: `
     <div class="dialog-overlay" (click)="onOverlayClick($event)">
-      <div class="dialog" role="dialog" aria-label="Resolve Risk Flag">
+      <div class="dialog" role="dialog" [attr.aria-label]="'admin.riskFlags.resolveDialog.title' | transloco">
         <div class="dialog-header">
-          <h2>Resolve Risk Flag</h2>
-          <button type="button" class="dialog-close" (click)="cancelled.emit()" aria-label="Close">&#x2715;</button>
+          <h2>{{ 'admin.riskFlags.resolveDialog.title' | transloco }}</h2>
+          <button type="button" class="dialog-close" (click)="cancelled.emit()" [attr.aria-label]="'common.actions.close' | transloco">&#x2715;</button>
         </div>
 
         <div class="dialog-content">
           <p class="dialog-description">
-            Describe how this risk flag has been addressed or resolved.
+            {{ 'admin.riskFlags.resolveDialog.description' | transloco }}
           </p>
 
           <form [formGroup]="form" (ngSubmit)="submit()">
 
             <div class="field">
-              <label>Resolution Note <span class="required">*</span></label>
+              <label>{{ 'admin.riskFlags.resolveDialog.resolutionNote.label' | transloco }} <span class="required">*</span></label>
               <textarea formControlName="resolutionNote" rows="5"
-                        placeholder="Describe the resolution…"></textarea>
+                        [placeholder]="'admin.riskFlags.resolveDialog.resolutionNote.placeholder' | transloco"></textarea>
               <span class="error-msg"
                     *ngIf="form.get('resolutionNote')!.invalid && form.get('resolutionNote')!.touched">
-                Resolution note is required.
+                {{ 'admin.riskFlags.resolveDialog.resolutionNote.required' | transloco }}
               </span>
             </div>
 
@@ -37,11 +37,11 @@ import { RiskFlagService } from '../services/risk-flag.service';
 
             <div class="dialog-actions">
               <button type="button" class="btn-secondary" (click)="cancelled.emit()">
-                Cancel
+                {{ 'common.actions.cancel' | transloco }}
               </button>
               <button type="submit" class="btn-primary"
                       [disabled]="form.invalid || saving">
-                {{ saving ? 'Resolving…' : 'Resolve Flag' }}
+                {{ saving ? ('admin.riskFlags.resolveDialog.resolving' | transloco) : ('admin.riskFlags.resolveDialog.submit' | transloco) }}
               </button>
             </div>
           </form>

@@ -30,7 +30,7 @@ import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-pan
   imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ClientTimelineComponent, AppointmentBookingDialogComponent, CarePlanListComponent, ClientPackagesComponent, RiskFlagsPanelComponent, Select],
   template: `
     <div class="page">
-      <a class="back-link" routerLink="/leads">&larr; Back to leads</a>
+      <a class="back-link" routerLink="/leads">&larr; {{ 'clients.detail.backToLeads' | transloco }}</a>
 
       <div *ngIf="loading" class="state-msg" aria-live="polite">Loading client…</div>
 
@@ -93,7 +93,7 @@ import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-pan
 
             <div class="grid two">
               <label class="field">
-                <span>Full name</span>
+                <span>{{ 'clients.detail.fields.fullName' | transloco }}</span>
                 <input type="text" formControlName="fullName" [readonly]="!editing" />
               </label>
 
@@ -288,7 +288,7 @@ import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-pan
             </div>
 
             <div *ngIf="tagsError" class="alert-error" role="alert">{{ tagsError }}</div>
-            <p *ngIf="!client.tags.length" class="muted">No tags yet.</p>
+            <p *ngIf="!client.tags.length" class="muted">{{ 'clients.detail.tags.noTags' | transloco }}</p>
           </section>
 
           <section class="section">
@@ -298,7 +298,7 @@ import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-pan
                    class="profile-photo"
                 [src]="photoSrc"
                    [alt]="client.fullName + ' photo'" />
-              <div *ngIf="!client.photoUrl || !photoSrc" class="photo-placeholder">No photo uploaded</div>
+              <div *ngIf="!client.photoUrl || !photoSrc" class="photo-placeholder">{{ 'clients.detail.photo.noPhoto' | transloco }}</div>
             </div>
 
             <div *ngIf="client.canUploadPhoto" class="photo-controls">
@@ -313,7 +313,7 @@ import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-pan
                 class="btn-primary"
                 [disabled]="photoUploading"
                 (click)="photoInput.click()">
-                {{ photoUploading ? 'Uploading...' : 'Upload photo' }}
+                {{ photoUploading ? ('clients.detail.photo.uploading' | transloco) : ('clients.detail.photo.upload' | transloco) }}
               </button>
             </div>
 
@@ -330,12 +330,12 @@ import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-pan
         </form>
 
         <div class="section" *ngIf="client.sourceLeadId">
-          <h2 class="section-title">Referral Link</h2>
-          <a [routerLink]="['/leads']" class="link">View source lead history</a>
+          <h2 class="section-title">{{ 'clients.detail.sections.referralLink' | transloco }}</h2>
+          <a [routerLink]="['/leads']" class="link">{{ 'clients.detail.viewSourceLeadHistory' | transloco }}</a>
         </div>
 
         <div class="section" *ngIf="client.notes">
-          <h2 class="section-title">Pre-conversion history</h2>
+          <h2 class="section-title">{{ 'clients.detail.sections.preConversionHistory' | transloco }}</h2>
           <div class="notes-block">{{ client.notes }}</div>
         </div>
 
@@ -737,8 +737,10 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
 
     const query = this.tagInput.trim().toLowerCase();
     const existing = new Set(this.client.tags.map((tag) => tag.toLowerCase()));
+    const translatedHints = this.transloco.translate<string[]>('clients.detail.tags.defaultHints');
+    const defaultHints = Array.isArray(translatedHints) ? translatedHints : ClientDetailComponent.DEFAULT_TAG_HINTS;
     const pool = [
-      ...ClientDetailComponent.DEFAULT_TAG_HINTS,
+      ...defaultHints,
       ...this.recentTagHints,
       ...this.client.tags,
     ];

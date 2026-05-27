@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
 import { TimelineModule } from 'primeng/timeline';
 import { Subject, takeUntil } from 'rxjs';
@@ -255,28 +255,33 @@ export class ClientTimelineComponent implements OnInit, OnDestroy {
   currentPage = 0;
   pageSize = 50;
 
-  eventTypeFilters: EventTypeFilter[] = [
-    { label: 'All Events', value: null },
-    { label: 'Appointments', value: 'APPOINTMENT' },
-    { label: 'Profile Changes', value: 'PROFILE_CHANGE' },
-    { label: 'Conversion', value: 'CONVERSION' },
-    { label: 'Notes', value: 'NOTE' },
-    { label: 'Payments', value: 'PAYMENT' },
-    { label: 'Communications', value: 'COMMUNICATION' },
-    { label: 'Attendance', value: 'ATTENDANCE_OUTCOME' }
-  ];
+  eventTypeFilters: EventTypeFilter[] = [];
 
   private destroy$ = new Subject<void>();
 
-  constructor(private clientService: ClientService) {}
+  constructor(private clientService: ClientService, private transloco: TranslocoService) {}
 
   ngOnInit(): void {
+    this.buildEventTypeFilters();
     this.loadTimeline();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private buildEventTypeFilters(): void {
+    this.eventTypeFilters = [
+      { label: this.transloco.translate('timeline.filter.allEvents'), value: null },
+      { label: this.transloco.translate('timeline.filter.appointments'), value: 'APPOINTMENT' },
+      { label: this.transloco.translate('timeline.filter.profileChanges'), value: 'PROFILE_CHANGE' },
+      { label: this.transloco.translate('timeline.filter.conversion'), value: 'CONVERSION' },
+      { label: this.transloco.translate('timeline.filter.notes'), value: 'NOTE' },
+      { label: this.transloco.translate('timeline.filter.payments'), value: 'PAYMENT' },
+      { label: this.transloco.translate('timeline.filter.communications'), value: 'COMMUNICATION' },
+      { label: this.transloco.translate('timeline.filter.attendance'), value: 'ATTENDANCE_OUTCOME' },
+    ];
   }
 
   loadTimeline(): void {

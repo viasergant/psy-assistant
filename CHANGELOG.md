@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-05-27
+
+### Added
+
+- **Solo/Clinic deployment mode** — the application now requires an explicit Spring Boot profile at startup (`--spring.profiles.active=solo` or `clinic`). Starting without a declared mode fails fast with a descriptive error.
+- **`GET /api/v1/meta`** — unauthenticated endpoint returning the active deployment mode (`SOLO`/`CLINIC`) and application version; consumed by the Angular frontend on boot.
+- **Solo first-boot user creation (`SoloUserInitRunner`)** — on first boot in solo mode the system auto-creates one user account from `SOLO_USERNAME`/`SOLO_PASSWORD` environment variables with all five roles and `mustChangePassword=true`. Subsequent boots are idempotent.
+- **Clinic first-boot admin endpoint (`POST /api/v1/setup/admin`)** — available in clinic mode only; allows creation of the initial administrator account before any users exist. Returns HTTP 201 with a `Location` header; returns HTTP 409 once setup is complete. The count-and-save is transactional to prevent race conditions.
+- **Local dev admin seed (`R__seed_admin_user.sql`)** — Flyway repeatable script in `db/local-seed/` that inserts `admin@psyassistant.local` / `Admin1234!` using the current `user_roles` junction-table schema; idempotent via `ON CONFLICT DO NOTHING`.
+- **Angular `AppModeService`** — singleton service that fetches `GET /api/v1/meta` during app initialisation and exposes the deployment mode as a `BehaviorSubject`; errors are swallowed so a backend outage does not block the app from loading.
+- **`*appIfMode` structural directive** — shows or hides any element based on the current deployment mode; reactive to mode changes via Angular signals.
+- **`modeGuard(requiredMode)`** — functional route guard factory that redirects to `/` when the active deployment mode does not match the required mode.
+
+### Changed
+
+- `AdminUserController` and `CaseloadController` are now registered only in clinic mode (`@Profile("clinic")`); requesting those endpoints in solo mode returns HTTP 404.
+- The `admin` route in the Angular frontend requires clinic mode; solo-mode users are redirected to `/` by the mode guard.
+- The `caseload` and `therapist-utilization` report routes require clinic mode; solo-mode users are redirected to `/`.
+- The shell navigation sidebar hides the Admin entry in solo mode using a reactive `clinicOnly` computed filter on `visibleNav`.
+- `application-solo.yml` and `application-clinic.yml` profile stubs added; `application-local.yml` `flyway.locations` already included `db/local-seed` (no change required).
+
+### Fixed
+
+- `RbacIntegrationTest` and `PsyAssistantApplicationTest` updated to activate the `clinic` profile, preventing false 404s on clinic-only endpoints that previously masked 403 assertions.
+
+---
+
 ## [Unreleased] — 2026-05-22
 
 ### Added

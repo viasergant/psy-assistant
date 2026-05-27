@@ -10,7 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
  * Smoke test that verifies the Spring application context loads without errors.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles({"clinic", "test"})
 class PsyAssistantApplicationTest {
 
     /**

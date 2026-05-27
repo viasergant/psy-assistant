@@ -45,7 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @WebMvcTest(controllers = AdminUserController.class)
 @Import({SecurityConfig.class, GlobalExceptionHandler.class})
-@ActiveProfiles("test")
+@ActiveProfiles({"clinic", "test"})
 class AdminUserControllerTest {
 
     @Autowired

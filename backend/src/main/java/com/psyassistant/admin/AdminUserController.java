@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -37,8 +38,12 @@ import org.springframework.web.bind.annotation.RestController;
  * Admin REST endpoints for managing internal user accounts.
  *
  * <p>All methods require the {@code ROLE_SYSTEM_ADMINISTRATOR} authority.
+ *
+ * <p>This controller is only registered in clinic mode ({@code @Profile("clinic")}).
+ * In solo mode these endpoints return HTTP 404.
  */
 @RestController
+@Profile("clinic")
 @RequestMapping("/api/v1/admin/users")
 @PreAuthorize("hasRole('SYSTEM_ADMINISTRATOR')")
 @Tag(name = "Admin — User Management",

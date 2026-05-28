@@ -21,13 +21,26 @@ interface TimeSlot {
   displayTime: string;
 }
 
+interface PositionedAppointment {
+  appointment: CalendarAppointmentBlock;
+  top: number;          // px from top of day column (1px = 1 min)
+  height: number;       // px
+  leftPercent: number;  // % within therapist band
+  widthPercent: number; // % within therapist band
+}
+
+const HOUR_HEIGHT = 60;    // pixels per hour = 1px per minute
+const DAY_START_HOUR = 8;
+const MIN_APPT_HEIGHT = 20; // minimum visible block height in px
+
 /**
  * Week calendar view component with multi-therapist column display (PA-32).
  *
  * Features:
  * - Side-by-side therapist columns
- * - 8AM-8PM time grid
- * - Appointment block positioning
+ * - 8AM–8PM time grid with 1px-per-minute absolute positioning
+ * - Overlapping appointments rendered side-by-side horizontally
+ * - Current-time indicator
  * - Keyboard navigation support
  */
 @Component({
@@ -36,7 +49,7 @@ interface TimeSlot {
   imports: [CommonModule, TranslocoPipe, AppointmentBlockComponent],
   template: `
     <div class="week-view-container">
-      <!-- Fixed header row: Time + Day columns (never scrolls) -->
+      <!-- Fixed header row: Time + Day columns -->
       <div class="grid-header">
         <div class="time-header">{{ 'calendar.time' | transloco }}</div>
         <div
@@ -57,33 +70,48 @@ interface TimeSlot {
         </div>
       </div>
 
-      <!-- Scrollable time slots body -->
+      <!-- Scrollable body: time labels + day columns side by side -->
       <div class="grid-scroll-body">
         <div class="grid-body">
-          <div *ngFor="let timeSlot of timeSlots" class="time-row">
-            <!-- Time label column -->
-            <div class="time-label">{{ timeSlot.displayTime }}</div>
+          <!-- Time labels column -->
+          <div class="time-column">
+            <div *ngFor="let slot of timeSlots" class="time-label">{{ slot.displayTime }}</div>
+          </div>
 
-            <!-- Day cells -->
+          <!-- Day columns (one per day, absolutely-positioned appointments inside) -->
+          <div
+            *ngFor="let day of weekDays; let dayIndex = index"
+            class="day-col"
+            [class.today]="day.isToday"
+            [style.height.px]="totalDayHeight"
+          >
+            <!-- Red current-time line -->
             <div
-              *ngFor="let day of weekDays; let dayIndex = index"
-              class="day-cell"
-              [class.current-hour]="isCurrentHour(day.date, timeSlot.hour)"
+              *ngIf="isToday(day.date)"
+              class="current-time-line"
+              [style.top.px]="getCurrentTimeTop()"
+            ></div>
+
+            <!-- Therapist bands (split day column horizontally per therapist) -->
+            <div
+              *ngFor="let therapist of therapistsArray; let tIdx = index"
+              class="therapist-band"
+              [style.left.%]="(tIdx / therapistsArray.length) * 100"
+              [style.width.%]="100 / therapistsArray.length"
             >
-              <!-- Therapist columns within each day cell -->
-              <div class="therapist-columns">
-                <div
-                  *ngFor="let therapist of therapistsArray"
-                  class="therapist-column"
-                  [style.width.%]="100 / therapistsArray.length"
-                >
-                  <!-- Appointments for this therapist/day/hour -->
-                  <app-appointment-block
-                    *ngFor="let appointment of getAppointmentsForCell(therapist.id, dayIndex, timeSlot.hour)"
-                    [appointment]="appointment"
-                    (appointmentClicked)="onAppointmentClick($event)"
-                  ></app-appointment-block>
-                </div>
+              <!-- Absolutely-positioned appointment wrappers -->
+              <div
+                *ngFor="let block of getPositionedAppointments(therapist.id, dayIndex)"
+                class="appt-wrapper"
+                [style.top.px]="block.top"
+                [style.height.px]="block.height"
+                [style.left.%]="block.leftPercent"
+                [style.width.%]="block.widthPercent"
+              >
+                <app-appointment-block
+                  [appointment]="block.appointment"
+                  (appointmentClicked)="onAppointmentClick($event)"
+                ></app-appointment-block>
               </div>
             </div>
           </div>
@@ -108,8 +136,10 @@ interface TimeSlot {
       flex-direction: column;
       height: 100%;
       min-height: 0;
-      overflow-x: auto; /* horizontal scroll here syncs header + body together */
+      overflow-x: auto;
     }
+
+    /* ── Fixed header ─────────────────────────────────────────── */
 
     .grid-header {
       display: grid;
@@ -118,12 +148,6 @@ interface TimeSlot {
       border-bottom: 2px solid var(--color-border);
       flex-shrink: 0;
       min-width: 1024px;
-    }
-
-    .grid-scroll-body {
-      flex: 1;
-      overflow-y: auto; /* only vertical scroll — horizontal handled by parent */
-      min-height: 0;
     }
 
     .time-header {
@@ -158,54 +182,111 @@ interface TimeSlot {
       color: var(--color-text-secondary);
     }
 
+    /* ── Scrollable body ──────────────────────────────────────── */
+
+    .grid-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
     .grid-body {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       min-width: 1024px;
     }
 
-    .time-row {
-      display: grid;
-      grid-template-columns: 80px repeat(7, 1fr);
-      min-height: 28px;
-      border-bottom: 1px solid var(--color-border-light);
+    /* ── Time labels column ───────────────────────────────────── */
+
+    .time-column {
+      width: 80px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--color-border);
     }
 
+    /* Each label is exactly HOUR_HEIGHT (60px) tall → 1px = 1 minute */
     .time-label {
-      padding: 2px 4px;
-      border-right: 1px solid var(--color-border);
+      height: 60px;
+      padding: 2px 8px 0 0;
       font-size: 0.65rem;
       color: var(--color-text-secondary);
       font-weight: 600;
       text-align: right;
+      box-sizing: border-box;
     }
 
-    .day-cell {
-      border-right: 1px solid var(--color-border-light);
+    /* ── Day columns ──────────────────────────────────────────── */
+
+    .day-col {
+      flex: 1;
       position: relative;
-      min-height: 28px;
+      border-right: 1px solid var(--color-border-light);
+      /* Hour-separator lines via CSS gradient (60px repeat = 1 line per hour) */
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 59px,
+        var(--color-border-light) 59px,
+        var(--color-border-light) 60px
+      );
     }
 
-    .day-cell.current-hour {
-      background: rgba(var(--color-primary-rgb), 0.05);
+    .day-col.today {
+      background-color: rgba(var(--color-primary-rgb), 0.02);
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 59px,
+        var(--color-border-light) 59px,
+        var(--color-border-light) 60px
+      );
     }
 
-    .therapist-columns {
-      display: flex;
-      height: 100%;
+    /* ── Current-time indicator ───────────────────────────────── */
+
+    .current-time-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--color-error, #ef4444);
+      z-index: 5;
+      pointer-events: none;
     }
 
-    .therapist-column {
-      border-left: 1px solid var(--color-border-light);
-      padding: 1px 2px;
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
+    .current-time-line::before {
+      content: '';
+      position: absolute;
+      left: -4px;
+      top: -3px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-error, #ef4444);
     }
 
-    .therapist-column:first-child {
-      border-left: none;
+    /* ── Therapist bands ──────────────────────────────────────── */
+
+    .therapist-band {
+      position: absolute;
+      top: 0;
+      bottom: 0;
     }
+
+    /* ── Appointment wrappers ─────────────────────────────────── */
+
+    .appt-wrapper {
+      position: absolute;
+      padding: 0 2px;
+      box-sizing: border-box;
+      z-index: 1;
+    }
+
+    .appt-wrapper:hover {
+      z-index: 10;
+    }
+
+    /* ── Misc ─────────────────────────────────────────────────── */
 
     .empty-state {
       display: flex;
@@ -252,7 +333,13 @@ export class CalendarWeekViewComponent implements OnChanges {
   weekDays: WeekDay[] = [];
   therapistsArray: TherapistInfo[] = [];
   timeSlots: TimeSlot[] = [];
-  appointmentGrid: Map<string, CalendarAppointmentBlock[]> = new Map();
+
+  private positionedAppointmentsMap = new Map<string, PositionedAppointment[]>();
+
+  /** Total pixel height of a day column: one slot per hour × HOUR_HEIGHT */
+  get totalDayHeight(): number {
+    return this.timeSlots.length * HOUR_HEIGHT;
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['weekData'] && this.weekData) {
@@ -294,57 +381,133 @@ export class CalendarWeekViewComponent implements OnChanges {
 
   private buildTimeSlots(): void {
     this.timeSlots = [];
-    // 8 AM to 8 PM (business hours)
+    // 8 AM to 8 PM (business hours), 13 slots × 60px = 780px total
     for (let hour = 8; hour <= 20; hour++) {
       const displayHour = hour % 12 || 12;
       const period = hour < 12 ? 'AM' : 'PM';
-      this.timeSlots.push({
-        hour,
-        displayTime: `${displayHour}:00 ${period}`
-      });
+      this.timeSlots.push({ hour, displayTime: `${displayHour}:00 ${period}` });
     }
   }
 
+  /**
+   * Groups appointments by therapist+day, then computes pixel positions
+   * with overlap detection so concurrent appointments sit side-by-side.
+   */
   private buildAppointmentGrid(): void {
     if (!this.weekData) return;
 
-    this.appointmentGrid.clear();
+    this.positionedAppointmentsMap.clear();
+
+    const groupMap = new Map<string, CalendarAppointmentBlock[]>();
 
     this.weekData.appointments.forEach(appointment => {
       const startTime = new Date(appointment.startTime);
-      const therapistId = appointment.therapistProfileId;
+      const dayIndex = this.weekDays.findIndex(day => this.isSameDay(day.date, startTime));
+      if (dayIndex === -1) return;
 
-      // Find which day of the week this appointment belongs to
-      const dayIndex = this.weekDays.findIndex(day =>
-        this.isSameDay(day.date, startTime)
-      );
-
-      if (dayIndex === -1) return; // Appointment outside current week
-
-      const hour = startTime.getHours();
-      const key = `${therapistId}-${dayIndex}-${hour}`;
-
-      const existing = this.appointmentGrid.get(key) || [];
+      const key = `${appointment.therapistProfileId}-${dayIndex}`;
+      const existing = groupMap.get(key) || [];
       existing.push(appointment);
-      this.appointmentGrid.set(key, existing);
+      groupMap.set(key, existing);
+    });
+
+    groupMap.forEach((appointments, key) => {
+      this.positionedAppointmentsMap.set(key, this.computeOverlapPositions(appointments));
     });
   }
 
-  getAppointmentsForCell(therapistId: string, dayIndex: number, hour: number): CalendarAppointmentBlock[] {
-    const key = `${therapistId}-${dayIndex}-${hour}`;
-    return this.appointmentGrid.get(key) || [];
+  /**
+   * Assigns pixel top/height and left/width percentages so overlapping
+   * appointments are rendered in columns side-by-side (not stacked).
+   *
+   * Algorithm:
+   * 1. Sort by start time.
+   * 2. Greedy sweep-line column assignment (no two overlapping share a column).
+   * 3. For each appointment, count max column index among all its overlapping
+   *    peers → determines how wide each block should be.
+   */
+  private computeOverlapPositions(appointments: CalendarAppointmentBlock[]): PositionedAppointment[] {
+    if (appointments.length === 0) return [];
+
+    interface Meta {
+      apt: CalendarAppointmentBlock;
+      startMin: number; // minutes from DAY_START_HOUR
+      endMin: number;
+      col: number;
+      totalCols: number;
+    }
+
+    const metas: Meta[] = appointments.map(apt => {
+      const start = new Date(apt.startTime);
+      const end = new Date(apt.endTime);
+      const startMin = (start.getHours() - DAY_START_HOUR) * 60 + start.getMinutes();
+      const endMin = Math.max(
+        (end.getHours() - DAY_START_HOUR) * 60 + end.getMinutes(),
+        startMin + 1
+      );
+      return { apt, startMin, endMin, col: 0, totalCols: 1 };
+    });
+
+    metas.sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
+
+    // Greedy column assignment: pick the first free column
+    const colEndTimes: number[] = [];
+    for (const meta of metas) {
+      let col = 0;
+      while (col < colEndTimes.length && colEndTimes[col] > meta.startMin) {
+        col++;
+      }
+      meta.col = col;
+      colEndTimes[col] = meta.endMin;
+    }
+
+    // Determine totalCols = (max col used by any overlapping peer) + 1
+    for (let i = 0; i < metas.length; i++) {
+      let maxCol = metas[i].col;
+      for (let j = 0; j < metas.length; j++) {
+        if (i !== j &&
+            metas[i].startMin < metas[j].endMin &&
+            metas[i].endMin   > metas[j].startMin) {
+          maxCol = Math.max(maxCol, metas[j].col);
+        }
+      }
+      metas[i].totalCols = maxCol + 1;
+    }
+
+    const maxViewMin = this.timeSlots.length * 60;
+
+    return metas.map(meta => {
+      const clampedStart = Math.max(0, meta.startMin);
+      const clampedEnd   = Math.min(meta.endMin, maxViewMin);
+      return {
+        appointment:  meta.apt,
+        top:          clampedStart,
+        height:       Math.max(clampedEnd - clampedStart, MIN_APPT_HEIGHT),
+        leftPercent:  (meta.col / meta.totalCols) * 100,
+        widthPercent: (1 / meta.totalCols) * 100,
+      };
+    });
   }
 
-  isCurrentHour(date: Date, hour: number): boolean {
+  getPositionedAppointments(therapistId: string, dayIndex: number): PositionedAppointment[] {
+    return this.positionedAppointmentsMap.get(`${therapistId}-${dayIndex}`) || [];
+  }
+
+  /** Top offset in px for the current-time red line */
+  getCurrentTimeTop(): number {
     const now = new Date();
-    return this.isSameDay(date, now) && now.getHours() === hour;
+    return (now.getHours() - DAY_START_HOUR) * HOUR_HEIGHT + now.getMinutes();
+  }
+
+  isToday(date: Date): boolean {
+    return this.isSameDay(date, new Date());
   }
 
   private isSameDay(date1: Date, date2: Date): boolean {
     return (
       date1.getFullYear() === date2.getFullYear() &&
-      date1.getMonth() === date2.getMonth() &&
-      date1.getDate() === date2.getDate()
+      date1.getMonth()    === date2.getMonth()    &&
+      date1.getDate()     === date2.getDate()
     );
   }
 
@@ -358,7 +521,7 @@ export class CalendarWeekViewComponent implements OnChanges {
         continue;
       }
       const start = new Date(leave.startDate + 'T00:00:00');
-      const end = new Date(leave.endDate + 'T23:59:59');
+      const end   = new Date(leave.endDate   + 'T23:59:59');
       if (date >= start && date <= end) {
         return leave.status === LeaveStatus.APPROVED ? 'APPROVED' : 'PENDING';
       }

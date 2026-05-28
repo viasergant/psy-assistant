@@ -45,6 +45,11 @@ import { CalendarAppointmentBlock, STATUS_COLORS, SESSION_TYPE_COLORS } from '..
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      height: 100%;
+    }
+
     .appointment-block {
       position: relative;
       padding: 2px 6px;
@@ -53,18 +58,21 @@ import { CalendarAppointmentBlock, STATUS_COLORS, SESSION_TYPE_COLORS } from '..
       cursor: pointer;
       transition: box-shadow 0.15s ease;
       background: white;
+      height: 100%;
       min-height: 24px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       gap: 1px;
+      box-sizing: border-box;
     }
 
     .appointment-block:hover {
       overflow: visible;
+      height: auto;
+      min-height: 100%;
       z-index: 50;
       box-shadow: var(--shadow-md);
-      min-height: auto;
     }
 
     .appointment-block:focus {

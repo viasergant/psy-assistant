@@ -5,6 +5,18 @@ import { AppointmentBlockComponent } from '../appointment-block/appointment-bloc
 import { CalendarAppointmentBlock } from '../../../models/calendar.model';
 import { Leave, LeaveStatus } from '../../../models/schedule.model';
 
+interface PositionedAppointment {
+  appointment: CalendarAppointmentBlock;
+  top: number;          // px from top of slots-container (1px = 1 min)
+  height: number;       // px
+  leftPercent: number;  // % within therapist column
+  widthPercent: number; // % within therapist column
+}
+
+const HOUR_HEIGHT = 60;    // pixels per hour = 1px per minute
+const DAY_START_HOUR = 8;
+const MIN_APPT_HEIGHT = 20;
+
 /**
  * Day view calendar component showing hourly time slots for multiple therapists side-by-side.
  *
@@ -49,18 +61,27 @@ import { Leave, LeaveStatus } from '../../../models/schedule.model';
             <!-- Time Slots Grid -->
             <div class="slots-container">
               <div class="time-slot-row" *ngFor="let hour of timeSlots"></div>
+
+              <!-- Current time indicator -->
+              <div
+                *ngIf="isToday()"
+                class="current-time-line"
+                [style.top.px]="getCurrentTimeTop()"
+              ></div>
               
               <!-- Appointments Overlay -->
               <div class="appointments-overlay">
                 <div
-                  *ngFor="let appointment of getTherapistAppointments(therapist.id)"
+                  *ngFor="let block of getPositionedAppointments(therapist.id)"
                   class="appointment-wrapper"
-                  [style.top.px]="calculateTopPosition(appointment.startTime)"
-                  [style.height.px]="calculateHeight(appointment.durationMinutes)"
+                  [style.top.px]="block.top"
+                  [style.height.px]="block.height"
+                  [style.left.%]="block.leftPercent"
+                  [style.width.%]="block.widthPercent"
                 >
                   <app-appointment-block
-                    [appointment]="appointment"
-                    (click)="onAppointmentClick(appointment)"
+                    [appointment]="block.appointment"
+                    (click)="onAppointmentClick(block.appointment)"
                   ></app-appointment-block>
                 </div>
               </div>
@@ -166,6 +187,27 @@ import { Leave, LeaveStatus } from '../../../models/schedule.model';
       border-bottom: 1px solid var(--color-border-light, #F1F5F9);
     }
 
+    .current-time-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--color-error, #ef4444);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .current-time-line::before {
+      content: '';
+      position: absolute;
+      left: -4px;
+      top: -3px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-error, #ef4444);
+    }
+
     .appointments-overlay {
       position: absolute;
       top: 0;
@@ -177,9 +219,14 @@ import { Leave, LeaveStatus } from '../../../models/schedule.model';
 
     .appointment-wrapper {
       position: absolute;
-      left: 4px;
-      right: 4px;
+      padding: 0 2px;
+      box-sizing: border-box;
       pointer-events: auto;
+      z-index: 1;
+    }
+
+    .appointment-wrapper:hover {
+      z-index: 10;
     }
 
     .empty-state {
@@ -222,7 +269,7 @@ export class CalendarDayViewComponent {
   @Input() leavePeriods: Leave[] = [];
   @Output() appointmentClicked = new EventEmitter<CalendarAppointmentBlock>();
 
-  // Time slots from 8 AM to 8 PM (12 hours)
+  // Time slots from 8 AM to 7 PM (12 hours × 60px = 720px total)
   timeSlots = Array.from({ length: 12 }, (_, i) => i + 8);
 
   formatHour(hour: number): string {
@@ -238,7 +285,7 @@ export class CalendarDayViewComponent {
         continue;
       }
       const start = new Date(leave.startDate + 'T00:00:00');
-      const end = new Date(leave.endDate + 'T23:59:59');
+      const end   = new Date(leave.endDate   + 'T23:59:59');
       if (this.dayDate >= start && this.dayDate <= end) {
         return leave.status === LeaveStatus.APPROVED ? 'APPROVED' : 'PENDING';
       }
@@ -246,26 +293,91 @@ export class CalendarDayViewComponent {
     return null;
   }
 
-  getTherapistAppointments(therapistId: string): CalendarAppointmentBlock[] {
-    return this.appointments.filter(apt => apt.therapistProfileId === therapistId);
+  isToday(): boolean {
+    if (!this.dayDate) return false;
+    const today = new Date();
+    return (
+      this.dayDate.getFullYear() === today.getFullYear() &&
+      this.dayDate.getMonth()    === today.getMonth()    &&
+      this.dayDate.getDate()     === today.getDate()
+    );
   }
 
-  calculateTopPosition(startTime: string): number {
-    const date = new Date(startTime);
-    const hour = date.getHours();
-    const minutes = date.getMinutes();
-    
-    // Calculate offset from 8 AM
-    const offsetHours = hour - 8;
-    const offsetMinutes = minutes;
-    
-    // Each hour = 60px, each minute = 1px
-    return (offsetHours * 60) + offsetMinutes;
+  getCurrentTimeTop(): number {
+    const now = new Date();
+    return (now.getHours() - DAY_START_HOUR) * HOUR_HEIGHT + now.getMinutes();
   }
 
-  calculateHeight(durationMinutes: number): number {
-    // Each minute = 1px
-    return durationMinutes;
+  getPositionedAppointments(therapistId: string): PositionedAppointment[] {
+    const apts = this.appointments.filter(a => a.therapistProfileId === therapistId);
+    return this.computeOverlapPositions(apts);
+  }
+
+  /**
+   * Assigns pixel top/height and left/width percentages so overlapping
+   * appointments are rendered side-by-side horizontally (not stacked).
+   */
+  private computeOverlapPositions(appointments: CalendarAppointmentBlock[]): PositionedAppointment[] {
+    if (appointments.length === 0) return [];
+
+    interface Meta {
+      apt: CalendarAppointmentBlock;
+      startMin: number;
+      endMin: number;
+      col: number;
+      totalCols: number;
+    }
+
+    const maxViewMin = this.timeSlots.length * 60;
+
+    const metas: Meta[] = appointments.map(apt => {
+      const start = new Date(apt.startTime);
+      const end   = new Date(apt.endTime);
+      const startMin = (start.getHours() - DAY_START_HOUR) * 60 + start.getMinutes();
+      const endMin   = Math.max(
+        (end.getHours() - DAY_START_HOUR) * 60 + end.getMinutes(),
+        startMin + 1
+      );
+      return { apt, startMin, endMin, col: 0, totalCols: 1 };
+    });
+
+    metas.sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
+
+    // Greedy column assignment: pick the first free column
+    const colEndTimes: number[] = [];
+    for (const meta of metas) {
+      let col = 0;
+      while (col < colEndTimes.length && colEndTimes[col] > meta.startMin) {
+        col++;
+      }
+      meta.col = col;
+      colEndTimes[col] = meta.endMin;
+    }
+
+    // totalCols = (max col among all overlapping peers) + 1
+    for (let i = 0; i < metas.length; i++) {
+      let maxCol = metas[i].col;
+      for (let j = 0; j < metas.length; j++) {
+        if (i !== j &&
+            metas[i].startMin < metas[j].endMin &&
+            metas[i].endMin   > metas[j].startMin) {
+          maxCol = Math.max(maxCol, metas[j].col);
+        }
+      }
+      metas[i].totalCols = maxCol + 1;
+    }
+
+    return metas.map(meta => {
+      const clampedStart = Math.max(0, meta.startMin);
+      const clampedEnd   = Math.min(meta.endMin, maxViewMin);
+      return {
+        appointment:  meta.apt,
+        top:          clampedStart,
+        height:       Math.max(clampedEnd - clampedStart, MIN_APPT_HEIGHT),
+        leftPercent:  (meta.col / meta.totalCols) * 100,
+        widthPercent: (1 / meta.totalCols) * 100,
+      };
+    });
   }
 
   onAppointmentClick(appointment: CalendarAppointmentBlock): void {

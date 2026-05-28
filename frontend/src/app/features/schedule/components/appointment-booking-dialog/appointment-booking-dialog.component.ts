@@ -116,7 +116,14 @@ interface ClientOption {
                 aria-required="true"
                 styleClass="w-full"
                 appendTo="body"
-              />
+              >
+                <ng-template #selectedItem let-type>
+                  {{ 'sessions.types.' + type?.code | transloco }}
+                </ng-template>
+                <ng-template #item let-type>
+                  {{ 'sessions.types.' + type.code | transloco }}
+                </ng-template>
+              </p-select>
               <span *ngIf="isInvalid('sessionTypeId')" class="error-msg" role="alert">
                 {{ 'schedule.appointment.validation.sessionTypeRequired' | transloco }}
               </span>

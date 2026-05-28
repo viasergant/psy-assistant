@@ -7,6 +7,8 @@ import com.psyassistant.crm.clients.dto.ClientPageResponse;
 import com.psyassistant.crm.clients.dto.ClientSummaryDto;
 import com.psyassistant.crm.clients.dto.UpdateClientProfileRequest;
 import com.psyassistant.crm.clients.dto.UpdateClientTagsRequest;
+import com.psyassistant.sessions.domain.SessionStatus;
+import com.psyassistant.sessions.repository.SessionRecordRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -51,6 +53,7 @@ public class ClientProfileService {
     private final ClientProfileAuditRecorder auditRecorder;
         private final ClientPhotoStorage photoStorage;
         private final long photoMaxBytes;
+    private final SessionRecordRepository sessionRecordRepository;
 
     /**
      * Constructs the service.
@@ -60,12 +63,14 @@ public class ClientProfileService {
                                 final ClientProfileAuditRecorder auditRecorder,
                                 final ClientPhotoStorage photoStorage,
                                 @Value("${app.client-profile.photo.max-bytes:5242880}")
-                                final long photoMaxBytes) {
+                                final long photoMaxBytes,
+                                final SessionRecordRepository sessionRecordRepository) {
         this.clientRepository = clientRepository;
         this.clientTagRepository = clientTagRepository;
         this.auditRecorder = auditRecorder;
         this.photoStorage = photoStorage;
         this.photoMaxBytes = photoMaxBytes;
+        this.sessionRecordRepository = sessionRecordRepository;
     }
 
     /**
@@ -90,7 +95,8 @@ public class ClientProfileService {
                 buildPhotoUrl(client),
                 canManageClients,
                 canManageClients,
-                canManageClients
+                canManageClients,
+                findLastTherapistId(client.getId())
         );
     }
 
@@ -282,7 +288,8 @@ public class ClientProfileService {
                 buildPhotoUrl(saved),
                 true,
                 true,
-                true
+                true,
+                null
         );
     }
 
@@ -324,7 +331,7 @@ public class ClientProfileService {
             ));
         }
 
-        return ClientDetailDto.from(saved, normalized, buildPhotoUrl(saved), true, true, true);
+        return ClientDetailDto.from(saved, normalized, buildPhotoUrl(saved), true, true, true, null);
     }
 
     /**
@@ -395,7 +402,8 @@ public class ClientProfileService {
                 buildPhotoUrl(saved),
                 true,
                 true,
-                true
+                true,
+                null
         );
     }
 
@@ -478,6 +486,14 @@ public class ClientProfileService {
             return null;
         }
         return "/api/v1/clients/" + client.getId() + "/photo";
+    }
+
+    private UUID findLastTherapistId(final UUID clientId) {
+        return sessionRecordRepository
+                .findTop1ByClientIdAndStatusOrderBySessionDateDescScheduledStartTimeDesc(
+                        clientId, SessionStatus.COMPLETED)
+                .map(s -> s.getTherapistId())
+                .orElse(null);
     }
 
     private List<String> normalizeTags(final List<String> tags) {

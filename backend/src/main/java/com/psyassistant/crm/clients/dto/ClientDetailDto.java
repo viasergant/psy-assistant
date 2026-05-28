@@ -60,6 +60,7 @@ public record ClientDetailDto(
         UUID sourceLeadId,
         UUID ownerId,
         UUID assignedTherapistId,
+        UUID lastTherapistId,
         String notes,
         String preferredName,
         LocalDate dateOfBirth,
@@ -113,7 +114,8 @@ public record ClientDetailDto(
                                 final String photoUrl,
                                        final boolean canEditProfile,
                                        final boolean canEditTags,
-                                       final boolean canUploadPhoto) {
+                                       final boolean canUploadPhoto,
+                                       final UUID lastTherapistId) {
         return new ClientDetailDto(
                 client.getId(),
                 client.getFullName(),
@@ -122,6 +124,7 @@ public record ClientDetailDto(
                 client.getSourceLeadId(),
                 client.getOwnerId(),
                 client.getAssignedTherapistId(),
+                lastTherapistId,
                 client.getNotes(),
                 client.getPreferredName(),
                 client.getDateOfBirth(),

@@ -10,6 +10,7 @@ import com.psyassistant.crm.clients.audit.ClientProfileAuditRecorder;
 import com.psyassistant.crm.clients.dto.ClientDetailDto;
 import com.psyassistant.crm.clients.dto.UpdateClientProfileRequest;
 import com.psyassistant.crm.clients.dto.UpdateClientTagsRequest;
+import com.psyassistant.sessions.repository.SessionRecordRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +47,9 @@ class ClientProfileServiceTest {
     @Mock
     private ClientPhotoStorage clientPhotoStorage;
 
+    @Mock
+    private SessionRecordRepository sessionRecordRepository;
+
     private ClientProfileService service;
 
     private final UUID clientId = UUID.randomUUID();
@@ -58,7 +62,8 @@ class ClientProfileServiceTest {
                 clientTagRepository,
                 auditRecorder,
                 clientPhotoStorage,
-                5_242_880L
+                5_242_880L,
+                sessionRecordRepository
         );
     }
 

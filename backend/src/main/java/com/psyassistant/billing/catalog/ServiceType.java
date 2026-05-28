@@ -6,6 +6,7 @@ package com.psyassistant.billing.catalog;
  */
 public enum ServiceType {
     INDIVIDUAL_SESSION,
+    ONLINE_SESSION,
     GROUP_SESSION,
     INTAKE_ASSESSMENT,
     FOLLOW_UP

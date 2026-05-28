@@ -3,6 +3,7 @@ export type PackageInstanceStatus = 'ACTIVE' | 'EXHAUSTED' | 'EXPIRED';
 
 export type ServiceType =
   | 'INDIVIDUAL_SESSION'
+  | 'ONLINE_SESSION'
   | 'GROUP_SESSION'
   | 'INTAKE_ASSESSMENT'
   | 'FOLLOW_UP';

@@ -585,6 +585,9 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
         this.client = c;
         this.patchForm(c);
         this.refreshPhotoSource(c);
+        if (this.needsTherapistPicker && c.lastTherapistId) {
+          this.selectedAdminTherapistId = c.lastTherapistId;
+        }
       },
       error: () => {
         this.loading = false;

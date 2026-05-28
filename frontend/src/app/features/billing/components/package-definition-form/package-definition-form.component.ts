@@ -12,6 +12,7 @@ import { CreatePackageDefinitionRequest, ServiceType } from '../../models/packag
 
 export const SERVICE_TYPES: ServiceType[] = [
   'INDIVIDUAL_SESSION',
+  'ONLINE_SESSION',
   'GROUP_SESSION',
   'INTAKE_ASSESSMENT',
   'FOLLOW_UP',

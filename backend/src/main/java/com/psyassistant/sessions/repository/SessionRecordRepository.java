@@ -28,6 +28,19 @@ public interface SessionRecordRepository extends JpaRepository<SessionRecord, UU
     Optional<SessionRecord> findByAppointmentId(UUID appointmentId);
 
     /**
+     * Returns the most recent completed session for a specific client, ordered by session date
+     * then scheduled start time descending.
+     *
+     * <p>Used to resolve the default therapist selection on the client detail page.
+     *
+     * @param clientId the client UUID
+     * @param status   session status filter (typically {@code COMPLETED})
+     * @return optional session record, empty if no matching session exists
+     */
+    Optional<SessionRecord> findTop1ByClientIdAndStatusOrderBySessionDateDescScheduledStartTimeDesc(
+            UUID clientId, SessionStatus status);
+
+    /**
      * Checks if a session record exists for a given appointment.
      *
      * @param appointmentId appointment UUID

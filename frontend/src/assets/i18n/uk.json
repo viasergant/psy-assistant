@@ -1366,6 +1366,7 @@
       },
       "serviceTypes": {
         "INDIVIDUAL_SESSION": "Індивідуальна сесія",
+        "ONLINE_SESSION": "Онлайн сесія",
         "GROUP_SESSION": "Групова сесія",
         "INTAKE_ASSESSMENT": "Первинна оцінка",
         "FOLLOW_UP": "Повторна консультація"

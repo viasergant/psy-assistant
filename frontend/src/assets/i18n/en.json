@@ -1366,6 +1366,7 @@
       },
       "serviceTypes": {
         "INDIVIDUAL_SESSION": "Individual Session",
+        "ONLINE_SESSION": "Online Session",
         "GROUP_SESSION": "Group Session",
         "INTAKE_ASSESSMENT": "Intake Assessment",
         "FOLLOW_UP": "Follow-Up"

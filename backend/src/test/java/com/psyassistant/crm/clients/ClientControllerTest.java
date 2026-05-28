@@ -183,7 +183,7 @@ class ClientControllerTest {
                 ReflectionTestUtils.setField(client, "version", 2L);
                 ReflectionTestUtils.setField(client, "createdAt", Instant.now());
                 ReflectionTestUtils.setField(client, "updatedAt", Instant.now());
-                return ClientDetailDto.from(client, List.of(), null, true, true, true);
+                return ClientDetailDto.from(client, List.of(), null, true, true, true, null);
     }
 
     private UpdateClientProfileRequest updateRequest() {

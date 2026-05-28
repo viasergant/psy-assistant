@@ -7,6 +7,7 @@ export interface ClientDetail {
   sourceLeadId: string | null;
   ownerId: string | null;
   assignedTherapistId: string | null;
+  lastTherapistId: string | null;
   notes: string | null;
   preferredName: string | null;
   dateOfBirth: string | null;

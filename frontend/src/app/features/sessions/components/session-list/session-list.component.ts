@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
@@ -79,7 +80,8 @@ export class SessionListComponent implements OnInit, OnDestroy {
     private sessionService: SessionService,
     private fb: FormBuilder,
     private transloco: TranslocoService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private router: Router
   ) {
     this.filterForm = this.fb.group({
       dateRange: ['today'],
@@ -343,6 +345,12 @@ export class SessionListComponent implements OnInit, OnDestroy {
     this.showCompleteDialog = false;
     this.showCancelDialog = false;
     this.selectedSession = null;
+  }
+
+  navigateToClient(session: SessionRecord): void {
+    if (session.clientId) {
+      this.router.navigate(['/clients', session.clientId]);
+    }
   }
 
   viewSession(session: SessionRecord): void {

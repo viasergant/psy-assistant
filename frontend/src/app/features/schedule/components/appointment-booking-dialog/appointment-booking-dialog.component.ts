@@ -14,9 +14,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TranslocoPipe } from '@jsverse/transloco';
 import { DatePicker } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
 import { ServiceCatalogItem } from '../../../billing/models/service-catalog.model';
 import { ServiceCatalogService } from '../../../billing/services/service-catalog.service';
+import { PackageInstance } from '../../../billing/models/package.model';
+import { PackageService } from '../../../billing/services/package.service';
 import {
   Appointment,
   CheckRecurringConflictsRequest,
@@ -130,6 +132,23 @@ interface ClientOption {
             </div>
           </div>
 
+          <!-- Prepaid Package Info Banner -->
+          <div *ngIf="visibleClientPackages.length > 0" class="prepaid-banner" role="status" aria-live="polite">
+            <div class="prepaid-banner__header">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+              </svg>
+              <span>{{ 'schedule.appointment.booking.prepaidBannerTitle' | transloco }}</span>
+            </div>
+            <ul class="prepaid-banner__list">
+              <li *ngFor="let pkg of visibleClientPackages">
+                <span class="pkg-name">{{ pkg.definitionName }}</span>
+                <span class="pkg-sessions-badge">{{ 'schedule.appointment.booking.prepaidSessionsRemaining' | transloco : { remaining: pkg.sessionsRemaining, total: pkg.sessionsTotal } }}</span>
+              </li>
+            </ul>
+          </div>
+
           <!-- Service Selection (full width, filtered by session type) -->
           <div class="field" *ngIf="filteredCatalogItems.length > 0 || form.value.sessionTypeId">
             <label for="serviceCatalogItem">
@@ -147,6 +166,30 @@ interface ClientOption {
               appendTo="body"
               (onChange)="onServiceSelected($event.value)"
             />
+          </div>
+
+          <!-- Manual Prepaid Amount -->
+          <div class="field manual-discount-field"
+               *ngIf="form.value.serviceCatalogItemId && visibleClientPackages.length === 0">
+            <label for="manualDiscount">
+              {{ 'schedule.appointment.booking.manualDiscountLabel' | transloco }}
+            </label>
+            <div class="manual-discount-input-wrap">
+              <span class="currency-prefix">{{ 'schedule.appointment.booking.currencySymbol' | transloco }}</span>
+              <input
+                id="manualDiscount"
+                type="number"
+                formControlName="manualDiscount"
+                [placeholder]="'schedule.appointment.booking.manualDiscountPlaceholder' | transloco"
+                min="0"
+                step="0.01"
+                [attr.aria-invalid]="isInvalid('manualDiscount')"
+              />
+            </div>
+            <span class="field-hint">{{ 'schedule.appointment.booking.manualDiscountHint' | transloco }}</span>
+            <span *ngIf="isInvalid('manualDiscount')" class="error-msg" role="alert">
+              {{ 'schedule.appointment.booking.manualDiscountInvalid' | transloco }}
+            </span>
           </div>
 
           <div class="form-grid">
@@ -696,6 +739,90 @@ interface ClientOption {
       color: #991B1B;
     }
 
+    .prepaid-banner {
+      background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+      border: 1.5px solid #86EFAC;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+      animation: slideIn 0.3s ease;
+    }
+
+    .prepaid-banner__header {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      color: #15803D;
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.625rem;
+    }
+
+    .prepaid-banner__list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .prepaid-banner__list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.875rem;
+    }
+
+    .pkg-name {
+      color: #166534;
+      font-weight: 500;
+    }
+
+    .pkg-sessions-badge {
+      background: #BBFAD7;
+      color: #15803D;
+      font-weight: 600;
+      padding: 0.125rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      white-space: nowrap;
+    }
+
+    .manual-discount-field {
+      margin-bottom: 1.25rem;
+    }
+
+    .manual-discount-input-wrap {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .currency-prefix {
+      display: flex;
+      align-items: center;
+      padding: 0 0.75rem;
+      background: #F1F5F9;
+      border: 1.5px solid var(--color-border, #E2E8F0);
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+      font-size: 0.9375rem;
+      color: var(--color-text-secondary, #64748B);
+      font-weight: 600;
+    }
+
+    .manual-discount-input-wrap input[type='number'] {
+      border-radius: 0 8px 8px 0;
+      flex: 1;
+    }
+
+    .field-hint {
+      display: block;
+      margin-top: 0.375rem;
+      font-size: 0.8125rem;
+      color: var(--color-text-secondary, #64748B);
+    }
+
     .alert-error {
       background: var(--color-error-bg, #FEF2F2);
       border: 1.5px solid var(--color-error, #DC2626);
@@ -951,6 +1078,7 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
   saving = false;
   serverError: string | null = null;
   minDate = new Date();
+  clientActivePackages: PackageInstance[] = [];
 
   // Working hours and leave warnings
   isOutsideWorkingHours = false;
@@ -973,7 +1101,8 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
   constructor(
     private fb: FormBuilder,
     private appointmentService: AppointmentApiService,
-    private serviceCatalogService: ServiceCatalogService
+    private serviceCatalogService: ServiceCatalogService,
+    private packageService: PackageService
   ) {}
 
   ngOnInit(): void {
@@ -982,6 +1111,7 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
     this.loadCatalogItems();
     this.setupConflictDetection();
     this.setupServiceFilter();
+    this.setupClientPackageLoader();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -1008,6 +1138,7 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
       notes: [''],
       allowConflictOverride: [false],
       confirmOutsideHours: [false], // Confirmation for outside hours/leave
+      manualDiscount: [null, [Validators.min(0)]],
       // Recurring series fields (PA-33)
       isRecurring: [false],
       recurrenceType: ['WEEKLY'],
@@ -1042,6 +1173,47 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
         this.filterCatalogItems(sessionTypeId);
         // Clear service selection when session type changes
         this.form.patchValue({ serviceCatalogItemId: null }, { emitEvent: false });
+      });
+  }
+
+  get visibleClientPackages(): PackageInstance[] {
+    const sessionTypeId: string | null = this.form?.value?.sessionTypeId ?? null;
+    if (!sessionTypeId || this.clientActivePackages.length === 0) return [];
+    const selected = this.sessionTypes.find(t => t.id === sessionTypeId);
+    if (!selected) return [];
+    const serviceType = this.sessionCodeToServiceType(selected.code);
+    if (!serviceType) return [];
+    return this.clientActivePackages.filter(p => p.serviceType === serviceType);
+  }
+
+  private sessionCodeToServiceType(code: string): string | null {
+    const map: Record<string, string> = {
+      'IN_PERSON':  'INDIVIDUAL_SESSION',
+      'ONLINE':     'ONLINE_SESSION',
+      'GROUP':      'GROUP_SESSION',
+      'INTAKE':     'INTAKE_ASSESSMENT',
+      'FOLLOW_UP':  'FOLLOW_UP',
+    };
+    return map[code] ?? null;
+  }
+
+  private setupClientPackageLoader(): void {
+    this.form.get('clientId')!.valueChanges
+      .pipe(
+        distinctUntilChanged(),
+        switchMap((clientId: string | null) => {
+          this.clientActivePackages = [];
+          if (!clientId) return of([]);
+          return this.packageService.listClientPackages(clientId).pipe(
+            catchError(() => of([]))
+          );
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((packages: PackageInstance[]) => {
+        this.clientActivePackages = packages.filter(
+          p => p.status === 'ACTIVE' && p.sessionsRemaining > 0
+        );
       });
   }
 
@@ -1375,7 +1547,8 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       notes: this.form.value.notes || undefined,
       allowConflictOverride: this.form.value.allowConflictOverride || false,
-      serviceCatalogItemId: this.form.value.serviceCatalogItemId || undefined
+      serviceCatalogItemId: this.form.value.serviceCatalogItemId || undefined,
+      manualDiscount: this.form.value.manualDiscount > 0 ? this.form.value.manualDiscount : undefined
     };
 
     this.appointmentService.createAppointment(request)

@@ -136,6 +136,7 @@ public class SessionRecordService {
                 sessionStatus
         );
         sessionRecord.setServiceCatalogItemId(appointment.getServiceCatalogItemId());
+        sessionRecord.setManualDiscount(appointment.getManualDiscount());
 
         try {
             final SessionRecord saved = sessionRecordRepository.save(sessionRecord);
@@ -211,6 +212,7 @@ public class SessionRecordService {
                 SessionStatus.IN_PROGRESS
         );
         sessionRecord.setServiceCatalogItemId(appointment.getServiceCatalogItemId());
+        sessionRecord.setManualDiscount(appointment.getManualDiscount());
 
         final SessionRecord saved = sessionRecordRepository.save(sessionRecord);
 
@@ -321,7 +323,8 @@ public class SessionRecordService {
                 saved.getTherapistId(),
                 saved.getSessionDate(),
                 saved.getSessionType(),
-                saved.getServiceCatalogItemId()
+                saved.getServiceCatalogItemId(),
+                saved.getManualDiscount()
         ));
 
         // Sync appointment status to COMPLETED

@@ -111,6 +111,7 @@ class AppointmentServiceTest {
                 false,
                 actorUserId,
                 "Dr. Smith",
+                null,
                 null
         );
 
@@ -149,6 +150,7 @@ class AppointmentServiceTest {
                 false, // Override NOT allowed
                 actorUserId,
                 "Dr. Smith",
+                null,
                 null
         ))
                 .isInstanceOf(AppointmentService.ConflictException.class)
@@ -187,6 +189,7 @@ class AppointmentServiceTest {
                 true, // Override allowed
                 actorUserId,
                 "Dr. Smith",
+                null,
                 null
         );
 
@@ -219,6 +222,7 @@ class AppointmentServiceTest {
                 false,
                 actorUserId,
                 "Dr. Smith",
+                null,
                 null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -242,6 +246,7 @@ class AppointmentServiceTest {
                 false,
                 actorUserId,
                 "Dr. Smith",
+                null,
                 null
         ))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -267,8 +272,7 @@ class AppointmentServiceTest {
                 null,
                 false,
                 actorUserId,
-                "Dr. Smith",
-                null
+                "Dr. Smith",                null,                null
         ))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Session type not found");

@@ -121,7 +121,7 @@ class PackageDeductionEventHandlerTest {
 
     private static SessionCompletedEvent event(final SessionType sessionType) {
         return new SessionCompletedEvent(SESSION_ID, CLIENT_ID, THERAPIST_ID,
-                LocalDate.now(), sessionType, null);
+                LocalDate.now(), sessionType, null, null);
     }
 
     private static SessionType sessionType(final String code) {

@@ -17,5 +17,7 @@ public record SessionCompletedEvent(
         LocalDate sessionDate,
         SessionType sessionType,
         /** Optional: the specific service catalog item chosen at booking time. */
-        UUID serviceCatalogItemId
+        UUID serviceCatalogItemId,
+        /** Optional: prepaid amount entered at booking time; applied as invoice discount. */
+        java.math.BigDecimal manualDiscount
 ) { }

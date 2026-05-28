@@ -593,7 +593,14 @@
         "occurrencesLabel": "Кількість повторень",
         "previewConflictsButton": "Попередній перегляд конфліктів",
         "bookButton": "Записати на прийом",
-        "bookingInProgress": "Запис..."
+        "bookingInProgress": "Запис...",
+        "prepaidBannerTitle": "У клієнта є передоплачені сесії",
+        "prepaidSessionsRemaining": "{{remaining}} / {{total}} сесій залишилось",
+        "manualDiscountLabel": "Передоплачена сума",
+        "currencySymbol": "₴",
+        "manualDiscountPlaceholder": "0.00",
+        "manualDiscountHint": "Сума, вже сплачена клієнтом — буде відрахована від загальної суми рахунку.",
+        "manualDiscountInvalid": "Сума має бути нуль або більше"
       },
       "reschedule": {
         "title": "Перенести прийом",

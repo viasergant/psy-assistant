@@ -37,7 +37,13 @@ public record CreateAppointmentRequest(
         Boolean allowConflictOverride,
 
         /** Optional service catalog item chosen at booking time; used to price the auto-generated invoice. */
-        UUID serviceCatalogItemId
+        UUID serviceCatalogItemId,
+
+        /**
+         * Optional prepaid amount entered at booking time.
+         * Applied as a discount on the auto-generated session invoice.
+         */
+        java.math.BigDecimal manualDiscount
 ) {
     /**
      * Compact constructor for validation.

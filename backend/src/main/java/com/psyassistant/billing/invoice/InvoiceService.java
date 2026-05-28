@@ -139,6 +139,12 @@ public class InvoiceService {
         invoice.setSessionId(event.sessionId());
         invoice.addLineItem(new InvoiceLineItem(lineItemDesc, BigDecimal.ONE, unitPrice, 0));
 
+        if (event.manualDiscount() != null && event.manualDiscount().compareTo(BigDecimal.ZERO) > 0) {
+            invoice.setDiscount(event.manualDiscount());
+            LOG.debug("Applied manual prepaid discount {} to invoice for session {}",
+                    event.manualDiscount(), event.sessionId());
+        }
+
         assignInvoiceNumber(invoice);
         Invoice saved = invoiceRepository.save(invoice);
         LOG.info("Auto-generated invoice {} for session {}", saved.getInvoiceNumber(), event.sessionId());

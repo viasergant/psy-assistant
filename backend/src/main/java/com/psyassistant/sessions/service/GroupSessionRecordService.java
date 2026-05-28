@@ -13,8 +13,8 @@ import com.psyassistant.sessions.repository.SessionRecordRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -127,11 +127,13 @@ public class GroupSessionRecordService {
                         "Appointment not found: " + appointmentId));
 
         // Create the GROUP session record
+        final ZonedDateTime localStart = appointment.getStartTime()
+                .withZoneSameInstant(ZoneId.of(appointment.getTimezone()));
         final SessionRecord session = SessionRecord.forGroup(
                 appointmentId,
                 appointment.getTherapistProfileId(),
-                LocalDate.from(appointment.getStartTime()),
-                LocalTime.from(appointment.getStartTime()),
+                localStart.toLocalDate(),
+                localStart.toLocalTime(),
                 appointment.getSessionType(),
                 Duration.ofMinutes(appointment.getDurationMinutes()),
                 status

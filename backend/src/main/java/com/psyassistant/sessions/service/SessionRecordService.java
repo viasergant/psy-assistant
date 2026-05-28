@@ -13,7 +13,8 @@ import com.psyassistant.sessions.repository.SessionRecordRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,12 +123,14 @@ public class SessionRecordService {
                 : SessionStatus.PENDING;
 
         // Create session record with immutable fields from appointment
+        final ZonedDateTime localStart = appointment.getStartTime()
+                .withZoneSameInstant(ZoneId.of(appointment.getTimezone()));
         final SessionRecord sessionRecord = new SessionRecord(
                 event.appointmentId(),  // Use event ID directly, not appointment.getId()
                 appointment.getClientId(),
                 appointment.getTherapistProfileId(),
-                LocalDate.from(appointment.getStartTime()),
-                LocalTime.from(appointment.getStartTime()),
+                localStart.toLocalDate(),
+                localStart.toLocalTime(),
                 appointment.getSessionType(),
                 Duration.ofMinutes(appointment.getDurationMinutes()),
                 sessionStatus
@@ -195,12 +198,14 @@ public class SessionRecordService {
                         "Appointment not found: " + appointmentId));
 
         // Create session record FIRST (before publishing event)
+        final ZonedDateTime localStart = appointment.getStartTime()
+                .withZoneSameInstant(ZoneId.of(appointment.getTimezone()));
         final SessionRecord sessionRecord = new SessionRecord(
                 appointmentId,  // Use appointmentId parameter directly, not appointment.getId()
                 appointment.getClientId(),
                 appointment.getTherapistProfileId(),
-                LocalDate.from(appointment.getStartTime()),
-                LocalTime.from(appointment.getStartTime()),
+                localStart.toLocalDate(),
+                localStart.toLocalTime(),
                 appointment.getSessionType(),
                 Duration.ofMinutes(appointment.getDurationMinutes()),
                 SessionStatus.IN_PROGRESS

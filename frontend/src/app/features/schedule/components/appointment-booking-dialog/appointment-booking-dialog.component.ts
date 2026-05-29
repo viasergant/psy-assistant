@@ -1064,6 +1064,7 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
   @Input() therapistProfileId!: string;
   @Input() clients: ClientOption[] = [];
   @Input() initialDateTime?: Date;
+  @Input() preselectedClientId?: string;
   @Input() schedule?: ScheduleSummary; // Schedule data for working hours and leave checks
   @Output() submitted = new EventEmitter<Appointment>();
   @Output() seriesCreated = new EventEmitter<CreateRecurringSeriesResponse>();
@@ -1130,7 +1131,7 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
 
   private initializeForm(): void {
     this.form = this.fb.group({
-      clientId: ['', Validators.required],
+      clientId: [this.preselectedClientId || '', Validators.required],
       sessionTypeId: ['', Validators.required],
       serviceCatalogItemId: [null],
       startTime: [this.initialDateTime || '', [Validators.required, this.pastDateValidator.bind(this)]],

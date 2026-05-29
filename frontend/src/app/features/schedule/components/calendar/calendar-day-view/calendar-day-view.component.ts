@@ -309,7 +309,15 @@ export class CalendarDayViewComponent {
   }
 
   getPositionedAppointments(therapistId: string): PositionedAppointment[] {
-    const apts = this.appointments.filter(a => a.therapistProfileId === therapistId);
+    const apts = this.appointments.filter(a => {
+      if (a.therapistProfileId !== therapistId) return false;
+      const start = new Date(a.startTime);
+      return (
+        start.getFullYear() === this.dayDate.getFullYear() &&
+        start.getMonth() === this.dayDate.getMonth() &&
+        start.getDate() === this.dayDate.getDate()
+      );
+    });
     return this.computeOverlapPositions(apts);
   }
 

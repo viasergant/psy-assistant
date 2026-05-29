@@ -1,5 +1,6 @@
 package com.psyassistant.scheduling.dto;
 
+import com.psyassistant.crm.clients.ClientRepository;
 import com.psyassistant.riskflags.domain.ClientRiskFlag;
 import com.psyassistant.riskflags.domain.ClientRiskFlagStatus;
 import com.psyassistant.riskflags.domain.RiskFlagType;
@@ -21,11 +22,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class AppointmentMapper {
 
+    private final ClientRepository clientRepository;
     private final ClientRiskFlagRepository clientRiskFlagRepository;
     private final RiskFlagTypeRepository riskFlagTypeRepository;
 
-    public AppointmentMapper(final ClientRiskFlagRepository clientRiskFlagRepository,
+    public AppointmentMapper(final ClientRepository clientRepository,
+                             final ClientRiskFlagRepository clientRiskFlagRepository,
                              final RiskFlagTypeRepository riskFlagTypeRepository) {
+        this.clientRepository = clientRepository;
         this.clientRiskFlagRepository = clientRiskFlagRepository;
         this.riskFlagTypeRepository = riskFlagTypeRepository;
     }
@@ -144,17 +148,17 @@ public class AppointmentMapper {
     /**
      * Converts a conflict into a minimal conflict DTO for UI display.
      *
-     * <p>Note: {@code clientName} is null in this implementation - should be joined
-     * from client table in production (requires repository enhancement).
-     *
      * @param conflict conflicting appointment
      * @return conflict DTO
      */
     public ConflictCheckResponse.ConflictingAppointment toConflictDto(final Appointment conflict) {
+        final String clientName = clientRepository.findById(conflict.getClientId())
+                .map(c -> c.getFullName())
+                .orElse(null);
         return new ConflictCheckResponse.ConflictingAppointment(
                 conflict.getId(),
                 conflict.getClientId(),
-                null, // TODO: Join client name from client table
+                clientName,
                 conflict.getStartTime(),
                 conflict.getEndTime(),
                 conflict.getDurationMinutes()

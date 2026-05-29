@@ -363,6 +363,7 @@ import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-pan
       *ngIf="showBookingDialog && effectiveTherapistId"
       [therapistProfileId]="effectiveTherapistId!"
       [clients]="bookingClientList"
+      [preselectedClientId]="client!.id"
       (submitted)="onBookingSubmitted()"
       (cancelled)="onBookingCancelled()"
     />

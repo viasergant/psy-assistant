@@ -2,6 +2,7 @@ package com.psyassistant.scheduling.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import com.psyassistant.crm.clients.ClientRepository;
 import com.psyassistant.riskflags.domain.ClientRiskFlag;
 import com.psyassistant.riskflags.domain.ClientRiskFlagStatus;
 import com.psyassistant.riskflags.domain.RiskFlagType;
@@ -35,6 +36,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 class AppointmentMapperTest {
 
     @Mock
+    private ClientRepository clientRepository;
+
+    @Mock
     private ClientRiskFlagRepository clientRiskFlagRepository;
 
     @Mock
@@ -47,7 +51,7 @@ class AppointmentMapperTest {
 
     @BeforeEach
     void setUp() {
-        mapper = new AppointmentMapper(clientRiskFlagRepository, riskFlagTypeRepository);
+        mapper = new AppointmentMapper(clientRepository, clientRiskFlagRepository, riskFlagTypeRepository);
 
         clientId = UUID.randomUUID();
 

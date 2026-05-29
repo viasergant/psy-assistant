@@ -188,6 +188,20 @@ class InvoiceServiceTest {
     }
 
     @Test
+    void issueTransitionsDraftToFullyDepositedPaidWhenDepositCoversTotal() {
+        Invoice invoice = draftInvoiceWithNumber("2026-0003b");
+        invoice.addLineItem(new InvoiceLineItem("Item", BigDecimal.ONE, new BigDecimal("100"), 0));
+        invoice.applyDeposit(new BigDecimal("100"));
+        when(invoiceRepository.findById(invoice.getId())).thenReturn(Optional.of(invoice));
+        when(pdfService.generateAndStore(invoice)).thenReturn("/tmp/invoices/2026-0003b.pdf");
+
+        service.issue(invoice.getId(), ACTOR);
+
+        assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.PAID);
+        assertThat(invoice.getIssuedDate()).isEqualTo(LocalDate.now());
+    }
+
+    @Test
     void issueEmptyInvoiceThrowsStateException() {
         Invoice invoice = draftInvoiceWithNumber("2026-0004");
         when(invoiceRepository.findById(invoice.getId())).thenReturn(Optional.of(invoice));

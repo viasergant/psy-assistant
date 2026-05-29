@@ -114,8 +114,13 @@ public class Invoice extends BaseEntity {
     // ---- business methods ----
 
     /**
-     * Locks the invoice, sets issued date, and transitions to ISSUED state.
-     * Throws {@link InvoiceStateException} if not in DRAFT state.
+     * Locks the invoice, sets issued date, and transitions status.
+     *
+     * <p>If a deposit already covers the full total (i.e. {@code paidAmount >= total}), the
+     * invoice transitions directly to {@link InvoiceStatus#PAID}; otherwise it transitions
+     * to {@link InvoiceStatus#ISSUED}.
+     *
+     * <p>Throws {@link InvoiceStateException} if not in DRAFT state or if no line items exist.
      *
      * @param issuedDate the date of issue
      * @param dueDate    the payment due date
@@ -128,7 +133,9 @@ public class Invoice extends BaseEntity {
         if (this.lineItems.isEmpty()) {
             throw new InvoiceStateException("Invoice must have at least one line item before issuing");
         }
-        this.status = InvoiceStatus.ISSUED;
+        this.status = this.paidAmount.compareTo(this.total) >= 0
+                ? InvoiceStatus.PAID
+                : InvoiceStatus.ISSUED;
         this.issuedDate = issuedDate;
         this.dueDate = dueDate;
     }

@@ -165,8 +165,8 @@ import { PaymentHistoryComponent } from '../payment-history/payment-history.comp
           <p>{{ invoice.cancellationReason }}</p>
         </div>
 
-        <!-- Payment history (shown for non-draft, non-cancelled invoices) -->
-        <div class="card" *ngIf="invoice.status !== 'DRAFT' && invoice.status !== 'CANCELLED'">
+        <!-- Payment history (hidden only for cancelled invoices) -->
+        <div class="card" *ngIf="invoice.status !== 'CANCELLED'">
           <app-payment-history [invoice]="invoice"></app-payment-history>
         </div>
 

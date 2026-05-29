@@ -810,11 +810,7 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
         this.therapists = page.content;
         this.loading = false;
         
-        // Auto-select first therapist if available
-        if (this.therapists.length > 0) {
-          this.selectedTherapistId = this.therapists[0].id;
-          this.onTherapistChange();
-        } else {
+        if (this.therapists.length === 0) {
           this.error = 'No therapists found in the system';
         }
       },

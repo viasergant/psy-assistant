@@ -140,7 +140,7 @@ public class AppointmentController {
                 actorUserId,
                 actorName,
                 request.serviceCatalogItemId(),
-                request.manualDiscount()
+                request.depositAmount()
         );
 
         final AppointmentResponse response = appointmentMapper.toResponse(appointment);

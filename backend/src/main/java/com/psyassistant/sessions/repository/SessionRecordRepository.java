@@ -1,5 +1,6 @@
 package com.psyassistant.sessions.repository;
 
+import com.psyassistant.sessions.domain.AttendanceOutcome;
 import com.psyassistant.sessions.domain.SessionRecord;
 import com.psyassistant.sessions.domain.SessionStatus;
 import java.time.LocalDate;
@@ -87,17 +88,30 @@ public interface SessionRecordRepository extends JpaRepository<SessionRecord, UU
      *
      * <p>When {@code lookbackFrom} is null, counts all no-shows for the client (all-time).
      *
+     * @param clientId      client UUID
+     * @param lookbackFrom  earliest session date to include (inclusive), or null for all-time
+     * @param outcome       the attendance outcome to count
+     * @return count of matching session records
+     */
+    @Query("SELECT COUNT(s) FROM SessionRecord s WHERE "
+            + "s.clientId = :clientId AND "
+            + "s.attendanceOutcome = :outcome AND "
+            + "(:lookbackFrom IS NULL OR s.sessionDate >= :lookbackFrom)")
+    long countByClientAndOutcomeAndDate(
+            @Param("clientId") UUID clientId,
+            @Param("lookbackFrom") LocalDate lookbackFrom,
+            @Param("outcome") AttendanceOutcome outcome
+    );
+
+    /**
+     * Convenience method that counts {@link AttendanceOutcome#NO_SHOW} records for a client.
+     *
      * @param clientId     client UUID
      * @param lookbackFrom earliest session date to include (inclusive), or null for all-time
      * @return count of no-show session records
      */
-    @Query("SELECT COUNT(s) FROM SessionRecord s WHERE "
-            + "s.clientId = :clientId AND "
-            + "s.attendanceOutcome = com.psyassistant.sessions.domain.AttendanceOutcome.NO_SHOW AND "
-            + "(:lookbackFrom IS NULL OR s.sessionDate >= :lookbackFrom)")
-    long countNoShowsForClient(
-            @Param("clientId") UUID clientId,
-            @Param("lookbackFrom") LocalDate lookbackFrom
-    );
+    default long countNoShowsForClient(final UUID clientId, final LocalDate lookbackFrom) {
+        return countByClientAndOutcomeAndDate(clientId, lookbackFrom, AttendanceOutcome.NO_SHOW);
+    }
 }
 

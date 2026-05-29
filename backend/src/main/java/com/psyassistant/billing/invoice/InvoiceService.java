@@ -13,6 +13,9 @@ import com.psyassistant.billing.invoice.dto.CreatePackageInvoiceRequest;
 import com.psyassistant.billing.invoice.dto.InvoiceListItemResponse;
 import com.psyassistant.billing.invoice.dto.InvoiceResponse;
 import com.psyassistant.billing.invoice.pdf.InvoicePdfService;
+import com.psyassistant.billing.payment.Payment;
+import com.psyassistant.billing.payment.PaymentMethod;
+import com.psyassistant.billing.payment.PaymentRepository;
 import com.psyassistant.billing.pkg.PrepaidPackageInstance;
 import com.psyassistant.billing.pkg.PrepaidPackageInstanceRepository;
 import com.psyassistant.sessions.domain.SessionRecord;
@@ -61,6 +64,7 @@ public class InvoiceService {
     private final ServiceCatalogPriceHistoryRepository priceHistoryRepository;
     private final ServiceCatalogTherapistOverrideRepository overrideRepository;
     private final PrepaidPackageInstanceRepository packageInstanceRepository;
+    private final PaymentRepository paymentRepository;
 
     public InvoiceService(
             final InvoiceRepository invoiceRepository,
@@ -72,7 +76,8 @@ public class InvoiceService {
             final ServiceCatalogRepository catalogRepository,
             final ServiceCatalogPriceHistoryRepository priceHistoryRepository,
             final ServiceCatalogTherapistOverrideRepository overrideRepository,
-            final PrepaidPackageInstanceRepository packageInstanceRepository) {
+            final PrepaidPackageInstanceRepository packageInstanceRepository,
+            final PaymentRepository paymentRepository) {
         this.invoiceRepository = invoiceRepository;
         this.seqRepository = seqRepository;
         this.sessionRecordRepository = sessionRecordRepository;
@@ -83,6 +88,7 @@ public class InvoiceService {
         this.priceHistoryRepository = priceHistoryRepository;
         this.overrideRepository = overrideRepository;
         this.packageInstanceRepository = packageInstanceRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     // =========================================================================
@@ -139,14 +145,25 @@ public class InvoiceService {
         invoice.setSessionId(event.sessionId());
         invoice.addLineItem(new InvoiceLineItem(lineItemDesc, BigDecimal.ONE, unitPrice, 0));
 
-        if (event.manualDiscount() != null && event.manualDiscount().compareTo(BigDecimal.ZERO) > 0) {
-            invoice.setDiscount(event.manualDiscount());
-            LOG.debug("Applied manual prepaid discount {} to invoice for session {}",
-                    event.manualDiscount(), event.sessionId());
-        }
-
         assignInvoiceNumber(invoice);
         Invoice saved = invoiceRepository.save(invoice);
+
+        if (event.depositAmount() != null && event.depositAmount().compareTo(BigDecimal.ZERO) > 0) {
+            saved.applyDeposit(event.depositAmount());
+            paymentRepository.save(new Payment(
+                    saved.getId(),
+                    event.depositAmount(),
+                    PaymentMethod.CASH,
+                    event.sessionDate(),
+                    null,
+                    "Advance payment received at booking",
+                    "system"
+            ));
+            invoiceRepository.save(saved);
+            LOG.debug("Registered deposit payment {} against invoice {} for session {}",
+                    event.depositAmount(), saved.getInvoiceNumber(), event.sessionId());
+        }
+
         LOG.info("Auto-generated invoice {} for session {}", saved.getInvoiceNumber(), event.sessionId());
     }
 

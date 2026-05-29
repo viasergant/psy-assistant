@@ -155,13 +155,13 @@ public class Appointment extends BaseEntity {
     private UUID serviceCatalogItemId;
 
     /**
-     * Optional prepaid amount entered at booking time.
+     * Optional advance payment amount entered at booking time.
      *
-     * <p>When set, this value is applied as a discount on the auto-generated invoice
-     * when the session is completed, reducing the amount owed by the client.
+     * <p>When set, this value is recorded as a pre-payment on the auto-generated invoice
+     * when the session is completed, preserving the full invoice total.
      */
-    @Column(name = "manual_discount", precision = 12, scale = 2)
-    private java.math.BigDecimal manualDiscount;
+    @Column(name = "deposit_amount", precision = 12, scale = 2)
+    private java.math.BigDecimal depositAmount;
 
     // ========== Optimistic Locking ==========
 
@@ -434,11 +434,11 @@ public class Appointment extends BaseEntity {
         this.serviceCatalogItemId = serviceCatalogItemId;
     }
 
-    public java.math.BigDecimal getManualDiscount() {
-        return manualDiscount;
+    public java.math.BigDecimal getDepositAmount() {
+        return depositAmount;
     }
 
-    public void setManualDiscount(final java.math.BigDecimal manualDiscount) {
-        this.manualDiscount = manualDiscount;
+    public void setDepositAmount(final java.math.BigDecimal depositAmount) {
+        this.depositAmount = depositAmount;
     }
 }

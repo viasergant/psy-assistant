@@ -40,10 +40,10 @@ public record CreateAppointmentRequest(
         UUID serviceCatalogItemId,
 
         /**
-         * Optional prepaid amount entered at booking time.
-         * Applied as a discount on the auto-generated session invoice.
+         * Optional advance payment amount entered at booking time.
+         * Recorded as a pre-payment on the auto-generated session invoice.
          */
-        java.math.BigDecimal manualDiscount
+        java.math.BigDecimal depositAmount
 ) {
     /**
      * Compact constructor for validation.

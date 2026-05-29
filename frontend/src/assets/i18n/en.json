@@ -596,11 +596,11 @@
         "bookingInProgress": "Booking...",
         "prepaidBannerTitle": "Client has prepaid sessions available",
         "prepaidSessionsRemaining": "{{remaining}} / {{total}} sessions left",
-        "manualDiscountLabel": "Prepaid Amount",
+        "depositAmountLabel": "Prepaid Amount",
         "currencySymbol": "$",
-        "manualDiscountPlaceholder": "0.00",
-        "manualDiscountHint": "Amount already paid by client — will be deducted from the invoice total.",
-        "manualDiscountInvalid": "Amount must be zero or greater"
+        "depositAmountPlaceholder": "0.00",
+        "depositAmountHint": "Amount already paid by client — will be recorded as a pre-payment on the invoice.",
+        "depositAmountInvalid": "Amount must be zero or greater"
       },
       "reschedule": {
         "title": "Reschedule Appointment",

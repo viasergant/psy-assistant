@@ -596,11 +596,11 @@
         "bookingInProgress": "Запис...",
         "prepaidBannerTitle": "У клієнта є передоплачені сесії",
         "prepaidSessionsRemaining": "{{remaining}} / {{total}} сесій залишилось",
-        "manualDiscountLabel": "Передоплачена сума",
+        "depositAmountLabel": "Передоплачена сума",
         "currencySymbol": "₴",
-        "manualDiscountPlaceholder": "0.00",
-        "manualDiscountHint": "Сума, вже сплачена клієнтом — буде відрахована від загальної суми рахунку.",
-        "manualDiscountInvalid": "Сума має бути нуль або більше"
+        "depositAmountPlaceholder": "0.00",
+        "depositAmountHint": "Сума, вже сплачена клієнтом — буде зарахована як передоплата у рахунку.",
+        "depositAmountInvalid": "Сума має бути нуль або більше"
       },
       "reschedule": {
         "title": "Перенести прийом",

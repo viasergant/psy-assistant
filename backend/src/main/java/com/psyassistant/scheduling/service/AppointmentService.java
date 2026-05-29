@@ -106,7 +106,7 @@ public class AppointmentService {
                                           final UUID actorUserId,
                                           final String actorName,
                                           final UUID serviceCatalogItemId,
-                                          final java.math.BigDecimal manualDiscount) {
+                                          final java.math.BigDecimal depositAmount) {
 
         // Validate inputs
         validateDuration(durationMinutes);
@@ -140,8 +140,8 @@ public class AppointmentService {
 
         appointment.setNotes(notes);
         appointment.setServiceCatalogItemId(serviceCatalogItemId);
-        if (manualDiscount != null && manualDiscount.compareTo(java.math.BigDecimal.ZERO) > 0) {
-            appointment.setManualDiscount(manualDiscount);
+        if (depositAmount != null && depositAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
+            appointment.setDepositAmount(depositAmount);
         }
 
         if (!conflicts.isEmpty() && allowConflictOverride) {

@@ -191,6 +191,27 @@ public class Invoice extends BaseEntity {
     }
 
     /**
+     * Applies a deposit (advance payment) to this invoice, updating paidAmount only.
+     *
+     * <p>Unlike {@link #applyPayment(BigDecimal)}, this method does NOT enforce an
+     * ISSUED/OVERDUE state guard and does NOT transition the invoice status. It is
+     * intended to be called immediately after invoice creation (while still DRAFT)
+     * to record advance payments collected at booking time.
+     *
+     * <p>Throws {@link PaymentValidationException} if the deposit exceeds the total.
+     *
+     * @param depositAmount the advance payment amount (must be positive and ≤ total)
+     */
+    public void applyDeposit(final BigDecimal depositAmount) {
+        BigDecimal outstanding = this.total.subtract(this.paidAmount);
+        if (depositAmount.compareTo(outstanding) > 0) {
+            throw new PaymentValidationException(
+                    "Deposit amount " + depositAmount + " exceeds outstanding balance " + outstanding);
+        }
+        this.paidAmount = this.paidAmount.add(depositAmount);
+    }
+
+    /**
      * Adds a line item and recalculates subtotal and total.
      * Only allowed for DRAFT invoices.
      *

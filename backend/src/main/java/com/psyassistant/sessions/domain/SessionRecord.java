@@ -149,11 +149,11 @@ public class SessionRecord extends BaseEntity {
     private UUID serviceCatalogItemId;
 
     /**
-     * Optional prepaid amount copied from the parent appointment.
-     * Applied as a discount when the auto-generated invoice is created on session completion.
+     * Optional advance payment amount copied from the parent appointment.
+     * Recorded as a pre-payment when the auto-generated invoice is created on session completion.
      */
-    @Column(name = "manual_discount", precision = 12, scale = 2)
-    private java.math.BigDecimal manualDiscount;
+    @Column(name = "deposit_amount", precision = 12, scale = 2)
+    private java.math.BigDecimal depositAmount;
 
     /**
      * Default constructor for JPA.
@@ -367,11 +367,11 @@ public class SessionRecord extends BaseEntity {
         this.serviceCatalogItemId = serviceCatalogItemId;
     }
 
-    public java.math.BigDecimal getManualDiscount() {
-        return manualDiscount;
+    public java.math.BigDecimal getDepositAmount() {
+        return depositAmount;
     }
 
-    public void setManualDiscount(final java.math.BigDecimal manualDiscount) {
-        this.manualDiscount = manualDiscount;
+    public void setDepositAmount(final java.math.BigDecimal depositAmount) {
+        this.depositAmount = depositAmount;
     }
 }

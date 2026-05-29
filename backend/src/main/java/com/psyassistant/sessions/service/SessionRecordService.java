@@ -136,7 +136,7 @@ public class SessionRecordService {
                 sessionStatus
         );
         sessionRecord.setServiceCatalogItemId(appointment.getServiceCatalogItemId());
-        sessionRecord.setManualDiscount(appointment.getManualDiscount());
+        sessionRecord.setDepositAmount(appointment.getDepositAmount());
 
         try {
             final SessionRecord saved = sessionRecordRepository.save(sessionRecord);
@@ -212,7 +212,7 @@ public class SessionRecordService {
                 SessionStatus.IN_PROGRESS
         );
         sessionRecord.setServiceCatalogItemId(appointment.getServiceCatalogItemId());
-        sessionRecord.setManualDiscount(appointment.getManualDiscount());
+        sessionRecord.setDepositAmount(appointment.getDepositAmount());
 
         final SessionRecord saved = sessionRecordRepository.save(sessionRecord);
 
@@ -324,7 +324,7 @@ public class SessionRecordService {
                 saved.getSessionDate(),
                 saved.getSessionType(),
                 saved.getServiceCatalogItemId(),
-                saved.getManualDiscount()
+                saved.getDepositAmount()
         ));
 
         // Sync appointment status to COMPLETED

@@ -171,24 +171,24 @@ interface ClientOption {
           <!-- Manual Prepaid Amount -->
           <div class="field manual-discount-field"
                *ngIf="form.value.serviceCatalogItemId && visibleClientPackages.length === 0">
-            <label for="manualDiscount">
-              {{ 'schedule.appointment.booking.manualDiscountLabel' | transloco }}
+            <label for="depositAmount">
+              {{ 'schedule.appointment.booking.depositAmountLabel' | transloco }}
             </label>
             <div class="manual-discount-input-wrap">
               <span class="currency-prefix">{{ 'schedule.appointment.booking.currencySymbol' | transloco }}</span>
               <input
-                id="manualDiscount"
+                id="depositAmount"
                 type="number"
-                formControlName="manualDiscount"
-                [placeholder]="'schedule.appointment.booking.manualDiscountPlaceholder' | transloco"
+                formControlName="depositAmount"
+                [placeholder]="'schedule.appointment.booking.depositAmountPlaceholder' | transloco"
                 min="0"
                 step="0.01"
-                [attr.aria-invalid]="isInvalid('manualDiscount')"
+                [attr.aria-invalid]="isInvalid('depositAmount')"
               />
             </div>
-            <span class="field-hint">{{ 'schedule.appointment.booking.manualDiscountHint' | transloco }}</span>
-            <span *ngIf="isInvalid('manualDiscount')" class="error-msg" role="alert">
-              {{ 'schedule.appointment.booking.manualDiscountInvalid' | transloco }}
+            <span class="field-hint">{{ 'schedule.appointment.booking.depositAmountHint' | transloco }}</span>
+            <span *ngIf="isInvalid('depositAmount')" class="error-msg" role="alert">
+              {{ 'schedule.appointment.booking.depositAmountInvalid' | transloco }}
             </span>
           </div>
 
@@ -1138,7 +1138,7 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
       notes: [''],
       allowConflictOverride: [false],
       confirmOutsideHours: [false], // Confirmation for outside hours/leave
-      manualDiscount: [null, [Validators.min(0)]],
+      depositAmount: [null, [Validators.min(0)]],
       // Recurring series fields (PA-33)
       isRecurring: [false],
       recurrenceType: ['WEEKLY'],
@@ -1548,7 +1548,7 @@ export class AppointmentBookingDialogComponent implements OnInit, OnChanges, OnD
       notes: this.form.value.notes || undefined,
       allowConflictOverride: this.form.value.allowConflictOverride || false,
       serviceCatalogItemId: this.form.value.serviceCatalogItemId || undefined,
-      manualDiscount: this.form.value.manualDiscount > 0 ? this.form.value.manualDiscount : undefined
+      depositAmount: this.form.value.depositAmount > 0 ? this.form.value.depositAmount : undefined
     };
 
     this.appointmentService.createAppointment(request)

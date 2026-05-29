@@ -283,8 +283,8 @@ export interface CreateAppointmentRequest {
   allowConflictOverride?: boolean;
   /** Optional: links this appointment to a specific service catalog item for invoice generation. */
   serviceCatalogItemId?: string;
-  /** Optional: prepaid amount deducted from the auto-generated invoice total. */
-  manualDiscount?: number;
+  /** Optional: advance payment amount recorded as a pre-payment on the auto-generated invoice. */
+  depositAmount?: number;
 }
 
 /**

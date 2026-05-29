@@ -3,6 +3,8 @@ package com.psyassistant.billing.invoice;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.psyassistant.billing.catalog.ServiceCatalogPriceHistoryRepository;
@@ -14,6 +16,10 @@ import com.psyassistant.billing.invoice.dto.CancelInvoiceRequest;
 import com.psyassistant.billing.invoice.dto.CreateManualInvoiceRequest;
 import com.psyassistant.billing.invoice.dto.InvoiceResponse;
 import com.psyassistant.billing.invoice.pdf.InvoicePdfService;
+import com.psyassistant.billing.payment.Payment;
+import com.psyassistant.billing.payment.PaymentRepository;
+import com.psyassistant.scheduling.domain.SessionType;
+import com.psyassistant.sessions.event.SessionCompletedEvent;
 import com.psyassistant.therapists.repository.TherapistPricingRuleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
@@ -64,6 +70,9 @@ class InvoiceServiceTest {
     @Mock
     private com.psyassistant.billing.pkg.PrepaidPackageInstanceRepository packageInstanceRepository;
 
+    @Mock
+    private PaymentRepository paymentRepository;
+
     private InvoiceService service;
 
     private static final UUID CLIENT_ID = UUID.randomUUID();
@@ -75,7 +84,7 @@ class InvoiceServiceTest {
         InvoiceProperties props = new InvoiceProperties(14, "/tmp/invoices");
         service = new InvoiceService(invoiceRepository, seqRepository, sessionRecordRepository, pdfService, props,
                 pricingRuleRepository, catalogRepository, priceHistoryRepository, overrideRepository,
-                packageInstanceRepository);
+                packageInstanceRepository, paymentRepository);
     }
 
     // ---- createManual -------------------------------------------------------
@@ -223,6 +232,73 @@ class InvoiceServiceTest {
                 service.cancel(invoice.getId(), new CancelInvoiceRequest("Test"), ACTOR))
                 .isInstanceOf(InvoiceStateException.class)
                 .hasMessageContaining("PAID");
+    }
+
+    // ---- handleSessionCompleted deposit tests --------------------------------
+
+    @Test
+    void handleSessionCompletedWithDepositRegistersPaymentNotDiscount() {
+        stubSeq(2026, 10);
+        UUID sessionId = UUID.randomUUID();
+        UUID sessionTypeId = UUID.randomUUID();
+        when(invoiceRepository.existsBySessionId(sessionId)).thenReturn(false);
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> {
+            Invoice i = inv.getArgument(0);
+            ReflectionTestUtils.setField(i, "id", UUID.randomUUID());
+            return i;
+        });
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(catalogRepository.findFirstBySessionTypeIdAndStatus(any(), any()))
+                .thenReturn(java.util.Optional.empty());
+        com.psyassistant.therapists.domain.TherapistPricingRule rule =
+                mock(com.psyassistant.therapists.domain.TherapistPricingRule.class);
+        when(rule.getRate()).thenReturn(new java.math.BigDecimal("100"));
+        when(pricingRuleRepository
+                .findByTherapistProfileIdAndSessionTypeIdOrderByEffectiveFromDesc(any(), any()))
+                .thenReturn(java.util.List.of(rule));
+
+        SessionType sessionType = new SessionType("INDIVIDUAL", "Individual", null);
+        ReflectionTestUtils.setField(sessionType, "id", sessionTypeId);
+
+        SessionCompletedEvent event = new SessionCompletedEvent(
+                sessionId, CLIENT_ID, THERAPIST_ID,
+                java.time.LocalDate.now(), sessionType, null,
+                new java.math.BigDecimal("30"));
+
+        service.handleSessionCompleted(event);
+
+        verify(invoiceRepository, org.mockito.Mockito.times(2)).save(any(Invoice.class));
+        verify(paymentRepository).save(any(Payment.class));
+    }
+
+    @Test
+    void handleSessionCompletedWithZeroDepositNoPaymentRegistered() {
+        stubSeq(2026, 11);
+        UUID sessionId = UUID.randomUUID();
+        UUID sessionTypeId = UUID.randomUUID();
+        when(invoiceRepository.existsBySessionId(sessionId)).thenReturn(false);
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> {
+            Invoice i = inv.getArgument(0);
+            ReflectionTestUtils.setField(i, "id", UUID.randomUUID());
+            return i;
+        });
+        when(catalogRepository.findFirstBySessionTypeIdAndStatus(any(), any()))
+                .thenReturn(java.util.Optional.empty());
+        when(pricingRuleRepository
+                .findByTherapistProfileIdAndSessionTypeIdOrderByEffectiveFromDesc(any(), any()))
+                .thenReturn(java.util.List.of());
+
+        SessionType sessionType = new SessionType("INDIVIDUAL", "Individual", null);
+        ReflectionTestUtils.setField(sessionType, "id", sessionTypeId);
+
+        SessionCompletedEvent event = new SessionCompletedEvent(
+                sessionId, CLIENT_ID, THERAPIST_ID,
+                java.time.LocalDate.now(), sessionType, null, null);
+
+        service.handleSessionCompleted(event);
+
+        verify(paymentRepository, never()).save(any(Payment.class));
+        verify(invoiceRepository, org.mockito.Mockito.times(1)).save(any(Invoice.class));
     }
 
     // ---- getById ------------------------------------------------------------

@@ -252,7 +252,7 @@ class TokenServiceTest {
     }
 
     private TokenService createServiceWithSecret(final String secret) {
-        TokenService svc = new TokenService();
+        TokenService svc = new TokenService(new com.psyassistant.common.config.GlobalAdminProperties(""));
         try {
             setField(svc, "jwtSecret", secret);
             setField(svc, "issuer", "psy-assistant");

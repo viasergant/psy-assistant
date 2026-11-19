@@ -6,7 +6,6 @@ import { profileCompletionGuard } from './core/auth/guards/profile-completion.gu
 import { roleGuard } from './core/auth/guards/role.guard';
 import { NAV_ITEMS, ROUTE_ROLES } from './core/auth/permissions.config';
 import { PermissionService } from './core/auth/permission.service';
-import { modeGuard } from './core/mode/mode.guard';
 import { ShellComponent } from './layout/shell/shell.component';
 
 export const appRoutes: Routes = [
@@ -56,7 +55,7 @@ export const appRoutes: Routes = [
       },
       {
         path: 'admin',
-        canActivate: [roleGuard(ROUTE_ROLES['admin']), modeGuard('CLINIC')],
+        canActivate: [roleGuard(ROUTE_ROLES['admin'])],
         loadChildren: () => import('./features/admin/admin.routes')
       },
       {

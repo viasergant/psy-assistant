@@ -42,6 +42,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'nav.sessions', route: '/sessions', roles: ROUTE_ROLES['sessions'], icon: 'pi-comments' },
   { labelKey: 'nav.billing',  route: '/billing',  roles: ROUTE_ROLES['billing'],  icon: 'pi-wallet' },
   { labelKey: 'nav.reports',  route: '/reports',  roles: ROUTE_ROLES['reports'],  icon: 'pi-chart-bar' },
-  { labelKey: 'nav.admin',    route: '/admin',    roles: ROUTE_ROLES['admin'],    icon: 'pi-cog', clinicOnly: true },
+  { labelKey: 'nav.admin',    route: '/admin',    roles: ROUTE_ROLES['admin'],    icon: 'pi-cog' },
   { labelKey: 'nav.settings', route: '/settings', roles: ROUTE_ROLES['settings'], icon: 'pi-sliders-h' },
 ] as const;

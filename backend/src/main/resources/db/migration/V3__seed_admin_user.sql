@@ -8,7 +8,7 @@ INSERT INTO users (email, password_hash, role, active)
 VALUES (
     'admin@psyassistant.local',
     '$2a$12$bzum65qKv3b.9DQSwmhyaeCEOw4Djw6yGFRTQvL5Im9M9gIjVEha6',
-    'ADMIN',
+    'SYSTEM_ADMINISTRATOR',
     TRUE
 )
 ON CONFLICT (email) DO NOTHING;

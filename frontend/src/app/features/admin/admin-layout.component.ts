@@ -1,10 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { AppModeService } from '../../core/mode/app-mode.service';
 
 /**
- * Admin area layout with tabbed navigation
+ * Admin area layout with tabbed navigation.
+ * Clinic-only tabs (Users, Therapists, Leave Requests) are hidden in SOLO mode.
  */
 @Component({
   selector: 'app-admin-layout',
@@ -17,36 +20,38 @@ import { TranslocoModule } from '@jsverse/transloco';
       </div>
 
       <nav class="admin-tabs" role="tablist">
-        <a
-          routerLink="/admin/users"
-          routerLinkActive="active"
-          class="tab"
-          role="tab"
-          [attr.aria-selected]="rla1.isActive"
-          #rla1="routerLinkActive"
-        >
-          {{ 'admin.tabs.users' | transloco }}
-        </a>
-        <a
-          routerLink="/admin/therapists"
-          routerLinkActive="active"
-          class="tab"
-          role="tab"
-          [attr.aria-selected]="rla2.isActive"
-          #rla2="routerLinkActive"
-        >
-          {{ 'admin.tabs.therapists' | transloco }}
-        </a>
-        <a
-          routerLink="/admin/leave-requests"
-          routerLinkActive="active"
-          class="tab"
-          role="tab"
-          [attr.aria-selected]="rla3.isActive"
-          #rla3="routerLinkActive"
-        >
-          {{ 'admin.tabs.leaveRequests' | transloco }}
-        </a>
+        @if (isClinic()) {
+          <a
+            routerLink="/admin/users"
+            routerLinkActive="active"
+            class="tab"
+            role="tab"
+            [attr.aria-selected]="rla1.isActive"
+            #rla1="routerLinkActive"
+          >
+            {{ 'admin.tabs.users' | transloco }}
+          </a>
+          <a
+            routerLink="/admin/therapists"
+            routerLinkActive="active"
+            class="tab"
+            role="tab"
+            [attr.aria-selected]="rla2.isActive"
+            #rla2="routerLinkActive"
+          >
+            {{ 'admin.tabs.therapists' | transloco }}
+          </a>
+          <a
+            routerLink="/admin/leave-requests"
+            routerLinkActive="active"
+            class="tab"
+            role="tab"
+            [attr.aria-selected]="rla3.isActive"
+            #rla3="routerLinkActive"
+          >
+            {{ 'admin.tabs.leaveRequests' | transloco }}
+          </a>
+        }
         <a
           routerLink="/admin/catalog"
           routerLinkActive="active"
@@ -142,4 +147,11 @@ import { TranslocoModule } from '@jsverse/transloco';
     }
   `]
 })
-export class AdminLayoutComponent {}
+export class AdminLayoutComponent {
+  private readonly modeService = inject(AppModeService);
+  private readonly currentMode = toSignal(this.modeService.mode$, {
+    initialValue: this.modeService.mode,
+  });
+
+  readonly isClinic = computed(() => this.currentMode() === 'CLINIC');
+}

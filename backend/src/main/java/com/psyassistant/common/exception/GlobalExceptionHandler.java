@@ -9,6 +9,7 @@ import com.psyassistant.careplans.exception.CarePlanNotActiveException;
 import com.psyassistant.careplans.exception.MaxActivePlansExceededException;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.common.mode.RegistrationException;
 import com.psyassistant.common.mode.SetupAlreadyCompleteException;
 import com.psyassistant.crm.leads.InvalidStatusTransitionException;
 import com.psyassistant.crm.leads.LeadAlreadyConvertedException;
@@ -204,6 +205,28 @@ public class GlobalExceptionHandler {
                         HttpStatus.CONFLICT.value(),
                         ex.getMessage(),
                         "SETUP_ALREADY_COMPLETE",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles self-service registration conflicts, e.g. email already registered (409).
+     *
+     * @param ex      the registration exception
+     * @param request the current HTTP request
+     * @return 409 Conflict with code {@code REGISTRATION_CONFLICT}
+     */
+    @ExceptionHandler(RegistrationException.class)
+    public ResponseEntity<ErrorResponse> handleRegistrationConflict(
+            final RegistrationException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage(),
+                        "REGISTRATION_CONFLICT",
                         request.getRequestURI()
                 )
         );

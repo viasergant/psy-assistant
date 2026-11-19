@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * A follow-up task created when a session has a no-show attendance outcome.
@@ -17,6 +18,7 @@ import java.util.UUID;
  * <p>The {@code session_record_id} column has a UNIQUE constraint to ensure
  * at most one follow-up task exists per session (idempotency guard).
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "session_follow_up_tasks")
 public class FollowUpTask {
@@ -51,6 +53,9 @@ public class FollowUpTask {
     /** When this task was last updated. */
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /** Required by JPA. */
     protected FollowUpTask() {
@@ -105,5 +110,9 @@ public class FollowUpTask {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

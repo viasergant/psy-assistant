@@ -14,9 +14,14 @@ import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.common.config.SecurityConfig;
 import com.psyassistant.common.exception.GlobalExceptionHandler;
+import com.psyassistant.organization.Organization;
+import com.psyassistant.organization.OrganizationRepository;
+import com.psyassistant.organization.OrganizationStatus;
+import com.psyassistant.organization.OrganizationType;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -56,6 +61,9 @@ class ClinicSetupControllerTest {
     private UserRepository userRepository;
 
     @MockitoBean
+    private OrganizationRepository organizationRepository;
+
+    @MockitoBean
     private PasswordEncoder passwordEncoder;
 
     @MockitoBean
@@ -67,11 +75,18 @@ class ClinicSetupControllerTest {
     void whenNoUsersExistCreatesAdminReturns201() throws Exception {
         // Arrange
         when(userRepository.count()).thenReturn(0L);
+        Organization org = new Organization("Clinic", "clinic",
+                OrganizationType.CLINIC, OrganizationStatus.ACTIVE);
+        UUID orgId = UUID.randomUUID();
+        ReflectionTestUtils.setField(org, "id", orgId);
+        when(organizationRepository.findAll()).thenReturn(Collections.emptyList());
+        when(organizationRepository.save(any(Organization.class))).thenReturn(org);
         when(passwordEncoder.encode("SecureP@ss1")).thenReturn("$2a$12$hashed");
 
         UUID newId = UUID.randomUUID();
         User savedUser = new User("admin@clinic.com", "$2a$12$hashed", "Clinic Admin",
                 Set.of(UserRole.SYSTEM_ADMINISTRATOR), true);
+        savedUser.setOrgId(orgId);
         ReflectionTestUtils.setField(savedUser, "id", newId);
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
@@ -136,11 +151,18 @@ class ClinicSetupControllerTest {
     void whenNoAuthRequestAllowed() throws Exception {
         // Arrange — no Authorization header; SecurityConfig must permitAll() for this path
         when(userRepository.count()).thenReturn(0L);
+        Organization org = new Organization("Clinic", "clinic",
+                OrganizationType.CLINIC, OrganizationStatus.ACTIVE);
+        UUID orgId = UUID.randomUUID();
+        ReflectionTestUtils.setField(org, "id", orgId);
+        when(organizationRepository.findAll()).thenReturn(Collections.emptyList());
+        when(organizationRepository.save(any(Organization.class))).thenReturn(org);
         when(passwordEncoder.encode(any())).thenReturn("$2a$12$hashed");
 
         UUID newId = UUID.randomUUID();
         User savedUser = new User("admin@clinic.com", "$2a$12$hashed",
                 Set.of(UserRole.SYSTEM_ADMINISTRATOR), true);
+        savedUser.setOrgId(orgId);
         ReflectionTestUtils.setField(savedUser, "id", newId);
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
@@ -160,11 +182,18 @@ class ClinicSetupControllerTest {
     void whenAuditLogThrowsCreatesAdminReturns201() throws Exception {
         // Arrange
         when(userRepository.count()).thenReturn(0L);
+        Organization org = new Organization("Clinic", "clinic",
+                OrganizationType.CLINIC, OrganizationStatus.ACTIVE);
+        UUID orgId = UUID.randomUUID();
+        ReflectionTestUtils.setField(org, "id", orgId);
+        when(organizationRepository.findAll()).thenReturn(Collections.emptyList());
+        when(organizationRepository.save(any(Organization.class))).thenReturn(org);
         when(passwordEncoder.encode("SecureP@ss1")).thenReturn("$2a$12$hashed");
 
         UUID newId = UUID.randomUUID();
         User savedUser = new User("admin@clinic.com", "$2a$12$hashed", "Clinic Admin",
                 Set.of(UserRole.SYSTEM_ADMINISTRATOR), true);
+        savedUser.setOrgId(orgId);
         ReflectionTestUtils.setField(savedUser, "id", newId);
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 

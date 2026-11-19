@@ -9,11 +9,13 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Per-therapist price override for a service.
  * Only the current override is stored — no history is tracked.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(
     name = "service_catalog_therapist_override",
@@ -33,6 +35,9 @@ public class ServiceCatalogTherapistOverride extends BaseEntity {
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     protected ServiceCatalogTherapistOverride() {
         // JPA
@@ -60,5 +65,9 @@ public class ServiceCatalogTherapistOverride extends BaseEntity {
 
     public void setPrice(final BigDecimal price) {
         this.price = price;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

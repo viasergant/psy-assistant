@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Daily snapshot of a therapist's caseload metrics.
@@ -14,6 +15,7 @@ import java.util.UUID;
  * <p>One row per therapist per day, upserted by {@link CaseloadSnapshotJob}.
  * The unique constraint {@code uq_caseload_snapshot} prevents duplicates.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "caseload_snapshot")
 public class CaseloadSnapshot extends SimpleBaseEntity {
@@ -41,6 +43,9 @@ public class CaseloadSnapshot extends SimpleBaseEntity {
 
     @Column(name = "utilization_rate")
     private BigDecimal utilizationRate;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /** Required by JPA. */
     protected CaseloadSnapshot() {
@@ -147,5 +152,9 @@ public class CaseloadSnapshot extends SimpleBaseEntity {
      */
     public BigDecimal getUtilizationRate() {
         return utilizationRate;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

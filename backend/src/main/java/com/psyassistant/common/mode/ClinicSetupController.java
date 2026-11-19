@@ -2,6 +2,10 @@ package com.psyassistant.common.mode;
 
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.organization.Organization;
+import com.psyassistant.organization.OrganizationRepository;
+import com.psyassistant.organization.OrganizationStatus;
+import com.psyassistant.organization.OrganizationType;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
@@ -43,20 +47,24 @@ public class ClinicSetupController {
     private static final Logger LOG = LoggerFactory.getLogger(ClinicSetupController.class);
 
     private final UserRepository userRepository;
+    private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
 
     /**
      * Constructs the controller with required dependencies.
      *
-     * @param userRepository  JPA repository for {@link User} entities
-     * @param passwordEncoder Spring Security password encoder (BCrypt)
-     * @param auditLogService service for recording security-relevant events
+     * @param userRepository         JPA repository for {@link User} entities
+     * @param organizationRepository JPA repository for {@link Organization} entities
+     * @param passwordEncoder        Spring Security password encoder (BCrypt)
+     * @param auditLogService        service for recording security-relevant events
      */
     public ClinicSetupController(final UserRepository userRepository,
+                                 final OrganizationRepository organizationRepository,
                                  final PasswordEncoder passwordEncoder,
                                  final AuditLogService auditLogService) {
         this.userRepository = userRepository;
+        this.organizationRepository = organizationRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
     }
@@ -85,9 +93,15 @@ public class ClinicSetupController {
             throw new SetupAlreadyCompleteException();
         }
 
+        Organization org = organizationRepository.findAll().stream().findFirst()
+                .orElseGet(() -> organizationRepository.save(
+                        new Organization("Clinic", "clinic",
+                                OrganizationType.CLINIC, OrganizationStatus.ACTIVE)));
+
         String hash = passwordEncoder.encode(request.password());
         User user = new User(request.email(), hash, request.fullName(),
                 Set.of(UserRole.SYSTEM_ADMINISTRATOR), true);
+        user.setOrgId(org.getId());
 
         User saved = userRepository.save(user);
         LOG.info("event=CLINIC_ADMIN_CREATED userId={}", saved.getId());

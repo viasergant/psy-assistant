@@ -2,6 +2,10 @@ package com.psyassistant.common.mode;
 
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.organization.Organization;
+import com.psyassistant.organization.OrganizationRepository;
+import com.psyassistant.organization.OrganizationStatus;
+import com.psyassistant.organization.OrganizationType;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
@@ -15,6 +19,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Initialises the single user account on first boot in solo deployment mode.
@@ -41,6 +46,7 @@ public class SoloUserInitRunner implements ApplicationRunner {
     );
 
     private final UserRepository userRepository;
+    private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
 
@@ -58,17 +64,20 @@ public class SoloUserInitRunner implements ApplicationRunner {
      * @param auditLogService service for recording security-relevant events
      */
     public SoloUserInitRunner(final UserRepository userRepository,
+                              final OrganizationRepository organizationRepository,
                               final PasswordEncoder passwordEncoder,
                               final AuditLogService auditLogService) {
         this.userRepository = userRepository;
+        this.organizationRepository = organizationRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
     }
 
     @Override
+    @Transactional
     public void run(final ApplicationArguments args) {
-        if (userRepository.count() > 0) {
-            LOG.info("event=SOLO_INIT_SKIPPED reason=users_exist");
+        if (organizationRepository.count() > 0) {
+            LOG.info("event=SOLO_INIT_SKIPPED reason=organization_exists");
             return;
         }
 
@@ -78,9 +87,14 @@ public class SoloUserInitRunner implements ApplicationRunner {
             );
         }
 
+        Organization org = new Organization(
+            "Solo Practice", "solo", OrganizationType.SOLO, OrganizationStatus.ACTIVE);
+        Organization savedOrg = organizationRepository.save(org);
+
         String hash = passwordEncoder.encode(soloPassword);
         User user = new User(soloUsername, hash, ALL_ROLES, true);
         user.setMustChangePassword(true);
+        user.setOrgId(savedOrg.getId());
 
         User saved = userRepository.save(user);
         LOG.info("event=SOLO_USER_CREATED userId={}", saved.getId());

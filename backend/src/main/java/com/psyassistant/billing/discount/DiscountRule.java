@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * A reusable discount rule that can be scoped to a specific client or service.
@@ -15,6 +16,7 @@ import java.util.UUID;
  * <p>Constraint: when scope=CLIENT, clientId must be set and serviceCatalogId must be null,
  * and vice versa for scope=SERVICE.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "discount_rules")
 public class DiscountRule extends BaseEntity {
@@ -44,6 +46,9 @@ public class DiscountRule extends BaseEntity {
 
     @Column(name = "updated_by")
     private String updatedBy;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     protected DiscountRule() {
     }
@@ -100,5 +105,9 @@ public class DiscountRule extends BaseEntity {
 
     public void setUpdatedBy(final String updatedBy) {
         this.updatedBy = updatedBy;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

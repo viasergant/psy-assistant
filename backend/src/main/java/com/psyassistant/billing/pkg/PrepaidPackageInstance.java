@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * A single sold (purchased) instance of a {@link PrepaidPackageDefinition}.
@@ -19,6 +20,7 @@ import java.util.UUID;
  * <p>Tracks remaining sessions and expiry. {@link PackageBalanceAudit} records
  * every deduction for full auditability.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "prepaid_package_instance")
 public class PrepaidPackageInstance extends BaseEntity {
@@ -51,6 +53,9 @@ public class PrepaidPackageInstance extends BaseEntity {
 
     @Column(name = "updated_by")
     private String updatedBy;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     protected PrepaidPackageInstance() {
     }
@@ -118,5 +123,9 @@ public class PrepaidPackageInstance extends BaseEntity {
 
     public void setUpdatedBy(final String updatedBy) {
         this.updatedBy = updatedBy;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

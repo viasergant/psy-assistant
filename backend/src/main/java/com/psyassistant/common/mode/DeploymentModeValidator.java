@@ -23,6 +23,7 @@ public class DeploymentModeValidator
         String[] profiles = applicationContext.getEnvironment().getActiveProfiles();
         boolean hasSolo = false;
         boolean hasClinic = false;
+        boolean hasSaas = false;
         for (String p : profiles) {
             if ("solo".equals(p)) {
                 hasSolo = true;
@@ -30,12 +31,14 @@ public class DeploymentModeValidator
             if ("clinic".equals(p)) {
                 hasClinic = true;
             }
+            if ("saas".equals(p)) {
+                hasSaas = true;
+            }
         }
-        if (!hasSolo && !hasClinic) {
+        if (!hasSolo && !hasClinic && !hasSaas) {
             throw new IllegalStateException(
                 "Deployment mode not configured. "
-                + "Start with --spring.profiles.active=solo or "
-                + "--spring.profiles.active=clinic"
+                + "Start with --spring.profiles.active=solo, clinic, or saas"
             );
         }
     }

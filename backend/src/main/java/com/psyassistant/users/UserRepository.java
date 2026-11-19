@@ -32,6 +32,16 @@ public interface UserRepository extends JpaRepository<User, UUID>,
     boolean existsByEmail(String email);
 
     /**
+     * Returns true if a user with the given email exists within the specified organization.
+     * Use this for org-scoped uniqueness checks (e.g. when an admin adds a therapist to a clinic).
+     *
+     * @param email email to check
+     * @param orgId organization to scope the check to
+     * @return true if the email is already in use within that org
+     */
+    boolean existsByEmailAndOrgId(String email, UUID orgId);
+
+    /**
      * Atomically increments the failed login attempt counter for the given user.
      *
      * @param id the user's primary key

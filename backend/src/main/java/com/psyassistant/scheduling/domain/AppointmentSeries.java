@@ -15,6 +15,7 @@ import jakarta.persistence.Version;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Represents a recurring appointment series.
@@ -30,6 +31,7 @@ import java.util.UUID;
  *     <li>Series uses a BIGSERIAL PK (not UUID) to keep FK joins compact</li>
  * </ul>
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "appointment_series")
 public class AppointmentSeries {
@@ -96,6 +98,9 @@ public class AppointmentSeries {
     @Version
     @Column(name = "version", nullable = false)
     private Long version = 0L;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /**
      * Default constructor for JPA.
@@ -220,5 +225,9 @@ public class AppointmentSeries {
 
     public Long getVersion() {
         return version;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

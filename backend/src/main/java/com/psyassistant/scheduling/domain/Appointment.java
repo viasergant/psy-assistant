@@ -13,6 +13,7 @@ import jakarta.persistence.Version;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Represents a therapy appointment booking.
@@ -31,6 +32,7 @@ import java.util.UUID;
  *
  * <p>Extends {@link BaseEntity} to inherit UUID primary key and Spring Data Auditing.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "appointment")
 public class Appointment extends BaseEntity {
@@ -175,6 +177,9 @@ public class Appointment extends BaseEntity {
     @Version
     @Column(name = "version", nullable = false)
     private Long version = 0L;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /**
      * Default constructor for JPA.
@@ -440,5 +445,9 @@ public class Appointment extends BaseEntity {
 
     public void setDepositAmount(final java.math.BigDecimal depositAmount) {
         this.depositAmount = depositAmount;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

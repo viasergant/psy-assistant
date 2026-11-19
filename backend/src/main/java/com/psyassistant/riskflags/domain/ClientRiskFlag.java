@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * A risk flag raised against a specific client.
@@ -20,6 +21,7 @@ import java.util.UUID;
  * Clinical notes are stored in plain text and their visibility is enforced at the
  * service/controller layer based on the caller's {@code READ_RISK_FLAG_NOTES} permission.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "client_risk_flags")
 public class ClientRiskFlag {
@@ -60,6 +62,9 @@ public class ClientRiskFlag {
 
     @Column(name = "resolution_note", columnDefinition = "TEXT")
     private String resolutionNote;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     // ---- constructors ----
 
@@ -144,5 +149,9 @@ public class ClientRiskFlag {
 
     public String getResolutionNote() {
         return resolutionNote;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

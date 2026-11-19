@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Invoice entity representing a billing document.
@@ -30,6 +31,7 @@ import java.util.UUID;
  *
  * <p>Monetary fields use {@link BigDecimal} to avoid floating-point rounding errors.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "invoices")
 public class Invoice extends BaseEntity {
@@ -95,6 +97,9 @@ public class Invoice extends BaseEntity {
 
     @Column(name = "updated_by")
     private String updatedBy;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true,
                fetch = FetchType.LAZY)
@@ -384,5 +389,9 @@ public class Invoice extends BaseEntity {
 
     public List<InvoiceLineItem> getLineItems() {
         return lineItems;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

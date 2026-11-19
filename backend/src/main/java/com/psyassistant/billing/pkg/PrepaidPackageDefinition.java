@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Catalogue entry defining a sellable prepaid session package.
@@ -14,11 +16,12 @@ import jakarta.persistence.Table;
  * <p>Instances are sold to clients via {@link PrepaidPackageInstance}.
  * Once sold, definitions should be ARCHIVED rather than deleted.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "prepaid_package_definition")
 public class PrepaidPackageDefinition extends BaseEntity {
 
-    @Column(name = "name", nullable = false, unique = true, length = 200)
+    @Column(name = "name", nullable = false, length = 200)
     private String name;
 
     @Enumerated(EnumType.STRING)
@@ -37,6 +40,9 @@ public class PrepaidPackageDefinition extends BaseEntity {
 
     @Column(name = "updated_by")
     private String updatedBy;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     protected PrepaidPackageDefinition() {
     }
@@ -89,5 +95,9 @@ public class PrepaidPackageDefinition extends BaseEntity {
 
     public void setUpdatedBy(final String updatedBy) {
         this.updatedBy = updatedBy;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

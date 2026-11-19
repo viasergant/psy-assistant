@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -44,6 +45,7 @@ import org.hibernate.type.SqlTypes;
  *
  * <p>Extends {@link BaseEntity} to inherit UUID primary key and Spring Data Auditing.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(
     name = "session_record",
@@ -154,6 +156,9 @@ public class SessionRecord extends BaseEntity {
      */
     @Column(name = "deposit_amount", precision = 12, scale = 2)
     private java.math.BigDecimal depositAmount;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /**
      * Default constructor for JPA.
@@ -373,5 +378,9 @@ public class SessionRecord extends BaseEntity {
 
     public void setDepositAmount(final java.math.BigDecimal depositAmount) {
         this.depositAmount = depositAmount;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

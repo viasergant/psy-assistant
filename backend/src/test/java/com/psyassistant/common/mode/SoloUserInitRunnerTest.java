@@ -10,6 +10,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.organization.Organization;
+import com.psyassistant.organization.OrganizationRepository;
+import com.psyassistant.organization.OrganizationStatus;
+import com.psyassistant.organization.OrganizationType;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
@@ -41,6 +45,9 @@ class SoloUserInitRunnerTest {
     private UserRepository userRepository;
 
     @Mock
+    private OrganizationRepository organizationRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
@@ -53,7 +60,8 @@ class SoloUserInitRunnerTest {
 
     @BeforeEach
     void setUp() {
-        runner = new SoloUserInitRunner(userRepository, passwordEncoder, auditLogService);
+        runner = new SoloUserInitRunner(userRepository, organizationRepository,
+                passwordEncoder, auditLogService);
         ReflectionTestUtils.setField(runner, "soloUsername", TEST_USERNAME);
         ReflectionTestUtils.setField(runner, "soloPassword", TEST_PASSWORD);
     }
@@ -61,7 +69,11 @@ class SoloUserInitRunnerTest {
     @Test
     void whenNoUsersExistCreatesUserWithAllRolesAndMustChangePassword() throws Exception {
         // Arrange
-        when(userRepository.count()).thenReturn(0L);
+        when(organizationRepository.count()).thenReturn(0L);
+        Organization savedOrg = new Organization(
+                "Solo Practice", "solo", OrganizationType.SOLO, OrganizationStatus.ACTIVE);
+        ReflectionTestUtils.setField(savedOrg, "id", UUID.randomUUID());
+        when(organizationRepository.save(any(Organization.class))).thenReturn(savedOrg);
         when(passwordEncoder.encode(TEST_PASSWORD)).thenReturn(TEST_HASH);
 
         User savedUser = new User(TEST_USERNAME, TEST_HASH,
@@ -70,6 +82,7 @@ class SoloUserInitRunnerTest {
                 UserRole.SUPERVISOR, UserRole.FINANCE, UserRole.SYSTEM_ADMINISTRATOR
             ), true);
         savedUser.setMustChangePassword(true);
+        savedUser.setOrgId(savedOrg.getId());
         ReflectionTestUtils.setField(savedUser, "id", UUID.randomUUID());
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
@@ -96,8 +109,8 @@ class SoloUserInitRunnerTest {
 
     @Test
     void whenUsersAlreadyExistSkipsCreation() throws Exception {
-        // Arrange
-        when(userRepository.count()).thenReturn(1L);
+        // Arrange — idempotency guard now checks organizationRepository
+        when(organizationRepository.count()).thenReturn(1L);
 
         // Act
         runner.run(applicationArguments);
@@ -111,7 +124,7 @@ class SoloUserInitRunnerTest {
     void whenSoloUsernameBlankThrowsIllegalStateException() {
         // Arrange
         ReflectionTestUtils.setField(runner, "soloUsername", "");
-        when(userRepository.count()).thenReturn(0L);
+        when(organizationRepository.count()).thenReturn(0L);
 
         // Act + Assert
         assertThrows(
@@ -126,7 +139,7 @@ class SoloUserInitRunnerTest {
     @Test
     void whenSoloPasswordBlankThrowsIllegalStateException() throws Exception {
         // Arrange
-        when(userRepository.count()).thenReturn(0L);
+        when(organizationRepository.count()).thenReturn(0L);
         ReflectionTestUtils.setField(runner, "soloUsername", "admin@example.com");
         ReflectionTestUtils.setField(runner, "soloPassword", "");
 
@@ -143,7 +156,11 @@ class SoloUserInitRunnerTest {
     @Test
     void whenAuditLogThrowsRunCompletesNormally() throws Exception {
         // Arrange
-        when(userRepository.count()).thenReturn(0L);
+        when(organizationRepository.count()).thenReturn(0L);
+        Organization org = new Organization(
+                "Solo Practice", "solo", OrganizationType.SOLO, OrganizationStatus.ACTIVE);
+        ReflectionTestUtils.setField(org, "id", UUID.randomUUID());
+        when(organizationRepository.save(any(Organization.class))).thenReturn(org);
         ReflectionTestUtils.setField(runner, "soloUsername", "admin@example.com");
         ReflectionTestUtils.setField(runner, "soloPassword", "SecurePass1!");
         when(passwordEncoder.encode(any())).thenReturn("hashed");

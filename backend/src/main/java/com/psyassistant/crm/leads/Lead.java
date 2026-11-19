@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Represents a CRM intake lead.
@@ -24,6 +25,7 @@ import java.util.UUID;
  * invariant is enforced by the application layer (service validation) and also by a
  * database trigger ({@code trg_lead_contact_min}).
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "leads")
 public class Lead extends BaseEntity {
@@ -62,6 +64,9 @@ public class Lead extends BaseEntity {
      */
     @Column(name = "converted_client_id")
     private UUID convertedClientId;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /** All contact methods (email and/or phone) registered for this lead. */
     @OneToMany(mappedBy = "lead", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -148,6 +153,11 @@ public class Lead extends BaseEntity {
     /** Sets the UUID of the client record this lead was converted to. */
     public void setConvertedClientId(final UUID convertedClientId) {
         this.convertedClientId = convertedClientId;
+    }
+
+    /** Returns the organization this lead belongs to. */
+    public UUID getOrgId() {
+        return orgId;
     }
 
     /**

@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Clinical care plan belonging to one client + therapist pair.
@@ -21,6 +22,7 @@ import java.util.UUID;
  * <p>Status lifecycle: ACTIVE → CLOSED or ACTIVE → ARCHIVED.
  * Multiple active plans per client are permitted up to the configured maximum.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "care_plan")
 public class CarePlan extends BaseEntity {
@@ -49,6 +51,9 @@ public class CarePlan extends BaseEntity {
 
     @Column(name = "archived_at")
     private Instant archivedAt;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     @OneToMany(mappedBy = "carePlan", cascade = CascadeType.ALL, orphanRemoval = true,
                fetch = FetchType.LAZY)
@@ -129,5 +134,9 @@ public class CarePlan extends BaseEntity {
 
     public List<CarePlanGoal> getGoals() {
         return goals;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

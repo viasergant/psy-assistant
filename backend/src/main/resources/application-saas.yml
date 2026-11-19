@@ -1,0 +1,3 @@
+# SaaS deployment mode: multiple independent organizations on one shared instance.
+# Self-service registration is enabled via POST /api/v1/register.
+# Defaults from application.yml apply; no overrides required at v1.

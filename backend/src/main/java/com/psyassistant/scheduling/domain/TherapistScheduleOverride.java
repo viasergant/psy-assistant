@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Represents a one-off schedule exception for a specific date.
@@ -19,6 +20,7 @@ import java.util.UUID;
  *
  * <p>Extends {@link BaseEntity} to inherit UUID primary key and Spring Data Auditing fields.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "therapist_schedule_override")
 public class TherapistScheduleOverride extends BaseEntity {
@@ -46,6 +48,9 @@ public class TherapistScheduleOverride extends BaseEntity {
     /** Optional human-readable explanation for the override. */
     @Column(name = "reason", length = 500)
     private String reason;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /**
      * Default constructor for JPA.
@@ -139,5 +144,9 @@ public class TherapistScheduleOverride extends BaseEntity {
 
     public void setReason(final String reason) {
         this.reason = reason;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

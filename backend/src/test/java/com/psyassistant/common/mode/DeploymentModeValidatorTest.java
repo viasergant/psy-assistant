@@ -53,8 +53,7 @@ class DeploymentModeValidatorTest {
         // Assert
         assertEquals(
             "Deployment mode not configured. "
-            + "Start with --spring.profiles.active=solo or "
-            + "--spring.profiles.active=clinic",
+            + "Start with --spring.profiles.active=solo, clinic, or saas",
             ex.getMessage()
         );
     }

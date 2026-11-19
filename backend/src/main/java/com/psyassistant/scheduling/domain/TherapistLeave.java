@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Represents a therapist leave period request.
@@ -24,6 +25,7 @@ import java.util.UUID;
  *
  * <p>Extends {@link BaseEntity} to inherit UUID primary key and Spring Data Auditing fields.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "therapist_leave")
 public class TherapistLeave extends BaseEntity {
@@ -69,6 +71,9 @@ public class TherapistLeave extends BaseEntity {
     /** User ID of the administrator who reviewed this request. */
     @Column(name = "reviewed_by")
     private UUID reviewedBy;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /**
      * Default constructor for JPA.
@@ -212,5 +217,9 @@ public class TherapistLeave extends BaseEntity {
 
     public void setReviewedBy(final UUID reviewedBy) {
         this.reviewedBy = reviewedBy;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

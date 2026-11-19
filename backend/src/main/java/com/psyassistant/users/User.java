@@ -73,6 +73,9 @@ public class User {
     @Column(name = "locked_until")
     private Instant lockedUntil;
 
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
+
     /** Required by JPA. */
     protected User() {
     }
@@ -93,7 +96,7 @@ public class User {
         this.passwordHash = passwordHash;
         this.fullName = fullName;
         this.active = active;
-        this.language = "en"; // Default locale
+        this.language = "en";
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
         if (roles == null || roles.isEmpty()) {
@@ -415,6 +418,15 @@ public class User {
      */
     public boolean isCurrentlyLocked() {
         return lockedUntil != null && Instant.now().isBefore(lockedUntil);
+    }
+
+    public UUID getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(final UUID orgId) {
+        this.orgId = orgId;
+        this.updatedAt = Instant.now();
     }
 
     // ---- private helpers --------------------------------------------------

@@ -377,6 +377,41 @@ public class AuthService {
                 tokenService.refreshTtlFor(user.getRoles()));
     }
 
+    /**
+     * Issues a fresh access + refresh token pair for an already-authenticated user.
+     *
+     * <p>Used by registration flows where the user record has just been created and
+     * does not need to be re-validated via email/password. Enforces the session cap
+     * and stores the refresh token the same way as normal login.
+     *
+     * @param user the newly created, fully-saved user
+     * @return an {@link AuthResult} ready for the controller to convert to a response
+     */
+    @Transactional
+    public AuthResult issueTokensForUser(final User user) {
+        enforceSessionCap(user);
+
+        String rawToken = tokenService.generateRawRefreshToken();
+        String hash = tokenService.hashRefreshToken(rawToken);
+        Instant expiresAt = Instant.now().plus(tokenService.refreshTtlFor(user.getRoles()));
+        refreshTokenRepository.save(new RefreshToken(user, hash, expiresAt));
+
+        UUID therapistProfileId = null;
+        if (user.hasRole(UserRole.THERAPIST)) {
+            therapistProfileId = therapistProfileRepository
+                    .findByEmailIgnoreCase(user.getEmail())
+                    .map(p -> p.getId())
+                    .orElse(null);
+        }
+
+        String accessToken = tokenService.buildAccessToken(user, therapistProfileId);
+        Instant accessExpiry = tokenService.accessTokenExpiresAt(user.getRoles());
+
+        LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer");
+        return new AuthResult(response, rawToken, user.getRoles(),
+                tokenService.refreshTtlFor(user.getRoles()));
+    }
+
     // ---- private helpers -----------------------------------------------
 
     /**

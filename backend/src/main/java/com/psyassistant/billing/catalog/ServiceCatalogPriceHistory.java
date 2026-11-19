@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Filter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -26,6 +27,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  * which is set exactly once during price close-out.
  * {@code @DynamicUpdate} ensures only {@code effective_to} is included in UPDATE statements.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "service_catalog_price_history")
 @EntityListeners(AuditingEntityListener.class)
@@ -56,6 +58,9 @@ public class ServiceCatalogPriceHistory {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "org_id", nullable = false, updatable = false)
+    private UUID orgId;
 
     protected ServiceCatalogPriceHistory() {
         // JPA
@@ -101,5 +106,9 @@ public class ServiceCatalogPriceHistory {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

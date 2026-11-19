@@ -11,6 +11,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Master record in the service catalog.
@@ -19,12 +21,13 @@ import jakarta.persistence.UniqueConstraint;
  * Price is NOT stored here — current/historical prices live in
  * {@link ServiceCatalogPriceHistory}.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(
     name = "service_catalog",
     uniqueConstraints = @UniqueConstraint(
-        name = "uq_catalog_name_category",
-        columnNames = {"name", "category"}
+        name = "uq_catalog_org_name_cat",
+        columnNames = {"org_id", "name", "category"}
     )
 )
 public class ServiceCatalog extends BaseEntity {
@@ -45,6 +48,9 @@ public class ServiceCatalog extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private ServiceStatus status = ServiceStatus.ACTIVE;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     protected ServiceCatalog() {
         // JPA
@@ -97,5 +103,9 @@ public class ServiceCatalog extends BaseEntity {
 
     public void setStatus(final ServiceStatus status) {
         this.status = status;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

@@ -6,11 +6,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Read-only definition of a standardised outcome measurement instrument
  * (e.g. PHQ-9, GAD-7). Seeded once via Flyway; never created by API callers.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "outcome_measure_definition")
 public class OutcomeMeasureDefinition extends BaseEntity {
@@ -45,6 +48,9 @@ public class OutcomeMeasureDefinition extends BaseEntity {
 
     @Column(name = "active", nullable = false)
     private boolean active = true;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     // ---- constructors ----
 
@@ -90,5 +96,9 @@ public class OutcomeMeasureDefinition extends BaseEntity {
 
     public boolean isActive() {
         return active;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

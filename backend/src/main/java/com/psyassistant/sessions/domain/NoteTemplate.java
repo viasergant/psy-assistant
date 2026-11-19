@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
@@ -21,6 +22,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  * <p>Templates are seeded via Flyway and are not user-manageable.  The {@code templateFields}
  * column stores a JSONB array of {@code {key, label, required}} objects.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "note_template")
 @EntityListeners(AuditingEntityListener.class)
@@ -49,6 +51,9 @@ public class NoteTemplate {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
+
     protected NoteTemplate() {
     }
 
@@ -74,5 +79,9 @@ public class NoteTemplate {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

@@ -18,6 +18,7 @@ public class AppMetaController {
 
     private static final String MODE_SOLO = "SOLO";
     private static final String MODE_CLINIC = "CLINIC";
+    private static final String MODE_SAAS = "SAAS";
 
     private final Environment environment;
 
@@ -43,15 +44,17 @@ public class AppMetaController {
         String[] profiles = environment.getActiveProfiles();
 
         String mode = MODE_SOLO;
-        boolean foundClinic = false;
         for (String p : profiles) {
-            if ("clinic".equals(p)) {
-                foundClinic = true;
+            if ("saas".equals(p)) {
+                mode = MODE_SAAS;
                 break;
             }
         }
-        if (foundClinic) {
-            mode = MODE_CLINIC;
+        for (String p : profiles) {
+            if ("clinic".equals(p)) {
+                mode = MODE_CLINIC;
+                break;
+            }
         }
         for (String p : profiles) {
             if ("solo".equals(p)) {

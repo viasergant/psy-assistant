@@ -112,6 +112,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/meta").permitAll()
                 .requestMatchers("/api/v1/setup/admin").permitAll()
+                .requestMatchers("/api/v1/register").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/api/v1/email/webhooks/**").permitAll()
                 .requestMatchers("/actuator/**").authenticated()

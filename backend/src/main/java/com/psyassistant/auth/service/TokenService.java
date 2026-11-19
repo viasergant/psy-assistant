@@ -142,6 +142,10 @@ public class TokenService {
             claimsBuilder.claim("therapistProfileId", therapistProfileId.toString());
         }
 
+        if (user.getOrgId() != null) {
+            claimsBuilder.claim("orgId", user.getOrgId().toString());
+        }
+
         JwtClaimsSet claims = claimsBuilder.build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();

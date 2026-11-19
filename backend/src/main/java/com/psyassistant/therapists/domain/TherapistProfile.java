@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Represents a therapist's professional profile, including personal information,
@@ -30,6 +31,7 @@ import java.util.UUID;
  * conflicting updates. All modifications are recorded in {@code TherapistProfileAuditEntry}
  * with field-level details in {@code TherapistProfileAuditChange}.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "therapist_profile")
 public class TherapistProfile extends BaseEntity {
@@ -83,6 +85,9 @@ public class TherapistProfile extends BaseEntity {
     /** Optional user ID that marked this therapist updated (for audit purposes). */
     @Column(name = "updated_by", length = 255)
     private String updatedBy;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     // ========== Relationships ==========
 
@@ -206,6 +211,10 @@ public class TherapistProfile extends BaseEntity {
 
     public void setUpdatedBy(String updatedBy) {
         this.updatedBy = updatedBy;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 
     public Set<Specialization> getSpecializations() {

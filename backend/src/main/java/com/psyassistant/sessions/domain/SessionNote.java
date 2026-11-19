@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedBy;
@@ -27,6 +28,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  * <p>The {@code content} and {@code structuredFields} columns are encrypted at rest via
  * {@link EncryptedStringConverter} (AES-256-GCM).
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "session_note")
 @EntityListeners(AuditingEntityListener.class)
@@ -93,6 +95,9 @@ public class SessionNote {
     @CreatedBy
     @Column(name = "created_by", updatable = false)
     private String createdBy;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     // -------------------------------------------------------------------------
     // Constructors
@@ -212,5 +217,9 @@ public class SessionNote {
 
     public void setTargetClientId(final UUID targetClientId) {
         this.targetClientId = targetClientId;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

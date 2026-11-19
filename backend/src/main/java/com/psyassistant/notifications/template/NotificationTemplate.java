@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Configurable message template for a notification event type, channel, and language.
@@ -15,6 +17,7 @@ import jakarta.persistence.Table;
  * This invariant is enforced by a partial unique index ({@code uq_notification_template_active})
  * in addition to the application-level SELECT FOR UPDATE in the service layer.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "notification_templates")
 public class NotificationTemplate extends BaseEntity {
@@ -45,6 +48,9 @@ public class NotificationTemplate extends BaseEntity {
 
     @Column(name = "has_unknown_variables", nullable = false)
     private boolean hasUnknownVariables;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /** Required by JPA. */
     protected NotificationTemplate() { }
@@ -133,5 +139,9 @@ public class NotificationTemplate extends BaseEntity {
 
     public boolean isActive() {
         return TemplateStatus.ACTIVE == status;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

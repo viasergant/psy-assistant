@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.LocalTime;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Represents a therapist's recurring weekly working hours for a specific day of the week.
@@ -16,6 +17,7 @@ import java.util.UUID;
  * <p>Each row defines availability for one day of the week (Monday=1 through Sunday=7).
  * A therapist may have multiple entries for the same day if they work split shifts.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "therapist_recurring_schedule")
 public class TherapistRecurringSchedule extends BaseEntity {
@@ -39,6 +41,9 @@ public class TherapistRecurringSchedule extends BaseEntity {
     /** IANA timezone identifier (e.g., "America/New_York", "Europe/London"). */
     @Column(name = "timezone", nullable = false, length = 64)
     private String timezone = "UTC";
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /**
      * Default constructor for JPA.
@@ -107,5 +112,9 @@ public class TherapistRecurringSchedule extends BaseEntity {
 
     public void setTimezone(final String timezone) {
         this.timezone = timezone;
+    }
+
+    public UUID getOrgId() {
+        return orgId;
     }
 }

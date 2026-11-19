@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-11-19
+
+### Added
+
+- **`Organization` entity + multi-tenancy foundation** — introduces an `Organization` table as the root tenant boundary. All 25 core domain tables (`users`, `clients`, `leads`, `therapist_profile`, `appointments`, `session_record`, `session_note`, `care_plan`, `invoices`, `prepaid_package_*`, `service_catalog*`, `discount_rules`, `caseload_snapshot`, `client_risk_flags`, `follow_up_tasks`, `therapist_*schedule/leave`, `notification_templates`, `outcome_measure_definition`, `note_template`) receive an `org_id FK NOT NULL` column via Flyway V76–V78.
+- **Row-level isolation via Hibernate `@Filter`** — a single `orgFilter` declared in `package-info.java` and applied to each org-scoped entity class; activated at transaction-begin time by `TenantHibernateJpaDialect` (extends `HibernateJpaDialect`) reading from a request-scoped `TenantContext` ThreadLocal populated by `TenantInterceptor`.
+- **`orgId` JWT claim** — `TokenService.buildAccessToken()` now includes the authenticated user's organization UUID in the JWT, enabling the interceptor to scope all subsequent queries automatically.
+- **`saas` deployment profile** — third deployment mode accepted by `DeploymentModeValidator`; enables `GET /api/v1/meta` mode=SAAS and activates the registration controller.
+- **`POST /api/v1/register`** (`@Profile("saas")`) — public self-service registration endpoint. Creates one `Organization` (type SOLO) + one `User` (all five roles) in a single transaction and immediately returns a JWT + refresh token so the caller is logged in without a separate login step.
+- **`AuthService.issueTokensForUser(User)`** — new package-level method used by registration to build a token pair for an already-persisted user without re-validating credentials.
+- **`UserRepository.existsByEmailAndOrgId`** — org-scoped email uniqueness check for use in clinic user management (global uniqueness enforced at registration time, org-scoped uniqueness available for admin-created users).
+- **Org-scoped unique constraints** — V78 replaces four global unique constraints (`users.email`, `therapist_profile.email`, `service_catalog(name,category)`, `prepaid_package_definition.name`) with org-scoped composite variants and updates the matching `@Table` annotations.
+- **Bootstrap creates Organization** — `SoloUserInitRunner` and `ClinicSetupController` now create an `Organization` row before the first user, keeping solo/clinic single-org deployments fully functional with the new schema.
+
+---
+
 ## [Unreleased] — 2026-05-27
 
 ### Added

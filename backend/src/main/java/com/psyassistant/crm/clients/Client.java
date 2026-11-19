@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import org.hibernate.annotations.Filter;
 
 /**
  * Represents a fully converted client record created from a CRM lead.
@@ -24,6 +25,7 @@ import java.util.UUID;
  * a UNIQUE database constraint — this is the authoritative concurrency guard that prevents
  * a lead from being converted twice.
  */
+@Filter(name = "orgFilter", condition = "org_id = :orgId")
 @Entity
 @Table(name = "clients")
 public class Client extends BaseEntity {
@@ -183,6 +185,9 @@ public class Client extends BaseEntity {
      */
     @Column(name = "source_lead_id", unique = true)
     private UUID sourceLeadId;
+
+    @Column(name = "org_id", nullable = false)
+    private UUID orgId;
 
     /** All contact methods (email and/or phone) registered for this client. */
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -564,6 +569,11 @@ public class Client extends BaseEntity {
     /** Sets the at-risk flag. Should only be called by {@code AtRiskEvaluationService}. */
     public void setAtRisk(final boolean atRisk) {
         this.atRisk = atRisk;
+    }
+
+    /** Returns the organization this client belongs to. */
+    public UUID getOrgId() {
+        return orgId;
     }
 
     /**

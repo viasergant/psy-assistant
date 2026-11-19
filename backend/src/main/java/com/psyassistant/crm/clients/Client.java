@@ -576,6 +576,11 @@ public class Client extends BaseEntity {
         return orgId;
     }
 
+    /** Sets the organization this client belongs to. */
+    public void setOrgId(final UUID orgId) {
+        this.orgId = orgId;
+    }
+
     /**
      * Returns an unmodifiable view of the contact methods list.
      * Mutate via {@link #setContactMethods(List)}.

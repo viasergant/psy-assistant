@@ -160,6 +160,11 @@ public class Lead extends BaseEntity {
         return orgId;
     }
 
+    /** Sets the organization this lead belongs to. */
+    public void setOrgId(final UUID orgId) {
+        this.orgId = orgId;
+    }
+
     /**
      * Returns an unmodifiable view of the contact methods list.
      * Mutate via {@link #replaceContactMethods(List)}.

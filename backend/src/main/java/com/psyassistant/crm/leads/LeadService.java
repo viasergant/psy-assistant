@@ -2,6 +2,7 @@ package com.psyassistant.crm.leads;
 
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.crm.clients.Client;
 import com.psyassistant.crm.clients.ClientContactMethod;
 import com.psyassistant.crm.clients.ClientRepository;
@@ -153,6 +154,7 @@ public class LeadService {
     @Transactional
     public LeadDetailDto createLead(final CreateLeadRequest request, final UUID actorId) {
         Lead lead = new Lead(request.fullName());
+        lead.setOrgId(TenantContext.get());
         lead.setSource(request.source());
         lead.setOwnerId(request.ownerId());
         lead.setNotes(request.notes());
@@ -344,6 +346,7 @@ public class LeadService {
 
         // 6. Build Client entity and its contact methods
         Client client = new Client(request.fullName());
+        client.setOrgId(TenantContext.get());
         client.setOwnerId(resolvedOwnerId);
         client.setNotes(notes);
         client.setSourceLeadId(leadId);

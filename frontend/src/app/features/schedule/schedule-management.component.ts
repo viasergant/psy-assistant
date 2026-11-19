@@ -16,6 +16,7 @@ import { ScheduleApiService } from './services/schedule-api.service';
 import { AppointmentApiService } from './services/appointment-api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { AppModeService } from '../../core/mode/app-mode.service';
+import { SoloTherapistService } from '../../core/mode/solo-therapist.service';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
 import { TherapistManagementService } from '../admin/therapists/services/therapist-management.service';
@@ -548,6 +549,7 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
     private clientService: ClientService,
     private authService: AuthService,
     private readonly modeService: AppModeService,
+    private readonly soloTherapistService: SoloTherapistService,
     private readonly calendarFacade: CalendarFacadeService,
     private readonly appointmentApiService: AppointmentApiService,
     private transloco: TranslocoService,
@@ -781,13 +783,14 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
       this.canEdit = true;
       this.loadTherapists();
     } else if (this.isAdmin && this.isSoloMode) {
-      // Solo admin: only one therapist exists (themselves) — skip the selector
-      this.therapistProfileId = currentProfileId;
+      // Solo admin: only one therapist exists — use JWT claim if present, otherwise
+      // fetch the single therapist from the API and auto-select them.
       this.canEdit = true;
-      if (this.therapistProfileId) {
+      if (currentProfileId) {
+        this.therapistProfileId = currentProfileId;
         this.loadSchedule();
       } else {
-        this.error = 'Unable to determine therapist profile';
+        this.loadSoloTherapist();
       }
     } else if (roles.includes('THERAPIST') || roles.includes('RECEPTION_ADMIN_STAFF')) {
       // Therapist views their own schedule
@@ -822,7 +825,7 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
       next: page => {
         this.therapists = page.content;
         this.loading = false;
-        
+
         if (this.therapists.length === 0) {
           this.error = 'No therapists found in the system';
         }
@@ -831,6 +834,27 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
         console.error('Error loading therapists:', err);
         this.error = 'Failed to load therapist list';
         this.loading = false;
+      }
+    });
+  }
+
+  private loadSoloTherapist(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.soloTherapistService.profileId$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: id => {
+        this.loading = false;
+        if (id) {
+          this.therapistProfileId = id;
+          this.loadSchedule();
+        } else {
+          this.error = 'Unable to determine therapist profile';
+        }
+      },
+      error: () => {
+        this.loading = false;
+        this.error = 'Unable to determine therapist profile';
       }
     });
   }

@@ -21,6 +21,7 @@ import { CarePlanListComponent } from '../care-plans/care-plan-list/care-plan-li
 import { ClientPackagesComponent } from '../components/client-packages/client-packages.component';
 import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-panel/risk-flags-panel.component';
 import { AppModeService } from '../../../core/mode/app-mode.service';
+import { SoloTherapistService } from '../../../core/mode/solo-therapist.service';
 
 /**
  * Client profile page for PA-23 slice-one read and update flow.
@@ -507,6 +508,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   saveError: string | null = null;
   showBookingDialog = false;
   therapistProfileId: string | null = null;
+  soloTherapistProfileId: string | null = null;
   availableTherapists: TherapistProfile[] = [];
   selectedAdminTherapistId = '';
   private _userRole: string[] = [];
@@ -529,6 +531,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
     private therapistManagementService: TherapistManagementService,
     private transloco: TranslocoService,
     private appModeService: AppModeService,
+    private soloTherapistService: SoloTherapistService,
   ) {
     this.profileForm = this.fb.group({
       fullName: ['', [Validators.required]],
@@ -567,6 +570,12 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
     this.therapistProfileId = getCurrentTherapistProfileId(this.authService);
     this._userRole = getCurrentUserRole(this.authService);
     this.recentTagHints = this.loadRecentTagHints();
+
+    if (this.appModeService.mode === 'SOLO' && !this.therapistProfileId) {
+      this.soloTherapistService.profileId$.subscribe(id => {
+        this.soloTherapistProfileId = id;
+      });
+    }
 
     if (this.needsTherapistPicker) {
       this.therapistManagementService.getTherapists(0, 100, undefined, true).subscribe({
@@ -624,6 +633,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
 
   get effectiveTherapistId(): string | null {
     if (this.therapistProfileId) return this.therapistProfileId;
+    if (this.soloTherapistProfileId) return this.soloTherapistProfileId;
     if (this.needsTherapistPicker) return this.selectedAdminTherapistId || null;
     return this.client?.assignedTherapistId || null;
   }

@@ -10,10 +10,12 @@ import java.time.Instant;
  * @param accessToken          signed JWT access token
  * @param accessTokenExpiresAt when the access token expires (ISO-8601)
  * @param tokenType            always {@code "Bearer"}
+ * @param language             user's stored language preference (e.g. "en", "uk")
  */
 public record LoginResponse(
         String accessToken,
         Instant accessTokenExpiresAt,
-        String tokenType
+        String tokenType,
+        String language
 ) {
 }

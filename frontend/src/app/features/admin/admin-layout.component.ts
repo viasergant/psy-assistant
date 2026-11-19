@@ -72,16 +72,6 @@ import { AppModeService } from '../../core/mode/app-mode.service';
         >
           {{ 'admin.tabs.notificationTemplates' | transloco }}
         </a>
-        <a
-          routerLink="/admin/risk-flag-types"
-          routerLinkActive="active"
-          class="tab"
-          role="tab"
-          [attr.aria-selected]="rla6.isActive"
-          #rla6="routerLinkActive"
-        >
-          {{ 'admin.tabs.riskFlagTypes' | transloco }}
-        </a>
       </nav>
 
       <div class="admin-content">

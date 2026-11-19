@@ -195,7 +195,7 @@ public class AuthService {
 
         LOG.info("event=LOGIN_SUCCESS userId={} requestId={}", user.getId(), requestId);
 
-        LoginResponse response = new LoginResponse(accessToken, expiresAtAccess, "Bearer");
+        LoginResponse response = new LoginResponse(accessToken, expiresAtAccess, "Bearer", user.getLanguage());
         return new AuthResult(response, rawToken, user.getRoles(),
                 tokenService.refreshTtlFor(user.getRoles()));
     }
@@ -265,7 +265,7 @@ public class AuthService {
 
         LOG.info("event=TOKEN_REFRESH userId={} requestId={}", user.getId(), requestId);
 
-        LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer");
+        LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer", user.getLanguage());
         return new AuthResult(response, newRawToken, user.getRoles(),
                 tokenService.refreshTtlFor(user.getRoles()));
     }
@@ -372,7 +372,7 @@ public class AuthService {
         LOG.info("event=PASSWORD_CHANGED userId={} requestId={} firstLogin=true",
                 user.getId(), requestId);
 
-        LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer");
+        LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer", user.getLanguage());
         return new AuthResult(response, rawToken, user.getRoles(),
                 tokenService.refreshTtlFor(user.getRoles()));
     }
@@ -407,7 +407,7 @@ public class AuthService {
         String accessToken = tokenService.buildAccessToken(user, therapistProfileId);
         Instant accessExpiry = tokenService.accessTokenExpiresAt(user.getRoles());
 
-        LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer");
+        LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer", user.getLanguage());
         return new AuthResult(response, rawToken, user.getRoles(),
                 tokenService.refreshTtlFor(user.getRoles()));
     }

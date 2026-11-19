@@ -28,6 +28,21 @@ export class PermissionService {
     { initialValue: [] }
   );
 
+  readonly isGlobalAdmin: Signal<boolean> = toSignal(
+    this.authService.token$.pipe(
+      map(token => {
+        if (!token) return false;
+        try {
+          const claims = jwtDecode<JwtClaims>(token);
+          return claims.roles?.includes('GLOBAL_ADMIN') ?? false;
+        } catch {
+          return false;
+        }
+      })
+    ),
+    { initialValue: false }
+  );
+
   hasAnyRole(required: AppRole[]): boolean {
     return this.roles().some(r => required.includes(r));
   }

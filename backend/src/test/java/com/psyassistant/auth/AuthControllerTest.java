@@ -61,7 +61,7 @@ class AuthControllerTest {
      */
     @Test
     void validLoginReturns200WithTokens() throws Exception {
-        LoginResponse resp = new LoginResponse("jwt-abc", Instant.now().plusSeconds(900), "Bearer");
+        LoginResponse resp = new LoginResponse("jwt-abc", Instant.now().plusSeconds(900), "Bearer", "en");
         AuthResult result = new AuthResult(resp, "raw-refresh-uuid", Set.of(UserRole.THERAPIST),
                 Duration.ofDays(15));
         when(authService.authenticate(any(), anyString())).thenReturn(result);
@@ -98,7 +98,7 @@ class AuthControllerTest {
      */
     @Test
     void validRefreshCookieReturns200WithNewTokens() throws Exception {
-        LoginResponse resp = new LoginResponse("new-jwt", Instant.now().plusSeconds(900), "Bearer");
+        LoginResponse resp = new LoginResponse("new-jwt", Instant.now().plusSeconds(900), "Bearer", "en");
         AuthResult result = new AuthResult(resp, "new-raw-refresh", Set.of(UserRole.THERAPIST),
                 Duration.ofDays(15));
         when(authService.refresh(anyString(), anyString())).thenReturn(result);
@@ -162,7 +162,7 @@ class AuthControllerTest {
     @Test
     void loginWithMultiRoleUserReturnsBothRolesInToken() throws Exception {
         LoginResponse resp = new LoginResponse(
-                "multi-role-jwt", Instant.now().plusSeconds(900), "Bearer");
+                "multi-role-jwt", Instant.now().plusSeconds(900), "Bearer", "en");
         AuthResult result = new AuthResult(
                 resp, "raw-refresh-uuid",
                 Set.of(UserRole.THERAPIST, UserRole.SUPERVISOR),
@@ -199,7 +199,7 @@ class AuthControllerTest {
      */
     @Test
     void successfulLoginSetsHttpOnlyCookie() throws Exception {
-        LoginResponse resp = new LoginResponse("jwt", Instant.now().plusSeconds(900), "Bearer");
+        LoginResponse resp = new LoginResponse("jwt", Instant.now().plusSeconds(900), "Bearer", "en");
         AuthResult result = new AuthResult(resp, "refresh-val", Set.of(UserRole.THERAPIST),
                 Duration.ofDays(15));
         when(authService.authenticate(any(), anyString())).thenReturn(result);

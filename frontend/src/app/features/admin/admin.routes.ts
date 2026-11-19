@@ -51,10 +51,6 @@ export default [
         path: 'notification-templates',
         loadChildren: () => import('./notification-templates/notification-templates.routes')
       },
-      {
-        path: 'risk-flag-types',
-        loadChildren: () => import('./risk-flag-types/risk-flag-types.routes')
-      }
     ]
   }
 ] satisfies Routes;

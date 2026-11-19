@@ -62,6 +62,7 @@
     "billing": "Billing",
     "reports": "Reports",
     "admin": "Admin",
+    "globalAdmin": "Global Admin",
     "settings": "Settings",
     "logout": "Logout"
   },
@@ -714,6 +715,12 @@
       "invalidTime": "Invalid time format"
     }
   },
+  "globalAdmin": {
+    "title": "Global Admin Settings",
+    "tabs": {
+      "riskFlagTypes": "Risk Flag Types"
+    }
+  },
   "admin": {
     "title": "Administration",
     "tabs": {
@@ -721,8 +728,7 @@
       "therapists": "Therapists",
       "leaveRequests": "Pending Requests",
       "serviceCatalog": "Service Catalog",
-      "notificationTemplates": "Notification Templates",
-      "riskFlagTypes": "Risk Flag Types"
+      "notificationTemplates": "Notification Templates"
     },
     "users": {
       "list": {

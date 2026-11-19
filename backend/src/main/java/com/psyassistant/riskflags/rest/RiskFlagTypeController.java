@@ -59,7 +59,7 @@ public class RiskFlagTypeController {
      * @return 200 with all flag types ordered by display order
      */
     @GetMapping("/api/v1/admin/risk-flag-types")
-    @PreAuthorize("hasAuthority('MANAGE_RISK_FLAG_TYPES')")
+    @PreAuthorize("hasAuthority('GLOBAL_ADMIN')")
     public ResponseEntity<List<RiskFlagTypeResponse>> listAll() {
         return ResponseEntity.ok(riskFlagTypeService.listAll());
     }
@@ -72,7 +72,7 @@ public class RiskFlagTypeController {
      * @return 201 with the created flag type and a {@code Location} header
      */
     @PostMapping("/api/v1/admin/risk-flag-types")
-    @PreAuthorize("hasAuthority('MANAGE_RISK_FLAG_TYPES')")
+    @PreAuthorize("hasAuthority('GLOBAL_ADMIN')")
     public ResponseEntity<RiskFlagTypeResponse> create(
             @Valid @RequestBody final CreateRiskFlagTypeRequest request) {
 
@@ -95,7 +95,7 @@ public class RiskFlagTypeController {
      * @return 200 with the updated flag type
      */
     @PatchMapping("/api/v1/admin/risk-flag-types/{id}/deactivate")
-    @PreAuthorize("hasAuthority('MANAGE_RISK_FLAG_TYPES')")
+    @PreAuthorize("hasAuthority('GLOBAL_ADMIN')")
     public ResponseEntity<RiskFlagTypeResponse> deactivate(@PathVariable final UUID id) {
         LOG.info("PATCH /api/v1/admin/risk-flag-types/{}/deactivate", id);
         return ResponseEntity.ok(riskFlagTypeService.deactivate(id));

@@ -59,6 +59,8 @@ logging:
 
 app:
   frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
+  global-admin:
+    username: ${GLOBAL_ADMIN_USERNAME:}
   jwt:
     secret: ${JWT_SECRET}
     issuer: psy-assistant

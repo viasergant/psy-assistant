@@ -62,6 +62,7 @@
     "billing": "Виставлення рахунків",
     "reports": "Звіти",
     "admin": "Адміністрування",
+    "globalAdmin": "Глобальний адмін",
     "settings": "Налаштування",
     "logout": "Вийти"
   },
@@ -714,6 +715,12 @@
       "invalidTime": "Невірний формат часу"
     }
   },
+  "globalAdmin": {
+    "title": "Глобальні налаштування адміна",
+    "tabs": {
+      "riskFlagTypes": "Типи прапорців ризику"
+    }
+  },
   "admin": {
     "title": "Адміністрування",
     "tabs": {
@@ -721,8 +728,7 @@
       "therapists": "Терапевти",
       "leaveRequests": "Запити в очікуванні",
       "serviceCatalog": "Каталог послуг",
-      "notificationTemplates": "Шаблони сповіщень",
-      "riskFlagTypes": "Типи прапорців ризику"
+      "notificationTemplates": "Шаблони сповіщень"
     },
     "users": {
       "list": {

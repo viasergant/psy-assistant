@@ -12,11 +12,13 @@ import {
 import { TherapistProfile } from '../../admin/therapists/models/therapist.model';
 import { ClientListItem } from '../models/client.model';
 import { ClientService } from '../services/client.service';
+import { AppIfModeDirective } from '../../../core/mode/app-if-mode.directive';
+import { AppModeService } from '../../../core/mode/app-mode.service';
 
 @Component({
   selector: 'app-client-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslocoPipe, Select, TableModule],
+  imports: [CommonModule, FormsModule, TranslocoPipe, Select, TableModule, AppIfModeDirective],
   template: `
     <div class="cl-page">
 
@@ -49,8 +51,8 @@ import { ClientService } from '../services/client.service';
           />
         </div>
 
-        <!-- Therapist filter -->
-        <div class="cl-filter-group">
+        <!-- Therapist filter (clinic mode only) -->
+        <div class="cl-filter-group" *appIfMode="'CLINIC'">
           <label class="cl-filter-label" for="therapistFilter">
             {{ 'clients.list.therapistFilterLabel' | transloco }}
           </label>
@@ -125,7 +127,7 @@ import { ClientService } from '../services/client.service';
             </th>
             <th class="col-contact">{{ 'clients.list.tableHeaders.contact' | transloco }}</th>
             <th class="col-city">{{ 'clients.list.tableHeaders.city' | transloco }}</th>
-            <th class="col-therapist">{{ 'clients.list.tableHeaders.therapist' | transloco }}</th>
+            <th class="col-therapist" *appIfMode="'CLINIC'">{{ 'clients.list.tableHeaders.therapist' | transloco }}</th>
             <th class="col-tags">{{ 'clients.list.tableHeaders.tags' | transloco }}</th>
             <th pSortableColumn="createdAt" class="col-created">
               {{ 'clients.list.tableHeaders.created' | transloco }}
@@ -173,7 +175,7 @@ import { ClientService } from '../services/client.service';
               </div>
             </td>
             <td class="col-city">{{ client.city || '—' }}</td>
-            <td class="col-therapist">
+            <td class="col-therapist" *appIfMode="'CLINIC'">
               <span *ngIf="client.assignedTherapistId">
                 {{ therapistName(client.assignedTherapistId) }}
               </span>
@@ -199,7 +201,7 @@ import { ClientService } from '../services/client.service';
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="7" class="cl-state">{{ 'clients.list.noClients' | transloco }}</td>
+            <td [attr.colspan]="isSolo ? 6 : 7" class="cl-state">{{ 'clients.list.noClients' | transloco }}</td>
           </tr>
         </ng-template>
       </p-table>
@@ -540,7 +542,12 @@ export class ClientListComponent implements OnInit, OnDestroy {
     private readonly therapistService: TherapistManagementService,
     private readonly router: Router,
     private readonly transloco: TranslocoService,
+    private readonly appModeService: AppModeService,
   ) {}
+
+  get isSolo(): boolean {
+    return this.appModeService.mode === 'SOLO';
+  }
 
   ngOnInit(): void {
     // Debounce text search
@@ -555,7 +562,9 @@ export class ClientListComponent implements OnInit, OnDestroy {
     });
 
     this.loadTags();
-    this.loadTherapists();
+    if (!this.isSolo) {
+      this.loadTherapists();
+    }
   }
 
   ngOnDestroy(): void {

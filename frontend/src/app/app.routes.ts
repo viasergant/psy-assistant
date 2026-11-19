@@ -4,6 +4,7 @@ import { authGuard } from './core/auth/auth.guard';
 import { mustChangePasswordGuard } from './core/auth/guards/must-change-password.guard';
 import { profileCompletionGuard } from './core/auth/guards/profile-completion.guard';
 import { roleGuard } from './core/auth/guards/role.guard';
+import { globalAdminGuard } from './core/auth/guards/global-admin.guard';
 import { NAV_ITEMS, ROUTE_ROLES } from './core/auth/permissions.config';
 import { PermissionService } from './core/auth/permission.service';
 import { ShellComponent } from './layout/shell/shell.component';
@@ -57,6 +58,11 @@ export const appRoutes: Routes = [
         path: 'admin',
         canActivate: [roleGuard(ROUTE_ROLES['admin'])],
         loadChildren: () => import('./features/admin/admin.routes')
+      },
+      {
+        path: 'global-admin',
+        canActivate: [globalAdminGuard],
+        loadChildren: () => import('./features/global-admin/global-admin.routes')
       },
       {
         path: 'settings',

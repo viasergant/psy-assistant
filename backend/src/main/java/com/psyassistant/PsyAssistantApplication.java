@@ -3,6 +3,7 @@ package com.psyassistant;
 import com.psyassistant.billing.invoice.config.InvoiceProperties;
 import com.psyassistant.billing.pkg.BillingPackageProperties;
 import com.psyassistant.careplans.config.CarePlanProperties;
+import com.psyassistant.common.config.GlobalAdminProperties;
 import com.psyassistant.common.config.SecurityProperties;
 import com.psyassistant.reporting.caseload.CaseloadProperties;
 import com.psyassistant.sessions.config.AttendanceProperties;
@@ -26,7 +27,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableConfigurationProperties({CarePlanProperties.class, CaseloadProperties.class, InvoiceProperties.class,
         BillingPackageProperties.class,
         com.psyassistant.reporting.reports.ReportProperties.class, SecurityProperties.class,
-        AttendanceProperties.class})
+        AttendanceProperties.class, GlobalAdminProperties.class})
 public class PsyAssistantApplication {
 
     private static final String LEGACY_KYIV_TIME_ZONE = "Europe/Kiev";

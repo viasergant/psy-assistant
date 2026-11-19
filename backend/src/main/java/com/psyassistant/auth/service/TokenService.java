@@ -1,6 +1,7 @@
 package com.psyassistant.auth.service;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.psyassistant.common.config.GlobalAdminProperties;
 import com.psyassistant.common.security.Permission;
 import com.psyassistant.common.security.RolePermissions;
 import com.psyassistant.users.User;
@@ -56,6 +57,7 @@ public class TokenService {
     private static final String SHA_256 = "SHA-256";
     private static final String HMAC_SHA256 = "HmacSHA256";
     private static final String ROLES_CLAIM = "roles";
+    private static final String GLOBAL_ADMIN_AUTHORITY = "GLOBAL_ADMIN";
     private static final int MIN_SECRET_BYTES = 32;
 
     @Value("${app.jwt.secret}")
@@ -63,6 +65,8 @@ public class TokenService {
 
     @Value("${app.jwt.issuer}")
     private String issuer;
+
+    private final GlobalAdminProperties globalAdminProperties;
 
     @Value("${app.security.token-ttl.admin.access}")
     private Duration adminAccessTtl;
@@ -77,6 +81,10 @@ public class TokenService {
     private Duration userRefreshTtl;
 
     private JwtEncoder jwtEncoder;
+
+    public TokenService(final GlobalAdminProperties globalAdminProperties) {
+        this.globalAdminProperties = globalAdminProperties;
+    }
 
     /**
      * Validates the JWT secret length and initialises the encoder.
@@ -129,7 +137,7 @@ public class TokenService {
         Instant now = Instant.now();
         Duration ttl = accessTtlFor(user.getRoles());
 
-        List<String> authorities = buildAuthorities(user.getRoles());
+        List<String> authorities = buildAuthorities(user.getRoles(), user.getEmail());
 
         JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
                 .issuer(issuer)
@@ -233,16 +241,18 @@ public class TokenService {
     // ---- private helpers -------------------------------------------------
 
     /**
-     * Builds the full authority list for the JWT {@code roles} claim from a collection of roles.
+     * Builds the full authority list for the JWT {@code roles} claim.
      *
      * <p>Uses a {@link LinkedHashSet} to collect authorities (deduplication). For each role,
      * adds {@code ROLE_X} and all {@link Permission} names from {@link RolePermissions}.
-     * Returns the set as a {@link List}.
+     * If {@code email} matches the configured global-admin username, {@code GLOBAL_ADMIN}
+     * is also added.
      *
      * @param roles the user roles
+     * @param email the user's email address (checked against global-admin config)
      * @return deduplicated list of authority strings for the JWT claim
      */
-    List<String> buildAuthorities(final Collection<UserRole> roles) {
+    List<String> buildAuthorities(final Collection<UserRole> roles, final String email) {
         LinkedHashSet<String> authorities = new LinkedHashSet<>();
         for (UserRole role : roles) {
             authorities.add("ROLE_" + role.canonical().name());
@@ -250,7 +260,23 @@ public class TokenService {
                 authorities.add(permission.name());
             }
         }
+        if (globalAdminProperties.matches(email)) {
+            authorities.add(GLOBAL_ADMIN_AUTHORITY);
+        }
         return new ArrayList<>(authorities);
+    }
+
+    /**
+     * Builds the full authority list for the JWT {@code roles} claim from a collection of roles.
+     * Does not add the {@code GLOBAL_ADMIN} authority.
+     *
+     * @param roles the user roles
+     * @return deduplicated list of authority strings for the JWT claim
+     * @deprecated Use {@link #buildAuthorities(Collection, String)} to support global-admin.
+     */
+    @Deprecated
+    List<String> buildAuthorities(final Collection<UserRole> roles) {
+        return buildAuthorities(roles, "");
     }
 
     /**

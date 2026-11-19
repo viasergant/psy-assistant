@@ -13,6 +13,7 @@ export interface LoginResponse {
   accessToken: string;
   accessTokenExpiresAt: string;
   tokenType: string;
+  language: string;
 }
 
 export interface FirstLoginPasswordChangeRequest {
@@ -58,10 +59,7 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiBase}/login`, credentials).pipe(
       tap(response => {
         this.tokenSubject.next(response.accessToken);
-        // Sync locale with backend asynchronously (fire-and-forget)
-        this.i18nService.syncWithBackend().catch(err => 
-          console.error('[AuthService] Failed to sync locale after login:', err)
-        );
+        this.i18nService.applyFromBackend(response.language);
       })
     );
   }
@@ -77,10 +75,7 @@ export class AuthService {
       .pipe(
         tap(response => {
           this.tokenSubject.next(response.accessToken);
-          // Sync locale with backend asynchronously (fire-and-forget)
-          this.i18nService.syncWithBackend().catch(err => 
-            console.error('[AuthService] Failed to sync locale after refresh:', err)
-          );
+          this.i18nService.applyFromBackend(response.language);
         })
       );
   }
@@ -118,10 +113,7 @@ export class AuthService {
       .pipe(
         tap(response => {
           this.tokenSubject.next(response.accessToken);
-          // Sync locale with backend asynchronously (fire-and-forget)
-          this.i18nService.syncWithBackend().catch(err => 
-            console.error('[AuthService] Failed to sync locale after password change:', err)
-          );
+          this.i18nService.applyFromBackend(response.language);
         })
       );
   }

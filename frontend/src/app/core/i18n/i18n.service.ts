@@ -40,6 +40,20 @@ export class I18nService {
   }
 
   /**
+   * Applies a language received from the backend (e.g. in the login response).
+   * Updates Transloco and the cookie but does NOT call back to the backend.
+   *
+   * @param locale 'en' or 'uk'
+   */
+  applyFromBackend(locale: string): void {
+    if (!this.SUPPORTED_LOCALES.includes(locale)) {
+      return;
+    }
+    this.transloco.setActiveLang(locale);
+    this.writeCookie(locale);
+  }
+
+  /**
    * Changes the active language, updates cookie, and syncs with backend.
    *
    * @param locale 'en' or 'uk'

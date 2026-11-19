@@ -33,15 +33,18 @@ export interface NavItem {
   icon?: string;
   /** When true, the item is only shown in CLINIC deployment mode. */
   clinicOnly?: boolean;
+  /** When true, the item is only shown for the configured global admin account. */
+  globalAdminOnly?: boolean;
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
-  { labelKey: 'nav.clients',  route: '/clients',  roles: ROUTE_ROLES['clients'],  icon: 'pi-users' },
-  { labelKey: 'nav.leads',    route: '/leads',    roles: ROUTE_ROLES['leads'],    icon: 'pi-user-plus' },
-  { labelKey: 'nav.schedule', route: '/schedule', roles: ROUTE_ROLES['schedule'], icon: 'pi-calendar' },
-  { labelKey: 'nav.sessions', route: '/sessions', roles: ROUTE_ROLES['sessions'], icon: 'pi-comments' },
-  { labelKey: 'nav.billing',  route: '/billing',  roles: ROUTE_ROLES['billing'],  icon: 'pi-wallet' },
-  { labelKey: 'nav.reports',  route: '/reports',  roles: ROUTE_ROLES['reports'],  icon: 'pi-chart-bar' },
-  { labelKey: 'nav.admin',    route: '/admin',    roles: ROUTE_ROLES['admin'],    icon: 'pi-cog' },
-  { labelKey: 'nav.settings', route: '/settings', roles: ROUTE_ROLES['settings'], icon: 'pi-sliders-h' },
+  { labelKey: 'nav.clients',     route: '/clients',      roles: ROUTE_ROLES['clients'],  icon: 'pi-users' },
+  { labelKey: 'nav.leads',       route: '/leads',        roles: ROUTE_ROLES['leads'],    icon: 'pi-user-plus' },
+  { labelKey: 'nav.schedule',    route: '/schedule',     roles: ROUTE_ROLES['schedule'], icon: 'pi-calendar' },
+  { labelKey: 'nav.sessions',    route: '/sessions',     roles: ROUTE_ROLES['sessions'], icon: 'pi-comments' },
+  { labelKey: 'nav.billing',     route: '/billing',      roles: ROUTE_ROLES['billing'],  icon: 'pi-wallet' },
+  { labelKey: 'nav.reports',     route: '/reports',      roles: ROUTE_ROLES['reports'],  icon: 'pi-chart-bar' },
+  { labelKey: 'nav.admin',       route: '/admin',        roles: ROUTE_ROLES['admin'],    icon: 'pi-cog' },
+  { labelKey: 'nav.globalAdmin', route: '/global-admin', roles: [],                      icon: 'pi-shield', globalAdminOnly: true },
+  { labelKey: 'nav.settings',    route: '/settings',     roles: ROUTE_ROLES['settings'], icon: 'pi-sliders-h' },
 ] as const;

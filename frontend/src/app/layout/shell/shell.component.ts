@@ -38,14 +38,15 @@ export class ShellComponent {
   /**
    * Nav items filtered to those the current user's role permits and that are
    * visible in the current deployment mode. Clinic-only items (clinicOnly: true)
-   * are hidden unless the deployment mode is CLINIC.
+   * are hidden unless the deployment mode is CLINIC. Global-admin-only items
+   * (globalAdminOnly: true) are hidden unless the user is the global admin.
    */
   readonly visibleNav = computed(() => {
     const mode = this.currentMode();
-    return NAV_ITEMS.filter(item =>
-      this.permissionService.hasAnyRole(item.roles) &&
-      (!item.clinicOnly || mode === 'CLINIC')
-    );
+    return NAV_ITEMS.filter(item => {
+      if (item.globalAdminOnly) return this.permissionService.isGlobalAdmin();
+      return this.permissionService.hasAnyRole(item.roles) && (!item.clinicOnly || mode === 'CLINIC');
+    });
   });
 
   onLogout(): void {

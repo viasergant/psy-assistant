@@ -10,14 +10,15 @@
 -- the "db/local-seed" location is configured in application-local.yml.
 -- It must NEVER be placed in db/migration or deployed to non-local environments.
 
-INSERT INTO users (email, password_hash, full_name, active)
+INSERT INTO users (email, password_hash, full_name, active, org_id)
 VALUES (
     'therapist@psyassistant.local',
     '$2a$12$bzum65qKv3b.9DQSwmhyaeCEOw4Djw6yGFRTQvL5Im9M9gIjVEha6',
     'Dev Therapist',
-    TRUE
+    TRUE,
+    '00000000-0000-0000-0000-000000000001'
 )
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT (org_id, email) DO NOTHING;
 
 INSERT INTO user_roles (user_id, role)
 SELECT id, 'THERAPIST'
@@ -25,13 +26,14 @@ FROM users
 WHERE email = 'therapist@psyassistant.local'
 ON CONFLICT (user_id, role) DO NOTHING;
 
-INSERT INTO therapist_profile (email, name, employment_status, active, created_by, updated_by)
+INSERT INTO therapist_profile (email, name, employment_status, active, org_id, created_by, updated_by)
 VALUES (
     'therapist@psyassistant.local',
     'Dev Therapist',
     'ACTIVE',
     TRUE,
+    '00000000-0000-0000-0000-000000000001',
     'flyway-local-seed',
     'flyway-local-seed'
 )
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT (org_id, email) DO NOTHING;

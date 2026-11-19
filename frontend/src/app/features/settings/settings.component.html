@@ -10,12 +10,11 @@
 
       <select
         class="language-select"
-        [value]="currentLocale()"
         (change)="selectLanguage($any($event.target).value)"
         [attr.aria-label]="'settings.language.title' | transloco"
       >
         @for (lang of languages; track lang.code) {
-          <option [value]="lang.code">{{ lang.labelKey | transloco }}</option>
+          <option [value]="lang.code" [selected]="lang.code === currentLocale()">{{ lang.labelKey | transloco }}</option>
         }
       </select>
 

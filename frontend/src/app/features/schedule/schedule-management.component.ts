@@ -15,6 +15,7 @@ import { CalendarFacadeService } from './services/calendar-facade.service';
 import { ScheduleApiService } from './services/schedule-api.service';
 import { AppointmentApiService } from './services/appointment-api.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { AppModeService } from '../../core/mode/app-mode.service';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
 import { TherapistManagementService } from '../admin/therapists/services/therapist-management.service';
@@ -84,7 +85,7 @@ interface ClientOption {
             <button type="button" class="view-button" [class.active]="viewMode === 'month'" (click)="setViewMode('month')">{{ 'schedule.calendar.monthView' | transloco }}</button>
           </div>
           <p-select
-            *ngIf="isAdmin"
+            *ngIf="isAdmin && !isSoloMode"
             [(ngModel)]="selectedTherapistId"
             (onChange)="onTherapistChange()"
             [options]="therapistSelectOptions"
@@ -505,6 +506,7 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
   therapists: TherapistProfile[] = [];
   clients: ClientOption[] = [];
   isAdmin = false;
+  isSoloMode = false;
   canEdit = false;
 
   get therapistSelectOptions(): { label: string; value: string | null }[] {
@@ -545,6 +547,7 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
     private therapistManagementService: TherapistManagementService,
     private clientService: ClientService,
     private authService: AuthService,
+    private readonly modeService: AppModeService,
     private readonly calendarFacade: CalendarFacadeService,
     private readonly appointmentApiService: AppointmentApiService,
     private transloco: TranslocoService,
@@ -771,11 +774,21 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
     const currentProfileId = getCurrentTherapistProfileId(this.authService);
 
     this.isAdmin = isSystemAdmin(this.authService);
+    this.isSoloMode = this.modeService.mode === 'SOLO';
 
-    if (this.isAdmin) {
-      // Admin can select any therapist - load therapist list
+    if (this.isAdmin && !this.isSoloMode) {
+      // Clinic admin: can select any therapist from the list
       this.canEdit = true;
       this.loadTherapists();
+    } else if (this.isAdmin && this.isSoloMode) {
+      // Solo admin: only one therapist exists (themselves) — skip the selector
+      this.therapistProfileId = currentProfileId;
+      this.canEdit = true;
+      if (this.therapistProfileId) {
+        this.loadSchedule();
+      } else {
+        this.error = 'Unable to determine therapist profile';
+      }
     } else if (roles.includes('THERAPIST') || roles.includes('RECEPTION_ADMIN_STAFF')) {
       // Therapist views their own schedule
       this.therapistProfileId = currentProfileId;

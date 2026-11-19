@@ -20,6 +20,7 @@ import { jwtDecode } from 'jwt-decode';
 import { CarePlanListComponent } from '../care-plans/care-plan-list/care-plan-list.component';
 import { ClientPackagesComponent } from '../components/client-packages/client-packages.component';
 import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-panel/risk-flags-panel.component';
+import { AppModeService } from '../../../core/mode/app-mode.service';
 
 /**
  * Client profile page for PA-23 slice-one read and update flow.
@@ -527,6 +528,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private therapistManagementService: TherapistManagementService,
     private transloco: TranslocoService,
+    private appModeService: AppModeService,
   ) {
     this.profileForm = this.fb.group({
       fullName: ['', [Validators.required]],
@@ -615,6 +617,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   }
 
   get needsTherapistPicker(): boolean {
+    if (this.appModeService.mode === 'SOLO') return false;
     return !this.therapistProfileId &&
       (this._userRole.includes('SYSTEM_ADMINISTRATOR') || this._userRole.includes('RECEPTION_ADMIN_STAFF'));
   }

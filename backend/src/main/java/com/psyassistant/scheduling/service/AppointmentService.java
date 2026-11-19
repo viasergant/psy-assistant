@@ -1,5 +1,6 @@
 package com.psyassistant.scheduling.service;
 
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.scheduling.domain.Appointment;
 import com.psyassistant.scheduling.domain.AppointmentStatus;
 import com.psyassistant.scheduling.domain.AuditActionType;
@@ -138,6 +139,7 @@ public class AppointmentService {
                 timezone
         );
 
+        appointment.setOrgId(TenantContext.get());
         appointment.setNotes(notes);
         appointment.setServiceCatalogItemId(serviceCatalogItemId);
         if (depositAmount != null && depositAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {

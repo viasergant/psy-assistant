@@ -1,5 +1,6 @@
 package com.psyassistant.scheduling.service;
 
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.scheduling.domain.Appointment;
 import com.psyassistant.scheduling.domain.AppointmentSeries;
 import com.psyassistant.scheduling.domain.AppointmentStatus;
@@ -179,6 +180,7 @@ public class RecurringSeriesService {
                 req.timezone(),
                 staffUserId
         );
+        series.setOrgId(TenantContext.get());
         final AppointmentSeries savedSeries = seriesRepository.save(series);
 
         // 6. Create appointment occurrences (skip conflicting ones)
@@ -199,6 +201,7 @@ public class RecurringSeriesService {
                     req.durationMinutes(),
                     req.timezone()
             );
+            appt.setOrgId(TenantContext.get());
             appt.setSeries(savedSeries);
             appt.setRecurrenceIndex(i);
             if (req.notes() != null && !req.notes().isBlank()) {

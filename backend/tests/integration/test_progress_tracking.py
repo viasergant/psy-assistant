@@ -35,15 +35,22 @@ def care_plan_setup(admin_client, reference_data, created_resources):
     therapist_user_id = therapist_resp.json()["userDetails"]["id"]
     created_resources["therapists"].append(therapist_id)
 
-    # Create client
-    client_payload = {
-        "firstName": "Progress",
-        "lastName": "TestClient",
-        "email": DataFactory.unique_email("progress-client"),
-        "phone": "+380501234567"
-    }
-    client_resp = admin_client.post("/api/v1/clients", json=client_payload, expected_status=201)
-    client_id = client_resp.json()["id"]
+    # Create client via lead → qualify → convert workflow
+    lead_payload = DataFactory.lead(email=DataFactory.unique_email("progress-client"))
+    lead_resp = admin_client.post("/api/v1/leads", json=lead_payload, expected_status=201)
+    lead_id = lead_resp.json()["id"]
+    created_resources["leads"].append(lead_id)
+
+    admin_client.patch(f"/api/v1/leads/{lead_id}/status", json={"status": "CONTACTED"}, expected_status=200)
+    admin_client.patch(f"/api/v1/leads/{lead_id}/status", json={"status": "QUALIFIED"}, expected_status=200)
+
+    lead_data = admin_client.get(f"/api/v1/leads/{lead_id}").json()
+    convert_resp = admin_client.post(
+        f"/api/v1/leads/{lead_id}/convert",
+        json={"fullName": lead_data["fullName"], "contactMethods": lead_data["contactMethods"]},
+        expected_status=201
+    )
+    client_id = convert_resp.json()["clientId"]
     created_resources["clients"].append(client_id)
 
     # Create active care plan
@@ -60,7 +67,7 @@ def care_plan_setup(admin_client, reference_data, created_resources):
         ]
     }
     plan_resp = admin_client.post(
-        f"/api/v1/care-plans/clients/{client_id}",
+        f"/api/v1/clients/{client_id}/care-plans",
         json=plan_payload,
         expected_status=201
     )

@@ -64,6 +64,7 @@ public class CaseloadSnapshotJob {
         for (Map<String, Object> row : therapists) {
             final UUID therapistId = (UUID) row.get("id");
             final BigDecimal contracted = (BigDecimal) row.get("contracted_hours_per_week");
+            final UUID orgId = (UUID) row.get("org_id");
             try {
                 final int activeClients = countActiveClients(therapistId, today);
                 final int sessionsWeek = countSessionsThisWeek(therapistId, today);
@@ -71,7 +72,7 @@ public class CaseloadSnapshotJob {
                 final BigDecimal hoursWeek = scheduledHoursThisWeek(therapistId, today);
                 final BigDecimal utilization = computeUtilization(hoursWeek, contracted);
 
-                upsertSnapshot(therapistId, today, activeClients, sessionsWeek,
+                upsertSnapshot(therapistId, orgId, today, activeClients, sessionsWeek,
                         sessionsMonth, hoursWeek, contracted, utilization);
                 processed++;
             } catch (Exception ex) {
@@ -88,7 +89,7 @@ public class CaseloadSnapshotJob {
 
     private List<Map<String, Object>> fetchActiveTherapists() {
         return jdbc.queryForList(
-                "SELECT id, contracted_hours_per_week FROM therapist_profile WHERE active = true");
+                "SELECT id, contracted_hours_per_week, org_id FROM therapist_profile WHERE active = true");
     }
 
     private int countActiveClients(final UUID therapistId, final LocalDate today) {
@@ -162,6 +163,7 @@ public class CaseloadSnapshotJob {
 
     private void upsertSnapshot(
             final UUID therapistId,
+            final UUID orgId,
             final LocalDate today,
             final int activeClients,
             final int sessionsWeek,
@@ -173,9 +175,9 @@ public class CaseloadSnapshotJob {
                 INSERT INTO caseload_snapshot
                     (id, therapist_profile_id, snapshot_date, active_client_count,
                      sessions_this_week, sessions_this_month, scheduled_hours_this_week,
-                     contracted_hours_per_week, utilization_rate, created_at, updated_at)
+                     contracted_hours_per_week, utilization_rate, org_id, created_at, updated_at)
                 VALUES
-                    (gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    (gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 ON CONFLICT (therapist_profile_id, snapshot_date)
                 DO UPDATE SET
                     active_client_count       = EXCLUDED.active_client_count,
@@ -187,6 +189,6 @@ public class CaseloadSnapshotJob {
                     updated_at                = NOW()
                 """;
         jdbc.update(sql, therapistId, today, activeClients, sessionsWeek,
-                sessionsMonth, hoursWeek, contracted, utilization);
+                sessionsMonth, hoursWeek, contracted, utilization, orgId);
     }
 }

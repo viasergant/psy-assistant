@@ -157,4 +157,8 @@ public class CaseloadSnapshot extends SimpleBaseEntity {
     public UUID getOrgId() {
         return orgId;
     }
+
+    public void setOrgId(final UUID orgId) {
+        this.orgId = orgId;
+    }
 }

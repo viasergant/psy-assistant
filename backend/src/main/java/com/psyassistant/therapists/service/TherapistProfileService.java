@@ -1,6 +1,7 @@
 package com.psyassistant.therapists.service;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.therapists.domain.Language;
 import com.psyassistant.therapists.domain.Specialization;
 import com.psyassistant.therapists.domain.TherapistProfile;
@@ -105,6 +106,7 @@ public class TherapistProfileService {
         }
 
         TherapistProfile profile = new TherapistProfile(email, name, phone);
+        profile.setOrgId(TenantContext.get());
         profile.setEmploymentStatus(employmentStatus);
         profile.setBio(bio);
         profile.setActive(true);
@@ -204,6 +206,7 @@ public class TherapistProfileService {
 
         // Create therapist profile
         TherapistProfile profile = new TherapistProfile(email, fullName, phone);
+        profile.setOrgId(TenantContext.get());
         profile.setEmploymentStatus(employmentStatus);
         profile.setActive(true);
         profile.getSpecializations().add(primarySpec);

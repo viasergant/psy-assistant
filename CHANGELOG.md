@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — 2026-11-19
+## [Unreleased] — 2026-11-20
 
 ### Added
 
@@ -45,6 +45,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **Proactive `org_id` sweep — 9 remaining entities** — Added `setOrgId()` setters and `TenantContext.get()` calls for: `TherapistProfile` (create + clinic-register paths in `TherapistProfileService`), `TherapistRecurringSchedule` + `TherapistScheduleOverride` (3 sites in `TherapistScheduleService`), `TherapistLeave` (`TherapistLeaveService`), `FollowUpTask` (`NoShowFollowUpService`), `ServiceCatalogTherapistOverride` (`ServiceCatalogService`). Added `setOrgId()` setters (no current creation site) to `OutcomeMeasureDefinition` and `NoteTemplate`. Fixed `CaseloadSnapshotJob` raw-JDBC upsert to select and pass `org_id` from `therapist_profile` into the `caseload_snapshot` INSERT.
+- **`client_risk_flags.org_id` null on flag creation** — `RiskFlagService.createFlag` now sets `orgId` from `TenantContext` before persisting. Added `setOrgId()` to `ClientRiskFlag`.
+- **`prepaid_package_instance.org_id` null on package sale** — `PackageService.sellPackage` now sets `orgId` from `TenantContext` before persisting. Added `setOrgId()` to `PrepaidPackageInstance`.
+- **`care_plan.org_id` null on creation** — `CarePlanService.create` now sets `orgId` from `TenantContext` before persisting. Added `setOrgId()` to `CarePlan`.
+- **`service_catalog_price_history.org_id` null on creation** — `ServiceCatalogService` now sets `orgId` from `TenantContext` on both `ServiceCatalogPriceHistory` construction sites (`createService` and `updateDefaultPrice`). Added `setOrgId()` to `ServiceCatalogPriceHistory`.
+- **`notification_templates.org_id` null on template creation** — `NotificationTemplateService.createTemplate` now sets `orgId` from `TenantContext` before persisting. Added `setOrgId()` to `NotificationTemplate`.
+- **`GET/POST /api/v1/billing/discounts` returned 404** — the discount rules REST layer was missing entirely. Added `DiscountRuleService` and `DiscountRuleController` implementing `GET` (list all / filter by `clientId` or `serviceCatalogId`), `POST` (create), and `PATCH /{id}/status` (toggle active). Added `MANAGE_DISCOUNTS` permission to `Permission` enum, assigned to `FINANCE` and `SYSTEM_ADMINISTRATOR` roles. Added `setOrgId()` to `DiscountRule`; service sets it from `TenantContext` on creation.
+- **`service_catalog.org_id` null on creation** — `ServiceCatalogService.createService` now sets `orgId` from `TenantContext` before persisting. Added `setOrgId()` setter to `ServiceCatalog`.
+- **`prepaid_package_definition.org_id` null on creation** — `PackageService.createDefinition` now sets `orgId` from `TenantContext` before persisting. Added `setOrgId()` setter to `PrepaidPackageDefinition`.
+- **`invoices.org_id` null on all invoice creation paths** — `InvoiceService` now calls `invoice.setOrgId(TenantContext.get())` on all four creation sites: auto-generated from session completion, generated from session, manual, and package. Added `setOrgId()` setter to `Invoice`.
+- **`session_note.org_id` null on note creation** — `SessionNoteService.createNote` now sets `orgId` from `TenantContext` before persisting, fixing a `NOT NULL` constraint violation on `POST /api/sessions/{id}/notes`.
+- **`session_record.org_id` null on appointment status change** — `SessionRecordService.createSessionIfNotExists` and `startSessionFromAppointment` now set `orgId` from the loaded `Appointment` entity before persisting the new `SessionRecord`. Previously the field was left null, causing a `NOT NULL` constraint violation when marking an appointment `IN_PROGRESS` or `COMPLETED`.
 - `RbacIntegrationTest` and `PsyAssistantApplicationTest` updated to activate the `clinic` profile, preventing false 404s on clinic-only endpoints that previously masked 403 assertions.
 
 ---

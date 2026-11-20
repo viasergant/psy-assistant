@@ -144,4 +144,8 @@ public class NotificationTemplate extends BaseEntity {
     public UUID getOrgId() {
         return orgId;
     }
+
+    public void setOrgId(final UUID orgId) {
+        this.orgId = orgId;
+    }
 }

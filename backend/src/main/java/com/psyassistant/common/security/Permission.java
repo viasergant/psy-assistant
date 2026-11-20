@@ -119,6 +119,10 @@ public enum Permission {
     /** List package definitions and view client package instances. */
     READ_PACKAGES,
 
+    // ---- Discount rules --------------------------------------------------
+    /** Create, update, and deactivate discount rules. */
+    MANAGE_DISCOUNTS,
+
     // ---- Risk flags ------------------------------------------------------
     /** Create, update, and resolve risk flags on client profiles. */
     MANAGE_RISK_FLAGS,

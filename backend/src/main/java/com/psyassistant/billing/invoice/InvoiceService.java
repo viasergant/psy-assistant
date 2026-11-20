@@ -18,6 +18,7 @@ import com.psyassistant.billing.payment.PaymentMethod;
 import com.psyassistant.billing.payment.PaymentRepository;
 import com.psyassistant.billing.pkg.PrepaidPackageInstance;
 import com.psyassistant.billing.pkg.PrepaidPackageInstanceRepository;
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.sessions.domain.SessionRecord;
 import com.psyassistant.sessions.domain.SessionStatus;
 import com.psyassistant.sessions.event.SessionCompletedEvent;
@@ -142,6 +143,7 @@ public class InvoiceService {
         }
 
         Invoice invoice = new Invoice(event.clientId(), event.therapistId(), InvoiceSource.SESSION);
+        invoice.setOrgId(TenantContext.get());
         invoice.setSessionId(event.sessionId());
         invoice.addLineItem(new InvoiceLineItem(lineItemDesc, BigDecimal.ONE, unitPrice, 0));
 
@@ -278,6 +280,7 @@ public class InvoiceService {
         }
 
         Invoice invoice = new Invoice(session.getClientId(), session.getTherapistId(), InvoiceSource.SESSION);
+        invoice.setOrgId(TenantContext.get());
         invoice.setSessionId(session.getId());
         invoice.setNotes(request.notes());
 
@@ -314,6 +317,7 @@ public class InvoiceService {
             final String actorName) {
 
         Invoice invoice = new Invoice(request.clientId(), request.therapistId(), InvoiceSource.MANUAL);
+        invoice.setOrgId(TenantContext.get());
         invoice.setNotes(request.notes());
         if (request.discount() != null) {
             invoice.setDiscount(request.discount());
@@ -353,6 +357,7 @@ public class InvoiceService {
                         "Package instance not found: " + request.prepaidPackageId()));
 
         Invoice invoice = new Invoice(instance.getClientId(), null, InvoiceSource.PACKAGE);
+        invoice.setOrgId(TenantContext.get());
         invoice.setPrepaidPackageId(instance.getId());
 
         String lineItemDesc = instance.getDefinition().getName()

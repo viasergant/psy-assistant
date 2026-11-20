@@ -22,6 +22,7 @@ import com.psyassistant.careplans.exception.CarePlanNotActiveException;
 import com.psyassistant.careplans.exception.MaxActivePlansExceededException;
 import com.psyassistant.careplans.repository.CarePlanAuditRepository;
 import com.psyassistant.careplans.repository.CarePlanRepository;
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.users.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
@@ -110,6 +111,7 @@ public class CarePlanService {
         }
 
         final CarePlan plan = new CarePlan(clientId, actorId, request.title(), request.description());
+        plan.setOrgId(TenantContext.get());
         addGoalsFromRequests(plan, request.goals());
 
         final CarePlan saved = carePlanRepository.save(plan);

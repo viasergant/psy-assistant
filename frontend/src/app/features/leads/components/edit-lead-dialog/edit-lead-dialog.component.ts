@@ -145,6 +145,7 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
               optionLabel="label"
               optionValue="value"
               styleClass="w-full"
+              appendTo="body"
             />
           </div>
 

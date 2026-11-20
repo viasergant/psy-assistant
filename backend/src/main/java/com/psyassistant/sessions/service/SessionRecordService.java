@@ -135,6 +135,7 @@ public class SessionRecordService {
                 Duration.ofMinutes(appointment.getDurationMinutes()),
                 sessionStatus
         );
+        sessionRecord.setOrgId(appointment.getOrgId());
         sessionRecord.setServiceCatalogItemId(appointment.getServiceCatalogItemId());
         sessionRecord.setDepositAmount(appointment.getDepositAmount());
 
@@ -211,6 +212,7 @@ public class SessionRecordService {
                 Duration.ofMinutes(appointment.getDurationMinutes()),
                 SessionStatus.IN_PROGRESS
         );
+        sessionRecord.setOrgId(appointment.getOrgId());
         sessionRecord.setServiceCatalogItemId(appointment.getServiceCatalogItemId());
         sessionRecord.setDepositAmount(appointment.getDepositAmount());
 

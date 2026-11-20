@@ -9,6 +9,7 @@ import com.psyassistant.billing.catalog.dto.UpdateDefaultPriceRequest;
 import com.psyassistant.billing.catalog.dto.UpdateServiceRequest;
 import com.psyassistant.billing.catalog.dto.UpdateServiceStatusRequest;
 import com.psyassistant.billing.catalog.dto.UpsertTherapistOverrideRequest;
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.scheduling.domain.SessionType;
 import com.psyassistant.scheduling.repository.SessionTypeRepository;
 import com.psyassistant.users.UserRepository;
@@ -117,6 +118,7 @@ public class ServiceCatalogService {
                 resolveSessionType(request.sessionTypeId()),
                 request.durationMin()
         );
+        service.setOrgId(TenantContext.get());
         catalogRepository.save(service);
 
         String changedBy = currentPrincipalName();
@@ -126,6 +128,7 @@ public class ServiceCatalogService {
                 request.effectiveFrom(),
                 changedBy
         );
+        priceRecord.setOrgId(TenantContext.get());
         priceHistoryRepository.save(priceRecord);
 
         LOG.info("Service catalog entry created: id={}, name={}, by={}", service.getId(), service.getName(), changedBy);
@@ -186,6 +189,7 @@ public class ServiceCatalogService {
                 request.effectiveFrom(),
                 changedBy
         );
+        newRecord.setOrgId(TenantContext.get());
         priceHistoryRepository.save(newRecord);
 
         LOG.info("Default price updated for service id={}, effective={}, by={}",
@@ -205,7 +209,10 @@ public class ServiceCatalogService {
                 overrideRepository.findByServiceCatalogIdAndTherapistId(serviceId, therapistId)
                         .orElseGet(() -> {
                             ServiceCatalog svc = loadService(serviceId);
-                            return new ServiceCatalogTherapistOverride(svc, therapistId, request.price());
+                            ServiceCatalogTherapistOverride o =
+                                    new ServiceCatalogTherapistOverride(svc, therapistId, request.price());
+                            o.setOrgId(TenantContext.get());
+                            return o;
                         });
         override.setPrice(request.price());
         overrideRepository.save(override);

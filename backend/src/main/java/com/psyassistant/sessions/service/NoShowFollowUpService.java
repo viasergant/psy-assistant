@@ -1,5 +1,6 @@
 package com.psyassistant.sessions.service;
 
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.sessions.config.AttendanceProperties;
 import com.psyassistant.sessions.domain.AttendanceOutcome;
 import com.psyassistant.sessions.domain.FollowUpTask;
@@ -73,6 +74,7 @@ public class NoShowFollowUpService {
                     event.sessionId(),
                     assignedToUserId,
                     FollowUpTaskType.NO_SHOW_FOLLOW_UP);
+            task.setOrgId(TenantContext.get());
 
             followUpTaskRepository.save(task);
 

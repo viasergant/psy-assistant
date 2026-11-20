@@ -217,6 +217,10 @@ public class TherapistProfile extends BaseEntity {
         return orgId;
     }
 
+    public void setOrgId(final UUID orgId) {
+        this.orgId = orgId;
+    }
+
     public Set<Specialization> getSpecializations() {
         return specializations;
     }

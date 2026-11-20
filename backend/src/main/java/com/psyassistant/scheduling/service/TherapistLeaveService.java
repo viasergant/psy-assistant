@@ -1,5 +1,6 @@
 package com.psyassistant.scheduling.service;
 
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.scheduling.domain.LeaveStatus;
 import com.psyassistant.scheduling.domain.LeaveType;
 import com.psyassistant.scheduling.domain.TherapistLeave;
@@ -81,6 +82,7 @@ public class TherapistLeaveService {
             leaveType,
             requestNotes
         );
+        leaveRequest.setOrgId(TenantContext.get());
 
         final var saved = leaveRepository.save(leaveRequest);
 

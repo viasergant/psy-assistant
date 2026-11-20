@@ -3,6 +3,7 @@ package com.psyassistant.sessions.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.sessions.domain.NoteScope;
 import com.psyassistant.sessions.domain.NoteType;
 import com.psyassistant.sessions.domain.NoteVisibility;
@@ -133,6 +134,7 @@ public class SessionNoteService {
                     request.visibility() != null ? request.visibility() : NoteVisibility.PRIVATE);
         }
 
+        note.setOrgId(TenantContext.get());
         applyContent(note, request.noteType(), request.content(), request.structuredFields());
 
         final SessionNote saved = noteRepository.save(note);

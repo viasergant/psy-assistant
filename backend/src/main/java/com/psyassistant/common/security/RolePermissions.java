@@ -113,7 +113,8 @@ public final class RolePermissions {
                 Permission.MANAGE_PRICING_RULES,
                 Permission.READ_PRICING_RULES,
                 Permission.MANAGE_PACKAGES,
-                Permission.READ_PACKAGES
+                Permission.READ_PACKAGES,
+                Permission.MANAGE_DISCOUNTS
         )));
 
         map.put(UserRole.SYSTEM_ADMINISTRATOR, Collections.unmodifiableSet(EnumSet.of(
@@ -147,6 +148,7 @@ public final class RolePermissions {
                 Permission.MANAGE_NOTIFICATION_TEMPLATES,
                 Permission.MANAGE_PACKAGES,
                 Permission.READ_PACKAGES,
+                Permission.MANAGE_DISCOUNTS,
                 Permission.MANAGE_RISK_FLAGS,
                 Permission.READ_RISK_FLAGS,
                 Permission.READ_RISK_FLAG_NOTES,

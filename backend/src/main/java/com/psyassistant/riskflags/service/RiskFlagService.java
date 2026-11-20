@@ -1,5 +1,6 @@
 package com.psyassistant.riskflags.service;
 
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.crm.clients.ClientRepository;
 import com.psyassistant.riskflags.domain.ClientRiskFlag;
 import com.psyassistant.riskflags.domain.ClientRiskFlagStatus;
@@ -101,6 +102,7 @@ public class RiskFlagService {
                 request.reviewDate(),
                 actorId
         );
+        flag.setOrgId(TenantContext.get());
         final ClientRiskFlag saved = flagRepository.save(flag);
 
         auditLogRepository.save(new RiskFlagAuditLog(

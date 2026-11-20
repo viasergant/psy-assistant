@@ -1,5 +1,6 @@
 package com.psyassistant.scheduling.service;
 
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.scheduling.domain.TherapistRecurringSchedule;
 import com.psyassistant.scheduling.domain.TherapistScheduleOverride;
 import com.psyassistant.scheduling.repository.TherapistRecurringScheduleRepository;
@@ -73,6 +74,7 @@ public class TherapistScheduleService {
             endTime,
             timezone
         );
+        schedule.setOrgId(TenantContext.get());
 
         final var saved = recurringScheduleRepository.save(schedule);
 
@@ -202,6 +204,7 @@ public class TherapistScheduleService {
         validateNotPastDate(overrideDate);
 
         final var override = new TherapistScheduleOverride(therapistProfileId, overrideDate, reason);
+        override.setOrgId(TenantContext.get());
         final var saved = overrideRepository.save(override);
 
         auditService.recordChange(therapistProfileId, "OVERRIDE", saved.getId(), "CREATE", null);
@@ -235,6 +238,7 @@ public class TherapistScheduleService {
             endTime,
             reason
         );
+        override.setOrgId(TenantContext.get());
 
         final var saved = overrideRepository.save(override);
 

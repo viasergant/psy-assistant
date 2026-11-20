@@ -6,6 +6,7 @@ import com.psyassistant.billing.pkg.dto.PackageDefinitionResponse;
 import com.psyassistant.billing.pkg.dto.PackageInstanceResponse;
 import com.psyassistant.billing.pkg.dto.SellPackageRequest;
 import com.psyassistant.billing.pkg.dto.UpdatePackageDefinitionStatusRequest;
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.notifications.BillingNotificationPort;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
@@ -79,6 +80,7 @@ public class PackageService {
                 request.serviceType(),
                 request.sessionQty(),
                 request.price());
+        definition.setOrgId(TenantContext.get());
         definition.setUpdatedBy(actorName);
 
         PrepaidPackageDefinition saved = definitionRepository.save(definition);
@@ -162,6 +164,7 @@ public class PackageService {
                 request.purchasedAt(),
                 definition.getSessionQty(),
                 expiresAt);
+        instance.setOrgId(TenantContext.get());
         instance.setUpdatedBy(actorName);
 
         PrepaidPackageInstance saved = instanceRepository.save(instance);

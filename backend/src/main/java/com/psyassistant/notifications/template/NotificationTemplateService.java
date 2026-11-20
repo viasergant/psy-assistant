@@ -1,5 +1,6 @@
 package com.psyassistant.notifications.template;
 
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.notifications.NotificationEventType;
 import com.psyassistant.notifications.template.dto.CreateTemplateRequest;
 import com.psyassistant.notifications.template.dto.DeactivateResponse;
@@ -85,6 +86,7 @@ public class NotificationTemplateService {
                 request.body(),
                 unknown
         );
+        template.setOrgId(TenantContext.get());
         return TemplateResponse.from(repository.save(template));
     }
 

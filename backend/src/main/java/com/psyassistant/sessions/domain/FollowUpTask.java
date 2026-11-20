@@ -115,4 +115,8 @@ public class FollowUpTask {
     public UUID getOrgId() {
         return orgId;
     }
+
+    public void setOrgId(final UUID orgId) {
+        this.orgId = orgId;
+    }
 }

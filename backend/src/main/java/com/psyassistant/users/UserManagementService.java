@@ -3,6 +3,7 @@ package com.psyassistant.users;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.common.config.SecurityProperties;
+import com.psyassistant.common.tenant.TenantContext;
 import com.psyassistant.notifications.EmailMessage;
 import com.psyassistant.notifications.EmailNotificationPort;
 import com.psyassistant.notifications.NotificationEventType;
@@ -157,6 +158,7 @@ public class UserManagementService {
         String unusableHash = passwordEncoder.encode(UUID.randomUUID().toString() + UNUSABLE_PASSWORD);
         User user = new User(request.email(), unusableHash, request.fullName(),
                 canonicalRoles, true);
+        user.setOrgId(TenantContext.get());
         userRepository.save(user);
 
         // Issue a 24h password reset token so the new user can set their password
@@ -331,6 +333,7 @@ public class UserManagementService {
         User user = new User(request.email(), passwordHash, request.fullName(),
                 canonicalRoles, true);
         user.setMustChangePassword(true);
+        user.setOrgId(TenantContext.get());
         userRepository.save(user);
 
         auditLogService.record(new AuditLog.Builder(EVENT_USER_CREATED)

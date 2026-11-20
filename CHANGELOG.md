@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-20
 
+### Fixed
+
+- **`UserManagementService` missing `orgId` on new users** — `createUser` and `createUserWithTemporaryPassword` now call `user.setOrgId(TenantContext.get())` before the INSERT, fixing a NOT NULL constraint violation that caused every therapist-creation call to return HTTP 500 in multi-tenant (saas/clinic) deployments.
+
 ### Added
 
 - **`Organization` entity + multi-tenancy foundation** — introduces an `Organization` table as the root tenant boundary. All 25 core domain tables (`users`, `clients`, `leads`, `therapist_profile`, `appointments`, `session_record`, `session_note`, `care_plan`, `invoices`, `prepaid_package_*`, `service_catalog*`, `discount_rules`, `caseload_snapshot`, `client_risk_flags`, `follow_up_tasks`, `therapist_*schedule/leave`, `notification_templates`, `outcome_measure_definition`, `note_template`) receive an `org_id FK NOT NULL` column via Flyway V76–V78.

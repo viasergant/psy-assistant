@@ -32,7 +32,7 @@ def care_plan_setup(admin_client, reference_data, created_resources):
         expected_status=201
     )
     therapist_id = therapist_resp.json()["therapistProfile"]["id"]
-    therapist_user_id = therapist_resp.json()["userId"]
+    therapist_user_id = therapist_resp.json()["userDetails"]["id"]
     created_resources["therapists"].append(therapist_id)
 
     # Create client

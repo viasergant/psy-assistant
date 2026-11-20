@@ -2,6 +2,7 @@
 Pytest configuration and shared fixtures for integration tests.
 """
 import os
+import requests
 import pytest
 from dotenv import load_dotenv
 from typing import Dict, Any, Generator
@@ -200,17 +201,39 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "e2e: marks end-to-end flow tests"
     )
+    config.addinivalue_line(
+        "markers", "clinic: marks tests that only run in clinic deployment mode"
+    )
+
+
+def _detect_deployment_mode() -> str:
+    """Call /api/v1/meta and return the deployment mode string (SOLO/CLINIC/SAAS)."""
+    api_base_url = os.getenv("API_BASE_URL", "http://localhost:8080")
+    try:
+        resp = requests.get(f"{api_base_url}/api/v1/meta", timeout=5)
+        if resp.status_code == 200:
+            return resp.json().get("mode", "SOLO").upper()
+    except Exception:
+        pass
+    return "SOLO"
 
 
 def pytest_collection_modifyitems(config, items):
     """
-    Automatically skip tests marked as 'external' if not enabled.
+    Automatically skip tests that don't match the current deployment mode,
+    and skip external tests unless explicitly enabled.
     """
+    deployment_mode = _detect_deployment_mode()
+
     skip_external = pytest.mark.skip(reason="External service tests disabled (set ENABLE_EXTERNAL_TESTS=true)")
+    skip_clinic = pytest.mark.skip(
+        reason=f"Clinic-only test skipped — current deployment mode: {deployment_mode}"
+    )
 
     enable_external = os.getenv("ENABLE_EXTERNAL_TESTS", "false").lower() == "true"
 
-    if not enable_external:
-        for item in items:
-            if "external" in item.keywords:
-                item.add_marker(skip_external)
+    for item in items:
+        if not enable_external and "external" in item.keywords:
+            item.add_marker(skip_external)
+        if deployment_mode != "CLINIC" and "clinic" in item.keywords:
+            item.add_marker(skip_clinic)

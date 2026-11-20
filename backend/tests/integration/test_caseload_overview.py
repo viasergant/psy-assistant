@@ -29,6 +29,7 @@ def therapist_for_caseload(admin_client, reference_data, created_resources):
     return therapist_id
 
 
+@pytest.mark.clinic
 def test_admin_can_access_caseload(admin_client):
     """Admin with READ_TEAM_WORKLOAD permission receives paginated caseload list."""
     response = admin_client.get(
@@ -45,6 +46,7 @@ def test_admin_can_access_caseload(admin_client):
     assert isinstance(data["content"], list), "content should be a list"
 
 
+@pytest.mark.clinic
 def test_caseload_row_shape(admin_client, therapist_for_caseload):
     """Each caseload row contains expected fields when data is present."""
     response = admin_client.get(
@@ -65,6 +67,7 @@ def test_caseload_row_shape(admin_client, therapist_for_caseload):
         assert "sessionsThisMonth" in row, "Row must have sessionsThisMonth"
 
 
+@pytest.mark.clinic
 def test_caseload_pagination(admin_client):
     """Page parameter restricts results correctly."""
     response_p0 = admin_client.get(
@@ -79,12 +82,14 @@ def test_caseload_pagination(admin_client):
 
 def test_unauthenticated_request_returns_401(unauthenticated_client):
     """Unauthenticated request to caseload returns 401."""
-    unauthenticated_client.get(
+    response = unauthenticated_client.get(
         "/api/v1/caseload",
-        expected_status=401
+        allow_error=True
     )
+    assert response.status_code == 401, "Should return 401 without authentication"
 
 
+@pytest.mark.clinic
 def test_drilldown_returns_client_list(admin_client, therapist_for_caseload):
     """Admin can access drill-down client list for a therapist."""
     response = admin_client.get(
@@ -99,6 +104,7 @@ def test_drilldown_returns_client_list(admin_client, therapist_for_caseload):
     assert isinstance(data["content"], list), "content should be a list"
 
 
+@pytest.mark.clinic
 def test_drilldown_client_row_shape(admin_client, therapist_for_caseload):
     """When clients exist, each drilldown row has expected fields."""
     response = admin_client.get(
@@ -122,12 +128,14 @@ def test_drilldown_unauthenticated_returns_401(unauthenticated_client, api_clien
     """Unauthenticated drill-down request returns 401."""
     import uuid
     fake_id = str(uuid.uuid4())
-    unauthenticated_client.get(
+    response = unauthenticated_client.get(
         f"/api/v1/caseload/{fake_id}/clients",
-        expected_status=401
+        allow_error=True
     )
+    assert response.status_code == 401, "Should return 401 without authentication"
 
 
+@pytest.mark.clinic
 def test_caseload_snapshot_date_filter(admin_client):
     """Snapshot date filter is accepted without server error."""
     response = admin_client.get(

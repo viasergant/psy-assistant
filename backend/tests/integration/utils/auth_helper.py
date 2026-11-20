@@ -26,11 +26,13 @@ class APIClient:
         self.token: Optional[str] = None
         self.session = requests.Session()
 
-        # Configure retry strategy for transient failures
+        # Configure retry strategy for transient failures.
+        # 500 is intentionally excluded: it is a backend error, not a transient network
+        # issue, and retrying it hammers the server and masks the real failure.
         retry_strategy = Retry(
             total=3,
             backoff_factor=0.5,
-            status_forcelist=[429, 500, 502, 503, 504],
+            status_forcelist=[429, 502, 503, 504],
             allowed_methods=["GET", "POST", "PUT", "PATCH", "DELETE"]
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
@@ -107,8 +109,9 @@ class APIClient:
                 f"Response: {response.text}"
             )
 
-        # Raise for non-2xx status unless errors are allowed
-        if not allow_error:
+        # Raise for non-2xx status unless errors are explicitly allowed OR the caller
+        # already declared the expected status (which may itself be a 4xx/5xx code).
+        if not allow_error and expected_status is None:
             response.raise_for_status()
 
         return response

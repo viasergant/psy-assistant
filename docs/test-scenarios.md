@@ -18,7 +18,11 @@
 | Care Plans | 14 | CP-001 – CP-014 |
 | Progress Tracking & Outcome Measures | 16 | PT-001 – PT-016 |
 | Cross-Entity / Business Rules | 12 | XE-001 – XE-012 |
-| **Total** | **219** | |
+| Billing | 13 | BILL-001 – BILL-013 |
+| Notification Templates | 4 | NT-001 – NT-004 |
+| Risk Flag Types | 5 | RFT-001 – RFT-005 |
+| Role-Based Access Control | 8 | RBAC-001 – RBAC-008 |
+| **Total** | **249** | |
 
 ---
 
@@ -2198,3 +2202,299 @@ These TODOs indicate tests for those behaviors should be written but may be expe
 16. CaseloadSnapshotJob is disabled in test profile (job-enabled: false)
 17. Job upserts rows with ON CONFLICT DO UPDATE so re-runs are idempotent
 18. utilizationRate = scheduledHoursThisWeek / contractedHoursPerWeek, null-guarded
+
+---
+
+## 15. Billing
+
+**Endpoints:** `POST /api/v1/billing/catalog`, `GET /api/v1/billing/catalog`, `GET /api/v1/invoices`, `POST /api/v1/invoices/manual`, `POST /api/v1/invoices/from-session`, `POST /api/v1/invoices/{id}/issue`, `POST /api/v1/invoices/{id}/payments`, `POST /api/v1/invoices/{id}/refunds`, `POST /api/v1/billing/package-definitions`, `POST /api/v1/billing/packages/sell`, `GET /api/v1/clients/{id}/packages`, `POST /api/v1/billing/discounts`
+
+### BILL-001 — Create service catalog item
+| Field | Value |
+|---|---|
+| Preconditions | ADMIN authenticated; session type exists |
+| Actor | ADMIN |
+| Action | `POST /api/v1/billing/catalog` `{"name":"Individual Session","category":"Therapy","sessionTypeId":"<uuid>","durationMin":60,"defaultPrice":"150.00","effectiveFrom":"2024-01-01"}` |
+| Expected result | 201; body contains `id`, `name`, `defaultPrice` |
+| HTTP status | 201 |
+
+### BILL-002 — List service catalog
+| Field | Value |
+|---|---|
+| Preconditions | At least one catalog item exists |
+| Actor | ADMIN |
+| Action | `GET /api/v1/billing/catalog` |
+| Expected result | 200; body is a list of catalog items |
+| HTTP status | 200 |
+
+### BILL-003 — Create manual invoice
+| Field | Value |
+|---|---|
+| Preconditions | Client exists |
+| Actor | ADMIN |
+| Action | `POST /api/v1/invoices/manual` `{"clientId":"<uuid>","lineItems":[{"description":"Session","quantity":"1","unitPrice":"150.00"}]}` |
+| Expected result | 201; body contains `id`, `clientId`, `status` |
+| HTTP status | 201 |
+
+### BILL-004 — List invoices
+| Field | Value |
+|---|---|
+| Preconditions | At least one invoice exists |
+| Actor | ADMIN |
+| Action | `GET /api/v1/invoices` |
+| Expected result | 200; body is list or paginated page |
+| HTTP status | 200 |
+
+### BILL-005 — Get invoice by ID
+| Field | Value |
+|---|---|
+| Preconditions | Invoice exists |
+| Actor | ADMIN |
+| Action | `GET /api/v1/invoices/{id}` |
+| Expected result | 200; `data.id == invoiceId` |
+| HTTP status | 200 |
+
+### BILL-006 — Issue invoice
+| Field | Value |
+|---|---|
+| Preconditions | Draft invoice exists |
+| Actor | ADMIN |
+| Action | `POST /api/v1/invoices/{id}/issue` |
+| Expected result | 200 or 204; status changes to ISSUED |
+| HTTP status | 200/204 |
+
+### BILL-007 — Register payment
+| Field | Value |
+|---|---|
+| Preconditions | Issued invoice with outstanding balance exists |
+| Actor | ADMIN |
+| Action | `POST /api/v1/invoices/{id}/payments` `{"amount":"150.00","paymentMethod":"BANK_TRANSFER","paymentDate":"2024-01-15"}` |
+| Expected result | 201; payment has `id` and `amount` |
+| HTTP status | 201 |
+
+### BILL-008 — Register refund
+| Field | Value |
+|---|---|
+| Preconditions | Invoice with payment exists |
+| Actor | ADMIN |
+| Action | `POST /api/v1/invoices/{id}/refunds` `{"amount":"50.00","reason":"Partial refund","refundDate":"2024-01-16"}` |
+| Expected result | 201; refund has `id` and `amount` |
+| HTTP status | 201 |
+
+### BILL-009 — Create package definition
+| Field | Value |
+|---|---|
+| Preconditions | ADMIN authenticated |
+| Actor | ADMIN |
+| Action | `POST /api/v1/billing/package-definitions` `{"name":"10-Session Pack","serviceType":"INDIVIDUAL_SESSION","sessionQty":10,"price":"1200.00"}` |
+| Expected result | 201; body contains `id`, `sessionQty == 10` |
+| HTTP status | 201 |
+
+### BILL-010 — Sell package to client
+| Field | Value |
+|---|---|
+| Preconditions | Package definition and client exist |
+| Actor | ADMIN |
+| Action | `POST /api/v1/billing/packages/sell` `{"definitionId":"<uuid>","clientId":"<uuid>","purchasedAt":"<ISO instant>"}` |
+| Expected result | 201; `GET /api/v1/clients/{clientId}/packages` returns non-empty list |
+| HTTP status | 201 |
+
+### BILL-011 — Create discount rule
+| Field | Value |
+|---|---|
+| Preconditions | ADMIN authenticated |
+| Actor | ADMIN |
+| Action | `POST /api/v1/billing/discounts` `{"name":"10% Discount","type":"PERCENTAGE","value":"10","scope":"CLIENT"}` |
+| Expected result | 201; body contains `id` |
+| HTTP status | 201 |
+
+### BILL-012 — List discount rules
+| Field | Value |
+|---|---|
+| Preconditions | ADMIN authenticated |
+| Actor | ADMIN |
+| Action | `GET /api/v1/billing/discounts` |
+| Expected result | 200; response is a list |
+| HTTP status | 200 |
+
+### BILL-013 — Billing access requires authentication
+| Field | Value |
+|---|---|
+| Preconditions | No token |
+| Actor | ANON |
+| Action | `GET /api/v1/invoices` |
+| Expected result | 401 |
+| HTTP status | 401 |
+
+---
+
+## 16. Notification Templates
+
+**Endpoints:** `GET/POST /api/admin/notification-templates`, `PUT /api/admin/notification-templates/{id}`, `POST /api/admin/notification-templates/{id}/preview`
+
+> Note: Base path is `/api/admin/...` (no `/v1/`).
+
+### NT-001 — List notification templates
+| Field | Value |
+|---|---|
+| Preconditions | ADMIN authenticated |
+| Actor | ADMIN |
+| Action | `GET /api/admin/notification-templates` |
+| Expected result | 200; response is a list |
+| HTTP status | 200 |
+
+### NT-002 — Create notification template
+| Field | Value |
+|---|---|
+| Preconditions | ADMIN authenticated |
+| Actor | ADMIN |
+| Action | `POST /api/admin/notification-templates` `{"eventType":"APPOINTMENT_REMINDER","channel":"EMAIL","language":"EN","subject":"Reminder: {{appointmentTime}}","body":"Dear {{clientName}}, your appointment is at {{appointmentTime}}."}` |
+| Expected result | 201; body contains `id`, `eventType == "APPOINTMENT_REMINDER"` |
+| HTTP status | 201 |
+
+### NT-003 — Update notification template
+| Field | Value |
+|---|---|
+| Preconditions | An INACTIVE template exists |
+| Actor | ADMIN |
+| Action | `PUT /api/admin/notification-templates/{id}` `{"subject":"Updated subject","body":"Updated body"}` |
+| Expected result | 200; response body reflects updated `body` |
+| HTTP status | 200 |
+
+### NT-004 — Preview notification template
+| Field | Value |
+|---|---|
+| Preconditions | A template exists |
+| Actor | ADMIN |
+| Action | `POST /api/admin/notification-templates/{id}/preview` |
+| Expected result | 200; response has `subject` and `body` fields with variables rendered |
+| HTTP status | 200 |
+
+---
+
+## 17. Risk Flag Types
+
+**Endpoints:** `GET /api/v1/risk-flag-types` (public), `GET/POST /api/v1/admin/risk-flag-types`, `PATCH /api/v1/admin/risk-flag-types/{id}/deactivate`
+
+### RFT-001 — List risk flag types (public)
+| Field | Value |
+|---|---|
+| Preconditions | ADMIN authenticated |
+| Actor | ADMIN |
+| Action | `GET /api/v1/risk-flag-types` |
+| Expected result | 200; response is a list of active types |
+| HTTP status | 200 |
+
+### RFT-002 — List risk flag types (admin)
+| Field | Value |
+|---|---|
+| Preconditions | ADMIN authenticated |
+| Actor | ADMIN |
+| Action | `GET /api/v1/admin/risk-flag-types` |
+| Expected result | 200; response is a list (includes inactive) |
+| HTTP status | 200 |
+
+### RFT-003 — Create risk flag type
+| Field | Value |
+|---|---|
+| Preconditions | ADMIN authenticated |
+| Actor | ADMIN |
+| Action | `POST /api/v1/admin/risk-flag-types` `{"name":"Suicidal Ideation"}` |
+| Expected result | 201; body contains `id`, `name` |
+| HTTP status | 201 |
+
+### RFT-004 — Deactivate risk flag type
+| Field | Value |
+|---|---|
+| Preconditions | An active risk flag type exists |
+| Actor | ADMIN |
+| Action | `PATCH /api/v1/admin/risk-flag-types/{id}/deactivate` |
+| Expected result | 200 or 204; type no longer appears in public list |
+| HTTP status | 200/204 |
+
+### RFT-005 — Non-admin cannot manage risk flag types
+| Field | Value |
+|---|---|
+| Preconditions | No token |
+| Actor | ANON |
+| Action | `POST /api/v1/admin/risk-flag-types` `{"name":"Test"}` |
+| Expected result | 401 |
+| HTTP status | 401 |
+
+---
+
+## 18. Role-Based Access Control
+
+**Purpose:** Cross-role access denial tests verifying that each role boundary is enforced at the API level.
+
+### RBAC-001 — THERAPIST cannot access Billing (invoices)
+| Field | Value |
+|---|---|
+| Preconditions | Authenticated THERAPIST JWT |
+| Actor | THERAPIST |
+| Action | `GET /api/v1/invoices` |
+| Expected result | 403 Forbidden |
+| HTTP status | 403 |
+
+### RBAC-002 — THERAPIST cannot access Admin user management
+| Field | Value |
+|---|---|
+| Preconditions | Authenticated THERAPIST JWT |
+| Actor | THERAPIST |
+| Action | `GET /api/v1/admin/users` |
+| Expected result | 403 Forbidden |
+| HTTP status | 403 |
+
+### RBAC-003 — Unauthenticated cannot access Clients
+| Field | Value |
+|---|---|
+| Preconditions | No token |
+| Actor | ANON |
+| Action | `GET /api/v1/clients` |
+| Expected result | 401 Unauthorized |
+| HTTP status | 401 |
+
+### RBAC-004 — Unauthenticated cannot access Sessions
+| Field | Value |
+|---|---|
+| Preconditions | No token |
+| Actor | ANON |
+| Action | `GET /api/sessions` |
+| Expected result | 401 Unauthorized |
+| HTTP status | 401 |
+
+### RBAC-005 — Unauthenticated cannot access Billing
+| Field | Value |
+|---|---|
+| Preconditions | No token |
+| Actor | ANON |
+| Action | `GET /api/v1/invoices` |
+| Expected result | 401 Unauthorized |
+| HTTP status | 401 |
+
+### RBAC-006 — Unauthenticated cannot access Reports
+| Field | Value |
+|---|---|
+| Preconditions | No token |
+| Actor | ANON |
+| Action | `GET /api/v1/reports/revenue/data?dateFrom=2024-01-01&dateTo=2024-12-31` |
+| Expected result | 401 Unauthorized |
+| HTTP status | 401 |
+
+### RBAC-007 — SOLO mode blocks caseload endpoint
+| Field | Value |
+|---|---|
+| Preconditions | Backend running in SOLO mode; ADMIN authenticated |
+| Actor | ADMIN |
+| Action | `GET /api/v1/caseload` |
+| Expected result | 403 or 404 (CLINIC-only endpoint blocked in SOLO mode) |
+| HTTP status | 403/404 |
+
+### RBAC-008 — SOLO mode blocks admin user management endpoint
+| Field | Value |
+|---|---|
+| Preconditions | Backend running in SOLO mode; ADMIN authenticated |
+| Actor | ADMIN |
+| Action | `GET /api/v1/admin/users` |
+| Expected result | 403 or 404 (CLINIC-only endpoint blocked in SOLO mode) |
+| HTTP status | 403/404 |

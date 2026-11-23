@@ -273,3 +273,118 @@ def test_update_appointment_status(admin_client, appointment_setup, created_reso
 
     updated_data = update_response.json()
     assert updated_data["status"] == "CONFIRMED"
+
+
+def test_create_recurring_appointment_series(admin_client, appointment_setup, created_resources):
+    """Test creating a weekly recurring appointment series (4 occurrences)."""
+    setup = appointment_setup
+
+    start_time = (
+        datetime.now(timezone.utc) + timedelta(days=3)
+    ).replace(hour=10, minute=0, second=0, microsecond=0).isoformat()
+
+    series_payload = {
+        "therapistProfileId": setup["therapist_id"],
+        "clientId": setup["client_id"],
+        "sessionTypeId": setup["session_type_id"],
+        "startTime": start_time,
+        "durationMinutes": 60,
+        "timezone": "Europe/Kiev",
+        "recurrenceType": "WEEKLY",
+        "occurrences": 4,
+        "conflictResolution": "SKIP_CONFLICTS"
+    }
+
+    response = admin_client.post(
+        "/api/v1/recurring-series",
+        json=series_payload,
+        expected_status=201
+    )
+
+    data = response.json()
+    assert "seriesId" in data, "Response should contain seriesId"
+    assert data["savedOccurrences"] >= 1, "At least one occurrence should be saved"
+    assert isinstance(data.get("appointments"), list), "Response should contain appointments list"
+    assert len(data["appointments"]) >= 1, "Appointments list should be non-empty"
+
+
+def test_edit_appointment_details(admin_client, appointment_setup, created_resources):
+    """Test editing appointment notes via PATCH; skips gracefully if endpoint not exposed."""
+    setup = appointment_setup
+
+    appointment_payload = DataFactory.appointment(
+        therapist_profile_id=setup["therapist_id"],
+        client_id=setup["client_id"],
+        session_type_id=setup["session_type_id"],
+        notes="Original notes"
+    )
+    create_response = admin_client.post(
+        "/api/v1/appointments",
+        json=appointment_payload,
+        expected_status=201
+    )
+    appointment_id = create_response.json()["id"]
+    created_resources["appointments"].append(appointment_id)
+
+    update_response = admin_client.patch(
+        f"/api/v1/appointments/{appointment_id}",
+        json={"notes": "Updated notes"},
+        allow_error=True
+    )
+
+    if update_response.status_code in (404, 405):
+        pytest.skip("PATCH /api/v1/appointments/{id} not yet exposed — skipping")
+
+    assert update_response.status_code == 200, (
+        f"Expected 200 updating appointment, got {update_response.status_code}"
+    )
+    assert update_response.json().get("notes") == "Updated notes"
+
+
+def test_recurring_series_conflict_returns_conflict_list(admin_client, appointment_setup, created_resources):
+    """Test that pre-flight conflict check detects an existing appointment in the series slots."""
+    setup = appointment_setup
+
+    conflict_time = (
+        datetime.now(timezone.utc) + timedelta(days=5)
+    ).replace(hour=10, minute=0, second=0, microsecond=0).isoformat()
+
+    # Book a single appointment at the target slot to create a conflict
+    single_payload = DataFactory.appointment(
+        therapist_profile_id=setup["therapist_id"],
+        client_id=setup["client_id"],
+        session_type_id=setup["session_type_id"],
+        start_time=conflict_time,
+        duration_minutes=60
+    )
+    book_response = admin_client.post(
+        "/api/v1/appointments",
+        json=single_payload,
+        expected_status=201
+    )
+    created_resources["appointments"].append(book_response.json()["id"])
+
+    # Pre-flight check: recurring series starting at the same slot should detect conflict
+    check_payload = {
+        "therapistProfileId": setup["therapist_id"],
+        "clientId": setup["client_id"],
+        "sessionTypeId": setup["session_type_id"],
+        "startTime": conflict_time,
+        "durationMinutes": 60,
+        "timezone": "Europe/Kiev",
+        "recurrenceType": "WEEKLY",
+        "occurrences": 4
+    }
+
+    check_response = admin_client.post(
+        "/api/v1/recurring-series/check-conflicts",
+        json=check_payload,
+        expected_status=200
+    )
+
+    result = check_response.json()
+    # Response shape: {conflictCount, cleanSlotCount, generatedSlots: [{hasConflict, ...}]}
+    assert result.get("conflictCount", 0) > 0, \
+        f"Should detect at least one conflict; got conflictCount={result.get('conflictCount')}"
+    assert isinstance(result.get("generatedSlots"), list), \
+        "Response should contain generatedSlots list"

@@ -204,6 +204,9 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "clinic: marks tests that only run in clinic deployment mode"
     )
+    config.addinivalue_line(
+        "markers", "solo: marks tests that only run in solo deployment mode"
+    )
 
 
 def _detect_deployment_mode() -> str:
@@ -229,6 +232,9 @@ def pytest_collection_modifyitems(config, items):
     skip_clinic = pytest.mark.skip(
         reason=f"Clinic-only test skipped — current deployment mode: {deployment_mode}"
     )
+    skip_solo = pytest.mark.skip(
+        reason=f"Solo-only test skipped — current deployment mode: {deployment_mode}"
+    )
 
     enable_external = os.getenv("ENABLE_EXTERNAL_TESTS", "false").lower() == "true"
 
@@ -237,3 +243,5 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_external)
         if deployment_mode != "CLINIC" and "clinic" in item.keywords:
             item.add_marker(skip_clinic)
+        if deployment_mode != "SOLO" and "solo" in item.keywords:
+            item.add_marker(skip_solo)

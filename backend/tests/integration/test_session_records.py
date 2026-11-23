@@ -303,8 +303,8 @@ def test_record_session_attendance(admin_client, session_setup, created_resource
     )
 
     data = attendance_response.json()
-    assert data.get("attendanceStatus") == "ATTENDED" or data.get("status") is not None, \
-        "Response should reflect recorded attendance"
+    assert data.get("effectiveOutcome") == "ATTENDED" or data.get("requestedOutcome") == "ATTENDED", \
+        f"Response should reflect recorded attendance, got: {data}"
 
 
 def test_add_session_note(admin_client, session_setup, created_resources):

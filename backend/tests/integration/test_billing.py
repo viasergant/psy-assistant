@@ -332,15 +332,16 @@ def test_sell_package_to_client(admin_client, billing_setup):
     assert len(packages) >= 1, "Client should have at least one package after sale"
 
 
-def test_create_discount_rule(admin_client):
-    """Test creating a discount rule."""
+def test_create_discount_rule(admin_client, billing_setup):
+    """Test creating a discount rule scoped to a service catalog item."""
     response = admin_client.post(
         "/api/v1/billing/discounts",
         json={
             "name": f"Test Discount {DataFactory.unique_email('disc')}",
             "type": "PERCENTAGE",
-            "value": "10",
-            "scope": "SERVICE"  # SERVICE scope does not require a clientId or serviceCatalogId
+            "value": 10,
+            "scope": "SERVICE",
+            "serviceCatalogId": billing_setup["catalog_item_id"]
         },
         expected_status=201
     )

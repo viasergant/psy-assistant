@@ -171,7 +171,7 @@ def test_resolve_risk_flag(admin_client, client_setup):
 
     response = admin_client.patch(
         f"/api/v1/clients/{client_id}/risk-flags/{flag_id}/resolve",
-        json={"resolution": "Resolved during testing"},
+        json={"resolutionNote": "Resolved during testing"},
         expected_status=200
     )
     data = response.json()

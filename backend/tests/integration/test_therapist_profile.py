@@ -243,8 +243,9 @@ def test_update_therapist_profile(admin_client, reference_data, created_resource
     assert updated_data["phone"] == "+380991234567"
 
 
+@pytest.mark.clinic
 def test_list_therapists_with_pagination(admin_client):
-    """Test listing therapists with pagination parameters."""
+    """Test listing therapists with pagination parameters (CLINIC only — solo has one therapist)."""
     response = admin_client.get(
         "/api/v1/therapists",
         params={"page": 0, "size": 10},
@@ -265,8 +266,9 @@ def test_list_therapists_with_pagination(admin_client):
     assert data["size"] == 10, "Should return size 10"
 
 
+@pytest.mark.clinic
 def test_list_therapists_default_pagination(admin_client):
-    """Test listing therapists without explicit pagination uses defaults."""
+    """Test listing therapists without explicit pagination uses defaults (CLINIC only)."""
     response = admin_client.get(
         "/api/v1/therapists",
         expected_status=200

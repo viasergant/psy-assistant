@@ -352,7 +352,8 @@
       "attendance.attended": "Attended",
       "attendance.no_show": "No Show",
       "attendance.late_cancellation": "Late Cancellation",
-      "attendance.cancelled": "Cancelled"
+      "attendance.cancelled": "Cancelled",
+      "PROFILE_UPDATED": "Profile updated"
     },
     "by": "by",
     "empty": "No activity yet",
@@ -1755,6 +1756,7 @@
       "statusHistory": "Status History",
       "saveNote": "Save Note",
       "cancel": "Cancel",
+      "notePlaceholder": "Notes",
       "addNoteError": "Failed to save progress note.",
       "loadError": "Failed to load progress notes."
     },

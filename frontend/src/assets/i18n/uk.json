@@ -342,7 +342,7 @@
       "ATTENDANCE_OUTCOME": "Результат відвідування"
     },
     "eventSubtype": {
-      "null": "",
+      "null": "-",
       "appointment.scheduled": "Заплановано",
       "appointment.confirmed": "Підтверджено",
       "appointment.completed": "Завершено",
@@ -352,7 +352,9 @@
       "attendance.attended": "Присутній",
       "attendance.no_show": "Не з'явився",
       "attendance.late_cancellation": "Пізнє скасування",
-      "attendance.cancelled": "Скасовано"
+      "attendance.cancelled": "Скасовано",
+      "PROFILE_UPDATED": "Профіль змінено"
+
     },
     "by": "від",
     "empty": "Поки немає активності",
@@ -1755,6 +1757,7 @@
       "statusHistory": "Історія статусів",
       "saveNote": "Зберегти нотатку",
       "cancel": "Скасувати",
+      "notePlaceholder": "Нотатки",
       "addNoteError": "Не вдалося зберегти нотатку.",
       "loadError": "Не вдалося завантажити нотатки прогресу."
     },
@@ -1762,7 +1765,9 @@
       "title": "Шкали оцінки",
       "record": "Записати оцінку",
       "noEntries": "Оцінок ще не зафіксовано.",
+      "measure": "Шкала",
       "measureName": "Шкала",
+      "alert": "Попередждення",
       "score": "Бал",
       "assessmentDate": "Дата",
       "recordedBy": "Записав",

@@ -8,9 +8,9 @@ spring:
     ignore-migration-patterns: "repeatable:missing"  # dev seed was applied to prod DB; ignore orphaned repeatable migrations
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://192.168.10.146:5432/psyassistant_prod}
-    username: ${DB_USERNAME:psyassistant}
-    password: ${DB_PASSWORD:psyassistant}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
 springdoc:
   swagger-ui:

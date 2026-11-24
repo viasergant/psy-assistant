@@ -13,7 +13,7 @@ Monorepo for a psychological assistance CRM: `backend/` (Spring Boot 3.4 / Java 
 
 - Local DB: `docker compose up -d` (Postgres 16 on localhost:5432).
 - Run app: `./mvnw spring-boot:run -Dspring-boot.run.profiles=solo,local`
-- ⚠️ The default `DB_URL` in **all** profiles points to `192.168.10.146` (home server), not localhost — the README's "defaults match Docker Compose" is stale. When using docker compose, override: `DB_URL=jdbc:postgresql://localhost:5432/psyassistant`.
+- The `local` profile defaults `DB_URL` to `192.168.10.146:5432/psyassistant_local`. The `prod` profile requires `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` to be set explicitly — it has no defaults and will fail fast at startup if they are missing.
 - Build + unit tests + Checkstyle: `./mvnw verify`; single test: `./mvnw test -Dtest=ClassName`
 - Unit tests run on in-memory H2 with Flyway disabled (`src/test/resources/application.yml`) — no Postgres needed.
 - The `local` profile seeds `admin@psyassistant.local` / `Admin1234!` plus a dev therapist via repeatable scripts in `db/local-seed/`.

@@ -11,7 +11,6 @@ import java.util.UUID;
 
 public record CreateServiceRequest(
         @NotBlank @Size(max = 200) String name,
-        @NotBlank @Size(max = 100) String category,
         @NotNull UUID sessionTypeId,
         @Min(1) int durationMin,
         @NotNull @DecimalMin("0.00") BigDecimal defaultPrice,

@@ -2214,7 +2214,7 @@ These TODOs indicate tests for those behaviors should be written but may be expe
 |---|---|
 | Preconditions | ADMIN authenticated; session type exists |
 | Actor | ADMIN |
-| Action | `POST /api/v1/billing/catalog` `{"name":"Individual Session","category":"Therapy","sessionTypeId":"<uuid>","durationMin":60,"defaultPrice":"150.00","effectiveFrom":"2024-01-01"}` |
+| Action | `POST /api/v1/billing/catalog` `{"name":"Individual Session","sessionTypeId":"<uuid>","durationMin":60,"defaultPrice":"150.00","effectiveFrom":"2024-01-01"}` |
 | Expected result | 201; body contains `id`, `name`, `defaultPrice` |
 | HTTP status | 201 |
 

@@ -10,7 +10,6 @@ export interface SessionTypeInfo {
 export interface ServiceCatalogItem {
   id: string;
   name: string;
-  category: string;
   sessionType: SessionTypeInfo;
   durationMin: number;
   status: ServiceStatus;
@@ -36,7 +35,6 @@ export interface TherapistOverride {
 
 export interface CreateServiceRequest {
   name: string;
-  category: string;
   sessionTypeId: string;
   durationMin: number;
   defaultPrice: number;
@@ -45,7 +43,6 @@ export interface CreateServiceRequest {
 
 export interface UpdateServiceRequest {
   name: string;
-  category: string;
   sessionTypeId: string;
   durationMin: number;
 }

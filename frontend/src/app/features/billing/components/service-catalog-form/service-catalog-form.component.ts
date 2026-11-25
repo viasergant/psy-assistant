@@ -61,20 +61,6 @@ import { SessionType } from '../../../schedule/models/schedule.model';
             </span>
           </div>
 
-          <!-- Category -->
-          <div class="field">
-            <label for="cf-category">
-              {{ 'billing.catalog.fields.category' | transloco }} <span class="required">*</span>
-            </label>
-            <input id="cf-category" type="text" formControlName="category"
-                   [placeholder]="'billing.catalog.fields.categoryPlaceholder' | transloco"
-                   [class.is-error]="isInvalid('category')"
-                   [attr.aria-describedby]="isInvalid('category') ? 'cf-category-error' : null" />
-            <span *ngIf="isInvalid('category')" id="cf-category-error" class="error-msg" role="alert">
-              {{ 'common.validation.required' | transloco }}
-            </span>
-          </div>
-
           <!-- Service Type + Duration -->
           <div class="field-row">
             <div class="field">
@@ -201,7 +187,6 @@ export class ServiceCatalogFormComponent implements OnInit, OnChanges {
   private buildForm(): void {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(200)]],
-      category: ['', [Validators.required, Validators.maxLength(100)]],
       sessionTypeId: ['', Validators.required],
       durationMin: [50, [Validators.required, Validators.min(1)]],
       defaultPrice: [null, this.editMode ? [] : [Validators.required, Validators.min(0)]],
@@ -232,7 +217,6 @@ export class ServiceCatalogFormComponent implements OnInit, OnChanges {
     if (!this.service) { return; }
     this.form.patchValue({
       name: this.service.name,
-      category: this.service.category,
       sessionTypeId: this.service.sessionType.id,
       durationMin: this.service.durationMin,
     });
@@ -252,8 +236,8 @@ export class ServiceCatalogFormComponent implements OnInit, OnChanges {
     if (this.form.invalid) { return; }
 
     if (this.editMode) {
-      const { name, category, sessionTypeId, durationMin } = this.form.value;
-      this.submitted.emit({ name, category, sessionTypeId, durationMin } as UpdateServiceRequest);
+      const { name, sessionTypeId, durationMin } = this.form.value;
+      this.submitted.emit({ name, sessionTypeId, durationMin } as UpdateServiceRequest);
     } else {
       this.submitted.emit(this.form.value as CreateServiceRequest);
     }

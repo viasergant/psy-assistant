@@ -1428,8 +1428,6 @@
       "fields": {
         "name": "Service Name",
         "namePlaceholder": "e.g. Individual Therapy — 50 min",
-        "category": "Category",
-        "categoryPlaceholder": "e.g. Individual Session",
         "serviceType": "Service Type",
         "serviceTypePlaceholder": "Select type",
         "durationMin": "Duration",
@@ -1456,7 +1454,7 @@
       "validation": {
         "durationMin": "Duration must be at least 1 minute",
         "priceMin": "Price must be zero or greater",
-        "duplicateName": "A service with this name already exists in this category"
+        "duplicateName": "A service with this name already exists"
       },
       "priceHistory": {
         "title": "Price History",

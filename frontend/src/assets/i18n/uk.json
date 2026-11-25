@@ -1428,8 +1428,6 @@
       "fields": {
         "name": "Назва послуги",
         "namePlaceholder": "напр. Індивідуальна терапія — 50 хв",
-        "category": "Категорія",
-        "categoryPlaceholder": "напр. Індивідуальна сесія",
         "serviceType": "Тип послуги",
         "serviceTypePlaceholder": "Оберіть тип",
         "durationMin": "Тривалість",
@@ -1456,7 +1454,7 @@
       "validation": {
         "durationMin": "Тривалість має бути не менше 1 хвилини",
         "priceMin": "Ціна має бути нулем або більше",
-        "duplicateName": "Послуга з такою назвою вже існує в цій категорії"
+        "duplicateName": "Послуга з такою назвою вже існує"
       },
       "priceHistory": {
         "title": "Історія цін",

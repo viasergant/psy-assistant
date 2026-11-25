@@ -45,7 +45,6 @@ def billing_setup(session_admin_client, reference_data):
     # Create service catalog item
     catalog_payload = {
         "name": f"Integration Test Service {DataFactory.unique_email('svc')}",
-        "category": "THERAPY",
         "sessionTypeId": session_type["id"],
         "durationMin": 60,
         "defaultPrice": "150.00",
@@ -74,7 +73,6 @@ def test_create_service_catalog_item(admin_client, billing_setup):
         "/api/v1/billing/catalog",
         json={
             "name": f"New Service {DataFactory.unique_email('newsvc')}",
-            "category": "THERAPY",
             "sessionTypeId": session_type_id,
             "durationMin": 45,
             "defaultPrice": "120.00",

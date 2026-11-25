@@ -26,17 +26,14 @@ import org.hibernate.annotations.Filter;
 @Table(
     name = "service_catalog",
     uniqueConstraints = @UniqueConstraint(
-        name = "uq_catalog_org_name_cat",
-        columnNames = {"org_id", "name", "category"}
+        name = "uq_catalog_org_name",
+        columnNames = {"org_id", "name"}
     )
 )
 public class ServiceCatalog extends BaseEntity {
 
     @Column(name = "name", nullable = false, length = 200)
     private String name;
-
-    @Column(name = "category", nullable = false, length = 100)
-    private String category;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "session_type_id", nullable = false)
@@ -56,10 +53,9 @@ public class ServiceCatalog extends BaseEntity {
         // JPA
     }
 
-    public ServiceCatalog(final String name, final String category,
+    public ServiceCatalog(final String name,
                           final SessionType sessionType, final int durationMin) {
         this.name = name;
-        this.category = category;
         this.sessionType = sessionType;
         this.durationMin = durationMin;
         this.status = ServiceStatus.ACTIVE;
@@ -71,14 +67,6 @@ public class ServiceCatalog extends BaseEntity {
 
     public void setName(final String name) {
         this.name = name;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(final String category) {
-        this.category = category;
     }
 
     public SessionType getSessionType() {

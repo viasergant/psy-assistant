@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-20
 
+### Removed
+
+- **Service catalog `category`** — dropped the free-text category field (nothing read it besides the detail view and the duplicate check) from the entity, API (`category` removed from create/update/list/detail), UI and translations. Flyway V81 drops the column and replaces the `(org_id, name, category)` unique constraint with `(org_id, name)`; services that shared a name across categories are renamed to `<name> (<category>)` first so the migration cannot fail.
+
 ### Changed
 
 - **BREAKING (saas): `POST /api/v1/register` now requires email confirmation** — returns `202 Accepted` with no body and no tokens. The owner `User` is created inactive with `email_verified=false`; a single-use link (24 h) is emailed via the existing outbox. Registering an already-used address returns the identical `202` and emails the existing owner instead (no account enumeration).

@@ -7,9 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ServiceCatalogRepository extends JpaRepository<ServiceCatalog, UUID> {
 
-    boolean existsByNameAndCategory(String name, String category);
+    boolean existsByName(String name);
 
-    boolean existsByNameAndCategoryAndIdNot(String name, String category, UUID id);
+    boolean existsByNameAndIdNot(String name, UUID id);
 
     List<ServiceCatalog> findByStatus(ServiceStatus status);
 

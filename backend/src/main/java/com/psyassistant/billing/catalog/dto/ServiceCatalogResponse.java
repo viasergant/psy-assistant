@@ -10,7 +10,6 @@ import java.util.UUID;
 public record ServiceCatalogResponse(
         UUID id,
         String name,
-        String category,
         SessionTypeResponse sessionType,
         int durationMin,
         ServiceStatus status,
@@ -28,7 +27,6 @@ public record ServiceCatalogResponse(
         return new ServiceCatalogResponse(
                 entity.getId(),
                 entity.getName(),
-                entity.getCategory(),
                 st,
                 entity.getDurationMin(),
                 entity.getStatus(),

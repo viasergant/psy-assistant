@@ -70,7 +70,6 @@ import { ServiceCatalogFormComponent } from '../service-catalog-form/service-cat
         <ng-template pTemplate="header">
           <tr>
             <th>{{ 'billing.catalog.fields.name' | transloco }}</th>
-            <th>{{ 'billing.catalog.fields.category' | transloco }}</th>
             <th>{{ 'billing.catalog.fields.serviceType' | transloco }}</th>
             <th class="col-right">{{ 'billing.catalog.fields.durationMin' | transloco }}</th>
             <th class="col-right">{{ 'billing.catalog.fields.currentPrice' | transloco }}</th>
@@ -86,7 +85,6 @@ import { ServiceCatalogFormComponent } from '../service-catalog-form/service-cat
                 {{ svc.name }}
               </a>
             </td>
-            <td>{{ svc.category }}</td>
             <td>{{ 'sessions.types.' + svc.sessionType.code | transloco }}</td>
             <td class="col-right">{{ svc.durationMin }} {{ 'billing.catalog.fields.min' | transloco }}</td>
             <td class="col-right price-cell">{{ svc.currentPrice | number:'1.2-2' }}</td>

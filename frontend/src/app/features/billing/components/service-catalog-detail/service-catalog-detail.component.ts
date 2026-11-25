@@ -56,10 +56,6 @@ import { TherapistOverrideDialogComponent, OverrideSubmission } from '../therapi
 
           <dl class="detail-meta-grid">
             <div class="meta-item">
-              <dt>{{ 'billing.catalog.fields.category' | transloco }}</dt>
-              <dd>{{ service.category }}</dd>
-            </div>
-            <div class="meta-item">
               <dt>{{ 'billing.catalog.fields.serviceType' | transloco }}</dt>
               <dd>{{ 'sessions.types.' + service.sessionType.code | transloco }}</dd>
             </div>

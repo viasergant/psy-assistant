@@ -108,13 +108,12 @@ public class ServiceCatalogService {
     @PreAuthorize("hasAuthority('MANAGE_SERVICE_CATALOG')")
     @Transactional
     public ServiceCatalogResponse createService(final CreateServiceRequest request) {
-        if (catalogRepository.existsByNameAndCategory(request.name(), request.category())) {
-            throw new DuplicateServiceException(request.name(), request.category());
+        if (catalogRepository.existsByName(request.name())) {
+            throw new DuplicateServiceException(request.name());
         }
 
         ServiceCatalog service = new ServiceCatalog(
                 request.name(),
-                request.category(),
                 resolveSessionType(request.sessionTypeId()),
                 request.durationMin()
         );
@@ -140,12 +139,11 @@ public class ServiceCatalogService {
     public ServiceCatalogResponse updateService(final UUID id, final UpdateServiceRequest request) {
         ServiceCatalog service = loadService(id);
 
-        if (catalogRepository.existsByNameAndCategoryAndIdNot(request.name(), request.category(), id)) {
-            throw new DuplicateServiceException(request.name(), request.category());
+        if (catalogRepository.existsByNameAndIdNot(request.name(), id)) {
+            throw new DuplicateServiceException(request.name());
         }
 
         service.setName(request.name());
-        service.setCategory(request.category());
         service.setSessionType(resolveSessionType(request.sessionTypeId()));
         service.setDurationMin(request.durationMin());
 

@@ -9,6 +9,17 @@ Monorepo for a psychological assistance CRM: `backend/` (Spring Boot 3.4 / Java 
 - Solo: first boot creates one user from `SOLO_USERNAME`/`SOLO_PASSWORD` env vars. Clinic: one-time `POST /api/v1/setup/admin`; admin/caseload controllers are `@Profile("clinic")` and return 404 in solo mode.
 - Frontend fetches `GET /api/v1/meta` on boot and gates routes/UI by mode (`modeGuard`, `*appIfMode`).
 
+## Tenant isolation (CRITICAL)
+
+- **A user must never see, count, aggregate or modify data of another organization.** This applies to every role (therapist, admin, finance, supervisor) and to every read path: lists, search, reports, exports, dashboards, timelines.
+- Every tenant table has `org_id`; JPA entities get `@Filter(name = "orgFilter")` + an `orgId` field. The Hibernate filter is enabled from the JWT `orgId` claim via `TenantContext`.
+- **The filter does NOT apply to native queries or `JdbcTemplate`.** Any `nativeQuery = true`, `JdbcTemplate` or `createNativeQuery` MUST include an explicit `org_id = ?` condition, taking the value from `TenantContext.require()` (fails fast if no org is bound). In Spring Data `@Query` use `:#{T(com.psyassistant.common.tenant.TenantContext).require()}`.
+- Tables without `org_id` (e.g. `payments`) must be scoped through their parent (`invoice_id IN (SELECT id FROM invoices WHERE org_id = …)`).
+- Reports, aggregates and `COUNT/SUM` queries are the most common leak — scope them too. Only global reference tables (`specialization`, `language`, `session_type`, `risk_flag_types`) are shared.
+- Never trust ids from the request alone: load the entity through an org-filtered repository first, or add `org_id` to the raw query.
+- Every new or changed query touching tenant data needs a test proving two organizations never see each other's rows. Code reviews must reject raw SQL without an org condition.
+- Only the `GLOBAL_ADMIN` endpoints (`/api/v1/global-admin/**`) may read across organizations, by design.
+
 ## Backend commands (run from `backend/`)
 
 - Local DB: `docker compose up -d` (Postgres 16 on localhost:5432).

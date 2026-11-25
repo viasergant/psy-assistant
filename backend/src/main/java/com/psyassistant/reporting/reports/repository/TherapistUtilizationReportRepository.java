@@ -1,5 +1,6 @@
 package com.psyassistant.reporting.reports.repository;
 
+import com.psyassistant.common.tenant.TenantContext;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,7 +15,8 @@ public class TherapistUtilizationReportRepository {
     private static final String COUNT_SQL = """
             SELECT COUNT(DISTINCT tp.id)
             FROM therapist_profile tp
-            WHERE tp.active = true
+            WHERE tp.org_id = ?
+              AND tp.active = true
               AND (CAST(? AS uuid) IS NULL OR tp.id = CAST(? AS uuid))
             """;
 
@@ -39,7 +41,8 @@ public class TherapistUtilizationReportRepository {
             LEFT JOIN appointment a
                    ON a.therapist_profile_id = tp.id
                   AND a.start_time BETWEEN CAST(? AS timestamptz) AND CAST(? AS timestamptz)
-            WHERE tp.active = true
+            WHERE tp.org_id = ?
+              AND tp.active = true
               AND (CAST(? AS uuid) IS NULL OR tp.id = CAST(? AS uuid))
             GROUP BY tp.id, u.full_name, tp.contracted_hours_per_week
             ORDER BY u.full_name
@@ -64,7 +67,8 @@ public class TherapistUtilizationReportRepository {
      * @return count
      */
     public long count(final String therapistId) {
-        final Long total = jdbc.queryForObject(COUNT_SQL, Long.class, therapistId, therapistId);
+        final Long total = jdbc.queryForObject(
+                COUNT_SQL, Long.class, TenantContext.require(), therapistId, therapistId);
         return total == null ? 0L : total;
     }
 
@@ -98,7 +102,7 @@ public class TherapistUtilizationReportRepository {
                 },
                 weeksInPeriod, weeksInPeriod, weeksInPeriod,
                 dateFrom.atStartOfDay(), dateTo.plusDays(1).atStartOfDay(),
-                therapistId, therapistId,
+                TenantContext.require(), therapistId, therapistId,
                 limit, offset);
     }
 
@@ -129,6 +133,6 @@ public class TherapistUtilizationReportRepository {
                 },
                 weeksInPeriod, weeksInPeriod, weeksInPeriod,
                 dateFrom.atStartOfDay(), dateTo.plusDays(1).atStartOfDay(),
-                therapistId, therapistId);
+                TenantContext.require(), therapistId, therapistId);
     }
 }

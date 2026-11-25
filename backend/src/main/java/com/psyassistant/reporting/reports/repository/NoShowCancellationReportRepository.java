@@ -1,5 +1,6 @@
 package com.psyassistant.reporting.reports.repository;
 
+import com.psyassistant.common.tenant.TenantContext;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -15,7 +16,8 @@ public class NoShowCancellationReportRepository {
             SELECT COUNT(DISTINCT tp.id)
             FROM appointment a
             JOIN therapist_profile tp ON a.therapist_profile_id = tp.id
-            WHERE a.start_time BETWEEN CAST(? AS timestamptz) AND CAST(? AS timestamptz)
+            WHERE a.org_id = ?
+              AND a.start_time BETWEEN CAST(? AS timestamptz) AND CAST(? AS timestamptz)
               AND (CAST(? AS uuid) IS NULL OR tp.id = CAST(? AS uuid))
               AND (CAST(? AS uuid) IS NULL OR a.session_type_id = CAST(? AS uuid))
             """;
@@ -33,7 +35,8 @@ public class NoShowCancellationReportRepository {
             FROM appointment a
             JOIN therapist_profile tp ON a.therapist_profile_id = tp.id
             JOIN users u ON tp.user_id = u.id
-            WHERE a.start_time BETWEEN CAST(? AS timestamptz) AND CAST(? AS timestamptz)
+            WHERE a.org_id = ?
+              AND a.start_time BETWEEN CAST(? AS timestamptz) AND CAST(? AS timestamptz)
               AND (CAST(? AS uuid) IS NULL OR tp.id = CAST(? AS uuid))
               AND (CAST(? AS uuid) IS NULL OR a.session_type_id = CAST(? AS uuid))
             GROUP BY tp.id, u.full_name
@@ -68,7 +71,7 @@ public class NoShowCancellationReportRepository {
             final String sessionTypeId) {
         final Long total = jdbc.queryForObject(
                 COUNT_SQL, Long.class,
-                dateFrom.atStartOfDay(), dateTo.plusDays(1).atStartOfDay(),
+                TenantContext.require(), dateFrom.atStartOfDay(), dateTo.plusDays(1).atStartOfDay(),
                 therapistId, therapistId, sessionTypeId, sessionTypeId);
         return total == null ? 0L : total;
     }
@@ -102,7 +105,7 @@ public class NoShowCancellationReportRepository {
                     rs.getLong("cancellation_count"),
                     rs.getBigDecimal("cancellation_rate")
                 },
-                dateFrom.atStartOfDay(), dateTo.plusDays(1).atStartOfDay(),
+                TenantContext.require(), dateFrom.atStartOfDay(), dateTo.plusDays(1).atStartOfDay(),
                 therapistId, therapistId, sessionTypeId, sessionTypeId,
                 limit, offset);
     }
@@ -133,7 +136,7 @@ public class NoShowCancellationReportRepository {
                     rs.getLong("cancellation_count"),
                     rs.getBigDecimal("cancellation_rate")
                 },
-                dateFrom.atStartOfDay(), dateTo.plusDays(1).atStartOfDay(),
+                TenantContext.require(), dateFrom.atStartOfDay(), dateTo.plusDays(1).atStartOfDay(),
                 therapistId, therapistId, sessionTypeId, sessionTypeId);
     }
 }

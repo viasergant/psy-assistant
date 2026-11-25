@@ -1,5 +1,6 @@
 package com.psyassistant.reporting.caseload;
 
+import com.psyassistant.common.tenant.TenantContext;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,14 +50,17 @@ public class CaseloadQueryService {
             final UUID therapistProfileId,
             final Pageable pageable) {
 
+        final UUID orgId = TenantContext.require();
         final String countSql = """
                 SELECT COUNT(DISTINCT c.id)
                 FROM clients c
                 JOIN appointment a ON a.client_id = c.id
-                WHERE a.therapist_profile_id = ?
+                WHERE c.org_id = ?
+                  AND a.therapist_profile_id = ?
                   AND a.status NOT IN ('CANCELLED')
                 """;
-        final Long total = jdbc.queryForObject(countSql, Long.class, therapistProfileId);
+        final Long total = jdbc.queryForObject(
+                countSql, Long.class, orgId, therapistProfileId);
         final long totalCount = total == null ? 0L : total;
 
         if (totalCount == 0) {
@@ -91,6 +95,7 @@ public class CaseloadQueryService {
                     ORDER BY start_time ASC
                     LIMIT 1
                 ) next_appt ON true
+                WHERE c.org_id = ?
                 GROUP BY c.id, c.full_name, c.treatment_status,
                          sr.completed_count, next_appt.start_time
                 ORDER BY c.full_name ASC
@@ -113,6 +118,7 @@ public class CaseloadQueryService {
                 therapistProfileId,
                 therapistProfileId,
                 therapistProfileId,
+                orgId,
                 pageable.getPageSize(),
                 pageable.getOffset()
         );

@@ -84,7 +84,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
      */
     @Query(value = """
         SELECT * FROM appointment a
-        WHERE a.therapist_profile_id = :therapistProfileId
+        WHERE a.org_id = :#{T(com.psyassistant.common.tenant.TenantContext).require()}
+        AND a.therapist_profile_id = :therapistProfileId
         AND a.status != 'CANCELLED'
         AND tstzrange(
             a.start_time,
@@ -114,7 +115,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
      */
     @Query(value = """
         SELECT * FROM appointment a
-        WHERE a.therapist_profile_id = :therapistProfileId
+        WHERE a.org_id = :#{T(com.psyassistant.common.tenant.TenantContext).require()}
+        AND a.therapist_profile_id = :therapistProfileId
         AND a.status != 'CANCELLED'
         AND a.id != :excludeAppointmentId
         AND tstzrange(
@@ -200,7 +202,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
             cancellation_reason = :reason,
             cancellation_type   = :cancellationType,
             cancelled_at        = NOW()
-        WHERE series_id = :seriesId
+        WHERE org_id = :#{T(com.psyassistant.common.tenant.TenantContext).require()}
+          AND series_id = :seriesId
           AND recurrence_index >= :fromIndex
           AND status != 'CANCELLED'
         """, nativeQuery = true)

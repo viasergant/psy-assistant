@@ -87,7 +87,11 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
                 COALESCE(SUM(CASE WHEN status = 'OVERDUE'
                     THEN (total - paid_amount) END), 0) AS totalOverdue,
                 COALESCE((SELECT SUM(amount) FROM payments
-                    WHERE created_at >= date_trunc('month', now())), 0) AS collectedThisMonth,
+                    WHERE created_at >= date_trunc('month', now())
+                      AND invoice_id IN (SELECT id FROM invoices
+                          WHERE org_id =
+                          :#{T(com.psyassistant.common.tenant.TenantContext).require()})), 0)
+                    AS collectedThisMonth,
                 COALESCE(SUM(CASE WHEN status IN ('ISSUED','OVERDUE','PARTIALLY_PAID')
                     AND (CURRENT_DATE - due_date) BETWEEN 0 AND 30
                     THEN (total - paid_amount) END), 0) AS aging030,
@@ -98,7 +102,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
                     AND (CURRENT_DATE - due_date) > 60
                     THEN (total - paid_amount) END), 0) AS aging60plus
             FROM invoices
-            WHERE status != 'CANCELLED'
+            WHERE org_id = :#{T(com.psyassistant.common.tenant.TenantContext).require()}
+              AND status != 'CANCELLED'
             """, nativeQuery = true)
     DashboardSummary getDashboardSummary();
 }

@@ -81,7 +81,8 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
     @Query(value = """
         SELECT c.*
         FROM clients c
-        WHERE c.id IN (
+        WHERE c.org_id = :#{T(com.psyassistant.common.tenant.TenantContext).require()}
+        AND c.id IN (
             SELECT DISTINCT c2.id
             FROM clients c2
             LEFT JOIN client_tags ct ON c2.id = ct.client_id

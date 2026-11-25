@@ -17,6 +17,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CaseloadSnapshotRepository extends JpaRepository<CaseloadSnapshot, UUID> {
 
+    /** SpEL expression resolving the current organization id for native queries. */
+    String CURRENT_ORG = ":#{T(com.psyassistant.common.tenant.TenantContext).require()}";
+
+
     /**
      * Returns the latest snapshots for all therapists, optionally filtered by
      * a set of allowed therapist IDs and/or specialization IDs.
@@ -33,7 +37,8 @@ public interface CaseloadSnapshotRepository extends JpaRepository<CaseloadSnapsh
             SELECT cs.*
             FROM caseload_snapshot cs
             JOIN therapist_profile tp ON tp.id = cs.therapist_profile_id
-            WHERE cs.therapist_profile_id IN (:therapistIds)
+            WHERE tp.org_id = :#{T(com.psyassistant.common.tenant.TenantContext).require()}
+              AND cs.therapist_profile_id IN (:therapistIds)
               AND (:snapshotDate IS NULL OR cs.snapshot_date = :snapshotDate)
               AND cs.snapshot_date = (
                   SELECT MAX(cs2.snapshot_date)
@@ -52,7 +57,8 @@ public interface CaseloadSnapshotRepository extends JpaRepository<CaseloadSnapsh
             SELECT COUNT(DISTINCT cs.therapist_profile_id)
             FROM caseload_snapshot cs
             JOIN therapist_profile tp ON tp.id = cs.therapist_profile_id
-            WHERE cs.therapist_profile_id IN (:therapistIds)
+            WHERE tp.org_id = :#{T(com.psyassistant.common.tenant.TenantContext).require()}
+              AND cs.therapist_profile_id IN (:therapistIds)
               AND (:snapshotDate IS NULL OR cs.snapshot_date = :snapshotDate)
               AND cs.snapshot_date = (
                   SELECT MAX(cs2.snapshot_date)
@@ -80,7 +86,8 @@ public interface CaseloadSnapshotRepository extends JpaRepository<CaseloadSnapsh
      * @param therapistProfileId therapist profile UUID
      * @return the therapist name, or null if not found
      */
-    @Query(value = "SELECT name FROM therapist_profile WHERE id = :id", nativeQuery = true)
+    @Query(value = "SELECT name FROM therapist_profile WHERE id = :id "
+            + "AND org_id = " + CURRENT_ORG, nativeQuery = true)
     String findTherapistNameById(@Param("id") UUID therapistProfileId);
 
     /**
@@ -88,7 +95,8 @@ public interface CaseloadSnapshotRepository extends JpaRepository<CaseloadSnapsh
      *
      * @return set of active therapist profile UUIDs
      */
-    @Query(value = "SELECT id FROM therapist_profile WHERE active = true", nativeQuery = true)
+    @Query(value = "SELECT id FROM therapist_profile WHERE active = true "
+            + "AND org_id = " + CURRENT_ORG, nativeQuery = true)
     Set<UUID> findAllActiveTherapistProfileIds();
 
     /**
@@ -97,7 +105,8 @@ public interface CaseloadSnapshotRepository extends JpaRepository<CaseloadSnapsh
      * @param therapistIds set of therapist profile IDs
      * @return list of Object arrays, each containing [id (UUID), name (String)]
      */
-    @Query(value = "SELECT id, name FROM therapist_profile WHERE id IN (:therapistIds)",
+    @Query(value = "SELECT id, name FROM therapist_profile WHERE id IN (:therapistIds) "
+                    + "AND org_id = " + CURRENT_ORG,
             nativeQuery = true)
     List<Object[]> findTherapistNamesById(@Param("therapistIds") Set<UUID> therapistIds);
 }

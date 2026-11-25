@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-25
 
+### Security (tenant isolation)
+
+- **Raw SQL is now scoped to the caller's organisation** — native/JDBC queries bypass the Hibernate `orgFilter`, so they leaked data across organisations. Added `org_id` conditions to client search, revenue / no-show / client-retention / lead-conversion / therapist-utilization reports, caseload list and snapshots, appointment conflict checks, bulk series cancel and the finance dashboard summary
+- **`TenantContext.require()`** — raw-SQL callers fail fast if no organisation is bound instead of returning unscoped data
+
 ### Added (global admin)
 
 - **Users tab in Global Admin** — read-only, paginated list of all registered users across all organisations (email, name, roles, organisation, status, created) with role/status/search filters and sorting; frontend route `/global-admin/users`

@@ -1,5 +1,6 @@
 package com.psyassistant.reporting.reports.repository;
 
+import com.psyassistant.common.tenant.TenantContext;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,7 +18,8 @@ public class RevenueReportRepository {
                 SELECT DATE_TRUNC('month', i.issued_date), tp.id
                 FROM invoices i
                 JOIN therapist_profile tp ON i.therapist_id = tp.user_id
-                WHERE i.status NOT IN ('DRAFT', 'CANCELLED')
+                WHERE i.org_id = ?
+                  AND i.status NOT IN ('DRAFT', 'CANCELLED')
                   AND i.issued_date BETWEEN ? AND ?
                   AND (CAST(? AS uuid) IS NULL OR tp.id = CAST(? AS uuid))
                 GROUP BY DATE_TRUNC('month', i.issued_date), tp.id
@@ -39,7 +41,8 @@ public class RevenueReportRepository {
                 FROM payments
                 GROUP BY invoice_id
             ) p ON p.invoice_id = i.id
-            WHERE i.status NOT IN ('DRAFT', 'CANCELLED')
+            WHERE i.org_id = ?
+              AND i.status NOT IN ('DRAFT', 'CANCELLED')
               AND i.issued_date BETWEEN ? AND ?
               AND (CAST(? AS uuid) IS NULL OR tp.id = CAST(? AS uuid))
             GROUP BY DATE_TRUNC('month', i.issued_date), tp.id, u.full_name
@@ -68,7 +71,7 @@ public class RevenueReportRepository {
      */
     public long count(final LocalDate dateFrom, final LocalDate dateTo, final String therapistId) {
         final Long total = jdbc.queryForObject(
-                COUNT_SQL, Long.class, dateFrom, dateTo, therapistId, therapistId);
+                COUNT_SQL, Long.class, TenantContext.require(), dateFrom, dateTo, therapistId, therapistId);
         return total == null ? 0L : total;
     }
 
@@ -98,7 +101,7 @@ public class RevenueReportRepository {
                     rs.getBigDecimal("paid_total"),
                     rs.getBigDecimal("outstanding_amount")
                 },
-                dateFrom, dateTo, therapistId, therapistId, limit, offset);
+                TenantContext.require(), dateFrom, dateTo, therapistId, therapistId, limit, offset);
     }
 
     /**
@@ -124,6 +127,6 @@ public class RevenueReportRepository {
                     rs.getBigDecimal("paid_total"),
                     rs.getBigDecimal("outstanding_amount")
                 },
-                dateFrom, dateTo, therapistId, therapistId);
+                TenantContext.require(), dateFrom, dateTo, therapistId, therapistId);
     }
 }

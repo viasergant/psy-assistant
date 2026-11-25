@@ -1,5 +1,6 @@
 package com.psyassistant.reporting.reports.repository;
 
+import com.psyassistant.common.tenant.TenantContext;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,7 +15,8 @@ public class LeadConversionReportRepository {
     private static final String COUNT_SQL = """
             SELECT COUNT(DISTINCT l.source)
             FROM leads l
-            WHERE l.created_at::date BETWEEN ? AND ?
+            WHERE l.org_id = ?
+              AND l.created_at::date BETWEEN ? AND ?
               AND (? IS NULL OR l.source = ?)
             """;
 
@@ -26,7 +28,8 @@ public class LeadConversionReportRepository {
                        COUNT(*) FILTER (WHERE l.converted_client_id IS NOT NULL)
                        * 100.0 / NULLIF(COUNT(*), 0), 2)                 AS conversion_rate
             FROM leads l
-            WHERE l.created_at::date BETWEEN ? AND ?
+            WHERE l.org_id = ?
+              AND l.created_at::date BETWEEN ? AND ?
               AND (? IS NULL OR l.source = ?)
             GROUP BY l.source
             ORDER BY l.source
@@ -55,7 +58,7 @@ public class LeadConversionReportRepository {
     public long count(final LocalDate dateFrom, final LocalDate dateTo, final String leadSource) {
         final Long total = jdbc.queryForObject(
                 COUNT_SQL, Long.class,
-                dateFrom, dateTo, leadSource, leadSource);
+                TenantContext.require(), dateFrom, dateTo, leadSource, leadSource);
         return total == null ? 0L : total;
     }
 
@@ -83,7 +86,7 @@ public class LeadConversionReportRepository {
                     rs.getLong("converted_leads"),
                     rs.getBigDecimal("conversion_rate")
                 },
-                dateFrom, dateTo, leadSource, leadSource, limit, offset);
+                TenantContext.require(), dateFrom, dateTo, leadSource, leadSource, limit, offset);
     }
 
     /**
@@ -106,7 +109,8 @@ public class LeadConversionReportRepository {
                            COUNT(*) FILTER (WHERE l.converted_client_id IS NOT NULL)
                            * 100.0 / NULLIF(COUNT(*), 0), 2)                 AS conversion_rate
                 FROM leads l
-                WHERE l.created_at::date BETWEEN ? AND ?
+                WHERE l.org_id = ?
+              AND l.created_at::date BETWEEN ? AND ?
                   AND (? IS NULL OR l.source = ?)
                 GROUP BY l.source
                 ORDER BY l.source
@@ -119,6 +123,6 @@ public class LeadConversionReportRepository {
                     rs.getLong("converted_leads"),
                     rs.getBigDecimal("conversion_rate")
                 },
-                dateFrom, dateTo, leadSource, leadSource);
+                TenantContext.require(), dateFrom, dateTo, leadSource, leadSource);
     }
 }

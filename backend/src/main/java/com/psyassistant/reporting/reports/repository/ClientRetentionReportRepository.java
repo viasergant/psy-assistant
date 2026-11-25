@@ -1,7 +1,9 @@
 package com.psyassistant.reporting.reports.repository;
 
+import com.psyassistant.common.tenant.TenantContext;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -19,18 +21,21 @@ public class ClientRetentionReportRepository {
             WITH client_last_session AS (
                 SELECT client_id, MAX(session_date) AS last_session
                 FROM session_record
+                WHERE org_id = ?
                 GROUP BY client_id
             ),
             period_active AS (
                 SELECT COUNT(DISTINCT sr.client_id) AS active_count
                 FROM session_record sr
-                WHERE sr.session_date BETWEEN ? AND ?
+                WHERE sr.org_id = ?
+                  AND sr.session_date BETWEEN ? AND ?
                   AND (CAST(? AS uuid) IS NULL OR sr.therapist_id = CAST(? AS uuid))
             ),
             new_acquired AS (
                 SELECT COUNT(DISTINCT sr.client_id) AS new_count
                 FROM session_record sr
-                WHERE sr.session_date BETWEEN ? AND ?
+                WHERE sr.org_id = ?
+                  AND sr.session_date BETWEEN ? AND ?
                   AND (CAST(? AS uuid) IS NULL OR sr.therapist_id = CAST(? AS uuid))
                   AND NOT EXISTS (
                       SELECT 1 FROM session_record sr2
@@ -81,6 +86,7 @@ public class ClientRetentionReportRepository {
             final LocalDate dateTo,
             final String therapistId,
             final int churnThresholdDays) {
+        final UUID orgId = TenantContext.require();
         return jdbc.query(
                 DATA_SQL,
                 (rs, rowNum) -> new Object[]{
@@ -89,10 +95,12 @@ public class ClientRetentionReportRepository {
                     rs.getLong("churned_count"),
                     rs.getBigDecimal("retention_rate")
                 },
+                // client_last_session params
+                orgId,
                 // period_active params
-                dateFrom, dateTo, therapistId, therapistId,
+                orgId, dateFrom, dateTo, therapistId, therapistId,
                 // new_acquired params
-                dateFrom, dateTo, therapistId, therapistId, dateFrom,
+                orgId, dateFrom, dateTo, therapistId, therapistId, dateFrom,
                 // churned params
                 dateTo, churnThresholdDays, dateFrom);
     }

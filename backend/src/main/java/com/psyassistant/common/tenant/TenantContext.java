@@ -27,6 +27,23 @@ public final class TenantContext {
         return CURRENT_ORG.get();
     }
 
+    /**
+     * Returns the current organization id, failing fast when none is bound.
+     *
+     * <p>Raw SQL bypasses the Hibernate {@code orgFilter}; callers of such queries must
+     * scope by this value explicitly.
+     *
+     * @return current organization id, never null
+     * @throws IllegalStateException if no organization is bound to the current thread
+     */
+    public static UUID require() {
+        UUID orgId = CURRENT_ORG.get();
+        if (orgId == null) {
+            throw new IllegalStateException("No organization bound to the current request");
+        }
+        return orgId;
+    }
+
     public static void clear() {
         CURRENT_ORG.remove();
     }

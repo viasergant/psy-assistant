@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, shareReplay, switchMap } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { AppModeService } from './app-mode.service';
+import { AppModeService, isSingleTherapistMode } from './app-mode.service';
 import { TherapistManagementService } from '../../features/admin/therapists/services/therapist-management.service';
 
 /**
@@ -21,7 +21,7 @@ export class SoloTherapistService {
   /** Emits the solo therapist's profile ID once and replays it to late subscribers. */
   readonly profileId$: Observable<string | null> = this.modeService.mode$.pipe(
     switchMap(mode => {
-      if (mode !== 'SOLO') return of(null);
+      if (!isSingleTherapistMode(mode)) return of(null);
       return this.therapistService.getTherapists(0, 1, undefined, true).pipe(
         map(page => page.content[0]?.id ?? null),
         catchError(() => of(null)),

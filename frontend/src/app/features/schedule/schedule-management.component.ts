@@ -15,7 +15,7 @@ import { CalendarFacadeService } from './services/calendar-facade.service';
 import { ScheduleApiService } from './services/schedule-api.service';
 import { AppointmentApiService } from './services/appointment-api.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { AppModeService } from '../../core/mode/app-mode.service';
+import { AppModeService, isSingleTherapistMode } from '../../core/mode/app-mode.service';
 import { SoloTherapistService } from '../../core/mode/solo-therapist.service';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
@@ -776,7 +776,7 @@ export class ScheduleManagementComponent implements OnInit, OnDestroy {
     const currentProfileId = getCurrentTherapistProfileId(this.authService);
 
     this.isAdmin = isSystemAdmin(this.authService);
-    this.isSoloMode = this.modeService.mode === 'SOLO';
+    this.isSoloMode = isSingleTherapistMode(this.modeService.mode);
 
     if (this.isAdmin && !this.isSoloMode) {
       // Clinic admin: can select any therapist from the list

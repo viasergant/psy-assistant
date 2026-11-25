@@ -13,7 +13,7 @@ import { TherapistProfile } from '../../admin/therapists/models/therapist.model'
 import { ClientListItem } from '../models/client.model';
 import { ClientService } from '../services/client.service';
 import { AppIfModeDirective } from '../../../core/mode/app-if-mode.directive';
-import { AppModeService } from '../../../core/mode/app-mode.service';
+import { AppModeService, isSingleTherapistMode } from '../../../core/mode/app-mode.service';
 
 @Component({
   selector: 'app-client-list',
@@ -546,7 +546,7 @@ export class ClientListComponent implements OnInit, OnDestroy {
   ) {}
 
   get isSolo(): boolean {
-    return this.appModeService.mode === 'SOLO';
+    return isSingleTherapistMode(this.appModeService.mode);
   }
 
   ngOnInit(): void {

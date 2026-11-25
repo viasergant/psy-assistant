@@ -20,7 +20,7 @@ import { jwtDecode } from 'jwt-decode';
 import { CarePlanListComponent } from '../care-plans/care-plan-list/care-plan-list.component';
 import { ClientPackagesComponent } from '../components/client-packages/client-packages.component';
 import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-panel/risk-flags-panel.component';
-import { AppModeService } from '../../../core/mode/app-mode.service';
+import { AppModeService, isSingleTherapistMode } from '../../../core/mode/app-mode.service';
 import { SoloTherapistService } from '../../../core/mode/solo-therapist.service';
 
 /**
@@ -571,7 +571,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
     this._userRole = getCurrentUserRole(this.authService);
     this.recentTagHints = this.loadRecentTagHints();
 
-    if (this.appModeService.mode === 'SOLO' && !this.therapistProfileId) {
+    if (isSingleTherapistMode(this.appModeService.mode) && !this.therapistProfileId) {
       this.soloTherapistService.profileId$.subscribe(id => {
         this.soloTherapistProfileId = id;
       });
@@ -626,7 +626,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   }
 
   get needsTherapistPicker(): boolean {
-    if (this.appModeService.mode === 'SOLO') return false;
+    if (isSingleTherapistMode(this.appModeService.mode)) return false;
     return !this.therapistProfileId &&
       (this._userRole.includes('SYSTEM_ADMINISTRATOR') || this._userRole.includes('RECEPTION_ADMIN_STAFF'));
   }

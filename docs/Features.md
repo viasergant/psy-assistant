@@ -194,6 +194,7 @@ The app boots in one of two modes, determined by `GET /api/v1/meta`:
 |---------|-------|------|--------|
 | Risk flag type list (platform-wide) | GLOBAL_ADMIN | ✓ | ✓ |
 | Create / edit risk flag type (platform-wide) | GLOBAL_ADMIN | ✓ | ✓ |
+| User list (all organisations, read-only) | GLOBAL_ADMIN | ✓ | ✓ |
 
 ---
 

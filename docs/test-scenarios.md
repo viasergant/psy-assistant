@@ -21,8 +21,9 @@
 | Billing | 13 | BILL-001 – BILL-013 |
 | Notification Templates | 4 | NT-001 – NT-004 |
 | Risk Flag Types | 5 | RFT-001 – RFT-005 |
+| Global Admin — User List | 5 | GADM-001 – GADM-005 |
 | Role-Based Access Control | 8 | RBAC-001 – RBAC-008 |
-| **Total** | **249** | |
+| **Total** | **254** | |
 
 ---
 
@@ -2418,6 +2419,57 @@ These TODOs indicate tests for those behaviors should be written but may be expe
 | Preconditions | No token |
 | Actor | ANON |
 | Action | `POST /api/v1/admin/risk-flag-types` `{"name":"Test"}` |
+| Expected result | 401 |
+| HTTP status | 401 |
+
+---
+
+## 17a. Global Admin — User List
+
+**Endpoint:** `GET /api/v1/global-admin/users` (params: `role`, `active`, `search`, `page`, `size`, `sort`)
+
+### GADM-001 — List all users across organisations
+| Field | Value |
+|---|---|
+| Preconditions | Users exist in at least two organisations; caller has `GLOBAL_ADMIN` authority |
+| Actor | GLOBAL_ADMIN |
+| Action | `GET /api/v1/global-admin/users` |
+| Expected result | 200; page contains users of all organisations, each with `orgId`, `orgName`, `orgType` |
+| HTTP status | 200 |
+
+### GADM-002 — Filter by role, status and search
+| Field | Value |
+|---|---|
+| Preconditions | As GADM-001 |
+| Actor | GLOBAL_ADMIN |
+| Action | `GET /api/v1/global-admin/users?role=THERAPIST&active=true&search=ann` |
+| Expected result | 200; only active therapists whose email or name contains "ann" (case-insensitive; `%`/`_` matched literally) |
+| HTTP status | 200 |
+
+### GADM-003 — Page size and sort are bounded
+| Field | Value |
+|---|---|
+| Preconditions | As GADM-001 |
+| Actor | GLOBAL_ADMIN |
+| Action | `GET /api/v1/global-admin/users?size=1000&sort=passwordHash,asc` |
+| Expected result | 200; size clamped to 100; unknown sort field falls back to `createdAt,desc` |
+| HTTP status | 200 |
+
+### GADM-004 — SYSTEM_ADMINISTRATOR without GLOBAL_ADMIN is denied
+| Field | Value |
+|---|---|
+| Preconditions | Caller is a regular system administrator |
+| Actor | SYSTEM_ADMINISTRATOR |
+| Action | `GET /api/v1/global-admin/users` |
+| Expected result | 403 `ACCESS_DENIED` |
+| HTTP status | 403 |
+
+### GADM-005 — Unauthenticated request
+| Field | Value |
+|---|---|
+| Preconditions | No token |
+| Actor | Anonymous |
+| Action | `GET /api/v1/global-admin/users` |
 | Expected result | 401 |
 | HTTP status | 401 |
 

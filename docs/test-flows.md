@@ -1334,6 +1334,22 @@ End-to-end test cases derived from [Features.md](Features.md). Each case covers 
 
 ---
 
+### TC-GADMIN-003 — View all registered users
+| Field | Value |
+|-------|-------|
+| Mode | BOTH |
+| Role | GLOBAL_ADMIN |
+| Preconditions | Users exist in more than one organisation |
+
+**Steps:**
+1. Open **Global Admin** in the sidebar and select the **Users** tab.
+2. Type part of an email or name in **Search**; pick a role and status filter.
+3. Sort by **Created** and change the page.
+
+**Expected:** Table lists users of all organisations with their organisation name/type; filters, sorting and paging apply server-side. A non-global user has no menu item and gets 403 from the API.
+
+---
+
 ## 15. Therapist Profile Setup
 
 ### TC-PROFILE-001 — Redirect to wizard on incomplete profile

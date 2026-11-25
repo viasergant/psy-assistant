@@ -760,7 +760,34 @@
   "globalAdmin": {
     "title": "Global Admin Settings",
     "tabs": {
-      "riskFlagTypes": "Risk Flag Types"
+      "riskFlagTypes": "Risk Flag Types",
+      "users": "Users"
+    },
+    "users": {
+      "pageTitle": "All registered users",
+      "ariaFilters": "User filters",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Email or name",
+      "roleLabel": "Role",
+      "statusLabel": "Status",
+      "filterAllRoles": "All roles",
+      "filterAllStatuses": "All statuses",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "noResults": "No users found.",
+      "loadError": "Failed to load users.",
+      "tableHeaders": {
+        "name": "Name",
+        "email": "Email",
+        "roles": "Roles",
+        "organization": "Organization",
+        "status": "Status",
+        "created": "Created"
+      },
+      "orgType": {
+        "SOLO": "Solo",
+        "CLINIC": "Clinic"
+      }
     }
   },
   "admin": {

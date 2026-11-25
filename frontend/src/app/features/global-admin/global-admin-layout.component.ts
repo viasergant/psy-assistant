@@ -27,6 +27,16 @@ import { TranslocoModule } from '@jsverse/transloco';
         >
           {{ 'globalAdmin.tabs.riskFlagTypes' | transloco }}
         </a>
+        <a
+          routerLink="/global-admin/users"
+          routerLinkActive="active"
+          class="tab"
+          role="tab"
+          [attr.aria-selected]="rla2.isActive"
+          #rla2="routerLinkActive"
+        >
+          {{ 'globalAdmin.tabs.users' | transloco }}
+        </a>
       </nav>
 
       <div class="ga-content">

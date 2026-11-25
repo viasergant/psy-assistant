@@ -14,6 +14,10 @@ export default [
       {
         path: 'risk-flag-types',
         loadChildren: () => import('../admin/risk-flag-types/risk-flag-types.routes')
+      },
+      {
+        path: 'users',
+        loadChildren: () => import('./users/global-users.routes')
       }
     ]
   }

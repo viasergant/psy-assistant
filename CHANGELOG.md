@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-25
 
+### Added (global admin)
+
+- **Users tab in Global Admin** — read-only, paginated list of all registered users across all organisations (email, name, roles, organisation, status, created) with role/status/search filters and sorting; frontend route `/global-admin/users`
+- **`GET /api/v1/global-admin/users`** — `GLOBAL_ADMIN` authority only, available in every deployment mode; `UserSpecification.withFilters` gained an optional email/name `search`
+
 ### Security (database encryption)
 
 - **Field-level encryption of clinical free text** (AES-256-GCM): client/lead `notes`, referral notes, risk-flag notes, care plan descriptions and goal progress notes, outcome measure notes, session-record notes, attendance/appointment notes, and the old/new values copied into client-profile, care-plan and appointment audit tables. Name, email, phone and DOB stay plaintext so client search is unchanged.

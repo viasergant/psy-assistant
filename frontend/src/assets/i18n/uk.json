@@ -760,7 +760,34 @@
   "globalAdmin": {
     "title": "Глобальні налаштування адміна",
     "tabs": {
-      "riskFlagTypes": "Типи прапорців ризику"
+      "riskFlagTypes": "Типи прапорців ризику",
+      "users": "Користувачі"
+    },
+    "users": {
+      "pageTitle": "Усі зареєстровані користувачі",
+      "ariaFilters": "Фільтри користувачів",
+      "searchLabel": "Пошук",
+      "searchPlaceholder": "Email або ім'я",
+      "roleLabel": "Роль",
+      "statusLabel": "Статус",
+      "filterAllRoles": "Усі ролі",
+      "filterAllStatuses": "Усі статуси",
+      "statusActive": "Активний",
+      "statusInactive": "Неактивний",
+      "noResults": "Користувачів не знайдено.",
+      "loadError": "Не вдалося завантажити користувачів.",
+      "tableHeaders": {
+        "name": "Ім'я",
+        "email": "Email",
+        "roles": "Ролі",
+        "organization": "Організація",
+        "status": "Статус",
+        "created": "Створено"
+      },
+      "orgType": {
+        "SOLO": "Соло",
+        "CLINIC": "Клініка"
+      }
     }
   },
   "admin": {

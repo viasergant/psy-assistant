@@ -1,8 +1,10 @@
 package com.psyassistant.sessions.domain;
 
 import com.psyassistant.common.audit.BaseEntity;
+import com.psyassistant.common.config.EncryptedTextConverter;
 import com.psyassistant.scheduling.domain.SessionType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -113,6 +115,7 @@ public class SessionRecord extends BaseEntity {
     private String cancellationReason;
 
     /** Clinical notes entered by therapist when completing the session (required for COMPLETED status). */
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "session_notes", columnDefinition = "TEXT")
     private String sessionNotes;
 

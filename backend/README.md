@@ -54,7 +54,9 @@ backend/
 | `DB_USERNAME` | `psyassistant`                           | Database username        |
 | `DB_PASSWORD` | `psyassistant`                           | Database password        |
 | `JWT_SECRET`  | local profile only: built-in dev fallback | JWT signing secret (required outside local dev unless overridden in config) |
-| `SESSION_NOTES_ENCRYPTION_KEY` | local profile only: built-in dev fallback | AES-256-GCM key for session note encryption. Must be a base64-encoded 32-byte value. Generate with: `openssl rand -base64 32` |
+| `SESSION_NOTES_ENCRYPTION_KEY` | local profile only: built-in dev fallback | Base64 32-byte AES-256-GCM key (key id `k1`) for field-level encryption of clinical text. Generate with: `openssl rand -base64 32`. See [ADR 002](../docs/adr/002-encryption-at-rest.md) for rotation |
+| `DB_SSLMODE` | `require` (prod) | Postgres TLS mode; use `verify-full` with `DB_SSLROOTCERT` for a cloud provider |
+| `APP_ENCRYPTION_ACTIVE_KEY_ID` / `APP_ENCRYPTION_KEYS_<ID>` | `k1` | Key rotation: add key `<id>` and make it active, then run the backfill |
 
 For local development, the defaults provided by `application.yml` and
 `application-local.yml` match the Docker Compose service configuration, and the

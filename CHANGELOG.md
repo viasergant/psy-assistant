@@ -6,7 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — 2026-11-20
+## [Unreleased] — 2026-11-25
+
+### Security (database encryption)
+
+- **Field-level encryption of clinical free text** (AES-256-GCM): client/lead `notes`, referral notes, risk-flag notes, care plan descriptions and goal progress notes, outcome measure notes, session-record notes, attendance/appointment notes, and the old/new values copied into client-profile, care-plan and appointment audit tables. Name, email, phone and DOB stay plaintext so client search is unchanged.
+- **Versioned keys:** ciphertext is now `enc:<keyId>:...`; `k1` is the existing `SESSION_NOTES_ENCRYPTION_KEY`, more keys via `app.encryption.keys.<id>` + `app.encryption.active-key-id`. Legacy session-note ciphertext remains readable.
+- **`EncryptionBackfillRunner`** (`app.encryption.backfill.enabled=true`, run once): encrypts existing plaintext rows, upgrades legacy ciphertext and re-encrypts rows to the active key (key rotation). Idempotent.
+- **Postgres TLS** in the `prod` profile via `DB_SSLMODE` (default `require`) / `DB_SSLROOTCERT`.
+- ADR `docs/adr/002-encryption-at-rest.md`.
 
 ### Added (contact methods)
 

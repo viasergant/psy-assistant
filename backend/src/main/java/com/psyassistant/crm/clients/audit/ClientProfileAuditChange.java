@@ -1,6 +1,8 @@
 package com.psyassistant.crm.clients.audit;
 
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,9 +30,11 @@ public class ClientProfileAuditChange {
     @Column(name = "field_name", nullable = false, length = 128)
     private String fieldName;
 
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "old_value", columnDefinition = "TEXT")
     private String oldValue;
 
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "new_value", columnDefinition = "TEXT")
     private String newValue;
 

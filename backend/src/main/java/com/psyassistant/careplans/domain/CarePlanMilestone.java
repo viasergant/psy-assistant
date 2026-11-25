@@ -1,7 +1,9 @@
 package com.psyassistant.careplans.domain;
 
 import com.psyassistant.common.audit.BaseEntity;
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -22,6 +24,7 @@ public class CarePlanMilestone extends BaseEntity {
     @JoinColumn(name = "goal_id", nullable = false, updatable = false)
     private CarePlanGoal goal;
 
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 

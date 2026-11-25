@@ -1,6 +1,8 @@
 package com.psyassistant.riskflags.domain;
 
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -41,6 +43,7 @@ public class ClientRiskFlag {
     @Column(nullable = false, length = 20)
     private ClientRiskFlagStatus status;
 
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "clinical_note", columnDefinition = "TEXT")
     private String clinicalNote;
 
@@ -60,6 +63,7 @@ public class ClientRiskFlag {
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "resolution_note", columnDefinition = "TEXT")
     private String resolutionNote;
 

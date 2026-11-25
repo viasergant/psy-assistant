@@ -1,6 +1,8 @@
 package com.psyassistant.careplans.domain;
 
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
@@ -45,6 +47,7 @@ public class OutcomeMeasureEntry {
     @Column(name = "assessment_date", nullable = false, updatable = false)
     private LocalDate assessmentDate;
 
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "notes", columnDefinition = "TEXT", updatable = false)
     private String notes;
 

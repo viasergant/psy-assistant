@@ -1,6 +1,8 @@
 package com.psyassistant.careplans.domain;
 
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
@@ -36,6 +38,7 @@ public class GoalProgressNote {
     @Column(name = "care_plan_id", nullable = false, updatable = false)
     private UUID carePlanId;
 
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "note_text", nullable = false, columnDefinition = "TEXT", updatable = false)
     private String noteText;
 

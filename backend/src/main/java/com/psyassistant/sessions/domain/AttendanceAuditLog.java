@@ -1,6 +1,8 @@
 package com.psyassistant.sessions.domain;
 
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -50,6 +52,7 @@ public class AttendanceAuditLog {
     private AttendanceOutcome newOutcome;
 
     /** Optional free-text note about the change. */
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
 

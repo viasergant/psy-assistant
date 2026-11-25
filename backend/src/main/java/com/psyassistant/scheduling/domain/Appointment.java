@@ -1,7 +1,9 @@
 package com.psyassistant.scheduling.domain;
 
 import com.psyassistant.common.audit.BaseEntity;
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -115,6 +117,7 @@ public class Appointment extends BaseEntity {
     // ========== Notes and Metadata ==========
 
     /** Free-form notes about the appointment (session prep, special requirements, etc.). */
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 

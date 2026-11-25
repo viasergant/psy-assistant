@@ -1,6 +1,8 @@
 package com.psyassistant.careplans.domain;
 
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -55,9 +57,11 @@ public class CarePlanAudit {
     @Column(name = "field_name", length = 100, updatable = false)
     private String fieldName;
 
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "old_value", columnDefinition = "TEXT", updatable = false)
     private String oldValue;
 
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "new_value", columnDefinition = "TEXT", updatable = false)
     private String newValue;
 

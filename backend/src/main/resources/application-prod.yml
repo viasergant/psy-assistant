@@ -11,6 +11,11 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      data-source-properties:
+        # TLS to Postgres (docs/adr/002-encryption-at-rest.md). Use verify-full with DB_SSLROOTCERT in the cloud.
+        sslmode: ${DB_SSLMODE:require}
+        sslrootcert: ${DB_SSLROOTCERT:}
 
 springdoc:
   swagger-ui:

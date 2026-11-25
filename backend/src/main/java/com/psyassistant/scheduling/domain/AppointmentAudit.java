@@ -1,6 +1,8 @@
 package com.psyassistant.scheduling.domain;
 
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -93,16 +95,19 @@ public class AppointmentAudit {
     private String fieldName;
 
     /** Value before the change (JSON or string representation). */
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "old_value", columnDefinition = "TEXT")
     private String oldValue;
 
     /** Value after the change (JSON or string representation). */
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "new_value", columnDefinition = "TEXT")
     private String newValue;
 
     // ========== Metadata ==========
 
     /** Human-readable notes about the action. */
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 

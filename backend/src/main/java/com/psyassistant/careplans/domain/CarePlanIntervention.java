@@ -1,7 +1,9 @@
 package com.psyassistant.careplans.domain;
 
 import com.psyassistant.common.audit.BaseEntity;
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -25,6 +27,7 @@ public class CarePlanIntervention extends BaseEntity {
     @Column(name = "intervention_type", nullable = false, length = 100)
     private String interventionType;
 
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 

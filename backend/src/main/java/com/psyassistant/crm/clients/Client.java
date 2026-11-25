@@ -1,8 +1,10 @@
 package com.psyassistant.crm.clients;
 
 import com.psyassistant.common.audit.BaseEntity;
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -68,6 +70,7 @@ public class Client extends BaseEntity {
     private UUID assignedTherapistId;
 
     /** Free-text notes about the client (may include pre-conversion lead notes). */
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(columnDefinition = "TEXT")
     private String notes;
 
@@ -116,6 +119,7 @@ public class Client extends BaseEntity {
     private String referralContactName;
 
     /** Additional referral details. */
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(name = "referral_notes", columnDefinition = "TEXT")
     private String referralNotes;
 

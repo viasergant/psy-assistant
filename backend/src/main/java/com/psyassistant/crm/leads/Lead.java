@@ -1,8 +1,10 @@
 package com.psyassistant.crm.leads;
 
 import com.psyassistant.common.audit.BaseEntity;
+import com.psyassistant.common.config.EncryptedTextConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -48,6 +50,7 @@ public class Lead extends BaseEntity {
     private UUID ownerId;
 
     /** Free-text notes about the lead. */
+    @Convert(converter = EncryptedTextConverter.class)
     @Column(columnDefinition = "TEXT")
     private String notes;
 

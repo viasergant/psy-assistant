@@ -26,7 +26,10 @@ public class AuthException extends RuntimeException {
         ACCOUNT_LOCKED,
 
         /** The supplied password-reset token is invalid or has already been used. */
-        TOKEN_INVALID
+        TOKEN_INVALID,
+
+        /** The credentials are correct but the email address has not been confirmed yet. */
+        EMAIL_NOT_VERIFIED
     }
 
     private final ErrorCode code;

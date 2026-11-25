@@ -2,6 +2,7 @@ package com.psyassistant.common.exception;
 
 import com.psyassistant.auth.service.AuthException;
 import com.psyassistant.auth.service.PasswordPolicyException;
+import com.psyassistant.auth.token.InvalidTokenException;
 import com.psyassistant.billing.catalog.DuplicateServiceException;
 import com.psyassistant.billing.invoice.InvoiceStateException;
 import com.psyassistant.billing.payment.PaymentValidationException;
@@ -9,8 +10,10 @@ import com.psyassistant.careplans.exception.CarePlanNotActiveException;
 import com.psyassistant.careplans.exception.MaxActivePlansExceededException;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
+import com.psyassistant.common.mode.CaptchaFailedException;
 import com.psyassistant.common.mode.RegistrationException;
 import com.psyassistant.common.mode.SetupAlreadyCompleteException;
+import com.psyassistant.common.mode.TooManyRequestsException;
 import com.psyassistant.crm.leads.InvalidStatusTransitionException;
 import com.psyassistant.crm.leads.LeadAlreadyConvertedException;
 import com.psyassistant.notifications.template.TemplateNotInactiveException;
@@ -211,9 +214,61 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles self-service registration conflicts, e.g. email already registered (409).
+     * Handles an invalid or expired one-time token (400).
      *
-     * @param ex      the registration exception
+     * @param ex      the exception
+     * @param request the current HTTP request
+     * @return 400 with code {@code TOKEN_INVALID} or {@code TOKEN_EXPIRED}
+     */
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidToken(
+            final InvalidTokenException ex,
+            final HttpServletRequest request) {
+        String code = ex.getReason() == InvalidTokenException.Reason.EXPIRED
+                ? "TOKEN_EXPIRED" : "TOKEN_INVALID";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                new ErrorResponse(Instant.now(), HttpStatus.BAD_REQUEST.value(),
+                        "Token is invalid or has expired", code, request.getRequestURI()));
+    }
+
+    /**
+     * Handles a failed CAPTCHA check (400).
+     *
+     * @param ex      the exception
+     * @param request the current HTTP request
+     * @return 400 with code {@code CAPTCHA_FAILED}
+     */
+    @ExceptionHandler(CaptchaFailedException.class)
+    public ResponseEntity<ErrorResponse> handleCaptchaFailed(
+            final CaptchaFailedException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                new ErrorResponse(Instant.now(), HttpStatus.BAD_REQUEST.value(),
+                        ex.getMessage(), "CAPTCHA_FAILED", request.getRequestURI()));
+    }
+
+    /**
+     * Handles rate-limit violations on public endpoints (429).
+     *
+     * @param ex      the exception
+     * @param request the current HTTP request
+     * @return 429 with code {@code TOO_MANY_REQUESTS}
+     */
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ErrorResponse> handleTooManyRequests(
+            final TooManyRequestsException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", "3600")
+                .body(
+                new ErrorResponse(Instant.now(), HttpStatus.TOO_MANY_REQUESTS.value(),
+                        ex.getMessage(), "TOO_MANY_REQUESTS", request.getRequestURI()));
+    }
+
+    /**
+     * Handles a registration conflict (409).
+     *
+     * @param ex      the exception
      * @param request the current HTTP request
      * @return 409 Conflict with code {@code REGISTRATION_CONFLICT}
      */

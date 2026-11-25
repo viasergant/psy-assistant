@@ -30,5 +30,11 @@ public enum NotificationEventType {
     APPOINTMENT_CANCELLATION,
 
     /** Follow-up sent to a client after a no-show appointment. */
-    NO_SHOW_FOLLOWUP
+    NO_SHOW_FOLLOWUP,
+
+    /** Link to confirm the email address used for self-service registration. */
+    EMAIL_CONFIRMATION,
+
+    /** Notice to an existing user that someone tried to register with their address. */
+    REGISTRATION_ATTEMPT_EXISTING
 }

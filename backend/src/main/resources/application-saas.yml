@@ -1,3 +1,5 @@
 # SaaS deployment mode: multiple independent organizations on one shared instance.
-# Self-service registration is enabled via POST /api/v1/register.
+# Self-service registration is enabled via POST /api/v1/register and requires email
+# confirmation (link built from app.frontend-base-url -> set FRONTEND_BASE_URL in production).
+# Enable CAPTCHA with CAPTCHA_ENABLED=true, CAPTCHA_SITE_KEY and CAPTCHA_SECRET_KEY (Turnstile).
 # Defaults from application.yml apply; no overrides required at v1.

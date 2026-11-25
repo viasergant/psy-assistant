@@ -78,8 +78,11 @@
       "loginButton": "Sign In",
       "errors": {
         "invalidCredentials": "Invalid email or password",
-        "accountLocked": "Account is locked. Contact administrator"
-      }
+        "accountLocked": "Account is locked. Contact administrator",
+        "emailNotVerified": "Please confirm your email address first. Check your inbox for the link."
+      },
+      "registerPrompt": "New here?",
+      "registerLink": "Create an account"
     },
     "firstTimeSetup": {
       "title": "Welcome!",
@@ -103,7 +106,44 @@
       },
       "changePasswordButton": "Change Password & Continue"
     },
-    "accessDenied": "Access restricted. You do not have permission to view this page."
+    "accessDenied": "Access restricted. You do not have permission to view this page.",
+    "register": {
+      "title": "Create your practice account",
+      "subtitle": "Start managing your practice in minutes",
+      "orgNameLabel": "Practice name",
+      "orgNameRequired": "Practice name is required",
+      "emailLabel": "Email address",
+      "emailInvalid": "Enter a valid email address",
+      "passwordLabel": "Password",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "confirmPasswordLabel": "Confirm password",
+      "passwordMismatch": "Passwords do not match",
+      "submitButton": "Create account",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "checkEmailTitle": "Check your email",
+      "checkEmailBody": "If {{email}} can be registered, we sent a confirmation link. It is valid for 24 hours.",
+      "resendButton": "Resend email",
+      "resendCooldown": "Resend available in {{seconds}}s",
+      "resendDone": "If the account is waiting for confirmation, a new email is on its way.",
+      "errors": {
+        "captchaRequired": "Please complete the verification challenge",
+        "captchaFailed": "Verification failed. Please try again.",
+        "tooManyRequests": "Too many attempts. Please try again later.",
+        "generic": "Registration failed. Please try again."
+      }
+    },
+    "confirmEmail": {
+      "pendingTitle": "Confirming your email…",
+      "successTitle": "Email confirmed",
+      "successBody": "Your account is active. You can sign in now.",
+      "goToLogin": "Go to sign in",
+      "expiredTitle": "Link expired",
+      "expiredBody": "This confirmation link has expired. Register again to receive a new one.",
+      "registerAgain": "Register again",
+      "invalidTitle": "Invalid link",
+      "invalidBody": "This confirmation link is invalid or has already been used."
+    }
   },
   "leads": {
     "title": "Leads",

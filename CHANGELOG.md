@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-20
 
+### Changed
+
+- **BREAKING (saas): `POST /api/v1/register` now requires email confirmation** — returns `202 Accepted` with no body and no tokens. The owner `User` is created inactive with `email_verified=false`; a single-use link (24 h) is emailed via the existing outbox. Registering an already-used address returns the identical `202` and emails the existing owner instead (no account enumeration).
+
+### Added
+
+- **Email confirmation for saas registration** — `POST /api/v1/register/confirm` (activates the account) and `POST /api/v1/register/resend` (rate-limited, 3/h per address and per IP). Login returns `EMAIL_NOT_VERIFIED` for correct credentials on an unconfirmed account. Flyway V79 adds `users.email_verified` (existing users stay verified) and `one_time_tokens`.
+- **Generic `OneTimeTokenService`** (`auth.token`) — 256-bit random tokens stored as SHA-256 hashes, single-use, purpose-bound; reusable for future flows such as password reset.
+- **CAPTCHA on public registration** — `CaptchaVerifier` port with Cloudflare Turnstile implementation, enabled via `CAPTCHA_ENABLED`, `CAPTCHA_SITE_KEY`, `CAPTCHA_SECRET_KEY`; site key exposed through `GET /api/v1/meta`.
+- **`UnverifiedRegistrationCleanupJob`** — daily purge of registrations unconfirmed after 7 days (user, tokens and empty organization).
+- **Frontend**: `/auth/register` (with "check your email" + resend state) and `/auth/confirm-email` pages, saas-only; register link on the login page; en/uk translations.
+
 ### Fixed
 
 - **`UserManagementService` missing `orgId` on new users** — `createUser` and `createUserWithTemporaryPassword` now call `user.setOrgId(TenantContext.get())` before the INSERT, fixing a NOT NULL constraint violation that caused every therapist-creation call to return HTTP 500 in multi-tenant (saas/clinic) deployments.

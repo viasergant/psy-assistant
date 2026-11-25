@@ -2,9 +2,10 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../core/auth/auth.service';
+import { AppIfModeDirective } from '../../../core/mode/app-if-mode.directive';
 
 /**
  * Login form component.
@@ -16,7 +17,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslocoPipe, AppIfModeDirective],
   template: `
     <div class="login-wrapper">
       <aside class="login-brand">
@@ -68,6 +69,11 @@ import { AuthService } from '../../../core/auth/auth.service';
           <button type="submit" [disabled]="loading">
             {{ loading ? 'Signing in…' : 'Sign in' }}
           </button>
+
+          <p *appIfMode="'SAAS'" class="register-prompt">
+            {{ 'auth.login.registerPrompt' | transloco }}
+            <a routerLink="/auth/register">{{ 'auth.login.registerLink' | transloco }}</a>
+          </p>
         </form>
       </section>
     </div>
@@ -231,6 +237,12 @@ import { AuthService } from '../../../core/auth/auth.service';
       opacity: 0.6;
       cursor: not-allowed;
     }
+    .register-prompt {
+      margin: 1.25rem 0 0;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #64748B;
+    }
     @media (max-width: 680px) {
       .login-brand { display: none; }
       .login-panel { background: #FFFFFF; }
@@ -246,7 +258,8 @@ export class LoginComponent {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private transloco: TranslocoService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -288,6 +301,8 @@ export class LoginComponent {
     switch (code) {
       case 'INVALID_CREDENTIALS':
         return 'Incorrect email or password.';
+      case 'EMAIL_NOT_VERIFIED':
+        return this.transloco.translate('auth.login.errors.emailNotVerified');
       case 'ACCOUNT_DISABLED':
         return 'Your account has been deactivated. Contact your administrator.';
       default:

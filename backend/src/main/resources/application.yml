@@ -59,6 +59,10 @@ logging:
 
 app:
   frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
+  captcha:
+    enabled: ${CAPTCHA_ENABLED:false}
+    site-key: ${CAPTCHA_SITE_KEY:}
+    secret-key: ${CAPTCHA_SECRET_KEY:}
   global-admin:
     username: ${GLOBAL_ADMIN_USERNAME:}
   jwt:

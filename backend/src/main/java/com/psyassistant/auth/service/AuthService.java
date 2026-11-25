@@ -148,6 +148,14 @@ public class AuthService {
                     "Invalid credentials");
         }
 
+        // Reached only with a correct password, so this does not leak account existence.
+        if (!user.isEmailVerified()) {
+            recordFailure(EVENT_LOGIN_FAILURE, user.getId().toString(),
+                    request.email(), ipAddress, requestId, "EMAIL_NOT_VERIFIED");
+            throw new AuthException(AuthException.ErrorCode.EMAIL_NOT_VERIFIED,
+                    "Email address has not been confirmed");
+        }
+
         if (!user.isActive()) {
             recordFailure(EVENT_LOGIN_FAILURE, user.getId().toString(),
                     request.email(), ipAddress, requestId, "ACCOUNT_DISABLED");

@@ -1,1 +1,1 @@
-./mvnw clean spring-boot:run -Dspring-boot.run.profiles=solo,local
+./mvnw clean spring-boot:run -Dspring-boot.run.profiles=saas,local

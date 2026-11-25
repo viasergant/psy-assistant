@@ -76,6 +76,9 @@ public class User {
     @Column(name = "org_id", nullable = false)
     private UUID orgId;
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = true;
+
     /** Required by JPA. */
     protected User() {
     }
@@ -426,6 +429,25 @@ public class User {
 
     public void setOrgId(final UUID orgId) {
         this.orgId = orgId;
+        this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Returns whether the user has confirmed ownership of the email address.
+     *
+     * @return true if verified
+     */
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    /**
+     * Sets the email verification flag.
+     *
+     * @param emailVerified new value
+     */
+    public void setEmailVerified(final boolean emailVerified) {
+        this.emailVerified = emailVerified;
         this.updatedAt = Instant.now();
     }
 

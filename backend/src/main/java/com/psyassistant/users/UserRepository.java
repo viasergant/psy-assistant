@@ -1,6 +1,7 @@
 package com.psyassistant.users;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -40,6 +41,22 @@ public interface UserRepository extends JpaRepository<User, UUID>,
      * @return true if the email is already in use within that org
      */
     boolean existsByEmailAndOrgId(String email, UUID orgId);
+
+    /**
+     * Returns users who never confirmed their email and registered before the cut-off.
+     *
+     * @param cutoff registration instant before which unverified users are stale
+     * @return stale unverified users
+     */
+    List<User> findAllByEmailVerifiedFalseAndCreatedAtBefore(Instant cutoff);
+
+    /**
+     * Counts the users belonging to an organization.
+     *
+     * @param orgId organization id
+     * @return number of users
+     */
+    long countByOrgId(UUID orgId);
 
     /**
      * Atomically increments the failed login attempt counter for the given user.

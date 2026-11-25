@@ -2,11 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, catchError, firstValueFrom, of, tap } from 'rxjs';
 
-export type AppMode = 'SOLO' | 'CLINIC';
+export type AppMode = 'SOLO' | 'CLINIC' | 'SAAS';
 
 interface MetaResponse {
   mode: string;
   version: string;
+  captchaSiteKey?: string;
 }
 
 /**
@@ -24,6 +25,9 @@ export class AppModeService {
 
   readonly mode$ = this.modeSubject.asObservable();
 
+  /** Public CAPTCHA site key; null when CAPTCHA is disabled on the server. */
+  captchaSiteKey: string | null = null;
+
   get mode(): AppMode | null {
     return this.modeSubject.getValue();
   }
@@ -36,7 +40,10 @@ export class AppModeService {
   async init(): Promise<void> {
     await firstValueFrom(
       this.http.get<MetaResponse>('/api/v1/meta').pipe(
-        tap(res => this.modeSubject.next(res.mode as AppMode)),
+        tap(res => {
+          this.captchaSiteKey = res.captchaSiteKey ?? null;
+          this.modeSubject.next(res.mode as AppMode);
+        }),
         catchError(() => of(null))
       )
     );

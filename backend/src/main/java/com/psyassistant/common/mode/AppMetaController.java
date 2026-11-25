@@ -66,6 +66,12 @@ public class AppMetaController {
         String version = environment.getProperty("spring.application.version",
                 environment.getProperty("build.version", "unknown"));
 
-        return new AppMetaResponse(mode, version);
+        String siteKey = null;
+        if (MODE_SAAS.equals(mode)
+                && environment.getProperty("app.captcha.enabled", Boolean.class, false)) {
+            siteKey = environment.getProperty("app.captcha.site-key");
+        }
+
+        return new AppMetaResponse(mode, version, siteKey);
     }
 }

@@ -4,6 +4,14 @@ import { BehaviorSubject, catchError, firstValueFrom, of, tap } from 'rxjs';
 
 export type AppMode = 'SOLO' | 'CLINIC' | 'SAAS';
 
+/**
+ * True for deployments where each organization is a single therapist (SOLO and SAAS),
+ * so therapist pickers and clinic-only UI are not shown.
+ */
+export function isSingleTherapistMode(mode: AppMode | null): boolean {
+  return mode === 'SOLO' || mode === 'SAAS';
+}
+
 interface MetaResponse {
   mode: string;
   version: string;

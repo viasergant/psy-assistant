@@ -26,7 +26,7 @@ public class OneTimeToken {
     @Column(nullable = false, length = 50)
     private TokenPurpose purpose;
 
-    @Column(name = "token_hash", nullable = false, length = 64, columnDefinition = "char(64)")
+    @Column(name = "token_hash", nullable = false, length = 64)
     private String tokenHash;
 
     @Column(name = "expires_at", nullable = false)

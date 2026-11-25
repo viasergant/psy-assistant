@@ -9,14 +9,14 @@ import jakarta.validation.constraints.Size;
 /**
  * A single contact method entry used in create/update lead requests.
  *
- * @param type      contact type: EMAIL or PHONE
+ * @param type      contact type: EMAIL, PHONE or MESSENGER
  * @param value     the actual email address or phone number
  * @param isPrimary whether this is the preferred contact method
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ContactMethodRequest(
         @NotNull(message = "Contact method type must not be null")
-        @Pattern(regexp = "EMAIL|PHONE", message = "Type must be EMAIL or PHONE")
+        @Pattern(regexp = "EMAIL|PHONE|MESSENGER", message = "Type must be EMAIL, PHONE or MESSENGER")
         String type,
 
         @NotBlank(message = "Contact method value must not be blank")

@@ -200,15 +200,16 @@ import { ConvertLeadDialogComponent } from '../convert-lead-dialog/convert-lead-
     textarea { resize: vertical; }
     .error-msg { color: #DC2626; font-size: .8125rem; margin-top: .25rem; }
     fieldset {
+      min-width: 0;
       border: 1.5px solid #E2E8F0; border-radius: 8px;
       padding: 1rem; margin-bottom: 1rem;
     }
     legend { font-weight: 500; padding: 0 .5rem; }
     .contact-row {
-      display: flex; gap: .5rem; align-items: center; margin-bottom: .5rem;
+      display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-bottom: .5rem;
     }
-    .contact-row select { width: 90px; flex-shrink: 0; }
-    .contact-row input[type="text"] { flex: 1; }
+    .contact-row p-select { flex: 0 0 150px; min-width: 0; }
+    .contact-row input[type="text"] { flex: 1 1 140px; min-width: 0; }
     .primary-label {
       display: flex; align-items: center; gap: .25rem;
       font-size: .8125rem; font-weight: 400; white-space: nowrap; cursor: pointer;
@@ -298,6 +299,7 @@ export class EditLeadDialogComponent implements OnInit {
     return [
       { label: this.transloco.translate('leads.create.contactTypeEmail'), value: 'EMAIL' },
       { label: this.transloco.translate('leads.create.contactTypePhone'), value: 'PHONE' },
+      { label: this.transloco.translate('leads.create.contactTypeMessenger'), value: 'MESSENGER' },
     ];
   }
 

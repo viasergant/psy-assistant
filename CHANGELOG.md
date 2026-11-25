@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-20
 
+### Added (contact methods)
+
+- **`MESSENGER` contact method type** for leads and clients — new option in the create/edit/convert lead dialogs (en/uk), accepted by the API (`EMAIL|PHONE|MESSENGER`); Flyway V82 widens the `lead_contact_methods` and `client_contact_methods` type CHECK constraints.
+
 ### Removed
 
 - **Service catalog `category`** — dropped the free-text category field (nothing read it besides the detail view and the duplicate check) from the entity, API (`category` removed from create/update/list/detail), UI and translations. Flyway V81 drops the column and replaces the `(org_id, name, category)` unique constraint with `(org_id, name)`; services that shared a name across categories are renamed to `<name> (<category>)` first so the migration cannot fail.

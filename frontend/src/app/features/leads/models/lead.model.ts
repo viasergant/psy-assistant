@@ -2,7 +2,7 @@
 export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'INACTIVE';
 
 /** Contact method types supported by the system. */
-export type ContactMethodType = 'EMAIL' | 'PHONE';
+export type ContactMethodType = 'EMAIL' | 'PHONE' | 'MESSENGER';
 
 /** Human-readable labels for lead statuses. */
 export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {

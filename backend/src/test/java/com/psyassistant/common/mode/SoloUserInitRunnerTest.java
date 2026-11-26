@@ -14,6 +14,7 @@ import com.psyassistant.organization.Organization;
 import com.psyassistant.organization.OrganizationRepository;
 import com.psyassistant.organization.OrganizationStatus;
 import com.psyassistant.organization.OrganizationType;
+import com.psyassistant.therapists.service.SingleTherapistProfileProvisioner;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
@@ -54,6 +55,9 @@ class SoloUserInitRunnerTest {
     private AuditLogService auditLogService;
 
     @Mock
+    private SingleTherapistProfileProvisioner therapistProvisioner;
+
+    @Mock
     private ApplicationArguments applicationArguments;
 
     private SoloUserInitRunner runner;
@@ -61,7 +65,7 @@ class SoloUserInitRunnerTest {
     @BeforeEach
     void setUp() {
         runner = new SoloUserInitRunner(userRepository, organizationRepository,
-                passwordEncoder, auditLogService);
+                passwordEncoder, auditLogService, therapistProvisioner);
         ReflectionTestUtils.setField(runner, "soloUsername", TEST_USERNAME);
         ReflectionTestUtils.setField(runner, "soloPassword", TEST_PASSWORD);
     }
@@ -104,6 +108,7 @@ class SoloUserInitRunnerTest {
         assertTrue(roles.contains(UserRole.FINANCE), "missing FINANCE");
         assertTrue(roles.contains(UserRole.SYSTEM_ADMINISTRATOR), "missing SYSTEM_ADMINISTRATOR");
 
+        verify(therapistProvisioner).ensureProfile(savedUser);
         verify(auditLogService).record(any(AuditLog.class));
     }
 

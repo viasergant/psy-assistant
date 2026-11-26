@@ -19,6 +19,7 @@ import com.psyassistant.notifications.EmailNotificationPort;
 import com.psyassistant.notifications.NotificationEventType;
 import com.psyassistant.organization.Organization;
 import com.psyassistant.organization.OrganizationRepository;
+import com.psyassistant.therapists.service.SingleTherapistProfileProvisioner;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
@@ -43,6 +44,7 @@ class RegistrationServiceTest {
     private EmailNotificationPort email;
     private CaptchaVerifier captcha;
     private RegistrationService service;
+    private SingleTherapistProfileProvisioner provisioner;
 
     @BeforeEach
     void setUp() {
@@ -51,6 +53,7 @@ class RegistrationServiceTest {
         tokens = mock(OneTimeTokenService.class);
         email = mock(EmailNotificationPort.class);
         captcha = mock(CaptchaVerifier.class);
+        provisioner = mock(SingleTherapistProfileProvisioner.class);
         PasswordEncoder encoder = mock(PasswordEncoder.class);
         when(encoder.encode(anyString())).thenReturn("hash");
         when(captcha.verify(any(), any())).thenReturn(true);
@@ -59,7 +62,7 @@ class RegistrationServiceTest {
         when(tokens.issue(any(), eq(TokenPurpose.EMAIL_CONFIRMATION), any(Duration.class)))
                 .thenReturn("rawtoken");
         service = new RegistrationService(orgRepo, userRepo, encoder, mock(AuditLogService.class),
-                tokens, email, captcha, new ResendRateLimiter());
+                tokens, email, captcha, new ResendRateLimiter(), provisioner);
         ReflectionTestUtils.setField(service, "frontendBaseUrl", "https://app.test");
     }
 
@@ -75,6 +78,7 @@ class RegistrationServiceTest {
         verify(userRepo).save(user.capture());
         assertThat(user.getValue().isActive()).isFalse();
         assertThat(user.getValue().isEmailVerified()).isFalse();
+        verify(provisioner).ensureProfile(user.getValue());
         ArgumentCaptor<EmailMessage> msg = ArgumentCaptor.forClass(EmailMessage.class);
         verify(email).queue(msg.capture());
         assertThat(msg.getValue().eventType()).isEqualTo(NotificationEventType.EMAIL_CONFIRMATION);

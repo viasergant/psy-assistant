@@ -13,6 +13,7 @@ import com.psyassistant.organization.Organization;
 import com.psyassistant.organization.OrganizationRepository;
 import com.psyassistant.organization.OrganizationStatus;
 import com.psyassistant.organization.OrganizationType;
+import com.psyassistant.therapists.service.SingleTherapistProfileProvisioner;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
@@ -73,6 +74,7 @@ public class RegistrationService {
     private final EmailNotificationPort emailNotificationPort;
     private final CaptchaVerifier captchaVerifier;
     private final ResendRateLimiter rateLimiter;
+    private final SingleTherapistProfileProvisioner therapistProvisioner;
 
     /**
      * Constructs the service.
@@ -85,6 +87,7 @@ public class RegistrationService {
      * @param emailNotificationPort  outbound email queue
      * @param captchaVerifier        CAPTCHA verifier
      * @param rateLimiter            limiter for emails sent to a single address
+     * @param therapistProvisioner   creates the owner's therapist profile
      */
     public RegistrationService(final OrganizationRepository organizationRepository,
                                final UserRepository userRepository,
@@ -93,7 +96,8 @@ public class RegistrationService {
                                final OneTimeTokenService tokenService,
                                final EmailNotificationPort emailNotificationPort,
                                final CaptchaVerifier captchaVerifier,
-                               final ResendRateLimiter rateLimiter) {
+                               final ResendRateLimiter rateLimiter,
+                               final SingleTherapistProfileProvisioner therapistProvisioner) {
         this.organizationRepository = organizationRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -102,6 +106,7 @@ public class RegistrationService {
         this.emailNotificationPort = emailNotificationPort;
         this.captchaVerifier = captchaVerifier;
         this.rateLimiter = rateLimiter;
+        this.therapistProvisioner = therapistProvisioner;
     }
 
     /**
@@ -135,6 +140,7 @@ public class RegistrationService {
         user.setEmailVerified(false);
         user.setOrgId(savedOrg.getId());
         User savedUser = userRepository.save(user);
+        therapistProvisioner.ensureProfile(savedUser);
 
         sendConfirmationEmail(savedUser);
 

@@ -6,6 +6,7 @@ import com.psyassistant.organization.Organization;
 import com.psyassistant.organization.OrganizationRepository;
 import com.psyassistant.organization.OrganizationStatus;
 import com.psyassistant.organization.OrganizationType;
+import com.psyassistant.therapists.service.SingleTherapistProfileProvisioner;
 import com.psyassistant.users.User;
 import com.psyassistant.users.UserRepository;
 import com.psyassistant.users.UserRole;
@@ -49,6 +50,7 @@ public class SoloUserInitRunner implements ApplicationRunner {
     private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    private final SingleTherapistProfileProvisioner therapistProvisioner;
 
     @Value("${SOLO_USERNAME:}")
     private String soloUsername;
@@ -62,15 +64,18 @@ public class SoloUserInitRunner implements ApplicationRunner {
      * @param userRepository  JPA repository for {@link User} entities
      * @param passwordEncoder Spring Security password encoder (BCrypt)
      * @param auditLogService service for recording security-relevant events
+     * @param therapistProvisioner creates the owner's therapist profile
      */
     public SoloUserInitRunner(final UserRepository userRepository,
                               final OrganizationRepository organizationRepository,
                               final PasswordEncoder passwordEncoder,
-                              final AuditLogService auditLogService) {
+                              final AuditLogService auditLogService,
+                              final SingleTherapistProfileProvisioner therapistProvisioner) {
         this.userRepository = userRepository;
         this.organizationRepository = organizationRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
+        this.therapistProvisioner = therapistProvisioner;
     }
 
     @Override
@@ -97,6 +102,7 @@ public class SoloUserInitRunner implements ApplicationRunner {
         user.setOrgId(savedOrg.getId());
 
         User saved = userRepository.save(user);
+        therapistProvisioner.ensureProfile(saved);
         LOG.info("event=SOLO_USER_CREATED userId={}", saved.getId());
 
         try {

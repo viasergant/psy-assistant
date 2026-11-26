@@ -54,7 +54,6 @@ interface EventTypeFilter {
                 <div class="event-data" *ngIf="hasEventData(event)">
                   <ng-container [ngSwitch]="event.eventType">
                     <div *ngSwitchCase="'APPOINTMENT'">
-                      <div *ngIf="event.eventData.notes">{{ event.eventData.notes }}</div>
                       <div>{{ 'timeline.appointment.duration' | transloco }}: {{ event.eventData.durationMinutes }}{{ 'timeline.appointment.minutes' | transloco }}</div>
                     </div>
                     <div *ngSwitchCase="'PROFILE_CHANGE'">

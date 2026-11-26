@@ -27,7 +27,6 @@ describe('ClientTimelineComponent', () => {
       eventTimestamp: '2026-03-15T10:00:00Z',
       actorName: 'Dr. Smith',
       eventData: {
-        notes: 'Initial consultation',
         durationMinutes: 60
       },
       createdAt: '2026-03-15T10:00:00Z'

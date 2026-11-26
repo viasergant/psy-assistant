@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-26
 
+### Fixed (Client timeline)
+
+- The client timeline no longer shows appointment notes. They were returned as raw `enc:k1:…` ciphertext because the timeline view bypassed field decryption. Migration `V84` recreates `client_activity_timeline` without the `notes` key, and the timeline UI no longer renders it.
+
 ### Fixed (Therapist availability)
 
 - `GET /api/v1/therapists/{id}/availability` now removes 30-minute slots that overlap a non-cancelled appointment, instead of listing every scheduled slot as free. This is the groundwork for letting clients pick a new slot from a Telegram bot.

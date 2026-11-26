@@ -105,6 +105,9 @@ def test_get_client_timeline(admin_client, client_setup):
     data = response.json()
 
     assert isinstance(data, list), "Timeline should be a list (may be empty for a new client)"
+    assert "enc:" not in response.text, "Timeline must never expose encrypted field values"
+    for event in data:
+        assert "notes" not in (event.get("eventData") or {}), "Appointment notes must not be in the timeline"
 
 
 def test_add_risk_flag(admin_client, client_setup):

@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security (tenant isolation)
 
+- **Hibernate `orgFilter` was never active** — `TenantHibernateJpaDialect` was registered as a plain `JpaDialect` bean, which Spring Boot ignores, so every JPA query (clients, leads, appointments, …) returned all organisations' rows. The dialect is now installed on the entity manager factory (`TenantConfig`); `TenantFilterIntegrationTest` proves two organisations no longer see each other's rows
 - **Raw SQL is now scoped to the caller's organisation** — native/JDBC queries bypass the Hibernate `orgFilter`, so they leaked data across organisations. Added `org_id` conditions to client search, revenue / no-show / client-retention / lead-conversion / therapist-utilization reports, caseload list and snapshots, appointment conflict checks, bulk series cancel and the finance dashboard summary
 - **`TenantContext.require()`** — raw-SQL callers fail fast if no organisation is bound instead of returning unscoped data
 

@@ -2550,3 +2550,53 @@ These TODOs indicate tests for those behaviors should be written but may be expe
 | Action | `GET /api/v1/admin/users` |
 | Expected result | 403 or 404 (CLINIC-only endpoint blocked in SOLO mode) |
 | HTTP status | 403/404 |
+
+## Telegram notifications
+
+### TG-001 — Link token is single-use and expires
+| Field | Value |
+|---|---|
+| Preconditions | Telegram enabled; therapist authenticated |
+| Action | `POST /api/v1/telegram/link`, redeem via `/start <token>` twice, or after 10 minutes |
+| Expected result | First redeem links the chat; reuse/expired token replies "invalid" and links nothing |
+| Covered by | `TelegramLinkServiceTest` |
+
+### TG-002 — A chat belongs to one user and one organization
+| Field | Value |
+|---|---|
+| Preconditions | Chat already linked to user A |
+| Action | User B redeems a valid token from the same chat |
+| Expected result | Rejected ("already connected"); DB unique index on `chat_id_hash` as backstop |
+| Covered by | `TelegramLinkServiceTest`, `TelegramIsolationIntegrationTest` |
+
+### TG-003 — Tenant isolation of settings and outbox
+| Field | Value |
+|---|---|
+| Preconditions | Two organizations with linked therapists |
+| Action | Read settings / outbox rows in organization A's context |
+| Expected result | Only A's rows are visible; messages are sent only to the chat of the row's own user and org |
+| Covered by | `TelegramIsolationIntegrationTest`, `TelegramOutboxProcessorTest` |
+
+### TG-004 — Digest and reminder timing, idempotency, privacy
+| Field | Value |
+|---|---|
+| Preconditions | Linked therapist with sessions |
+| Action | Run the scheduler repeatedly around the digest time / reminder lead time |
+| Expected result | One digest per local date, one reminder per appointment start; cancelled/completed sessions skipped; client code shown, names only when opted in |
+| Covered by | `TelegramSchedulePlannerTest` |
+
+### TG-005 — Webhook authentication
+| Field | Value |
+|---|---|
+| Preconditions | `TELEGRAM_MODE=webhook` |
+| Action | `POST /api/v1/telegram/webhook` without / with wrong / with correct secret header |
+| Expected result | 403 / 403 / 200 |
+| Covered by | `TelegramWebhookControllerTest`, `test_telegram_settings.py` |
+
+### TG-006 — Settings API contract
+| Field | Value |
+|---|---|
+| Action | `GET/PUT /api/v1/telegram/settings`, `POST /api/v1/telegram/link` with Telegram disabled |
+| Expected result | 401 unauthenticated; defaults without chat id; 400 on invalid input; 503 for link/test when not configured |
+| Covered by | `backend/tests/integration/test_telegram_settings.py` (requires a running backend) |
+

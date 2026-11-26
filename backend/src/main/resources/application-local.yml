@@ -43,3 +43,8 @@ logging:
     com.psyassistant: DEBUG
     org.springframework.mail.javamail: DEBUG
     org.eclipse.angus.mail.smtp: DEBUG
+
+notifications:
+  telegram:
+    enabled: true
+    mode: polling   # long polling; works without a public webhook URL

@@ -155,6 +155,8 @@ DB_USERNAME=psyassistant
 DB_PASSWORD=CHANGE_ME
 JWT_SECRET=CHANGE_ME
 SESSION_NOTES_ENCRYPTION_KEY=CHANGE_ME
+# Telegram bot token from @BotFather (enables therapist digests/reminders; long polling)
+TELEGRAM_BOT_TOKEN=CHANGE_ME
 # Comma-separated list of allowed CORS origins.
 # Add every hostname/IP the frontend is served from (no trailing slash).
 # Example: http://192.168.10.128,https://psy-assistant.tail1cbdbb.ts.net

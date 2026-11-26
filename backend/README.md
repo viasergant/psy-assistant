@@ -67,6 +67,27 @@ Sensitive credentials must never be committed. Place them in
 `src/main/resources/application-secrets.properties` (git-ignored) or supply them as
 environment variables.
 
+## Telegram notifications (optional)
+
+Therapists can receive their daily schedule and pre-session reminders in Telegram.
+
+1. Create a bot with [@BotFather](https://t.me/BotFather) and note its token and username.
+2. Provide the token without committing it: locally in the git-ignored `.env` (`backend/.env` is a symlink to the repo-root `.env`; the backend imports it automatically and it never enters the jar) as `TELEGRAM_BOT_TOKEN=...`; in prod as `TELEGRAM_BOT_TOKEN` in `/opt/psy-assistant/psy-assistant.env`. Other variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TELEGRAM_ENABLED` | `false` (`true` in the `local` and `prod` profiles) | Master switch |
+| `TELEGRAM_BOT_TOKEN` | – | Bot token from BotFather (secret) |
+| `TELEGRAM_BOT_USERNAME` | `hermes_psy1_bot` | Bot username without `@`, used for the deep link |
+| `TELEGRAM_MODE` | `polling` (set explicitly in `local` and `prod`) | `polling` works anywhere (e.g. local dev); `webhook` needs a public HTTPS URL |
+| `TELEGRAM_WEBHOOK_URL` | – | Webhook mode: `https://<host>/api/v1/telegram/webhook` |
+| `TELEGRAM_WEBHOOK_SECRET` | – | Webhook mode: random string Telegram echoes in `X-Telegram-Bot-Api-Secret-Token` (secret) |
+
+On startup the app registers (webhook) or removes (polling) the Telegram webhook to match the mode.
+Therapists then connect from **Settings → Telegram**. Both modes are safe with several backend
+instances: in polling mode a DB lock makes exactly one instance poll, and scheduled messages are
+de-duplicated through unique keys in `telegram_delivery_log`.
+
 ## Build
 
 ```bash

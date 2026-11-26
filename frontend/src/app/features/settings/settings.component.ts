@@ -1,16 +1,22 @@
 import { Component, inject, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { PermissionService } from '../../core/auth/permission.service';
+import { TelegramSettingsComponent } from './telegram/telegram-settings.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [TranslocoPipe],
+  imports: [TranslocoPipe, TelegramSettingsComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })
 export class SettingsComponent {
   private readonly i18nService = inject(I18nService);
+  private readonly permissions = inject(PermissionService);
+
+  /** Matches the backend rule for /api/v1/telegram/** (therapists and system administrators). */
+  readonly canUseTelegram = (): boolean => this.permissions.hasAnyRole(['THERAPIST', 'SYSTEM_ADMINISTRATOR']);
 
   readonly currentLocale = signal(this.i18nService.getCurrentLocale());
   readonly savedLocale = signal(this.i18nService.getCurrentLocale());

@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-25
 
+### Added (Telegram notifications)
+
+- **Telegram digest and reminders for therapists** — one platform bot sends each therapist a daily schedule (at their local time, on chosen weekdays) and a reminder N minutes before every session. Messages contain only time, session type and the opaque client code; client first names are an opt-in per therapist
+- **Safe account linking** — Settings → "Connect Telegram" creates a single-use, 10-minute deep link (`t.me/<bot>?start=<token>`, only the SHA-256 hash is stored). The bot binds the chat to exactly the user that issued the token; group chats are refused and one chat can belong to only one user. The chat id is encrypted at rest and never exposed by the API
+- **Webhook or long polling** — `notifications.telegram.mode` (`webhook` verifies `X-Telegram-Bot-Api-Secret-Token`; `polling` uses `getUpdates` with a DB-locked offset so only one instance polls). Configured with `TELEGRAM_ENABLED`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_MODE`, `TELEGRAM_WEBHOOK_SECRET`, `TELEGRAM_WEBHOOK_URL`
+- **Outbox delivery** — `telegram_delivery_log` with unique dedup keys (no double sends across restarts/instances), SKIP LOCKED claiming, backoff, Telegram `retry_after` support, auto-unlink when the user blocks the bot (Flyway `V83`)
+- **API** `GET/PUT /api/v1/telegram/settings`, `POST/DELETE /api/v1/telegram/link`, `POST /api/v1/telegram/test` (therapist / system administrator, always scoped to the caller); Telegram settings section on the Settings page (en/uk)
+
 ### Security (tenant isolation)
 
 - **Hibernate `orgFilter` was never active** — `TenantHibernateJpaDialect` was registered as a plain `JpaDialect` bean, which Spring Boot ignores, so every JPA query (clients, leads, appointments, …) returned all organisations' rows. The dialect is now installed on the entity manager factory (`TenantConfig`); `TenantFilterIntegrationTest` proves two organisations no longer see each other's rows

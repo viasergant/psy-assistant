@@ -1,0 +1,116 @@
+@if (settings(); as s) {
+  <section class="settings-section telegram">
+    <h2 class="section-title">{{ 'settings.telegram.title' | transloco }}</h2>
+    <p class="section-description">{{ 'settings.telegram.description' | transloco }}</p>
+
+    @if (!s.available) {
+      <p class="field-hint" role="status">{{ 'settings.telegram.unavailable' | transloco }}</p>
+    } @else {
+      <div class="telegram-status" role="status">
+        @if (s.linked) {
+          <span class="badge badge-success">{{ 'settings.telegram.connected' | transloco }}</span>
+          <button type="button" class="btn-secondary btn-sm" (click)="sendTest()">
+            {{ 'settings.telegram.sendTest' | transloco }}
+          </button>
+          <button type="button" class="btn-danger btn-sm" (click)="disconnect()">
+            {{ 'settings.telegram.disconnect' | transloco }}
+          </button>
+          @if (testSent()) {
+            <span class="save-confirmation">{{ 'settings.telegram.testSent' | transloco }}</span>
+          }
+        } @else {
+          <span class="badge">{{ 'settings.telegram.notConnected' | transloco }}</span>
+          <button type="button" class="btn-primary" (click)="connect()">
+            {{ 'settings.telegram.connect' | transloco }}
+          </button>
+          @if (waitingForLink()) {
+            <span class="field-hint">{{ 'settings.telegram.waiting' | transloco }}</span>
+          }
+        }
+      </div>
+
+      @if (form) {
+        <fieldset class="telegram-group">
+          <legend>{{ 'settings.telegram.digest.title' | transloco }}</legend>
+          <label class="field-checkbox">
+            <input type="checkbox" [(ngModel)]="form.digestEnabled" name="digestEnabled" />
+            {{ 'settings.telegram.digest.enabled' | transloco }}
+          </label>
+          <div class="field">
+            <label for="tg-digest-time">{{ 'settings.telegram.digest.time' | transloco }}</label>
+            <input id="tg-digest-time" type="time" [(ngModel)]="form.digestTime" name="digestTime"
+                   [disabled]="!form.digestEnabled" />
+          </div>
+          <div class="telegram-days" role="group" [attr.aria-label]="'settings.telegram.digest.days' | transloco">
+            @for (d of days; track d.bit) {
+              <label class="field-checkbox">
+                <input type="checkbox" [checked]="isDayOn(d.bit)" (change)="toggleDay(d.bit)"
+                       [disabled]="!form.digestEnabled" />
+                {{ 'settings.telegram.days.' + d.key | transloco }}
+              </label>
+            }
+          </div>
+          <label class="field-checkbox">
+            <input type="checkbox" [(ngModel)]="form.skipEmptyDigest" name="skipEmptyDigest"
+                   [disabled]="!form.digestEnabled" />
+            {{ 'settings.telegram.digest.skipEmpty' | transloco }}
+          </label>
+        </fieldset>
+
+        <fieldset class="telegram-group">
+          <legend>{{ 'settings.telegram.reminder.title' | transloco }}</legend>
+          <label class="field-checkbox">
+            <input type="checkbox" [(ngModel)]="form.reminderEnabled" name="reminderEnabled" />
+            {{ 'settings.telegram.reminder.enabled' | transloco }}
+          </label>
+          <div class="field">
+            <label for="tg-reminder-min">{{ 'settings.telegram.reminder.minutes' | transloco }}</label>
+            <input id="tg-reminder-min" type="number" min="5" max="1440" step="5"
+                   [(ngModel)]="form.reminderMinutesBefore" name="reminderMinutesBefore"
+                   [disabled]="!form.reminderEnabled" />
+          </div>
+        </fieldset>
+
+        <fieldset class="telegram-group">
+          <legend>{{ 'settings.telegram.general.title' | transloco }}</legend>
+          <div class="field">
+            <label for="tg-timezone">{{ 'settings.telegram.general.timezone' | transloco }}</label>
+            <input id="tg-timezone" type="text" list="tg-timezones" [(ngModel)]="form.timezone" name="timezone" />
+            <datalist id="tg-timezones">
+              @for (tz of timezones; track tz) {
+                <option [value]="tz"></option>
+              }
+            </datalist>
+          </div>
+          <div class="field">
+            <label for="tg-language">{{ 'settings.telegram.general.language' | transloco }}</label>
+            <select id="tg-language" [(ngModel)]="form.language" name="language">
+              @for (l of languages; track l) {
+                <option [value]="l">{{ 'settings.language.' + (l === 'en' ? 'english' : 'ukrainian') | transloco }}</option>
+              }
+            </select>
+          </div>
+          <label class="field-checkbox">
+            <input type="checkbox" [(ngModel)]="form.includeClientNames" name="includeClientNames" />
+            {{ 'settings.telegram.general.includeNames' | transloco }}
+          </label>
+          <p class="field-hint">{{ 'settings.telegram.general.privacyHint' | transloco }}</p>
+        </fieldset>
+
+        <div class="section-actions">
+          <button type="button" class="btn-primary" (click)="save()" [disabled]="saving()"
+                  [attr.aria-busy]="saving()">
+            {{ (saving() ? 'settings.language.saving' : 'settings.language.save') | transloco }}
+          </button>
+          @if (saved()) {
+            <span class="save-confirmation" role="status">{{ 'settings.language.saved' | transloco }}</span>
+          }
+        </div>
+      }
+    }
+
+    @if (error(); as key) {
+      <p class="error-msg" role="alert">{{ key | transloco }}</p>
+    }
+  </section>
+}

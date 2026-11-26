@@ -40,5 +40,9 @@
         }
       </div>
     </section>
+
+    @if (canUseTelegram()) {
+      <app-telegram-settings />
+    }
   </div>
 </div>

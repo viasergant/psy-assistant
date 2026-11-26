@@ -116,6 +116,10 @@ public class SecurityConfig {
                         "/api/v1/register/resend").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/api/v1/email/webhooks/**").permitAll()
+                // Telegram calls this itself; it is authenticated by the secret-token header in the controller.
+                .requestMatchers("/api/v1/telegram/webhook").permitAll()
+                .requestMatchers("/api/v1/telegram/**")
+                    .hasAnyRole("THERAPIST", "SYSTEM_ADMINISTRATOR")
                 .requestMatchers("/actuator/**").authenticated()
                 .requestMatchers("/api/v1/admin/**")
                     .hasRole("SYSTEM_ADMINISTRATOR")

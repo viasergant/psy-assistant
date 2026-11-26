@@ -35,3 +35,8 @@ logging:
   level:
     root: WARN
     com.psyassistant: INFO
+
+notifications:
+  telegram:
+    enabled: true
+    mode: polling   # long polling; works without a public webhook URL

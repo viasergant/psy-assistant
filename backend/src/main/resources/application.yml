@@ -1,6 +1,9 @@
 spring:
   application:
     name: psy-assistant
+  config:
+    # Optional git-ignored .env (backend/.env -> repo-root .env), kept out of the jar; real env vars still win.
+    import: optional:file:./.env[.properties]
   datasource:
     url: ${DB_URL:jdbc:postgresql://192.168.10.146:5432/psyassistant}
     username: ${DB_USERNAME:psyassistant}
@@ -137,6 +140,15 @@ notifications:
     outbox:
       poll-interval-ms: 5000
       batch-size: 10
+  telegram:
+    enabled: ${TELEGRAM_ENABLED:false}
+    # polling = pull updates (works anywhere); webhook = Telegram pushes to webhook-url (public HTTPS needed)
+    mode: ${TELEGRAM_MODE:polling}
+    bot-token: ${TELEGRAM_BOT_TOKEN:}
+    bot-username: ${TELEGRAM_BOT_USERNAME:hermes_psy1_bot}
+    webhook-secret: ${TELEGRAM_WEBHOOK_SECRET:}
+    webhook-url: ${TELEGRAM_WEBHOOK_URL:}
+    max-retries: 5
 
 
 billing:

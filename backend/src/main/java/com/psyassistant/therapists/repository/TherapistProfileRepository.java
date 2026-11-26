@@ -26,6 +26,14 @@ public interface TherapistProfileRepository extends JpaRepository<TherapistProfi
     Optional<TherapistProfile> findByEmailIgnoreCase(String email);
 
     /**
+     * Finds the therapist profile linked to a user account.
+     *
+     * @param userId the user id
+     * @return the profile if one is linked
+     */
+    Optional<TherapistProfile> findByUserId(UUID userId);
+
+    /**
      * Checks if a therapist with the given email already exists.
      *
      * @param email the email to check

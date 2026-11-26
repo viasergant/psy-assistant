@@ -1891,6 +1891,51 @@
       "save": "Save",
       "saving": "Saving...",
       "saved": "Saved"
+    },
+    "telegram": {
+      "title": "Telegram notifications",
+      "description": "Get your daily schedule and reminders before sessions in Telegram. Messages never contain client contact details or notes.",
+      "unavailable": "Telegram notifications are not configured on this server.",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "connect": "Connect Telegram",
+      "disconnect": "Disconnect",
+      "waiting": "Open the chat with the bot and press Start...",
+      "sendTest": "Send test message",
+      "testSent": "Test message queued",
+      "digest": {
+        "title": "Daily schedule",
+        "enabled": "Send my schedule every day",
+        "time": "Send at (local time)",
+        "days": "Days",
+        "skipEmpty": "Skip days without sessions"
+      },
+      "reminder": {
+        "title": "Session reminders",
+        "enabled": "Remind me before each session",
+        "minutes": "Minutes before the session"
+      },
+      "general": {
+        "title": "General",
+        "timezone": "Time zone",
+        "language": "Message language",
+        "includeNames": "Show client first names",
+        "privacyHint": "By default only the client code is shown. Telegram is not end-to-end encrypted, so enable names only if you are comfortable with that."
+      },
+      "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again.",
+        "link": "Could not create the connection link.",
+        "save": "Could not save settings."
+      }
     }
   }
 }

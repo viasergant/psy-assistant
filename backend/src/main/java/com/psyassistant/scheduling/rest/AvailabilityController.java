@@ -87,7 +87,7 @@ public class AvailabilityController {
                 slot.date(),
                 slot.startTime(),
                 slot.endTime(),
-                true  // Future: check against booked appointments
+                true  // booked slots are already removed by the service
             ))
             .collect(Collectors.toList());
 

@@ -1,13 +1,19 @@
 package com.psyassistant.scheduling.service;
 
+import com.psyassistant.scheduling.domain.Appointment;
 import com.psyassistant.scheduling.domain.TherapistLeave;
 import com.psyassistant.scheduling.domain.TherapistRecurringSchedule;
 import com.psyassistant.scheduling.domain.TherapistScheduleOverride;
+import com.psyassistant.scheduling.repository.AppointmentRepository;
 import com.psyassistant.scheduling.repository.TherapistLeaveRepository;
 import com.psyassistant.scheduling.repository.TherapistRecurringScheduleRepository;
 import com.psyassistant.scheduling.repository.TherapistScheduleOverrideRepository;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  *     <li>Recurring weekly schedule (baseline availability)</li>
  *     <li>Schedule overrides (take precedence over recurring)</li>
  *     <li>Approved leave periods (blocks all dates in range)</li>
- *     <li>Future: existing appointments (not implemented in this phase)</li>
+ *     <li>Booked appointments (non-cancelled; their time is removed from the slots)</li>
  * </ul>
  *
  * <p>Generates 30-minute slots respecting all constraints.
@@ -36,6 +42,7 @@ public class AvailabilityQueryService {
     private final TherapistRecurringScheduleRepository recurringScheduleRepository;
     private final TherapistScheduleOverrideRepository overrideRepository;
     private final TherapistLeaveRepository leaveRepository;
+    private final AppointmentRepository appointmentRepository;
 
     /**
      * Constructs the availability query service.
@@ -43,13 +50,16 @@ public class AvailabilityQueryService {
      * @param recurringScheduleRepository repository for recurring schedules
      * @param overrideRepository repository for overrides
      * @param leaveRepository repository for leave periods
+     * @param appointmentRepository repository for booked appointments
      */
     public AvailabilityQueryService(final TherapistRecurringScheduleRepository recurringScheduleRepository,
                                      final TherapistScheduleOverrideRepository overrideRepository,
-                                     final TherapistLeaveRepository leaveRepository) {
+                                     final TherapistLeaveRepository leaveRepository,
+                                     final AppointmentRepository appointmentRepository) {
         this.recurringScheduleRepository = recurringScheduleRepository;
         this.overrideRepository = overrideRepository;
         this.leaveRepository = leaveRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     /**
@@ -61,7 +71,11 @@ public class AvailabilityQueryService {
      *     <li>Check for override on that date → use override hours if present</li>
      *     <li>Otherwise, use recurring schedule for that day of week</li>
      *     <li>Generate 30-minute slots within available hours</li>
+     *     <li>Drop slots that overlap a non-cancelled appointment</li>
      * </ol>
+     *
+     * <p>Schedule hours are wall-clock times; each appointment is compared in its own timezone,
+     * which is assumed to be the timezone the therapist's schedule is expressed in.
      *
      * @param therapistProfileId therapist profile UUID
      * @param startDate query start date (inclusive)
@@ -135,7 +149,34 @@ public class AvailabilityQueryService {
             currentDate = currentDate.plusDays(1);
         }
 
-        return slots;
+        return removeBookedSlots(therapistProfileId, startDate, endDate, slots);
+    }
+
+    private List<AvailabilitySlot> removeBookedSlots(final UUID therapistProfileId,
+                                                      final LocalDate startDate,
+                                                      final LocalDate endDate,
+                                                      final List<AvailabilitySlot> slots) {
+        if (slots.isEmpty()) {
+            return slots;
+        }
+        // Pad by a day each side so appointments in any zone that touch the range are loaded.
+        final ZonedDateTime from = startDate.minusDays(1).atStartOfDay(ZoneOffset.UTC);
+        final ZonedDateTime to = endDate.plusDays(2).atStartOfDay(ZoneOffset.UTC);
+        final List<Appointment> booked =
+            appointmentRepository.findByTherapistAndDateRange(therapistProfileId, from, to);
+        if (booked.isEmpty()) {
+            return slots;
+        }
+        return slots.stream().filter(slot -> booked.stream().noneMatch(a -> overlaps(slot, a))).toList();
+    }
+
+    private boolean overlaps(final AvailabilitySlot slot, final Appointment appointment) {
+        final ZoneId zone = ZoneId.of(appointment.getTimezone());
+        final LocalDateTime apptStart = appointment.getStartTime().withZoneSameInstant(zone).toLocalDateTime();
+        final LocalDateTime apptEnd = appointment.getEndTime().withZoneSameInstant(zone).toLocalDateTime();
+        final LocalDateTime slotStart = LocalDateTime.of(slot.date(), slot.startTime());
+        final LocalDateTime slotEnd = LocalDateTime.of(slot.date(), slot.endTime());
+        return slotStart.isBefore(apptEnd) && apptStart.isBefore(slotEnd);
     }
 
     /**

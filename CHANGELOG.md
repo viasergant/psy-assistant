@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-26
 
+### Fixed (Therapist availability)
+
+- `GET /api/v1/therapists/{id}/availability` now removes 30-minute slots that overlap a non-cancelled appointment, instead of listing every scheduled slot as free. This is the groundwork for letting clients pick a new slot from a Telegram bot.
+
 ### Changed (Telegram settings)
 
 - The Telegram timezone now defaults to the browser's timezone whenever the stored value is still the UTC default, and it is saved automatically once the chat is linked, so digests fire in local time without a manual save.

@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-26
 
+### Fixed (Prod startup)
+
+- Backend failed to start with `Schema-validation: wrong column type ... chat_id_hash` (every login failed). Migration `V88` converts `chat_id_hash` in `therapist_notification_settings` and `client_telegram_link` from `CHAR(64)` to `VARCHAR(64)` to match the entity mapping.
+
 ### Added (Client Telegram link)
 
 - A therapist can now invite a client to the Telegram bot: `POST /api/v1/clients/{id}/telegram/link?language=en|uk` returns a one-time `https://t.me/<bot>?start=<token>` link, `GET` reports whether the client is linked, and `DELETE` unlinks. When the client presses Start, the bot binds that private chat to the client stored on the token (never to an id typed by the client). The client can send `/stop` to disconnect. Migration `V85` adds `client_telegram_link` (encrypted chat id, unique chat hash, `org_id`) and lets `telegram_link_token` belong to a client. A chat can belong to only one therapist or client, and access reuses the client-profile checks (org filter and assigned-therapist rule). 

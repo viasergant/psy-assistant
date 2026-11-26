@@ -89,11 +89,7 @@ export class TelegramSettingsComponent implements OnInit, OnDestroy {
       this.error.set('settings.telegram.errors.reminderRange');
       return;
     }
-    const payload: TelegramSettingsUpdate = {
-      timezone: f.timezone, language: f.language, digestEnabled: f.digestEnabled, digestTime: f.digestTime,
-      digestDays: f.digestDays, skipEmptyDigest: f.skipEmptyDigest, reminderEnabled: f.reminderEnabled,
-      reminderMinutesBefore: f.reminderMinutesBefore, includeClientNames: f.includeClientNames
-    };
+    const payload = this.toUpdate(f);
     this.saving.set(true);
     this.saved.set(false);
     this.error.set(null);
@@ -125,14 +121,34 @@ export class TelegramSettingsComponent implements OnInit, OnDestroy {
   private load(): void {
     this.service.get().subscribe({
       next: s => {
-        // Brand-new settings default to UTC; start from the browser's zone instead.
-        if (!s.linked && s.timezone === 'UTC') {
-          s = { ...s, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' };
-        }
-        this.apply(s);
+        // Settings default to UTC on the server; start from the browser's zone instead.
+        this.apply(s.timezone === 'UTC' ? { ...s, timezone: this.browserTimezone() } : s);
       },
       error: () => this.error.set('settings.telegram.errors.generic')
     });
+  }
+
+  private browserTimezone(): string {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  }
+
+  /** Right after linking, store the browser zone so digests fire in local time without a manual save. */
+  private persistBrowserTimezoneIfDefault(s: TelegramSettings): void {
+    const zone = this.browserTimezone();
+    if (s.timezone !== 'UTC' || zone === 'UTC') {
+      return;
+    }
+    this.service.update({ ...this.toUpdate(s), timezone: zone }).subscribe({
+      next: saved => this.apply(saved)
+    });
+  }
+
+  private toUpdate(f: TelegramSettings): TelegramSettingsUpdate {
+    return {
+      timezone: f.timezone, language: f.language, digestEnabled: f.digestEnabled, digestTime: f.digestTime,
+      digestDays: f.digestDays, skipEmptyDigest: f.skipEmptyDigest, reminderEnabled: f.reminderEnabled,
+      reminderMinutesBefore: f.reminderMinutesBefore, includeClientNames: f.includeClientNames
+    };
   }
 
   private apply(s: TelegramSettings): void {
@@ -156,6 +172,7 @@ export class TelegramSettingsComponent implements OnInit, OnDestroy {
       this.service.get().subscribe(s => {
         if (s.linked) {
           this.apply(s);
+          this.persistBrowserTimezoneIfDefault(s);
         }
       });
     }, LINK_POLL_MS);

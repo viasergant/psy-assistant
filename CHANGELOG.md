@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-26
 
+### Changed (Telegram settings)
+
+- The Telegram timezone now defaults to the browser's timezone whenever the stored value is still the UTC default, and it is saved automatically once the chat is linked, so digests fire in local time without a manual save.
+
+### Fixed (Reports navigation)
+
+- The Reports menu opened the Clients page in solo mode, because `/reports` redirected to the clinic-only caseload report. It now redirects to the first report available for the current mode and role, and the menu item is hidden for solo-mode therapists (no reports are available to them).
+
 ### Fixed (Telegram settings)
 
 - Saving Telegram notification settings with a reminder lead time below 5 minutes failed with a generic error (the API enforces 5–1440). The form now validates the range client-side and shows a specific message

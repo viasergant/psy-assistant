@@ -84,4 +84,11 @@ describe('TelegramSettingsComponent', () => {
     expect(c.waitingForLink()).toBeTrue();
     c.ngOnDestroy();
   });
+
+  it('prefills the browser timezone when the server still has the UTC default', () => {
+    spyOn(Intl, 'DateTimeFormat').and.returnValue(
+      { resolvedOptions: () => ({ timeZone: 'Europe/Kyiv' }) } as unknown as Intl.DateTimeFormat);
+    const c = create({ ...BASE, linked: false, timezone: 'UTC' });
+    expect(c.form?.timezone).toBe('Europe/Kyiv');
+  });
 });

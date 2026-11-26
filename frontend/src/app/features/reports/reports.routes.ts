@@ -1,4 +1,7 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
+import { PermissionService } from '../../core/auth/permission.service';
+import { AppModeService } from '../../core/mode/app-mode.service';
 import { roleGuard } from '../../core/auth/guards/role.guard';
 import { modeGuard } from '../../core/mode/mode.guard';
 
@@ -8,7 +11,10 @@ const REPORTS_ROLES = ['SUPERVISOR', 'FINANCE', 'SYSTEM_ADMINISTRATOR'] as const
 export default [
   {
     path: '',
-    redirectTo: 'caseload',
+    redirectTo: () => {
+      if (inject(AppModeService).mode === 'CLINIC') return 'caseload';
+      return inject(PermissionService).hasAnyRole([...REPORTS_ROLES]) ? 'lead-conversion' : '/';
+    },
     pathMatch: 'full',
   },
   {

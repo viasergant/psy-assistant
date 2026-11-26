@@ -33,6 +33,8 @@ export interface NavItem {
   icon?: string;
   /** When true, the item is only shown in CLINIC deployment mode. */
   clinicOnly?: boolean;
+  /** Roles that see the item in SOLO/SAAS mode, overriding `roles` (e.g. no reports available to a solo therapist). */
+  singleTherapistRoles?: AppRole[];
   /** When true, the item is only shown for the configured global admin account. */
   globalAdminOnly?: boolean;
 }
@@ -43,7 +45,8 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'nav.schedule',    route: '/schedule',     roles: ROUTE_ROLES['schedule'], icon: 'pi-calendar' },
   { labelKey: 'nav.sessions',    route: '/sessions',     roles: ROUTE_ROLES['sessions'], icon: 'pi-comments' },
   { labelKey: 'nav.billing',     route: '/billing',      roles: ROUTE_ROLES['billing'],  icon: 'pi-wallet' },
-  { labelKey: 'nav.reports',     route: '/reports',      roles: ROUTE_ROLES['reports'],  icon: 'pi-chart-bar' },
+  { labelKey: 'nav.reports',     route: '/reports',      roles: ROUTE_ROLES['reports'],  icon: 'pi-chart-bar',
+    singleTherapistRoles: ['SUPERVISOR', 'FINANCE', 'SYSTEM_ADMINISTRATOR'] },
   { labelKey: 'nav.admin',       route: '/admin',        roles: ROUTE_ROLES['admin'],    icon: 'pi-cog' },
   { labelKey: 'nav.globalAdmin', route: '/global-admin', roles: [],                      icon: 'pi-shield', globalAdminOnly: true },
   { labelKey: 'nav.settings',    route: '/settings',     roles: ROUTE_ROLES['settings'], icon: 'pi-sliders-h' },

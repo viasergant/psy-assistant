@@ -7,7 +7,7 @@ import { Toolbar } from 'primeng/toolbar';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionService } from '../../core/auth/permission.service';
 import { NAV_ITEMS } from '../../core/auth/permissions.config';
-import { AppModeService } from '../../core/mode/app-mode.service';
+import { AppModeService, isSingleTherapistMode } from '../../core/mode/app-mode.service';
 import { GlobalSearchComponent } from '../global-search/global-search.component';
 
 @Component({
@@ -45,7 +45,10 @@ export class ShellComponent {
     const mode = this.currentMode();
     return NAV_ITEMS.filter(item => {
       if (item.globalAdminOnly) return this.permissionService.isGlobalAdmin();
-      return this.permissionService.hasAnyRole(item.roles) && (!item.clinicOnly || mode === 'CLINIC');
+      const roles = isSingleTherapistMode(mode) && item.singleTherapistRoles
+        ? item.singleTherapistRoles
+        : item.roles;
+      return this.permissionService.hasAnyRole(roles) && (!item.clinicOnly || mode === 'CLINIC');
     });
   });
 

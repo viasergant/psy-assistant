@@ -105,6 +105,13 @@ describe('ShellComponent.visibleNav', () => {
     expect(nav.length).toBe(NAV_ITEMS.length);
   });
 
+  it('hides reports for a therapist in SOLO mode but shows it in CLINIC mode', () => {
+    expect(buildComponent('SOLO', ['THERAPIST']).component.visibleNav()
+      .some(i => i.route === '/reports')).toBeFalse();
+    expect(buildComponent('CLINIC', ['THERAPIST']).component.visibleNav()
+      .some(i => i.route === '/reports')).toBeTrue();
+  });
+
   it('hides role-restricted items regardless of mode', () => {
     // Only FINANCE role — cannot see admin (SYSTEM_ADMINISTRATOR only)
     const { component } = buildComponent('CLINIC', ['FINANCE']);

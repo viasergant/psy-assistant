@@ -13,6 +13,7 @@ import com.psyassistant.scheduling.domain.AppointmentStatus;
 import com.psyassistant.scheduling.domain.AuditActionType;
 import com.psyassistant.scheduling.domain.CancellationType;
 import com.psyassistant.scheduling.domain.SessionType;
+import com.psyassistant.scheduling.event.AppointmentStatusChangedEvent;
 import com.psyassistant.scheduling.repository.AppointmentRepository;
 import com.psyassistant.scheduling.repository.SessionTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -432,6 +433,38 @@ class AppointmentServiceTest {
                 eq("Dr. Smith"),
                 anyString()
         );
+    }
+
+    @Test
+    @DisplayName("Client rejection keeps the appointment with status CLIENT_REJECTED and publishes an event")
+    void testRejectByClientKeepsAppointment() {
+        final UUID appointmentId = UUID.randomUUID();
+        final Appointment existingAppointment = createMockAppointment();
+        ReflectionTestUtils.setField(existingAppointment, "id", appointmentId);
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(existingAppointment));
+        when(appointmentRepository.save(any(Appointment.class))).thenReturn(existingAppointment);
+
+        final Appointment result = appointmentService.rejectByClient(appointmentId, actorUserId, "Client (Telegram)");
+
+        assertThat(result.getStatus()).isEqualTo(AppointmentStatus.CLIENT_REJECTED);
+        assertThat(result.getCancelledAt()).isNull();
+        verify(auditService).recordAuditEntryWithMetadata(
+                eq(appointmentId), eq(AuditActionType.STATUS_CHANGED), eq(actorUserId),
+                eq("Client (Telegram)"), anyString());
+        verify(eventPublisher).publishEvent(any(AppointmentStatusChangedEvent.class));
+    }
+
+    @Test
+    @DisplayName("Rejecting a completed appointment throws IllegalStateException")
+    void testRejectByClientRejectsNonUpcomingAppointment() {
+        final UUID appointmentId = UUID.randomUUID();
+        final Appointment existingAppointment = createMockAppointment();
+        existingAppointment.setStatus(AppointmentStatus.COMPLETED);
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(existingAppointment));
+
+        assertThatThrownBy(() -> appointmentService.rejectByClient(appointmentId, actorUserId, "Client (Telegram)"))
+                .isInstanceOf(IllegalStateException.class);
+        verify(appointmentRepository, never()).save(any(Appointment.class));
     }
 
     @Test

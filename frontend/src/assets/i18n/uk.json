@@ -564,6 +564,7 @@
         "COMPLETED": "Завершено",
         "CANCELLED": "Скасовано",
         "NO_SHOW": "Не з'явився",
+        "CLIENT_REJECTED": "Відхилено клієнтом",
         "IN_PROGRESS": "В процесі"
       }
     },
@@ -1783,6 +1784,7 @@
       "COMPLETED": "Завершено",
       "CANCELLED": "Скасовано",
       "NO_SHOW": "Не з'явився",
+      "CLIENT_REJECTED": "Відхилено клієнтом",
       "IN_PROGRESS": "В процесі"
     }
   },

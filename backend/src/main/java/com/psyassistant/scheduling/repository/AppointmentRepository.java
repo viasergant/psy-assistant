@@ -96,7 +96,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
         SELECT * FROM appointment a
         WHERE a.org_id = :#{T(com.psyassistant.common.tenant.TenantContext).require()}
         AND a.therapist_profile_id = :therapistProfileId
-        AND a.status != 'CANCELLED'
+        AND a.status NOT IN ('CANCELLED', 'CLIENT_REJECTED')
         AND tstzrange(
             a.start_time,
             a.start_time + (a.duration_minutes || ' minutes')::INTERVAL
@@ -127,7 +127,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
         SELECT * FROM appointment a
         WHERE a.org_id = :#{T(com.psyassistant.common.tenant.TenantContext).require()}
         AND a.therapist_profile_id = :therapistProfileId
-        AND a.status != 'CANCELLED'
+        AND a.status NOT IN ('CANCELLED', 'CLIENT_REJECTED')
         AND a.id != :excludeAppointmentId
         AND tstzrange(
             a.start_time,

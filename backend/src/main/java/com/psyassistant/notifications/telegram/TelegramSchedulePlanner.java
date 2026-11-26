@@ -35,7 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class TelegramSchedulePlanner {
 
     private static final Set<AppointmentStatus> INACTIVE =
-            Set.of(AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW);
+            Set.of(AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW,
+                    AppointmentStatus.CLIENT_REJECTED);
     /** A digest is still sent when the server was briefly down at the configured time. */
     private static final Duration DIGEST_GRACE = Duration.ofHours(2);
 

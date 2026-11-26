@@ -12,7 +12,6 @@ import com.psyassistant.crm.clients.Client;
 import com.psyassistant.crm.clients.ClientRepository;
 import com.psyassistant.scheduling.domain.Appointment;
 import com.psyassistant.scheduling.domain.AppointmentStatus;
-import com.psyassistant.scheduling.domain.CancellationType;
 import com.psyassistant.scheduling.domain.SessionType;
 import com.psyassistant.scheduling.repository.AppointmentRepository;
 import com.psyassistant.scheduling.service.AppointmentService;
@@ -95,7 +94,7 @@ class ClientSessionCancellationServiceTest {
 
         assertThat(reply.buttons()).isEqualTo(ClientSessionCancellationService.Buttons.CONFIRM);
         assertThat(reply.text()).startsWith("Cancel your session on").contains("10:00");
-        verify(appointmentService, never()).cancelAppointment(any(), any(), anyString(), any(), anyString());
+        verify(appointmentService, never()).rejectByClient(any(), any(), anyString());
     }
 
     @Test
@@ -106,15 +105,15 @@ class ClientSessionCancellationServiceTest {
     }
 
     @Test
-    void confirmedCancellationIsRecordedAsClientInitiatedAndTheTherapistIsNotified() {
+    void confirmedCancellationKeepsTheSessionAsRejectedAndTheTherapistIsNotified() {
         final TherapistNotificationSettings s = new TherapistNotificationSettings(org, therapistUser);
         s.link("555", "hash", NOW);
         when(therapistSettings.findByUserId(therapistUser)).thenReturn(Optional.of(s));
 
         final var reply = service.cancel(link, appointmentId);
 
-        verify(appointmentService).cancelAppointment(eq(appointmentId), eq(CancellationType.CLIENT_INITIATED),
-                anyString(), eq(therapistUser), eq("Client (Telegram)"));
+        verify(appointmentService).rejectByClient(appointmentId, therapistUser, "Client (Telegram)");
+        verify(appointmentService, never()).cancelAppointment(any(), any(), anyString(), any(), anyString());
         verify(deliveries).cancelPendingForAppointment(appointmentId);
         assertThat(reply.buttons()).isEqualTo(ClientSessionCancellationService.Buttons.NONE);
         assertThat(reply.text()).contains("has been cancelled");
@@ -126,13 +125,18 @@ class ClientSessionCancellationServiceTest {
     }
 
     @Test
-    void cancellationInsideTheLateWindowIsClassifiedAsLate() {
+    void rejectionInsideTheLateWindowTellsTheTherapistItWasLate() {
+        final TherapistNotificationSettings s = new TherapistNotificationSettings(org, therapistUser);
+        s.link("555", "hash", NOW);
+        when(therapistSettings.findByUserId(therapistUser)).thenReturn(Optional.of(s));
         when(appointment.getStartTime()).thenReturn(ZonedDateTime.parse("2026-11-26T20:00:00Z"));
 
         service.cancel(link, appointmentId);
 
-        verify(appointmentService).cancelAppointment(eq(appointmentId), eq(CancellationType.LATE_CANCELLATION),
-                anyString(), eq(therapistUser), anyString());
+        verify(appointmentService).rejectByClient(eq(appointmentId), eq(therapistUser), anyString());
+        final ArgumentCaptor<TelegramDeliveryLog> notice = ArgumentCaptor.forClass(TelegramDeliveryLog.class);
+        verify(deliveries).save(notice.capture());
+        assertThat(notice.getValue().getBody()).contains("late notice");
     }
 
     @Test
@@ -147,7 +151,7 @@ class ClientSessionCancellationServiceTest {
         when(appointments.findById(appointmentId)).thenReturn(Optional.of(otherOrg));
         assertThat(service.cancel(link, appointmentId).text()).contains("can no longer be changed");
 
-        verify(appointmentService, never()).cancelAppointment(any(), any(), anyString(), any(), anyString());
+        verify(appointmentService, never()).rejectByClient(any(), any(), anyString());
     }
 
     @Test
@@ -162,7 +166,7 @@ class ClientSessionCancellationServiceTest {
         when(appointments.findById(appointmentId)).thenReturn(Optional.empty());
         assertThat(service.keep(link, appointmentId).text()).contains("can no longer be changed");
 
-        verify(appointmentService, never()).cancelAppointment(any(), any(), anyString(), any(), anyString());
+        verify(appointmentService, never()).rejectByClient(any(), any(), anyString());
     }
 
     @Test

@@ -57,7 +57,7 @@ public class CaseloadQueryService {
                 JOIN appointment a ON a.client_id = c.id
                 WHERE c.org_id = ?
                   AND a.therapist_profile_id = ?
-                  AND a.status NOT IN ('CANCELLED')
+                  AND a.status NOT IN ('CANCELLED', 'CLIENT_REJECTED')
                 """;
         final Long total = jdbc.queryForObject(
                 countSql, Long.class, orgId, therapistProfileId);
@@ -77,7 +77,7 @@ public class CaseloadQueryService {
                 FROM clients c
                 JOIN appointment a ON a.client_id = c.id
                     AND a.therapist_profile_id = ?
-                    AND a.status NOT IN ('CANCELLED')
+                    AND a.status NOT IN ('CANCELLED', 'CLIENT_REJECTED')
                 LEFT JOIN (
                     SELECT client_id, COUNT(*) AS completed_count
                     FROM session_record

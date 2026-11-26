@@ -564,6 +564,7 @@
         "COMPLETED": "Completed",
         "CANCELLED": "Cancelled",
         "NO_SHOW": "No Show",
+        "CLIENT_REJECTED": "Rejected by client",
         "IN_PROGRESS": "In Progress"
       }
     },
@@ -1783,6 +1784,7 @@
       "COMPLETED": "Completed",
       "CANCELLED": "Cancelled",
       "NO_SHOW": "No Show",
+      "CLIENT_REJECTED": "Rejected by client",
       "IN_PROGRESS": "In Progress"
     }
   },

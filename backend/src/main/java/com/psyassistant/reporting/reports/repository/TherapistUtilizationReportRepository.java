@@ -24,7 +24,7 @@ public class TherapistUtilizationReportRepository {
             SELECT tp.id                                                          AS therapist_profile_id,
                    u.full_name                                                    AS therapist_name,
                    COALESCE(SUM(a.duration_minutes)
-                       FILTER (WHERE a.status NOT IN ('CANCELLED')), 0)           AS booked_minutes,
+                       FILTER (WHERE a.status NOT IN ('CANCELLED', 'CLIENT_REJECTED')), 0)           AS booked_minutes,
                    CASE WHEN tp.contracted_hours_per_week IS NOT NULL
                         THEN CAST(tp.contracted_hours_per_week * ? * 60 AS BIGINT)
                         ELSE NULL END                                             AS available_minutes,
@@ -32,7 +32,7 @@ public class TherapistUtilizationReportRepository {
                              AND tp.contracted_hours_per_week * ? * 60 > 0
                         THEN ROUND(
                             COALESCE(SUM(a.duration_minutes)
-                                FILTER (WHERE a.status NOT IN ('CANCELLED')), 0)
+                                FILTER (WHERE a.status NOT IN ('CANCELLED', 'CLIENT_REJECTED')), 0)
                             * 100.0
                             / (tp.contracted_hours_per_week * ? * 60), 2)
                         ELSE NULL END                                             AS utilization_pct

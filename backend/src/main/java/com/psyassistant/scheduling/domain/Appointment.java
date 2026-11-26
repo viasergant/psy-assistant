@@ -245,6 +245,14 @@ public class Appointment extends BaseEntity {
     }
 
     /**
+     * Marks the appointment as declined by the client. Unlike {@link #cancel}, it carries no cancellation
+     * metadata: the therapist decides what happens to the session next.
+     */
+    public void rejectByClient() {
+        this.status = AppointmentStatus.CLIENT_REJECTED;
+    }
+
+    /**
      * Reschedules the appointment to a new time.
      *
      * @param newStartTime new start time

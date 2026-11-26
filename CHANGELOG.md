@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-26
 
+### Changed (Client rejection via Telegram)
+
+- When a client declines a session from the Telegram bot, the session is no longer cancelled and removed from the calendar. It gets the new status `CLIENT_REJECTED`, stays on the board highlighted in pink (badge "Rejected by client" / "Відхилено клієнтом") and the therapist is notified in Telegram. Its time slot no longer blocks new bookings, its pending reminders are dropped, and it is excluded from utilization and caseload counts but counted as a cancellation in the no-show/cancellation report. The therapist can then cancel or reschedule it as usual. Migration `V91` extends the status check constraint. The late/on-time distinction is now only shown in the therapist's notice, not stored.
+- Added `ClientRejectionIntegrationTest` (Spring Boot on H2, Telegram API mocked): a client rejecting a session late or in good time keeps it as `CLIENT_REJECTED`, still visible to the calendar query, with the matching therapist notice, and a link from another organization cannot touch it.
+
 ### Fixed (Prod startup)
 
 - Backend failed to start with `Schema-validation: wrong column type ... chat_id_hash` (every login failed). Migrations `V88` and `V89` convert `chat_id_hash` in `therapist_notification_settings` and `client_telegram_link`, and `token_hash` in `telegram_link_token`, from `CHAR(64)` to `VARCHAR(64)` to match the entity mapping.

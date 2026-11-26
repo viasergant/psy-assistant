@@ -29,8 +29,8 @@ public class NoShowCancellationReportRepository {
                    COUNT(*) FILTER (WHERE a.status = 'NO_SHOW')                  AS no_show_count,
                    ROUND(COUNT(*) FILTER (WHERE a.status = 'NO_SHOW')
                        * 100.0 / NULLIF(COUNT(*), 0), 2)                         AS no_show_rate,
-                   COUNT(*) FILTER (WHERE a.status = 'CANCELLED')                AS cancellation_count,
-                   ROUND(COUNT(*) FILTER (WHERE a.status = 'CANCELLED')
+                   COUNT(*) FILTER (WHERE a.status IN ('CANCELLED', 'CLIENT_REJECTED')) AS cancellation_count,
+                   ROUND(COUNT(*) FILTER (WHERE a.status IN ('CANCELLED', 'CLIENT_REJECTED'))
                        * 100.0 / NULLIF(COUNT(*), 0), 2)                         AS cancellation_rate
             FROM appointment a
             JOIN therapist_profile tp ON a.therapist_profile_id = tp.id

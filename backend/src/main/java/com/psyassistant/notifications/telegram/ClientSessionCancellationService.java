@@ -5,7 +5,6 @@ import com.psyassistant.crm.clients.ClientRepository;
 import com.psyassistant.notifications.telegram.TelegramDeliveryLog.Kind;
 import com.psyassistant.scheduling.domain.Appointment;
 import com.psyassistant.scheduling.domain.AppointmentStatus;
-import com.psyassistant.scheduling.domain.CancellationType;
 import com.psyassistant.scheduling.repository.AppointmentRepository;
 import com.psyassistant.scheduling.service.AppointmentService;
 import com.psyassistant.therapists.domain.TherapistProfile;
@@ -25,7 +24,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Lets a Telegram-linked client cancel their own upcoming session from a bot button.
+ * Lets a Telegram-linked client decline their own upcoming session from a bot button. The session is kept
+ * with status {@code CLIENT_REJECTED} rather than cancelled.
  *
  * <p>The chat, and through it the client and organization, comes from the stored link, never from the
  * button payload: the payload only names an appointment, which must belong to that client and
@@ -40,7 +40,6 @@ public class ClientSessionCancellationService {
     private static final Set<AppointmentStatus> CANCELLABLE =
             Set.of(AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED);
     private static final String ACTOR_NAME = "Client (Telegram)";
-    private static final String REASON = "Cancelled by the client via Telegram";
 
     /** Which buttons accompany a reply. */
     public enum Buttons { NONE, CANCEL, CONFIRM }
@@ -142,7 +141,7 @@ public class ClientSessionCancellationService {
     }
 
     /**
-     * "Yes, cancel": cancels the session, drops its pending reminders and tells the therapist.
+     * "Yes, cancel": marks the session as rejected by the client, drops its pending reminders and tells the therapist.
      *
      * @param link          the client's link
      * @param appointmentId appointment named by the button
@@ -158,14 +157,14 @@ public class ClientSessionCancellationService {
             return unavailable(locale);
         }
         final Appointment a = found.get();
-        final CancellationType type = isLate(a) ? CancellationType.LATE_CANCELLATION
-                : CancellationType.CLIENT_INITIATED;
-        // The audit trail and the cancelled_by column reference a user; the client has none, so the action is
-        // recorded under the session's therapist with the actor name "Client (Telegram)".
-        appointmentService.cancelAppointment(a.getId(), type, REASON, therapist.get().getUserId(), ACTOR_NAME);
+        final boolean late = isLate(a);
+        // The audit trail references a user; the client has none, so the action is recorded under the
+        // session's therapist with the actor name "Client (Telegram)". The session is kept (CLIENT_REJECTED)
+        // so the therapist sees it highlighted on the calendar and decides what to do with it.
+        appointmentService.rejectByClient(a.getId(), therapist.get().getUserId(), ACTOR_NAME);
         deliveries.cancelPendingForAppointment(a.getId());
-        notifyTherapist(link, a, therapist.get(), type);
-        LOG.info("Client cancelled appointment {} via Telegram, type={}", a.getId(), type);
+        notifyTherapist(link, a, therapist.get(), late);
+        LOG.info("Client rejected appointment {} via Telegram, late={}", a.getId(), late);
         return new Reply(formatter.text("telegram.client.cancelled", locale,
                 formatter.clientWhen(a.getStartTime(), TelegramClientReminderPlanner.zoneOf(link), locale)),
                 Buttons.NONE);
@@ -188,13 +187,13 @@ public class ClientSessionCancellationService {
     }
 
     private void notifyTherapist(final ClientTelegramLink link, final Appointment a, final TherapistProfile therapist,
-                                 final CancellationType type) {
+                                 final boolean late) {
         therapistSettings.findByUserId(therapist.getUserId())
                 .filter(s -> s.isLinked() && s.getOrgId().equals(link.getOrgId()))
                 .ifPresent(s -> {
                     final Locale locale = Locale.forLanguageTag(s.getLanguage());
                     final Client client = clients.findById(link.getClientId()).orElse(null);
-                    final String key = type == CancellationType.LATE_CANCELLATION
+                    final String key = late
                             ? "telegram.therapist.client-cancelled.late" : "telegram.therapist.client-cancelled";
                     final String text = formatter.text(key, locale,
                             TelegramSchedulePlanner.label(s, client, locale),

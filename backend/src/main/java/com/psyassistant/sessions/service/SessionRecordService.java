@@ -96,6 +96,8 @@ public class SessionRecordService {
         // Handle session cancellation for CANCELLED appointments
         if (newStatus == AppointmentStatus.CANCELLED) {
             cancelPendingOrInProgressSession(event.appointmentId(), "Appointment was cancelled");
+        } else if (newStatus == AppointmentStatus.CLIENT_REJECTED) {
+            cancelPendingOrInProgressSession(event.appointmentId(), "Appointment was rejected by the client");
         }
     }
 

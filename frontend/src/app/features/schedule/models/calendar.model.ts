@@ -38,7 +38,8 @@ export type AppointmentStatus =
   | 'IN_PROGRESS'
   | 'COMPLETED'
   | 'CANCELLED'
-  | 'NO_SHOW';
+  | 'NO_SHOW'
+  | 'CLIENT_REJECTED';
 
 export type CalendarViewMode = 'day' | 'week' | 'month';
 
@@ -65,5 +66,6 @@ export const STATUS_COLORS: Record<AppointmentStatus, string> = {
   IN_PROGRESS: '#2196F3', // Blue
   COMPLETED: '#9E9E9E',   // Grey
   CANCELLED: '#F44336',   // Red
-  NO_SHOW: '#FF5722'      // Deep Orange
+  NO_SHOW: '#FF5722',     // Deep Orange
+  CLIENT_REJECTED: '#E91E63' // Pink: client declined, therapist action needed
 };

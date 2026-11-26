@@ -150,6 +150,11 @@ import { CalendarAppointmentBlock, STATUS_COLORS, SESSION_TYPE_COLORS } from '..
       color: #721C24;
     }
 
+    .appointment-status-badge.client_rejected {
+      background: #FCE4EC;
+      color: #880E4F;
+    }
+
     .modified-indicator {
       position: absolute;
       top: 4px;

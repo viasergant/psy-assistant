@@ -35,5 +35,11 @@ public enum AppointmentStatus {
     /**
      * Client did not attend the scheduled appointment without prior notice.
      */
-    NO_SHOW
+    NO_SHOW,
+
+    /**
+     * Client declined the session themselves (e.g. via the Telegram bot). The session stays on the
+     * calendar, highlighted, until the therapist cancels or reschedules it; its time slot is free for rebooking.
+     */
+    CLIENT_REJECTED
 }

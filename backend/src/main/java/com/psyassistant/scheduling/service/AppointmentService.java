@@ -403,6 +403,48 @@ public class AppointmentService {
     }
 
     /**
+     * Records that the client declined an upcoming session. The appointment is kept (status
+     * {@code CLIENT_REJECTED}) so the therapist still sees it on the calendar.
+     *
+     * @param appointmentId appointment UUID
+     * @param actorUserId   user recorded in the audit trail
+     * @param actorName     display name recorded in the audit trail
+     * @return updated appointment
+     * @throws IllegalStateException if the appointment is not SCHEDULED or CONFIRMED
+     */
+    @Retryable(
+            retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 50, multiplier = 2)
+    )
+    @Transactional
+    public Appointment rejectByClient(final UUID appointmentId, final UUID actorUserId, final String actorName) {
+        final Appointment appointment = getAppointment(appointmentId);
+        final AppointmentStatus oldStatus = appointment.getStatus();
+        if (oldStatus != AppointmentStatus.SCHEDULED && oldStatus != AppointmentStatus.CONFIRMED) {
+            throw new IllegalStateException("Only a scheduled or confirmed appointment can be rejected: "
+                    + appointmentId + " is " + oldStatus);
+        }
+
+        appointment.rejectByClient();
+        final Appointment saved = appointmentRepository.save(appointment);
+
+        auditService.recordAuditEntryWithMetadata(
+                saved.getId(),
+                AuditActionType.STATUS_CHANGED,
+                actorUserId,
+                actorName,
+                String.format("{\"oldStatus\": \"%s\", \"newStatus\": \"%s\"}",
+                        oldStatus, AppointmentStatus.CLIENT_REJECTED));
+
+        eventPublisher.publishEvent(AppointmentStatusChangedEvent.of(
+                saved.getId(), oldStatus, AppointmentStatus.CLIENT_REJECTED, actorUserId, actorName));
+
+        LOG.info("Appointment rejected by client: id={}, oldStatus={}", saved.getId(), oldStatus);
+        return saved;
+    }
+
+    /**
      * Updates an appointment's status.
      *
      * <p>Allows manual status transitions (e.g., marking as CONFIRMED, COMPLETED, or NO_SHOW).

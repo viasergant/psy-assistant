@@ -208,6 +208,10 @@ import { Leave, LeaveStatus } from '../../../models/schedule.model';
       background: #FF5722;
     }
 
+    .status-dot.status-client_rejected {
+      background: #E91E63;
+    }
+
     .month-info {
       margin-top: var(--spacing-lg, 1.5rem);
       padding-top: var(--spacing-md, 1rem);

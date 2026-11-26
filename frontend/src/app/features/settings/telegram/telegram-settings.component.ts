@@ -5,6 +5,8 @@ import { TelegramSettings, TelegramSettingsService, TelegramSettingsUpdate } fro
 
 const LINK_POLL_MS = 3000;
 const LINK_POLL_MAX_MS = 10 * 60 * 1000;
+const REMINDER_MIN_MINUTES = 5;
+const REMINDER_MAX_MINUTES = 1440;
 
 @Component({
   selector: 'app-telegram-settings',
@@ -82,6 +84,11 @@ export class TelegramSettingsComponent implements OnInit, OnDestroy {
       return;
     }
     const f = this.form;
+    if (f.reminderEnabled && !this.isReminderLeadTimeValid(f.reminderMinutesBefore)) {
+      this.saved.set(false);
+      this.error.set('settings.telegram.errors.reminderRange');
+      return;
+    }
     const payload: TelegramSettingsUpdate = {
       timezone: f.timezone, language: f.language, digestEnabled: f.digestEnabled, digestTime: f.digestTime,
       digestDays: f.digestDays, skipEmptyDigest: f.skipEmptyDigest, reminderEnabled: f.reminderEnabled,
@@ -101,6 +108,10 @@ export class TelegramSettingsComponent implements OnInit, OnDestroy {
         this.error.set('settings.telegram.errors.save');
       }
     });
+  }
+
+  private isReminderLeadTimeValid(minutes: number): boolean {
+    return Number.isInteger(minutes) && minutes >= REMINDER_MIN_MINUTES && minutes <= REMINDER_MAX_MINUTES;
   }
 
   sendTest(): void {

@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-26
 
+### Fixed (Telegram settings)
+
+- Saving Telegram notification settings with a reminder lead time below 5 minutes failed with a generic error (the API enforces 5–1440). The form now validates the range client-side and shows a specific message
+
+### Changed (local seed)
+
+- `R__seed_personal_therapist.sql` now also grants `RECEPTION_ADMIN_STAFF` and `FINANCE` to the dev account, so Leads and Billing appear in the menu (local profile only)
+
 ### Added (change password)
 
 - **Self-service password change** — `POST /api/v1/users/me/password` (`currentPassword`, `newPassword`) for any signed-in user. Verifies the current password, enforces the configured password policy and rejects reuse of the current password. All refresh tokens are revoked and a fresh token pair is returned, so the calling session stays signed in; other devices are signed out when their access token expires (up to 60 minutes — access tokens are stateless)

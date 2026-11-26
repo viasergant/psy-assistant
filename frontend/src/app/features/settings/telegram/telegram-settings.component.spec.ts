@@ -65,6 +65,16 @@ describe('TelegramSettingsComponent', () => {
     expect(c.saved()).toBeTrue();
   });
 
+  it('rejects a reminder lead time below 5 minutes without calling the API', () => {
+    const c = create(BASE);
+    c.form!.reminderEnabled = true;
+    c.form!.reminderMinutesBefore = 3;
+    c.save();
+    http.expectNone('/api/v1/telegram/settings');
+    expect(c.error()).toBe('settings.telegram.errors.reminderRange');
+    expect(c.saved()).toBeFalse();
+  });
+
   it('opens the deep link and waits for the bot to confirm', () => {
     const open = spyOn(window, 'open');
     const c = create({ ...BASE, linked: false, timezone: 'Europe/Kyiv' });

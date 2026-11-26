@@ -1955,7 +1955,8 @@
       "errors": {
         "generic": "Something went wrong. Please try again.",
         "link": "Could not create the connection link.",
-        "save": "Could not save settings."
+        "save": "Could not save settings.",
+        "reminderRange": "Reminder lead time must be between 5 and 1440 minutes."
       }
     }
   }

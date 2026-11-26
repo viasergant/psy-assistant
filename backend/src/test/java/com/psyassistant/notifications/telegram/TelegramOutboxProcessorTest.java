@@ -11,13 +11,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.psyassistant.notifications.telegram.TelegramDeliveryLog.Kind;
 import com.psyassistant.notifications.telegram.TelegramDeliveryLog.Status;
+import com.psyassistant.scheduling.domain.Appointment;
+import com.psyassistant.scheduling.domain.AppointmentStatus;
+import com.psyassistant.scheduling.repository.AppointmentRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class TelegramOutboxProcessorTest {
@@ -30,6 +36,8 @@ class TelegramOutboxProcessorTest {
     private TelegramSettingsRepository settings;
     private TelegramClient client;
     private TelegramLinkService linkService;
+    private ClientTelegramLinkRepository clientLinks;
+    private AppointmentRepository appointments;
     private TelegramOutboxProcessor processor;
     private TelegramDeliveryLog row;
 
@@ -39,9 +47,13 @@ class TelegramOutboxProcessorTest {
         settings = mock(TelegramSettingsRepository.class);
         client = mock(TelegramClient.class);
         linkService = mock(TelegramLinkService.class);
+        clientLinks = mock(ClientTelegramLinkRepository.class);
+        appointments = mock(AppointmentRepository.class);
+        final TelegramMessageFormatter formatter = mock(TelegramMessageFormatter.class);
+        when(formatter.text(anyString(), any(Locale.class))).thenReturn("Cancel session");
         final TelegramProperties props = new TelegramProperties();
-        processor = new TelegramOutboxProcessor(deliveries, settings, client, linkService, props,
-                Clock.fixed(NOW, ZoneOffset.UTC));
+        processor = new TelegramOutboxProcessor(deliveries, settings, client, linkService, clientLinks,
+                appointments, formatter, props, Clock.fixed(NOW, ZoneOffset.UTC));
         row = new TelegramDeliveryLog(org, user, Kind.REMINDER, "k", "hello");
         when(deliveries.findNextBatch(any(), anyInt())).thenReturn(List.of(row));
         final TherapistNotificationSettings s = new TherapistNotificationSettings(org, user);
@@ -118,5 +130,80 @@ class TelegramOutboxProcessorTest {
 
         assertThat(row.getStatus()).isEqualTo(Status.FAILED);
         verify(linkService, never()).unlink(any());
+    }
+
+    @Nested
+    class ClientMessages {
+
+        private final UUID clientId = UUID.randomUUID();
+        private final UUID appointmentId = UUID.randomUUID();
+        private TelegramDeliveryLog clientRow;
+        private Appointment appointment;
+
+        @BeforeEach
+        void givenLinkedClient() {
+            clientRow = TelegramDeliveryLog.forClient(org, clientId, appointmentId, Kind.CLIENT_REMINDER, "k2",
+                    "Reminder");
+            when(deliveries.findNextBatch(any(), anyInt())).thenReturn(List.of(clientRow));
+            when(clientLinks.findByClientId(clientId)).thenReturn(Optional.of(
+                    new ClientTelegramLink(org, clientId, "777", "h", "en", "UTC", NOW)));
+            appointment = mock(Appointment.class);
+            when(appointment.getOrgId()).thenReturn(org);
+            when(appointment.getClientId()).thenReturn(clientId);
+            when(appointment.getStatus()).thenReturn(AppointmentStatus.SCHEDULED);
+            when(appointment.getStartTime()).thenReturn(ZonedDateTime.parse("2026-11-27T10:00:00Z"));
+            when(appointments.findById(appointmentId)).thenReturn(Optional.of(appointment));
+        }
+
+        @Test
+        void reminderIsSentToTheClientsChatWithACancelButton() {
+            processor.processBatch();
+
+            verify(client).sendMessage("777", "Reminder",
+                    List.of(new TelegramClient.Button("Cancel session", "cx:" + appointmentId)));
+            assertThat(clientRow.getStatus()).isEqualTo(Status.SENT);
+        }
+
+        @Test
+        void reminderForACancelledSessionIsDroppedNotSent() {
+            when(appointment.getStatus()).thenReturn(AppointmentStatus.CANCELLED);
+
+            processor.processBatch();
+
+            verify(client, never()).sendMessage(anyString(), anyString(), any());
+            assertThat(clientRow.getStatus()).isEqualTo(Status.CANCELLED);
+        }
+
+        @Test
+        void reminderForAnotherClientsOrOrgsSessionIsDropped() {
+            when(appointment.getClientId()).thenReturn(UUID.randomUUID());
+
+            processor.processBatch();
+
+            verify(client, never()).sendMessage(anyString(), anyString(), any());
+            assertThat(clientRow.getStatus()).isEqualTo(Status.CANCELLED);
+        }
+
+        @Test
+        void linkOfAnotherOrgIsNeverUsed() {
+            when(clientLinks.findByClientId(clientId)).thenReturn(Optional.of(
+                    new ClientTelegramLink(UUID.randomUUID(), clientId, "777", "h", "en", "UTC", NOW)));
+
+            processor.processBatch();
+
+            verify(client, never()).sendMessage(anyString(), anyString(), any());
+            assertThat(clientRow.getStatus()).isEqualTo(Status.CANCELLED);
+        }
+
+        @Test
+        void blockedBotUnlinksTheClient() {
+            doThrow(new TelegramApiException("403 blocked", 403, 0)).when(client)
+                    .sendMessage(anyString(), anyString(), any());
+
+            processor.processBatch();
+
+            assertThat(clientRow.getStatus()).isEqualTo(Status.FAILED);
+            verify(linkService).unlinkClient(clientId);
+        }
     }
 }

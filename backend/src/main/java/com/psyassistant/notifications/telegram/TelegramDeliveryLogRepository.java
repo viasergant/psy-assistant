@@ -51,4 +51,30 @@ public interface TelegramDeliveryLogRepository extends JpaRepository<TelegramDel
             WHERE l.userId = :userId AND l.status IN ('PENDING', 'RETRY')
             """)
     int cancelPendingForUser(@Param("userId") UUID userId);
+
+    /**
+     * Cancels undelivered messages of a client, for example after unlinking.
+     *
+     * @param clientId the client whose pending messages are cancelled
+     * @return number of rows updated
+     */
+    @Modifying
+    @Query("""
+            UPDATE TelegramDeliveryLog l SET l.status = 'CANCELLED'
+            WHERE l.clientId = :clientId AND l.status IN ('PENDING', 'RETRY')
+            """)
+    int cancelPendingForClient(@Param("clientId") UUID clientId);
+
+    /**
+     * Cancels undelivered client messages about an appointment that no longer takes place.
+     *
+     * @param appointmentId the appointment
+     * @return number of rows updated
+     */
+    @Modifying
+    @Query("""
+            UPDATE TelegramDeliveryLog l SET l.status = 'CANCELLED'
+            WHERE l.appointmentId = :appointmentId AND l.status IN ('PENDING', 'RETRY')
+            """)
+    int cancelPendingForAppointment(@Param("appointmentId") UUID appointmentId);
 }

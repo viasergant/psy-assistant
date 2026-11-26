@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-26
 
+### Added (Client Telegram link)
+
+- A therapist can now invite a client to the Telegram bot: `POST /api/v1/clients/{id}/telegram/link?language=en|uk` returns a one-time `https://t.me/<bot>?start=<token>` link, `GET` reports whether the client is linked, and `DELETE` unlinks. When the client presses Start, the bot binds that private chat to the client stored on the token (never to an id typed by the client). The client can send `/stop` to disconnect. Migration `V85` adds `client_telegram_link` (encrypted chat id, unique chat hash, `org_id`) and lets `telegram_link_token` belong to a client. A chat can belong to only one therapist or client, and access reuses the client-profile checks (org filter and assigned-therapist rule). 
+
+### Added (Client session reminders and self-service cancellation)
+
+- Linked clients now get a Telegram reminder before each upcoming session (`notifications.telegram.client-reminder-minutes`, default 1440 = 24 h), shown in the time zone given when the invite was created (`POST /api/v1/clients/{id}/telegram/link?timezone=Europe/Kyiv`). The reminder has a **Cancel session** button; pressing it asks for confirmation (with a late-cancellation warning), and confirming cancels the session through `AppointmentService`. The therapist gets a Telegram notice when they are linked, and the client's other pending reminders for that session are dropped.
+- Cancellations closer than `notifications.telegram.late-cancellation-hours` (default 24) to the start are recorded as `LATE_CANCELLATION`, otherwise `CLIENT_INITIATED`. Because `appointment.cancelled_by` and the audit trail reference a user, the action is recorded under the session's therapist with the actor name "Client (Telegram)".
+- Only the client, organization and appointment stored in the link and the database are trusted, never the button payload; sessions of another client or organization, and sessions that are cancelled or already started, cannot be cancelled. Reminders for sessions that stop being upcoming are dropped at send time.
+- Frontend: the client detail page has a **Telegram** section to create an invite link (client language and the therapist's browser time zone are sent along), copy it, see whether the client is connected, and disconnect.
+- Migration `V86` adds `timezone` to links and tokens, and lets `telegram_delivery_log` rows address a client (`client_id`, `appointment_id`). The bot now also subscribes to `callback_query` updates; in webhook mode the webhook is re-registered on startup.
+
 ### Fixed (Client timeline)
 
 - The client timeline no longer shows appointment notes. They were returned as raw `enc:k1:…` ciphertext because the timeline view bypassed field decryption. Migration `V84` recreates `client_activity_timeline` without the `notes` key, and the timeline UI no longer renders it.

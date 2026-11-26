@@ -56,6 +56,7 @@ public class TelegramWebhookController {
         }
         try {
             TelegramUpdate.parse(body).ifPresent(handler::handle);
+            TelegramCallback.parse(body).ifPresent(handler::handleCallback);
         } catch (RuntimeException e) {
             // Always acknowledge, otherwise Telegram retries the same update indefinitely.
             LOG.warn("Telegram update handling failed: {}", e.getClass().getSimpleName());

@@ -50,6 +50,16 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     List<Appointment> findByClientIdOrderByStartTimeDesc(UUID clientId);
 
     /**
+     * Finds a client's appointments that start within a window (org-filtered like every JPQL query).
+     *
+     * @param clientId client UUID
+     * @param from     window start (inclusive)
+     * @param to       window end (inclusive)
+     * @return matching appointments
+     */
+    List<Appointment> findByClientIdAndStartTimeBetween(UUID clientId, ZonedDateTime from, ZonedDateTime to);
+
+    /**
      * <strong>CRITICAL CONFLICT DETECTION QUERY</strong>
      *
      * <p>Uses PostgreSQL tstzrange with GIST index for O(log n) overlap detection.

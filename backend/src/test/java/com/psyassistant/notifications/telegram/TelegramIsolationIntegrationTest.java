@@ -28,6 +28,8 @@ class TelegramIsolationIntegrationTest {
     @Autowired
     private TelegramDeliveryLogRepository deliveries;
     @Autowired
+    private ClientTelegramLinkRepository clientLinks;
+    @Autowired
     private PlatformTransactionManager transactionManager;
 
     /** The org filter is enabled when a transaction begins, as in the real services. */
@@ -39,6 +41,7 @@ class TelegramIsolationIntegrationTest {
     void cleanUp() {
         TenantContext.clear();
         settings.deleteAllInBatch();
+        clientLinks.deleteAllInBatch();
         deliveries.deleteAllInBatch();
     }
 
@@ -74,6 +77,31 @@ class TelegramIsolationIntegrationTest {
 
         assertThatThrownBy(() -> link(org, UUID.randomUUID(), "same-chat"))
                 .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void clientLinksAreInvisibleAcrossOrganizationsAndChatsAreUnique() {
+        final UUID orgA = UUID.randomUUID();
+        final UUID orgB = UUID.randomUUID();
+        final UUID clientA = UUID.randomUUID();
+        final UUID clientB = UUID.randomUUID();
+        clientLinks.saveAndFlush(clientLink(orgA, clientA, "chat-a"));
+        clientLinks.saveAndFlush(clientLink(orgB, clientB, "chat-b"));
+
+        TenantContext.set(orgA);
+        assertThat(inTx(() -> clientLinks.findAll().stream().map(ClientTelegramLink::getClientId).toList()))
+                .containsExactly(clientA);
+        assertThat(inTx(() -> clientLinks.findByClientId(clientB))).isEmpty();
+        assertThat(inTx(() -> clientLinks.findByChatIdHash(TelegramLinkService.sha256("chat-b")))).isEmpty();
+
+        TenantContext.clear();
+        assertThatThrownBy(() -> clientLinks.saveAndFlush(clientLink(orgA, UUID.randomUUID(), "chat-a")))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    private static ClientTelegramLink clientLink(final UUID org, final UUID client, final String chat) {
+        return new ClientTelegramLink(org, client, chat, TelegramLinkService.sha256(chat), "en", "UTC",
+                Instant.now());
     }
 
     private void link(final UUID org, final UUID user, final String chat) {

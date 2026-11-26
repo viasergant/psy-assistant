@@ -19,8 +19,17 @@ public class TelegramLinkToken extends BaseEntity {
     @Column(name = "org_id", nullable = false)
     private UUID orgId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private UUID userId;
+
+    @Column(name = "client_id")
+    private UUID clientId;
+
+    @Column(name = "language", nullable = false, length = 5)
+    private String language = "en";
+
+    @Column(name = "timezone", nullable = false, length = 64)
+    private String timezone = "UTC";
 
     @Column(name = "token_hash", nullable = false, length = 64)
     private String tokenHash;
@@ -51,6 +60,27 @@ public class TelegramLinkToken extends BaseEntity {
     }
 
     /**
+     * Creates a token record that binds a chat to a client.
+     *
+     * @param orgId     owning organization
+     * @param clientId  client the chat will be bound to
+     * @param language  en or uk, used for bot replies
+     * @param timezone  IANA zone used to render session times for the client
+     * @param tokenHash SHA-256 hex of the raw token
+     * @param expiresAt expiry instant
+     * @return the token
+     */
+    public static TelegramLinkToken forClient(final UUID orgId, final UUID clientId, final String language,
+                                              final String timezone, final String tokenHash,
+                                              final Instant expiresAt) {
+        final TelegramLinkToken token = new TelegramLinkToken(orgId, null, tokenHash, expiresAt);
+        token.clientId = clientId;
+        token.language = language;
+        token.timezone = timezone;
+        return token;
+    }
+
+    /**
      * Returns whether the token can still be redeemed.
      *
      * @param now current time
@@ -70,6 +100,18 @@ public class TelegramLinkToken extends BaseEntity {
 
     public UUID getUserId() {
         return userId;
+    }
+
+    public UUID getClientId() {
+        return clientId;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public String getTimezone() {
+        return timezone;
     }
 
     public String getTokenHash() {

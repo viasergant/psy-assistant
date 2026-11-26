@@ -26,6 +26,7 @@ class TelegramLinkServiceTest {
     private TelegramLinkTokenRepository tokens;
     private TelegramSettingsRepository settings;
     private TelegramDeliveryLogRepository deliveries;
+    private ClientTelegramLinkRepository clientLinks;
     private TelegramLinkService service;
 
     @BeforeEach
@@ -35,7 +36,9 @@ class TelegramLinkServiceTest {
         deliveries = mock(TelegramDeliveryLogRepository.class);
         final TelegramProperties props = new TelegramProperties();
         props.setBotUsername("psy_bot");
-        service = new TelegramLinkService(props, tokens, settings, deliveries, Clock.fixed(NOW, ZoneOffset.UTC));
+        clientLinks = mock(ClientTelegramLinkRepository.class);
+        service = new TelegramLinkService(props, tokens, settings, deliveries, clientLinks,
+                Clock.fixed(NOW, ZoneOffset.UTC));
         TenantContext.set(org);
     }
 
@@ -115,5 +118,87 @@ class TelegramLinkServiceTest {
         assertThat(s.isLinked()).isFalse();
         assertThat(s.getChatIdHash()).isNull();
         verify(deliveries).cancelPendingForUser(user);
+    }
+
+    @Test
+    void clientDeepLinkStoresHashedTokenForTheClientInTheCallersOrg() {
+        final UUID clientId = UUID.randomUUID();
+
+        final String url = service.createClientDeepLink(clientId, "uk", "Europe/Kyiv");
+
+        final ArgumentCaptor<TelegramLinkToken> saved = ArgumentCaptor.forClass(TelegramLinkToken.class);
+        verify(tokens).save(saved.capture());
+        final String raw = url.substring(url.indexOf("start=") + 6);
+        assertThat(saved.getValue().getTokenHash()).isEqualTo(TelegramLinkService.sha256(raw));
+        assertThat(saved.getValue().getClientId()).isEqualTo(clientId);
+        assertThat(saved.getValue().getUserId()).isNull();
+        assertThat(saved.getValue().getOrgId()).isEqualTo(org);
+        assertThat(saved.getValue().getLanguage()).isEqualTo("uk");
+        assertThat(saved.getValue().getTimezone()).isEqualTo("Europe/Kyiv");
+    }
+
+    @Test
+    void redeemBindsChatToTheClientOnTheToken() {
+        final UUID clientId = UUID.randomUUID();
+        final TelegramLinkToken token = TelegramLinkToken.forClient(org, clientId, "uk", "Europe/Kyiv",
+                TelegramLinkService.sha256("c"), NOW.plusSeconds(60));
+        when(tokens.findByTokenHash(TelegramLinkService.sha256("c"))).thenReturn(Optional.of(token));
+
+        assertThat(service.redeem("c", "777")).isEqualTo(TelegramLinkService.RedeemResult.CLIENT_LINKED);
+
+        final ArgumentCaptor<ClientTelegramLink> saved = ArgumentCaptor.forClass(ClientTelegramLink.class);
+        verify(clientLinks).save(saved.capture());
+        assertThat(saved.getValue().getClientId()).isEqualTo(clientId);
+        assertThat(saved.getValue().getOrgId()).isEqualTo(org);
+        assertThat(saved.getValue().getChatId()).isEqualTo("777");
+        assertThat(saved.getValue().getLanguage()).isEqualTo("uk");
+        assertThat(saved.getValue().getTimezone()).isEqualTo("Europe/Kyiv");
+        verify(settings, never()).save(any());
+        assertThat(token.getUsedAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    void clientCannotLinkAChatOwnedByAnotherClientOrATherapist() {
+        final TelegramLinkToken token = TelegramLinkToken.forClient(org, UUID.randomUUID(), "en", "UTC", "h",
+                NOW.plusSeconds(60));
+        when(tokens.findByTokenHash(TelegramLinkService.sha256("c"))).thenReturn(Optional.of(token));
+        final String hash = TelegramLinkService.sha256("777");
+        when(clientLinks.findByChatIdHash(hash)).thenReturn(Optional.of(
+                new ClientTelegramLink(org, UUID.randomUUID(), "777", hash, "en", "UTC", NOW)));
+
+        assertThat(service.redeem("c", "777")).isEqualTo(TelegramLinkService.RedeemResult.CHAT_ALREADY_LINKED);
+
+        when(clientLinks.findByChatIdHash(hash)).thenReturn(Optional.empty());
+        when(settings.findByChatIdHash(hash)).thenReturn(Optional.of(
+                new TherapistNotificationSettings(org, UUID.randomUUID())));
+
+        assertThat(service.redeem("c", "777")).isEqualTo(TelegramLinkService.RedeemResult.CHAT_ALREADY_LINKED);
+        verify(clientLinks, never()).save(any());
+        assertThat(token.getUsedAt()).isNull();
+    }
+
+    @Test
+    void therapistTokenCannotLinkAChatOwnedByAClient() {
+        final TelegramLinkToken token = new TelegramLinkToken(org, user, "h", NOW.plusSeconds(60));
+        when(tokens.findByTokenHash(TelegramLinkService.sha256("t"))).thenReturn(Optional.of(token));
+        final String hash = TelegramLinkService.sha256("777");
+        when(clientLinks.findByChatIdHash(hash)).thenReturn(Optional.of(
+                new ClientTelegramLink(org, UUID.randomUUID(), "777", hash, "en", "UTC", NOW)));
+
+        assertThat(service.redeem("t", "777")).isEqualTo(TelegramLinkService.RedeemResult.CHAT_ALREADY_LINKED);
+        verify(settings, never()).save(any());
+    }
+
+    @Test
+    void stopAlsoRemovesAClientLink() {
+        final String hash = TelegramLinkService.sha256("777");
+        final ClientTelegramLink link = new ClientTelegramLink(org, UUID.randomUUID(), "777", hash, "en", "UTC", NOW);
+        when(clientLinks.findByChatIdHash(hash)).thenReturn(Optional.of(link));
+        when(clientLinks.findByClientId(link.getClientId())).thenReturn(Optional.of(link));
+
+        service.unlinkByChat("777");
+
+        verify(clientLinks).delete(link);
+        verify(deliveries).cancelPendingForClient(link.getClientId());
     }
 }

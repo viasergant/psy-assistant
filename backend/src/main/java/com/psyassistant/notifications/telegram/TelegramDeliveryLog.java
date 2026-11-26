@@ -23,7 +23,7 @@ import org.hibernate.annotations.Filter;
 public class TelegramDeliveryLog extends BaseEntity {
 
     /** Message category. */
-    public enum Kind { DIGEST, REMINDER, SYSTEM }
+    public enum Kind { DIGEST, REMINDER, CLIENT_REMINDER, SYSTEM }
 
     /** Delivery state. */
     public enum Status { PENDING, RETRY, SENT, FAILED, CANCELLED }
@@ -31,8 +31,15 @@ public class TelegramDeliveryLog extends BaseEntity {
     @Column(name = "org_id", nullable = false)
     private UUID orgId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private UUID userId;
+
+    @Column(name = "client_id")
+    private UUID clientId;
+
+    /** Appointment a client message is about; drives the cancel button. */
+    @Column(name = "appointment_id")
+    private UUID appointmentId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -81,12 +88,39 @@ public class TelegramDeliveryLog extends BaseEntity {
         this.body = body;
     }
 
+    /**
+     * Creates a pending delivery addressed to a client.
+     *
+     * @param orgId         owning organization
+     * @param clientId      recipient client
+     * @param appointmentId appointment the message is about, or null
+     * @param kind          message category
+     * @param dedupKey      idempotency key
+     * @param body          rendered text
+     * @return the delivery
+     */
+    public static TelegramDeliveryLog forClient(final UUID orgId, final UUID clientId, final UUID appointmentId,
+                                                final Kind kind, final String dedupKey, final String body) {
+        final TelegramDeliveryLog log = new TelegramDeliveryLog(orgId, null, kind, dedupKey, body);
+        log.clientId = clientId;
+        log.appointmentId = appointmentId;
+        return log;
+    }
+
     public UUID getOrgId() {
         return orgId;
     }
 
     public UUID getUserId() {
         return userId;
+    }
+
+    public UUID getClientId() {
+        return clientId;
+    }
+
+    public UUID getAppointmentId() {
+        return appointmentId;
     }
 
     public Kind getKind() {

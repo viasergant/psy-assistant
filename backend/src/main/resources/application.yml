@@ -137,6 +137,10 @@ notifications:
     sender-name: ${EMAIL_SENDER_NAME:PSY Assistant}
     webhook-secret: ${EMAIL_WEBHOOK_SECRET}
     max-retries: 5
+    # Clients get a reminder this many minutes before a session (default 24 h)
+    client-reminder-minutes: 1440
+    # Client cancellations closer than this to the start are recorded as LATE_CANCELLATION
+    late-cancellation-hours: 24
     outbox:
       poll-interval-ms: 5000
       batch-size: 10

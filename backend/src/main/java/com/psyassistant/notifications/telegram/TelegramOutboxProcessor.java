@@ -1,7 +1,11 @@
 package com.psyassistant.notifications.telegram;
 
+import com.psyassistant.scheduling.repository.AppointmentRepository;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +29,9 @@ public class TelegramOutboxProcessor {
     private final TelegramSettingsRepository settings;
     private final TelegramClient client;
     private final TelegramLinkService linkService;
+    private final ClientTelegramLinkRepository clientLinks;
+    private final AppointmentRepository appointments;
+    private final TelegramMessageFormatter formatter;
     private final TelegramProperties props;
     private final Clock clock;
 
@@ -35,17 +42,26 @@ public class TelegramOutboxProcessor {
      * @param settings    settings
      * @param client      Telegram API
      * @param linkService link service (used to unlink blocked chats)
+     * @param clientLinks client links
+     * @param appointments appointments (to drop reminders for sessions that are no longer upcoming)
+     * @param formatter   text source for button labels
      * @param props       configuration
      * @param clock       clock
      */
     public TelegramOutboxProcessor(final TelegramDeliveryLogRepository deliveries,
                                    final TelegramSettingsRepository settings, final TelegramClient client,
-                                   final TelegramLinkService linkService, final TelegramProperties props,
+                                   final TelegramLinkService linkService,
+                                   final ClientTelegramLinkRepository clientLinks,
+                                   final AppointmentRepository appointments,
+                                   final TelegramMessageFormatter formatter, final TelegramProperties props,
                                    final Clock clock) {
         this.deliveries = deliveries;
         this.settings = settings;
         this.client = client;
         this.linkService = linkService;
+        this.clientLinks = clientLinks;
+        this.appointments = appointments;
+        this.formatter = formatter;
         this.props = props;
         this.clock = clock;
     }
@@ -61,6 +77,10 @@ public class TelegramOutboxProcessor {
     }
 
     private void deliver(final TelegramDeliveryLog row, final Instant now) {
+        if (row.getClientId() != null) {
+            deliverToClient(row, now);
+            return;
+        }
         final var target = settings.findByUserId(row.getUserId())
                 .filter(s -> s.isLinked() && s.getOrgId().equals(row.getOrgId()));
         if (target.isEmpty()) {
@@ -73,17 +93,54 @@ public class TelegramOutboxProcessor {
             row.setSentAt(now);
             row.setLastError(null);
         } catch (TelegramApiException e) {
-            handleFailure(row, target.get(), e, now);
+            handleFailure(row, () -> linkService.unlink(target.get().getUserId()), e, now);
         }
     }
 
-    private void handleFailure(final TelegramDeliveryLog row, final TherapistNotificationSettings s,
+    private void deliverToClient(final TelegramDeliveryLog row, final Instant now) {
+        final var target = clientLinks.findByClientId(row.getClientId())
+                .filter(l -> l.getOrgId().equals(row.getOrgId()));
+        if (target.isEmpty() || row.getAppointmentId() != null && !stillUpcoming(row, now)) {
+            row.setStatus(TelegramDeliveryLog.Status.CANCELLED);
+            return;
+        }
+        final ClientTelegramLink link = target.get();
+        try {
+            if (row.getAppointmentId() == null) {
+                client.sendMessage(link.getChatId(), row.getBody());
+            } else {
+                client.sendMessage(link.getChatId(), row.getBody(), List.of(cancelButton(link,
+                        row.getAppointmentId())));
+            }
+            row.setStatus(TelegramDeliveryLog.Status.SENT);
+            row.setSentAt(now);
+            row.setLastError(null);
+        } catch (TelegramApiException e) {
+            handleFailure(row, () -> linkService.unlinkClient(link.getClientId()), e, now);
+        }
+    }
+
+    /** The session must still exist for this client and organization, and be cancellable. */
+    private boolean stillUpcoming(final TelegramDeliveryLog row, final Instant now) {
+        return appointments.findById(row.getAppointmentId())
+                .filter(a -> row.getOrgId().equals(a.getOrgId()) && row.getClientId().equals(a.getClientId()))
+                .filter(a -> ClientSessionCancellationService.cancellable(a, now))
+                .isPresent();
+    }
+
+    private TelegramClient.Button cancelButton(final ClientTelegramLink link, final UUID appointmentId) {
+        return new TelegramClient.Button(
+                formatter.text("telegram.client.btn.cancel", Locale.forLanguageTag(link.getLanguage())),
+                TelegramUpdateHandler.CANCEL_ASK + appointmentId);
+    }
+
+    private void handleFailure(final TelegramDeliveryLog row, final Runnable unlinkRecipient,
                                final TelegramApiException e, final Instant now) {
         row.setLastError(truncate(e.getMessage()));
         if (e.isRecipientGone()) {
             row.setStatus(TelegramDeliveryLog.Status.FAILED);
-            linkService.unlink(s.getUserId());
-            LOG.info("Telegram recipient unreachable; unlinked user {}", s.getUserId());
+            unlinkRecipient.run();
+            LOG.info("Telegram recipient unreachable; unlinked");
             return;
         }
         final int attempt = row.getRetryCount() + 1;

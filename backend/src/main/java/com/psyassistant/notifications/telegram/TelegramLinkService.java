@@ -30,12 +30,13 @@ public class TelegramLinkService {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     /** Outcome of a redeem attempt. */
-    public enum RedeemResult { LINKED, INVALID_TOKEN, CHAT_ALREADY_LINKED }
+    public enum RedeemResult { LINKED, CLIENT_LINKED, INVALID_TOKEN, CHAT_ALREADY_LINKED }
 
     private final TelegramProperties props;
     private final TelegramLinkTokenRepository tokens;
     private final TelegramSettingsRepository settings;
     private final TelegramDeliveryLogRepository deliveries;
+    private final ClientTelegramLinkRepository clientLinks;
     private final Clock clock;
 
     /**
@@ -45,15 +46,18 @@ public class TelegramLinkService {
      * @param tokens     token repository
      * @param settings   settings repository
      * @param deliveries delivery repository
+     * @param clientLinks client link repository
      * @param clock      clock
      */
     public TelegramLinkService(final TelegramProperties props, final TelegramLinkTokenRepository tokens,
                                final TelegramSettingsRepository settings,
-                               final TelegramDeliveryLogRepository deliveries, final Clock clock) {
+                               final TelegramDeliveryLogRepository deliveries,
+                               final ClientTelegramLinkRepository clientLinks, final Clock clock) {
         this.props = props;
         this.tokens = tokens;
         this.settings = settings;
         this.deliveries = deliveries;
+        this.clientLinks = clientLinks;
         this.clock = clock;
     }
 
@@ -66,10 +70,26 @@ public class TelegramLinkService {
     @Transactional
     public String createDeepLink(final UUID userId) {
         final UUID orgId = TenantContext.require();
-        final byte[] raw = new byte[32];
-        RANDOM.nextBytes(raw);
-        final String token = Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
+        final String token = newToken();
         tokens.save(new TelegramLinkToken(orgId, userId, sha256(token),
+                clock.instant().plus(Duration.ofMinutes(props.getLinkTokenTtlMinutes()))));
+        return "https://t.me/" + props.getBotUsername() + "?start=" + token;
+    }
+
+    /**
+     * Issues a deep link that binds a Telegram chat to a client. The caller must already have
+     * verified (through an org-filtered load) that the client is visible to the authenticated user.
+     *
+     * @param clientId the client to invite
+     * @param language en or uk, used for bot replies to the client
+     * @param timezone IANA zone used to render session times for the client
+     * @return {@code https://t.me/<bot>?start=<token>}
+     */
+    @Transactional
+    public String createClientDeepLink(final UUID clientId, final String language, final String timezone) {
+        final UUID orgId = TenantContext.require();
+        final String token = newToken();
+        tokens.save(TelegramLinkToken.forClient(orgId, clientId, language, timezone, sha256(token),
                 clock.instant().plus(Duration.ofMinutes(props.getLinkTokenTtlMinutes()))));
         return "https://t.me/" + props.getBotUsername() + "?start=" + token;
     }
@@ -91,6 +111,12 @@ public class TelegramLinkService {
         }
         final TelegramLinkToken token = found.get();
         final String chatHash = sha256(chatId);
+        if (token.getClientId() != null) {
+            return redeemForClient(token, chatId, chatHash, now);
+        }
+        if (clientLinks.findByChatIdHash(chatHash).isPresent()) {
+            return RedeemResult.CHAT_ALREADY_LINKED;
+        }
         final Optional<TherapistNotificationSettings> owner = settings.findByChatIdHash(chatHash);
         if (owner.isPresent() && !owner.get().getUserId().equals(token.getUserId())) {
             return RedeemResult.CHAT_ALREADY_LINKED;
@@ -103,6 +129,56 @@ public class TelegramLinkService {
         tokens.save(token);
         LOG.info("Telegram linked for user {}", token.getUserId());
         return RedeemResult.LINKED;
+    }
+
+    private RedeemResult redeemForClient(final TelegramLinkToken token, final String chatId,
+                                         final String chatHash, final Instant now) {
+        final boolean usedByTherapist = settings.findByChatIdHash(chatHash).isPresent();
+        final Optional<ClientTelegramLink> owner = clientLinks.findByChatIdHash(chatHash);
+        if (usedByTherapist || owner.isPresent() && !owner.get().getClientId().equals(token.getClientId())) {
+            return RedeemResult.CHAT_ALREADY_LINKED;
+        }
+        final Optional<ClientTelegramLink> existing = clientLinks.findByClientId(token.getClientId());
+        if (existing.isPresent()) {
+            existing.get().rebind(chatId, chatHash, token.getLanguage(), token.getTimezone(), now);
+            clientLinks.save(existing.get());
+        } else {
+            clientLinks.save(new ClientTelegramLink(token.getOrgId(), token.getClientId(), chatId, chatHash,
+                    token.getLanguage(), token.getTimezone(), now));
+        }
+        token.markUsed(now);
+        tokens.save(token);
+        LOG.info("Telegram linked for client {}", token.getClientId());
+        return RedeemResult.CLIENT_LINKED;
+    }
+
+    /**
+     * Unlinks a client's Telegram chat.
+     *
+     * @param clientId client to unlink
+     */
+    @Transactional
+    public void unlinkClient(final UUID clientId) {
+        clientLinks.findByClientId(clientId).ifPresent(clientLinks::delete);
+        deliveries.cancelPendingForClient(clientId);
+        LOG.info("Telegram unlinked for client {}", clientId);
+    }
+
+    /**
+     * Returns whether the client has a linked chat.
+     *
+     * @param clientId client id
+     * @return true when linked
+     */
+    @Transactional(readOnly = true)
+    public boolean isClientLinked(final UUID clientId) {
+        return clientLinks.findByClientId(clientId).isPresent();
+    }
+
+    private static String newToken() {
+        final byte[] raw = new byte[32];
+        RANDOM.nextBytes(raw);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
     }
 
     /**
@@ -127,7 +203,9 @@ public class TelegramLinkService {
      */
     @Transactional
     public void unlinkByChat(final String chatId) {
-        settings.findByChatIdHash(sha256(chatId)).ifPresent(s -> unlink(s.getUserId()));
+        final String hash = sha256(chatId);
+        settings.findByChatIdHash(hash).ifPresent(s -> unlink(s.getUserId()));
+        clientLinks.findByChatIdHash(hash).ifPresent(l -> unlinkClient(l.getClientId()));
     }
 
     /**

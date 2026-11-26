@@ -19,6 +19,7 @@ import { TherapistProfile } from '../../admin/therapists/models/therapist.model'
 import { jwtDecode } from 'jwt-decode';
 import { CarePlanListComponent } from '../care-plans/care-plan-list/care-plan-list.component';
 import { ClientPackagesComponent } from '../components/client-packages/client-packages.component';
+import { ClientTelegramComponent } from '../components/client-telegram/client-telegram.component';
 import { RiskFlagsPanelComponent } from '../components/risk-flags/risk-flags-panel/risk-flags-panel.component';
 import { AppModeService, isSingleTherapistMode } from '../../../core/mode/app-mode.service';
 import { SoloTherapistService } from '../../../core/mode/solo-therapist.service';
@@ -29,7 +30,7 @@ import { SoloTherapistService } from '../../../core/mode/solo-therapist.service'
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ClientTimelineComponent, AppointmentBookingDialogComponent, CarePlanListComponent, ClientPackagesComponent, RiskFlagsPanelComponent, Select],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ClientTimelineComponent, AppointmentBookingDialogComponent, CarePlanListComponent, ClientPackagesComponent, ClientTelegramComponent, RiskFlagsPanelComponent, Select],
   template: `
     <div class="page">
       <a class="back-link" routerLink="/leads">&larr; {{ 'clients.detail.backToLeads' | transloco }}</a>
@@ -350,6 +351,8 @@ import { SoloTherapistService } from '../../../core/mode/solo-therapist.service'
         </div>
 
         <app-client-packages [clientId]="client.id" />
+
+        <app-client-telegram [clientId]="client.id" />
 
         <div class="section">
           <app-risk-flags-panel

@@ -349,6 +349,28 @@
       "sessionsRemaining": "{{remaining}} / {{total}} sessions remaining",
       "viewInvoice": "View invoice"
     },
+    "telegram": {
+      "title": "Telegram",
+      "description": "Invite the client to the bot to get session reminders in Telegram, with a button to cancel a session. Messages contain only the session time and type.",
+      "unavailable": "Telegram is not configured on this server.",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "disconnect": "Disconnect",
+      "language": "Client language",
+      "languages": {
+        "en": "English",
+        "uk": "Ukrainian"
+      },
+      "invite": "Create invite link",
+      "inviteHint": "Send this link to the client. It works once and expires in a few minutes. When they open it and press Start, they are connected.",
+      "linkLabel": "Invite link",
+      "copy": "Copy",
+      "copied": "Copied",
+      "errors": {
+        "generic": "Telegram action failed. Please try again.",
+        "invite": "Could not create the invite link."
+      }
+    },
     "atRisk": {
       "badge": "At Risk",
       "tooltip": "Client has been flagged as at-risk due to repeated no-shows"

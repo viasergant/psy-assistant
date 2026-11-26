@@ -69,6 +69,7 @@ public class TelegramLongPollingRunner {
             offset = Math.max(offset, raw.path("update_id").asLong(offset));
             try {
                 TelegramUpdate.parse(raw).ifPresent(handler::handle);
+                TelegramCallback.parse(raw).ifPresent(handler::handleCallback);
             } catch (RuntimeException e) {
                 LOG.warn("Telegram update handling failed: {}", e.getClass().getSimpleName());
             }

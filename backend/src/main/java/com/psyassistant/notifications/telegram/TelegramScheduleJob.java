@@ -9,7 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Every minute, queues due daily digests and session reminders for all linked therapists.
+ * Every minute, queues due daily digests and session reminders for all linked therapists, and session
+ * reminders for all linked clients.
  *
  * <p>The cross-organization scan only reads settings rows; the tenant is then bound per row so every
  * further query is org-filtered. Dedup keys in the outbox make this idempotent and safe on several
@@ -23,6 +24,8 @@ public class TelegramScheduleJob {
 
     private final TelegramSettingsRepository settings;
     private final TelegramSchedulePlanner planner;
+    private final ClientTelegramLinkRepository clientLinks;
+    private final TelegramClientReminderPlanner clientPlanner;
     private final Clock clock;
 
     /**
@@ -30,12 +33,17 @@ public class TelegramScheduleJob {
      *
      * @param settings settings repository
      * @param planner  planner
+     * @param clientLinks client links
+     * @param clientPlanner client reminder planner
      * @param clock    clock
      */
     public TelegramScheduleJob(final TelegramSettingsRepository settings, final TelegramSchedulePlanner planner,
-                               final Clock clock) {
+                               final ClientTelegramLinkRepository clientLinks,
+                               final TelegramClientReminderPlanner clientPlanner, final Clock clock) {
         this.settings = settings;
         this.planner = planner;
+        this.clientLinks = clientLinks;
+        this.clientPlanner = clientPlanner;
         this.clock = clock;
     }
 
@@ -51,6 +59,17 @@ public class TelegramScheduleJob {
             } catch (RuntimeException e) {
                 // One therapist's failure (or a duplicate-key race with another instance) must not stop the rest.
                 LOG.warn("Telegram scheduling failed for user {}: {}", s.getUserId(), e.getClass().getSimpleName());
+            } finally {
+                TenantContext.clear();
+            }
+        }
+        for (final ClientTelegramLink link : clientLinks.findAll()) {
+            TenantContext.set(link.getOrgId());
+            try {
+                clientPlanner.plan(link, now);
+            } catch (RuntimeException e) {
+                LOG.warn("Telegram client scheduling failed for client {}: {}", link.getClientId(),
+                        e.getClass().getSimpleName());
             } finally {
                 TenantContext.clear();
             }

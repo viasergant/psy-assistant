@@ -8,6 +8,14 @@ import java.util.List;
 public interface TelegramClient {
 
     /**
+     * Inline keyboard button.
+     *
+     * @param text         label
+     * @param callbackData payload returned when pressed (at most 64 bytes)
+     */
+    record Button(String text, String callbackData) { }
+
+    /**
      * Sends a plain-text message (no parse mode, so content is never interpreted as markup).
      *
      * @param chatId target chat
@@ -15,6 +23,35 @@ public interface TelegramClient {
      * @throws TelegramApiException on any API or transport failure
      */
     void sendMessage(String chatId, String text);
+
+    /**
+     * Sends a message with one row of inline buttons.
+     *
+     * @param chatId  target chat
+     * @param text    message text
+     * @param buttons inline buttons shown under the message
+     * @throws TelegramApiException on any API or transport failure
+     */
+    void sendMessage(String chatId, String text, List<Button> buttons);
+
+    /**
+     * Replaces the text and buttons of a message the bot sent earlier.
+     *
+     * @param chatId    chat containing the message
+     * @param messageId message to edit
+     * @param text      new text
+     * @param buttons   new buttons; empty removes the keyboard
+     * @throws TelegramApiException on any API or transport failure
+     */
+    void editMessage(String chatId, long messageId, String text, List<Button> buttons);
+
+    /**
+     * Acknowledges a button press so the client's spinner stops.
+     *
+     * @param callbackQueryId id of the callback query
+     * @throws TelegramApiException on any API or transport failure
+     */
+    void answerCallbackQuery(String callbackQueryId);
 
     /**
      * Fetches updates with long polling.

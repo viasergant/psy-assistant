@@ -19,6 +19,7 @@ describe('ClientDetailComponent', () => {
     sourceLeadId: null,
     ownerId: null,
     assignedTherapistId: null,
+    lastTherapistId: null,
     notes: 'Initial notes',
     preferredName: null,
     dateOfBirth: null,

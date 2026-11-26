@@ -45,9 +45,34 @@ public class TelegramBotApiClient implements TelegramClient {
     }
 
     @Override
+    public void sendMessage(final String chatId, final String text, final List<Button> buttons) {
+        call("sendMessage", Map.of("chat_id", chatId, "text", text, "disable_web_page_preview", true,
+                "reply_markup", keyboard(buttons)));
+    }
+
+    @Override
+    public void editMessage(final String chatId, final long messageId, final String text,
+                            final List<Button> buttons) {
+        call("editMessageText", Map.of("chat_id", chatId, "message_id", messageId, "text", text,
+                "disable_web_page_preview", true, "reply_markup", keyboard(buttons)));
+    }
+
+    @Override
+    public void answerCallbackQuery(final String callbackQueryId) {
+        call("answerCallbackQuery", Map.of("callback_query_id", callbackQueryId));
+    }
+
+    private static Map<String, Object> keyboard(final List<Button> buttons) {
+        final List<Map<String, String>> row = buttons.stream()
+                .map(b -> Map.of("text", b.text(), "callback_data", b.callbackData()))
+                .toList();
+        return Map.of("inline_keyboard", row.isEmpty() ? List.of() : List.of(row));
+    }
+
+    @Override
     public List<JsonNode> getUpdates(final long offset, final int timeoutSeconds) {
         final JsonNode result = call("getUpdates", Map.of(
-                "offset", offset, "timeout", timeoutSeconds, "allowed_updates", List.of("message")));
+                "offset", offset, "timeout", timeoutSeconds, "allowed_updates", List.of("message", "callback_query")));
         final List<JsonNode> updates = new ArrayList<>();
         if (result != null && result.path("result").isArray()) {
             result.path("result").forEach(updates::add);
@@ -57,7 +82,8 @@ public class TelegramBotApiClient implements TelegramClient {
 
     @Override
     public void setWebhook(final String url, final String secret) {
-        call("setWebhook", Map.of("url", url, "secret_token", secret, "allowed_updates", List.of("message")));
+        call("setWebhook", Map.of("url", url, "secret_token", secret,
+                "allowed_updates", List.of("message", "callback_query")));
     }
 
     @Override

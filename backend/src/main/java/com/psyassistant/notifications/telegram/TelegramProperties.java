@@ -32,6 +32,8 @@ public class TelegramProperties {
     private int outboxBatchSize = 20;
     private int pollTimeoutSeconds = 25;
     private long linkTokenTtlMinutes = 10L;
+    private int clientReminderMinutes = 1440;
+    private int lateCancellationHours = 24;
 
     /**
      * Returns whether Telegram can actually operate: switched on and a bot token is present.
@@ -120,6 +122,22 @@ public class TelegramProperties {
 
     public void setPollTimeoutSeconds(final int pollTimeoutSeconds) {
         this.pollTimeoutSeconds = pollTimeoutSeconds;
+    }
+
+    public int getClientReminderMinutes() {
+        return clientReminderMinutes;
+    }
+
+    public void setClientReminderMinutes(final int clientReminderMinutes) {
+        this.clientReminderMinutes = clientReminderMinutes;
+    }
+
+    public int getLateCancellationHours() {
+        return lateCancellationHours;
+    }
+
+    public void setLateCancellationHours(final int lateCancellationHours) {
+        this.lateCancellationHours = lateCancellationHours;
     }
 
     public long getLinkTokenTtlMinutes() {

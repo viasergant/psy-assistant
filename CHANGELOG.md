@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed (Prod startup)
 
-- Backend failed to start with `Schema-validation: wrong column type ... chat_id_hash` (every login failed). Migration `V88` converts `chat_id_hash` in `therapist_notification_settings` and `client_telegram_link` from `CHAR(64)` to `VARCHAR(64)` to match the entity mapping.
+- Backend failed to start with `Schema-validation: wrong column type ... chat_id_hash` (every login failed). Migrations `V88` and `V89` convert `chat_id_hash` in `therapist_notification_settings` and `client_telegram_link`, and `token_hash` in `telegram_link_token`, from `CHAR(64)` to `VARCHAR(64)` to match the entity mapping.
 
 ### Added (Client Telegram link)
 

@@ -4,7 +4,7 @@
 
 | Area | Scenario Count | IDs |
 |---|---|---|
-| Authentication | 16 | AUTH-001 – AUTH-016 |
+| Authentication | 22 | AUTH-001 – AUTH-022 |
 | User Management (Admin) | 14 | USR-001 – USR-014 |
 | User Preferences | 5 | PREF-001 – PREF-005 |
 | Lead Management | 22 | LEAD-001 – LEAD-022 |
@@ -23,7 +23,7 @@
 | Risk Flag Types | 5 | RFT-001 – RFT-005 |
 | Global Admin — User List | 5 | GADM-001 – GADM-005 |
 | Role-Based Access Control | 8 | RBAC-001 – RBAC-008 |
-| **Total** | **254** | |
+| **Total** | **260** | |
 
 ---
 
@@ -184,6 +184,66 @@
 | Actor | ANON |
 | Action | `POST /api/v1/auth/first-login-password-change` without Authorization header |
 | HTTP status | 401 |
+
+### AUTH-017 — Self-service password change requires authentication
+
+| Field | Value |
+|---|---|
+| Actor | ANON |
+| Action | `POST /api/v1/users/me/password` without Authorization header |
+| HTTP status | 401 |
+| Covered by | `test_users.py::test_change_password_without_authentication_returns_401` |
+
+### AUTH-018 — Self-service password change switches credentials and keeps the session
+
+| Field | Value |
+|---|---|
+| Preconditions | Signed-in user, correct current password |
+| Actor | That user |
+| Action | `POST /api/v1/users/me/password` `{"currentPassword":"<current>","newPassword":"<valid new>"}` |
+| Expected result | Fresh `accessToken` + rotated refresh cookie; all other sessions revoked; login with the new password works, the old one returns 401; `PASSWORD_CHANGED` audit event (`self-service`); confirmation email queued |
+| HTTP status | 200 |
+| Covered by | `test_users.py::test_change_password_happy_path_switches_credentials`, `AuthServiceTest` |
+
+### AUTH-019 — Self-service password change rejected for wrong current password
+
+| Field | Value |
+|---|---|
+| Actor | Signed-in user |
+| Action | `currentPassword` = wrong value |
+| Expected result | `code=INVALID_CURRENT_PASSWORD`; password unchanged; failed-attempt counter incremented. Returns 400 (not 401) so the client does not attempt a token refresh |
+| HTTP status | 400 |
+| Covered by | `test_users.py::test_change_password_with_wrong_current_password_returns_400` |
+
+### AUTH-020 — Self-service password change rejects a password that violates the policy
+
+| Field | Value |
+|---|---|
+| Actor | Signed-in user |
+| Action | `newPassword` = `"weak"` |
+| Expected result | `code=PASSWORD_POLICY_VIOLATION` with a violation list; nothing revoked |
+| HTTP status | 400 |
+| Covered by | `test_users.py::test_change_password_rejects_weak_new_password` |
+
+### AUTH-021 — Self-service password change rejects reusing the current password
+
+| Field | Value |
+|---|---|
+| Actor | Signed-in user |
+| Action | `newPassword` equals `currentPassword` |
+| Expected result | `code=SAME_PASSWORD` |
+| HTTP status | 400 |
+| Covered by | `test_users.py::test_change_password_rejects_same_password` |
+
+### AUTH-022 — Repeated wrong current passwords lock the account
+
+| Field | Value |
+|---|---|
+| Actor | Signed-in user |
+| Action | 5 wrong `currentPassword` attempts, then a request with the correct one |
+| Expected result | Account locked (same lockout as login, lock email queued); `code=ACCOUNT_LOCKED` |
+| HTTP status | 423 |
+| Covered by | `test_users.py::test_change_password_locks_account_after_repeated_failures`, `AuthServiceTest` |
 
 ---
 

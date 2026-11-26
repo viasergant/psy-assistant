@@ -5,19 +5,25 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.psyassistant.auth.domain.RefreshToken;
 import com.psyassistant.auth.domain.RefreshTokenRepository;
+import com.psyassistant.auth.dto.ChangePasswordRequest;
 import com.psyassistant.auth.dto.LoginRequest;
 import com.psyassistant.auth.service.AuthException;
 import com.psyassistant.auth.service.AuthResult;
 import com.psyassistant.auth.service.AuthService;
+import com.psyassistant.auth.service.PasswordChangeException;
+import com.psyassistant.auth.service.PasswordComplexityValidator;
+import com.psyassistant.auth.service.PasswordPolicyException;
 import com.psyassistant.auth.service.TokenService;
 import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.common.config.SecurityProperties;
+import com.psyassistant.notifications.EmailMessage;
 import com.psyassistant.notifications.EmailNotificationPort;
 import com.psyassistant.therapists.repository.TherapistProfileRepository;
 import com.psyassistant.users.User;
@@ -72,6 +78,9 @@ class AuthServiceTest {
     @Mock
     private EmailNotificationPort emailNotificationPort;
 
+    @Mock
+    private PasswordComplexityValidator passwordComplexityValidator;
+
     private AuthService authService;
 
     private User activeUser;
@@ -87,7 +96,7 @@ class AuthServiceTest {
         authService = new AuthService(
                 userRepository, refreshTokenRepository, tokenService,
                 passwordEncoder, auditLogService, therapistProfileRepository,
-                securityProperties, emailNotificationPort);
+                securityProperties, emailNotificationPort, passwordComplexityValidator);
         ReflectionTestUtils.setField(authService, "maxAdminSessions", 1);
         ReflectionTestUtils.setField(authService, "maxUserSessions", 5);
 
@@ -351,6 +360,120 @@ class AuthServiceTest {
         Collection<UserRole> capturedRoles = rolesCaptor.getValue();
         assertThat(capturedRoles).contains(UserRole.SYSTEM_ADMINISTRATOR);
         assertThat(capturedRoles).doesNotContain(UserRole.THERAPIST);
+    }
+
+    // ---- changePassword ------------------------------------------------
+
+    private void stubTokenIssue() {
+        when(refreshTokenRepository.countActiveSessions(any())).thenReturn(0L);
+        when(tokenService.generateRawRefreshToken()).thenReturn(UUID.randomUUID().toString());
+        when(tokenService.hashRefreshToken(anyString())).thenReturn("deadbeef".repeat(8));
+        when(tokenService.buildAccessToken(any(), any())).thenReturn("new-jwt");
+        when(tokenService.accessTokenExpiresAt(any(Collection.class))).thenReturn(Instant.now().plusSeconds(3600));
+        when(tokenService.refreshTtlFor(any(Collection.class))).thenReturn(Duration.ofDays(15));
+        when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(therapistProfileRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
+    }
+
+    @Test
+    void changePasswordSucceedsRevokesSessionsAndIssuesNewTokens() {
+        when(userRepository.findById(activeUser.getId())).thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches("OldPass1!", "hashed-pw")).thenReturn(true);
+        when(passwordComplexityValidator.validate("NewPass1!")).thenReturn(List.of());
+        when(passwordEncoder.encode("NewPass1!")).thenReturn("new-hash");
+        stubTokenIssue();
+
+        AuthResult result = authService.changePassword(
+                activeUser.getId(), new ChangePasswordRequest("OldPass1!", "NewPass1!"), "127.0.0.1");
+
+        assertThat(activeUser.getPasswordHash()).isEqualTo("new-hash");
+        assertThat(result.loginResponse().accessToken()).isEqualTo("new-jwt");
+        verify(refreshTokenRepository).deleteAllByUserId(activeUser.getId());
+        verify(userRepository).clearFailedLoginAttempts(activeUser.getId());
+        verify(emailNotificationPort).queue(any(EmailMessage.class));
+    }
+
+    @Test
+    void changePasswordWithWrongCurrentPasswordIncrementsFailureCounter() {
+        when(userRepository.findById(activeUser.getId())).thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.changePassword(
+                activeUser.getId(), new ChangePasswordRequest("wrong", "NewPass1!"), "127.0.0.1"))
+                .isInstanceOf(PasswordChangeException.class)
+                .extracting(e -> ((PasswordChangeException) e).getReason())
+                .isEqualTo(PasswordChangeException.Reason.INVALID_CURRENT_PASSWORD);
+
+        verify(userRepository).incrementFailedLoginAttempts(activeUser.getId());
+        verify(refreshTokenRepository, never()).deleteAllByUserId(any());
+        assertThat(activeUser.getPasswordHash()).isEqualTo("hashed-pw");
+    }
+
+    @Test
+    void changePasswordLocksAccountOnFifthFailure() {
+        ReflectionTestUtils.setField(activeUser, "failedLoginAttempts", 4);
+        when(userRepository.findById(activeUser.getId())).thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.changePassword(
+                activeUser.getId(), new ChangePasswordRequest("wrong", "NewPass1!"), "127.0.0.1"))
+                .isInstanceOf(PasswordChangeException.class);
+
+        verify(userRepository).lockAccount(any(), any());
+    }
+
+    @Test
+    void changePasswordRejectedWhileAccountLocked() {
+        ReflectionTestUtils.setField(activeUser, "lockedUntil", Instant.now().plusSeconds(600));
+        when(userRepository.findById(activeUser.getId())).thenReturn(Optional.of(activeUser));
+
+        assertThatThrownBy(() -> authService.changePassword(
+                activeUser.getId(), new ChangePasswordRequest("OldPass1!", "NewPass1!"), "127.0.0.1"))
+                .isInstanceOf(PasswordChangeException.class)
+                .extracting(e -> ((PasswordChangeException) e).getReason())
+                .isEqualTo(PasswordChangeException.Reason.ACCOUNT_LOCKED);
+
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+    }
+
+    @Test
+    void changePasswordRejectsSamePassword() {
+        when(userRepository.findById(activeUser.getId())).thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.changePassword(
+                activeUser.getId(), new ChangePasswordRequest("SamePass1!", "SamePass1!"), "127.0.0.1"))
+                .isInstanceOf(PasswordChangeException.class)
+                .extracting(e -> ((PasswordChangeException) e).getReason())
+                .isEqualTo(PasswordChangeException.Reason.SAME_PASSWORD);
+    }
+
+    @Test
+    void changePasswordRejectsPolicyViolation() {
+        when(userRepository.findById(activeUser.getId())).thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(passwordComplexityValidator.validate("weak")).thenReturn(List.of("MIN_LENGTH"));
+
+        assertThatThrownBy(() -> authService.changePassword(
+                activeUser.getId(), new ChangePasswordRequest("OldPass1!", "weak"), "127.0.0.1"))
+                .isInstanceOf(PasswordPolicyException.class);
+
+        verify(refreshTokenRepository, never()).deleteAllByUserId(any());
+    }
+
+    @Test
+    void changePasswordSucceedsEvenWhenConfirmationEmailFails() {
+        when(userRepository.findById(activeUser.getId())).thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(passwordComplexityValidator.validate("NewPass1!")).thenReturn(List.of());
+        when(passwordEncoder.encode(anyString())).thenReturn("new-hash");
+        stubTokenIssue();
+        doThrow(new RuntimeException("smtp down")).when(emailNotificationPort).queue(any());
+
+        AuthResult result = authService.changePassword(
+                activeUser.getId(), new ChangePasswordRequest("OldPass1!", "NewPass1!"), "127.0.0.1");
+
+        assertThat(result.loginResponse().accessToken()).isEqualTo("new-jwt");
     }
 
     // ---- helpers -------------------------------------------------------

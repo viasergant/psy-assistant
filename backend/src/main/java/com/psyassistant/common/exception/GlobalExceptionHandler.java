@@ -1,6 +1,7 @@
 package com.psyassistant.common.exception;
 
 import com.psyassistant.auth.service.AuthException;
+import com.psyassistant.auth.service.PasswordChangeException;
 import com.psyassistant.auth.service.PasswordPolicyException;
 import com.psyassistant.auth.token.InvalidTokenException;
 import com.psyassistant.billing.catalog.DuplicateServiceException;
@@ -615,6 +616,30 @@ public class GlobalExceptionHandler {
                         HttpStatus.METHOD_NOT_ALLOWED.value(),
                         message,
                         "METHOD_NOT_ALLOWED",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles rejected self-service password changes (400, or 423 when locked).
+     *
+     * @param ex      the exception
+     * @param request the current HTTP request
+     * @return error response carrying the {@link PasswordChangeException.Reason} as code
+     */
+    @ExceptionHandler(PasswordChangeException.class)
+    public ResponseEntity<ErrorResponse> handlePasswordChange(
+            final PasswordChangeException ex,
+            final HttpServletRequest request) {
+        HttpStatus status = ex.getReason() == PasswordChangeException.Reason.ACCOUNT_LOCKED
+                ? HttpStatus.LOCKED : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        status.value(),
+                        ex.getMessage(),
+                        ex.getReason().name(),
                         request.getRequestURI()
                 )
         );

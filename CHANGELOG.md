@@ -6,7 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — 2026-11-25
+## [Unreleased] — 2026-11-26
+
+### Added (change password)
+
+- **Self-service password change** — `POST /api/v1/users/me/password` (`currentPassword`, `newPassword`) for any signed-in user. Verifies the current password, enforces the configured password policy and rejects reuse of the current password. All refresh tokens are revoked and a fresh token pair is returned, so the calling session stays signed in; other devices are signed out when their access token expires (up to 60 minutes — access tokens are stateless)
+- **Brute-force protection** — wrong current passwords count towards the normal login lockout (5 attempts, 30 minutes); a locked account gets `423 ACCOUNT_LOCKED`. Rejections use 400/423 with codes `INVALID_CURRENT_PASSWORD`, `SAME_PASSWORD`, `ACCOUNT_LOCKED` instead of 401, so the frontend does not trigger a token refresh
+- **Audit and notification** — `PASSWORD_CHANGED` audit event (`self-service`) and a best-effort confirmation email (`email.subject.password.changed`, en/uk)
+- **Settings → Change password** section (en/uk)
+
 
 ### Added (Telegram notifications)
 

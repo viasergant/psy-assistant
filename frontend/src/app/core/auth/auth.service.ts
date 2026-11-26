@@ -117,4 +117,14 @@ export class AuthService {
         })
       );
   }
+
+  /**
+   * Changes the signed-in user's own password (POST /api/v1/users/me/password).
+   * The backend revokes all refresh tokens and returns a fresh pair, so the session continues.
+   */
+  changePassword(request: FirstLoginPasswordChangeRequest): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>('/api/v1/users/me/password', request)
+      .pipe(tap(response => this.tokenSubject.next(response.accessToken)));
+  }
 }

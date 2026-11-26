@@ -1892,6 +1892,27 @@
       "saving": "Saving...",
       "saved": "Saved"
     },
+    "password": {
+      "title": "Change password",
+      "description": "Use a strong password you do not use anywhere else. Other devices will be signed out.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "hint": "At least 8 characters, including an uppercase letter, a digit and a special character.",
+      "submit": "Change password",
+      "saving": "Saving...",
+      "saved": "Password changed",
+      "errors": {
+        "currentRequired": "Enter your current password.",
+        "newInvalid": "Enter a new password of 8 to 72 characters.",
+        "mismatch": "Passwords do not match.",
+        "invalidCurrent": "The current password is incorrect.",
+        "samePassword": "The new password must differ from the current one.",
+        "locked": "Too many failed attempts. The account is temporarily locked; try again later.",
+        "policy": "The new password does not meet the password requirements.",
+        "generic": "Could not change the password. Please try again."
+      }
+    },
     "telegram": {
       "title": "Telegram notifications",
       "description": "Get your daily schedule and reminders before sessions in Telegram. Messages never contain client contact details or notes.",

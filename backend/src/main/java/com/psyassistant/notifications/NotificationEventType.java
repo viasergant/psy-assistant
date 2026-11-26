@@ -17,6 +17,9 @@ public enum NotificationEventType {
     /** Password-reset link for an account holder. */
     PASSWORD_RESET,
 
+    /** Confirmation that an account holder changed their own password. */
+    PASSWORD_CHANGED,
+
     /** Account has been locked due to too many consecutive failed login attempts. */
     ACCOUNT_LOCKED,
 

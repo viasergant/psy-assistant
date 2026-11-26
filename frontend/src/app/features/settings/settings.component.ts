@@ -2,12 +2,13 @@ import { Component, inject, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { PermissionService } from '../../core/auth/permission.service';
+import { ChangePasswordComponent } from './change-password/change-password.component';
 import { TelegramSettingsComponent } from './telegram/telegram-settings.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [TranslocoPipe, TelegramSettingsComponent],
+  imports: [TranslocoPipe, ChangePasswordComponent, TelegramSettingsComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })

@@ -2,6 +2,7 @@ package com.psyassistant.auth.service;
 
 import com.psyassistant.auth.domain.RefreshToken;
 import com.psyassistant.auth.domain.RefreshTokenRepository;
+import com.psyassistant.auth.dto.ChangePasswordRequest;
 import com.psyassistant.auth.dto.FirstLoginPasswordChangeDto;
 import com.psyassistant.auth.dto.LoginRequest;
 import com.psyassistant.auth.dto.LoginResponse;
@@ -47,6 +48,7 @@ public class AuthService {
     private static final String EVENT_TOKEN_REFRESH = "TOKEN_REFRESH";
     private static final String EVENT_REPLAY_ATTACK = "REPLAY_ATTACK";
     private static final String EVENT_PASSWORD_CHANGED = "PASSWORD_CHANGED";
+    private static final String EVENT_PASSWORD_CHANGE_FAILED = "PASSWORD_CHANGE_FAILED";
     private static final String EVENT_ACCOUNT_LOCKED = "ACCOUNT_LOCKED";
     private static final String OUTCOME_SUCCESS = "SUCCESS";
     private static final String OUTCOME_FAILURE = "FAILURE";
@@ -66,6 +68,7 @@ public class AuthService {
     private final TherapistProfileRepository therapistProfileRepository;
     private final SecurityProperties securityProperties;
     private final EmailNotificationPort emailNotificationPort;
+    private final PasswordComplexityValidator passwordComplexityValidator;
 
     /**
      * Constructs the service with all required collaborators.
@@ -78,6 +81,7 @@ public class AuthService {
      * @param therapistProfileRepository therapist profile repository
      * @param securityProperties         security policy settings
      * @param emailNotificationPort      outbound email queue port
+     * @param passwordComplexityValidator password policy validator
      */
     public AuthService(
             final UserRepository userRepository,
@@ -87,7 +91,8 @@ public class AuthService {
             final AuditLogService auditLogService,
             final TherapistProfileRepository therapistProfileRepository,
             final SecurityProperties securityProperties,
-            final EmailNotificationPort emailNotificationPort) {
+            final EmailNotificationPort emailNotificationPort,
+            final PasswordComplexityValidator passwordComplexityValidator) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.tokenService = tokenService;
@@ -96,6 +101,7 @@ public class AuthService {
         this.therapistProfileRepository = therapistProfileRepository;
         this.securityProperties = securityProperties;
         this.emailNotificationPort = emailNotificationPort;
+        this.passwordComplexityValidator = passwordComplexityValidator;
     }
 
     /**
@@ -383,6 +389,88 @@ public class AuthService {
         LoginResponse response = new LoginResponse(accessToken, accessExpiry, "Bearer", user.getLanguage());
         return new AuthResult(response, rawToken, user.getRoles(),
                 tokenService.refreshTtlFor(user.getRoles()));
+    }
+
+    /**
+     * Changes the password of an already-authenticated user (self-service).
+     *
+     * <p>Wrong current-password attempts count towards the normal login lockout. On success all
+     * refresh tokens are revoked and a fresh pair is issued so the calling session stays signed in.
+     *
+     * @param userId    the authenticated user's UUID (from the JWT subject, never the request body)
+     * @param request   current and new password
+     * @param ipAddress caller's IP address for audit
+     * @return authentication result with a new token pair
+     * @throws PasswordChangeException  if the current password is wrong, the account is locked,
+     *                                  or the new password equals the current one
+     * @throws PasswordPolicyException  if the new password violates the complexity policy
+     * @throws AuthException            if the user no longer exists
+     */
+    @Transactional
+    public AuthResult changePassword(
+            final UUID userId,
+            final ChangePasswordRequest request,
+            final String ipAddress) {
+        String requestId = MDC.get("requestId");
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(AuthException.ErrorCode.INVALID_CREDENTIALS,
+                        "User not found"));
+
+        if (user.isCurrentlyLocked()) {
+            recordFailure(EVENT_PASSWORD_CHANGE_FAILED, user.getId().toString(),
+                    user.getEmail(), ipAddress, requestId, "ACCOUNT_LOCKED");
+            throw new PasswordChangeException(PasswordChangeException.Reason.ACCOUNT_LOCKED,
+                    "Account locked until " + user.getLockedUntil());
+        }
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            handleFailedLoginAttempt(user, user.getEmail(), ipAddress, requestId);
+            LOG.warn("event=PASSWORD_CHANGE_FAILURE userId={} requestId={} reason=InvalidCurrentPassword",
+                    user.getId(), requestId);
+            throw new PasswordChangeException(PasswordChangeException.Reason.INVALID_CURRENT_PASSWORD,
+                    "Current password is incorrect");
+        }
+
+        if (request.currentPassword().equals(request.newPassword())) {
+            throw new PasswordChangeException(PasswordChangeException.Reason.SAME_PASSWORD,
+                    "New password must differ from the current password");
+        }
+
+        List<String> violations = passwordComplexityValidator.validate(request.newPassword());
+        if (!violations.isEmpty()) {
+            throw new PasswordPolicyException(violations);
+        }
+
+        user.updatePasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+        userRepository.clearFailedLoginAttempts(user.getId());
+
+        refreshTokenRepository.deleteAllByUserId(user.getId());
+        AuthResult result = issueTokensForUser(user);
+
+        auditLogService.record(new AuditLog.Builder(EVENT_PASSWORD_CHANGED)
+                .userId(user.getId())
+                .ipAddress(ipAddress)
+                .requestId(requestId)
+                .outcome(OUTCOME_SUCCESS)
+                .detail("self-service")
+                .build());
+        LOG.info("event=PASSWORD_CHANGED userId={} requestId={} selfService=true", user.getId(), requestId);
+
+        try {
+            emailNotificationPort.queue(new EmailMessage(
+                    user.getEmail(),
+                    NotificationEventType.PASSWORD_CHANGED,
+                    "email.subject.password.changed",
+                    "Your password was changed. If this was not you, reset your password "
+                            + "immediately and contact your administrator."));
+        } catch (Exception ex) {
+            LOG.warn("event=PASSWORD_CHANGED_EMAIL_FAILED userId={} reason={}",
+                    user.getId(), ex.getMessage());
+        }
+
+        return result;
     }
 
     /**

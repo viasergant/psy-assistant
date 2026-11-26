@@ -26,6 +26,7 @@ public class TelegramScheduleJob {
     private final TelegramSchedulePlanner planner;
     private final ClientTelegramLinkRepository clientLinks;
     private final TelegramClientReminderPlanner clientPlanner;
+    private final TelegramProperties props;
     private final Clock clock;
 
     /**
@@ -35,15 +36,18 @@ public class TelegramScheduleJob {
      * @param planner  planner
      * @param clientLinks client links
      * @param clientPlanner client reminder planner
+     * @param props    configuration
      * @param clock    clock
      */
     public TelegramScheduleJob(final TelegramSettingsRepository settings, final TelegramSchedulePlanner planner,
                                final ClientTelegramLinkRepository clientLinks,
-                               final TelegramClientReminderPlanner clientPlanner, final Clock clock) {
+                               final TelegramClientReminderPlanner clientPlanner, final TelegramProperties props,
+                               final Clock clock) {
         this.settings = settings;
         this.planner = planner;
         this.clientLinks = clientLinks;
         this.clientPlanner = clientPlanner;
+        this.props = props;
         this.clock = clock;
     }
 
@@ -62,6 +66,9 @@ public class TelegramScheduleJob {
             } finally {
                 TenantContext.clear();
             }
+        }
+        if (!props.isClientBotOperational()) {
+            return;
         }
         for (final ClientTelegramLink link : clientLinks.findAll()) {
             TenantContext.set(link.getOrgId());

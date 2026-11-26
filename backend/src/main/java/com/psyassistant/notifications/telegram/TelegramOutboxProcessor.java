@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,7 @@ public class TelegramOutboxProcessor {
     private final TelegramDeliveryLogRepository deliveries;
     private final TelegramSettingsRepository settings;
     private final TelegramClient client;
+    private final TelegramClient clientBot;
     private final TelegramLinkService linkService;
     private final ClientTelegramLinkRepository clientLinks;
     private final AppointmentRepository appointments;
@@ -40,7 +42,8 @@ public class TelegramOutboxProcessor {
      *
      * @param deliveries  outbox
      * @param settings    settings
-     * @param client      Telegram API
+     * @param client      therapist bot API
+     * @param clientBot   client bot API
      * @param linkService link service (used to unlink blocked chats)
      * @param clientLinks client links
      * @param appointments appointments (to drop reminders for sessions that are no longer upcoming)
@@ -50,6 +53,7 @@ public class TelegramOutboxProcessor {
      */
     public TelegramOutboxProcessor(final TelegramDeliveryLogRepository deliveries,
                                    final TelegramSettingsRepository settings, final TelegramClient client,
+                                   @Qualifier(TelegramConfig.CLIENT_BOT) final TelegramClient clientBot,
                                    final TelegramLinkService linkService,
                                    final ClientTelegramLinkRepository clientLinks,
                                    final AppointmentRepository appointments,
@@ -58,6 +62,7 @@ public class TelegramOutboxProcessor {
         this.deliveries = deliveries;
         this.settings = settings;
         this.client = client;
+        this.clientBot = clientBot;
         this.linkService = linkService;
         this.clientLinks = clientLinks;
         this.appointments = appointments;
@@ -107,9 +112,9 @@ public class TelegramOutboxProcessor {
         final ClientTelegramLink link = target.get();
         try {
             if (row.getAppointmentId() == null) {
-                client.sendMessage(link.getChatId(), row.getBody());
+                clientBot.sendMessage(link.getChatId(), row.getBody());
             } else {
-                client.sendMessage(link.getChatId(), row.getBody(), List.of(cancelButton(link,
+                clientBot.sendMessage(link.getChatId(), row.getBody(), List.of(cancelButton(link,
                         row.getAppointmentId())));
             }
             row.setStatus(TelegramDeliveryLog.Status.SENT);
@@ -131,7 +136,7 @@ public class TelegramOutboxProcessor {
     private TelegramClient.Button cancelButton(final ClientTelegramLink link, final UUID appointmentId) {
         return new TelegramClient.Button(
                 formatter.text("telegram.client.btn.cancel", Locale.forLanguageTag(link.getLanguage())),
-                TelegramUpdateHandler.CANCEL_ASK + appointmentId);
+                ClientBotUpdateHandler.CANCEL_ASK + appointmentId);
     }
 
     private void handleFailure(final TelegramDeliveryLog row, final Runnable unlinkRecipient,

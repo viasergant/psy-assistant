@@ -2,12 +2,13 @@ package com.psyassistant.notifications.telegram;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
- * Aligns Telegram's webhook registration with the configured mode on startup. Failures are logged
+ * Aligns Telegram's webhook registration of both bots with the configured mode on startup. Failures are logged
  * and never prevent the application from starting.
  */
 @Component
@@ -16,38 +17,50 @@ public class TelegramWebhookRegistrar {
     private static final Logger LOG = LoggerFactory.getLogger(TelegramWebhookRegistrar.class);
 
     private final TelegramProperties props;
-    private final TelegramClient client;
+    private final TelegramClient therapistBot;
+    private final TelegramClient clientBot;
 
     /**
      * Creates the registrar.
      *
-     * @param props  configuration
-     * @param client Telegram API
+     * @param props        configuration
+     * @param therapistBot therapist bot API
+     * @param clientBot    client bot API
      */
-    public TelegramWebhookRegistrar(final TelegramProperties props, final TelegramClient client) {
+    public TelegramWebhookRegistrar(final TelegramProperties props, final TelegramClient therapistBot,
+                                    @Qualifier(TelegramConfig.CLIENT_BOT) final TelegramClient clientBot) {
         this.props = props;
-        this.client = client;
+        this.therapistBot = therapistBot;
+        this.clientBot = clientBot;
     }
 
-    /** Registers or removes the webhook once the application is ready. */
+    /** Registers or removes the webhooks once the application is ready. */
     @EventListener(ApplicationReadyEvent.class)
     public void align() {
-        if (!props.isOperational()) {
-            return;
+        if (props.isOperational()) {
+            align("therapist", therapistBot, props.getWebhookUrl(), props.getWebhookSecret());
         }
+        if (props.isClientBotOperational()) {
+            align("client", clientBot, props.getClientBot().getWebhookUrl(),
+                    props.getClientBot().getWebhookSecret());
+        }
+    }
+
+    private void align(final String name, final TelegramClient client, final String url, final String secret) {
         try {
             if (props.getMode() == TelegramProperties.Mode.WEBHOOK) {
-                if (props.getWebhookUrl().isBlank() || props.getWebhookSecret().isBlank()) {
-                    LOG.error("Telegram webhook mode needs webhook-url and webhook-secret; not registering");
+                if (url.isBlank() || secret.isBlank()) {
+                    LOG.error("Telegram {} bot in webhook mode needs a webhook url and secret; not registering",
+                            name);
                     return;
                 }
-                client.setWebhook(props.getWebhookUrl(), props.getWebhookSecret());
+                client.setWebhook(url, secret);
             } else {
                 client.deleteWebhook();
             }
-            LOG.info("Telegram configured in {} mode", props.getMode());
+            LOG.info("Telegram {} bot configured in {} mode", name, props.getMode());
         } catch (TelegramApiException e) {
-            LOG.error("Telegram webhook alignment failed: {}", e.getMessage());
+            LOG.error("Telegram {} bot webhook alignment failed: {}", name, e.getMessage());
         }
     }
 }

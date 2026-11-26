@@ -5,33 +5,34 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.springframework.boot.web.client.ClientHttpRequestFactories;
 import org.springframework.boot.web.client.ClientHttpRequestFactorySettings;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 /**
- * {@link TelegramClient} backed by Spring's {@link RestClient}.
+ * {@link TelegramClient} backed by Spring's {@link RestClient}. One instance per bot (see
+ * {@link TelegramConfig}).
  *
  * <p>The bot token is part of the request path; it is never logged and is stripped from errors.
  */
-@Component
 public class TelegramBotApiClient implements TelegramClient {
 
     private static final String API = "https://api.telegram.org/bot";
 
-    private final TelegramProperties props;
+    private final Supplier<String> token;
     private final RestClient client;
 
     /**
      * Creates the client.
      *
-     * @param props Telegram configuration
+     * @param props Telegram configuration (timeouts)
+     * @param token supplies the bot token of the bot this client acts as
      */
-    public TelegramBotApiClient(final TelegramProperties props) {
-        this.props = props;
+    public TelegramBotApiClient(final TelegramProperties props, final Supplier<String> token) {
+        this.token = token;
         final Duration read = Duration.ofSeconds(props.getPollTimeoutSeconds() + 10L);
         this.client = RestClient.builder()
                 .requestFactory(ClientHttpRequestFactories.get(ClientHttpRequestFactorySettings.DEFAULTS
@@ -94,7 +95,7 @@ public class TelegramBotApiClient implements TelegramClient {
     private JsonNode call(final String method, final Map<String, ?> body) {
         try {
             return client.post()
-                    .uri(API + props.getBotToken() + "/" + method)
+                    .uri(API + token.get() + "/" + method)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()

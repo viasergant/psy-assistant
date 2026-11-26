@@ -1,6 +1,11 @@
 spring:
   application:
     name: psy-assistant
+  task:
+    scheduling:
+      # Two Telegram bots long-poll (up to ~25 s per call); a single scheduler thread would starve every other job.
+      pool:
+        size: 4
   config:
     # Optional git-ignored .env (backend/.env -> repo-root .env), kept out of the jar; real env vars still win.
     import: optional:file:./.env[.properties]
@@ -152,6 +157,12 @@ notifications:
     bot-username: ${TELEGRAM_BOT_USERNAME:hermes_psy1_bot}
     webhook-secret: ${TELEGRAM_WEBHOOK_SECRET:}
     webhook-url: ${TELEGRAM_WEBHOOK_URL:}
+    # Separate bot for clients (own BotFather token). Without a token it stays idle.
+    client-bot:
+      bot-token: ${TELEGRAM_CLIENT_BOT_TOKEN:}
+      bot-username: ${TELEGRAM_CLIENT_BOT_USERNAME:}
+      webhook-secret: ${TELEGRAM_CLIENT_WEBHOOK_SECRET:}
+      webhook-url: ${TELEGRAM_CLIENT_WEBHOOK_URL:}
     max-retries: 5
 
 

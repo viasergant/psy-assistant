@@ -60,7 +60,7 @@ public class ClientTelegramController {
     @PreAuthorize(ACCESS)
     public Map<String, Boolean> status(@PathVariable final UUID clientId) {
         clientProfileService.getClientProfile(clientId);
-        return Map.of("available", props.isOperational(), "linked", linkService.isClientLinked(clientId));
+        return Map.of("available", props.isClientBotOperational(), "linked", linkService.isClientLinked(clientId));
     }
 
     /**
@@ -76,7 +76,7 @@ public class ClientTelegramController {
     public Map<String, String> link(@PathVariable final UUID clientId,
                                     @RequestParam(defaultValue = "en") final String language,
                                     @RequestParam(defaultValue = "UTC") final String timezone) {
-        if (!props.isOperational()) {
+        if (!props.isClientBotOperational()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Telegram is not configured");
         }
         if (!LANGUAGES.contains(language)) {

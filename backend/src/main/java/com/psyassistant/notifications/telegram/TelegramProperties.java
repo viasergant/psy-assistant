@@ -21,7 +21,51 @@ public class TelegramProperties {
         POLLING
     }
 
+    /**
+     * Credentials of the separate bot that talks to clients. It is a different bot from the therapist bot,
+     * so a client can never reach therapist functions and a leaked token exposes only one audience.
+     */
+    public static class ClientBot {
+        private String botToken = "";
+        private String botUsername = "";
+        private String webhookSecret = "";
+        private String webhookUrl = "";
+
+        public String getBotToken() {
+            return botToken;
+        }
+
+        public void setBotToken(final String botToken) {
+            this.botToken = botToken;
+        }
+
+        public String getBotUsername() {
+            return botUsername;
+        }
+
+        public void setBotUsername(final String botUsername) {
+            this.botUsername = botUsername;
+        }
+
+        public String getWebhookSecret() {
+            return webhookSecret;
+        }
+
+        public void setWebhookSecret(final String webhookSecret) {
+            this.webhookSecret = webhookSecret;
+        }
+
+        public String getWebhookUrl() {
+            return webhookUrl;
+        }
+
+        public void setWebhookUrl(final String webhookUrl) {
+            this.webhookUrl = webhookUrl;
+        }
+    }
+
     private boolean enabled;
+    private final ClientBot clientBot = new ClientBot();
     private String botToken = "";
     private String botUsername = "";
     private Mode mode = Mode.POLLING;
@@ -42,6 +86,19 @@ public class TelegramProperties {
      */
     public boolean isOperational() {
         return enabled && botToken != null && !botToken.isBlank();
+    }
+
+    /**
+     * Returns whether the client bot can operate: Telegram is switched on and the client bot has a token.
+     *
+     * @return true when client invites, reminders and cancellations are possible
+     */
+    public boolean isClientBotOperational() {
+        return enabled && clientBot.getBotToken() != null && !clientBot.getBotToken().isBlank();
+    }
+
+    public ClientBot getClientBot() {
+        return clientBot;
     }
 
     public boolean isEnabled() {

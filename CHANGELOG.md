@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - A therapist can now invite a client to the Telegram bot: `POST /api/v1/clients/{id}/telegram/link?language=en|uk` returns a one-time `https://t.me/<bot>?start=<token>` link, `GET` reports whether the client is linked, and `DELETE` unlinks. When the client presses Start, the bot binds that private chat to the client stored on the token (never to an id typed by the client). The client can send `/stop` to disconnect. Migration `V85` adds `client_telegram_link` (encrypted chat id, unique chat hash, `org_id`) and lets `telegram_link_token` belong to a client. A chat can belong to only one therapist or client, and access reuses the client-profile checks (org filter and assigned-therapist rule). 
 
+### Changed (Separate client bot)
+
+- Clients now talk to their **own Telegram bot** with its own token, separate from the therapist bot. Configure it with `TELEGRAM_CLIENT_BOT_TOKEN`, `TELEGRAM_CLIENT_BOT_USERNAME` and, in webhook mode, `TELEGRAM_CLIENT_WEBHOOK_URL` / `TELEGRAM_CLIENT_WEBHOOK_SECRET` (webhook endpoint `/api/v1/telegram/client-webhook`, secret must differ from the therapist bot's). Without a client bot token the client bot stays idle, invites return 503 and the client page shows "not configured".
+- Each bot has its own handler, long-polling offset (migration `V87` adds a second `telegram_poll_state` row) and webhook, and each rejects the other audience's invite tokens. Client reminders and replies are sent only through the client bot; the therapist notice about a client cancellation still goes through the therapist bot. A person may now be a therapist on one bot and a client on the other.
+- `spring.task.scheduling.pool.size` is 4, so two long-polling bots do not starve the outbox and schedulers.
+
 ### Added (Client session reminders and self-service cancellation)
 
 - Linked clients now get a Telegram reminder before each upcoming session (`notifications.telegram.client-reminder-minutes`, default 1440 = 24 h), shown in the time zone given when the invite was created (`POST /api/v1/clients/{id}/telegram/link?timezone=Europe/Kyiv`). The reminder has a **Cancel session** button; pressing it asks for confirmation (with a late-cancellation warning), and confirming cancels the session through `AppointmentService`. The therapist gets a Telegram notice when they are linked, and the client's other pending reminders for that session are dropped.

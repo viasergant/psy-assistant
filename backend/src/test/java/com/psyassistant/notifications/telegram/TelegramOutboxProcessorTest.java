@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import com.psyassistant.notifications.telegram.TelegramDeliveryLog.Kind;
 import com.psyassistant.notifications.telegram.TelegramDeliveryLog.Status;
@@ -35,6 +36,7 @@ class TelegramOutboxProcessorTest {
     private TelegramDeliveryLogRepository deliveries;
     private TelegramSettingsRepository settings;
     private TelegramClient client;
+    private TelegramClient clientBot;
     private TelegramLinkService linkService;
     private ClientTelegramLinkRepository clientLinks;
     private AppointmentRepository appointments;
@@ -46,13 +48,14 @@ class TelegramOutboxProcessorTest {
         deliveries = mock(TelegramDeliveryLogRepository.class);
         settings = mock(TelegramSettingsRepository.class);
         client = mock(TelegramClient.class);
+        clientBot = mock(TelegramClient.class);
         linkService = mock(TelegramLinkService.class);
         clientLinks = mock(ClientTelegramLinkRepository.class);
         appointments = mock(AppointmentRepository.class);
         final TelegramMessageFormatter formatter = mock(TelegramMessageFormatter.class);
         when(formatter.text(anyString(), any(Locale.class))).thenReturn("Cancel session");
         final TelegramProperties props = new TelegramProperties();
-        processor = new TelegramOutboxProcessor(deliveries, settings, client, linkService, clientLinks,
+        processor = new TelegramOutboxProcessor(deliveries, settings, client, clientBot, linkService, clientLinks,
                 appointments, formatter, props, Clock.fixed(NOW, ZoneOffset.UTC));
         row = new TelegramDeliveryLog(org, user, Kind.REMINDER, "k", "hello");
         when(deliveries.findNextBatch(any(), anyInt())).thenReturn(List.of(row));
@@ -159,8 +162,9 @@ class TelegramOutboxProcessorTest {
         void reminderIsSentToTheClientsChatWithACancelButton() {
             processor.processBatch();
 
-            verify(client).sendMessage("777", "Reminder",
+            verify(clientBot).sendMessage("777", "Reminder",
                     List.of(new TelegramClient.Button("Cancel session", "cx:" + appointmentId)));
+            verifyNoInteractions(client);
             assertThat(clientRow.getStatus()).isEqualTo(Status.SENT);
         }
 
@@ -170,7 +174,7 @@ class TelegramOutboxProcessorTest {
 
             processor.processBatch();
 
-            verify(client, never()).sendMessage(anyString(), anyString(), any());
+            verify(clientBot, never()).sendMessage(anyString(), anyString(), any());
             assertThat(clientRow.getStatus()).isEqualTo(Status.CANCELLED);
         }
 
@@ -180,7 +184,7 @@ class TelegramOutboxProcessorTest {
 
             processor.processBatch();
 
-            verify(client, never()).sendMessage(anyString(), anyString(), any());
+            verify(clientBot, never()).sendMessage(anyString(), anyString(), any());
             assertThat(clientRow.getStatus()).isEqualTo(Status.CANCELLED);
         }
 
@@ -191,13 +195,13 @@ class TelegramOutboxProcessorTest {
 
             processor.processBatch();
 
-            verify(client, never()).sendMessage(anyString(), anyString(), any());
+            verify(clientBot, never()).sendMessage(anyString(), anyString(), any());
             assertThat(clientRow.getStatus()).isEqualTo(Status.CANCELLED);
         }
 
         @Test
         void blockedBotUnlinksTheClient() {
-            doThrow(new TelegramApiException("403 blocked", 403, 0)).when(client)
+            doThrow(new TelegramApiException("403 blocked", 403, 0)).when(clientBot)
                     .sendMessage(anyString(), anyString(), any());
 
             processor.processBatch();

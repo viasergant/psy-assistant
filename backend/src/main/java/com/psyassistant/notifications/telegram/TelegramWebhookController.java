@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Receives Telegram updates in webhook mode. The endpoint is public, so every request must carry the
+ * Receives updates of the therapist bot in webhook mode. The endpoint is public, so every request must carry the
  * configured secret in {@code X-Telegram-Bot-Api-Secret-Token}; a blank secret rejects everything.
  */
 @RestController
@@ -65,7 +65,17 @@ public class TelegramWebhookController {
     }
 
     private boolean secretMatches(final String provided) {
-        final String expected = props.getWebhookSecret();
+        return secretMatches(props.getWebhookSecret(), provided);
+    }
+
+    /**
+     * Constant-time comparison of the configured and provided secret; a blank configured secret never matches.
+     *
+     * @param expected configured secret
+     * @param provided value of the secret-token header
+     * @return true when they match
+     */
+    static boolean secretMatches(final String expected, final String provided) {
         if (expected == null || expected.isBlank() || provided == null) {
             return false;
         }

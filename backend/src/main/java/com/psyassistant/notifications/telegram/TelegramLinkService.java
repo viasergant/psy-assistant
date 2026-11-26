@@ -91,12 +91,12 @@ public class TelegramLinkService {
         final String token = newToken();
         tokens.save(TelegramLinkToken.forClient(orgId, clientId, language, timezone, sha256(token),
                 clock.instant().plus(Duration.ofMinutes(props.getLinkTokenTtlMinutes()))));
-        return "https://t.me/" + props.getBotUsername() + "?start=" + token;
+        return "https://t.me/" + props.getClientBot().getBotUsername() + "?start=" + token;
     }
 
     /**
-     * Redeems a token received via {@code /start}. Runs outside any HTTP request, so it binds the
-     * tenant from the token itself.
+     * Redeems a therapist token received via {@code /start} on the therapist bot. Client tokens are
+     * rejected here. Runs outside any HTTP request, so it binds the tenant from the token itself.
      *
      * @param rawToken token from the deep link
      * @param chatId   private chat id
@@ -106,17 +106,11 @@ public class TelegramLinkService {
     public RedeemResult redeem(final String rawToken, final String chatId) {
         final Optional<TelegramLinkToken> found = tokens.findByTokenHash(sha256(rawToken));
         final Instant now = clock.instant();
-        if (found.isEmpty() || !found.get().isRedeemable(now)) {
+        if (found.isEmpty() || !found.get().isRedeemable(now) || found.get().getClientId() != null) {
             return RedeemResult.INVALID_TOKEN;
         }
         final TelegramLinkToken token = found.get();
         final String chatHash = sha256(chatId);
-        if (token.getClientId() != null) {
-            return redeemForClient(token, chatId, chatHash, now);
-        }
-        if (clientLinks.findByChatIdHash(chatHash).isPresent()) {
-            return RedeemResult.CHAT_ALREADY_LINKED;
-        }
         final Optional<TherapistNotificationSettings> owner = settings.findByChatIdHash(chatHash);
         if (owner.isPresent() && !owner.get().getUserId().equals(token.getUserId())) {
             return RedeemResult.CHAT_ALREADY_LINKED;
@@ -131,11 +125,26 @@ public class TelegramLinkService {
         return RedeemResult.LINKED;
     }
 
-    private RedeemResult redeemForClient(final TelegramLinkToken token, final String chatId,
-                                         final String chatHash, final Instant now) {
-        final boolean usedByTherapist = settings.findByChatIdHash(chatHash).isPresent();
+    /**
+     * Redeems a client invite token received via {@code /start} on the client bot. Therapist tokens are
+     * rejected here, so the two bots can never be used to link the other audience. Chat ids are only
+     * unique per bot, so a person who is both a therapist and a client may use both bots.
+     *
+     * @param rawToken token from the deep link
+     * @param chatId   private chat id
+     * @return the outcome
+     */
+    @Transactional
+    public RedeemResult redeemClient(final String rawToken, final String chatId) {
+        final Optional<TelegramLinkToken> found = tokens.findByTokenHash(sha256(rawToken));
+        final Instant now = clock.instant();
+        if (found.isEmpty() || !found.get().isRedeemable(now) || found.get().getClientId() == null) {
+            return RedeemResult.INVALID_TOKEN;
+        }
+        final TelegramLinkToken token = found.get();
+        final String chatHash = sha256(chatId);
         final Optional<ClientTelegramLink> owner = clientLinks.findByChatIdHash(chatHash);
-        if (usedByTherapist || owner.isPresent() && !owner.get().getClientId().equals(token.getClientId())) {
+        if (owner.isPresent() && !owner.get().getClientId().equals(token.getClientId())) {
             return RedeemResult.CHAT_ALREADY_LINKED;
         }
         final Optional<ClientTelegramLink> existing = clientLinks.findByClientId(token.getClientId());
@@ -197,15 +206,23 @@ public class TelegramLinkService {
     }
 
     /**
-     * Unlinks by chat (the {@code /stop} command or a blocked bot).
+     * Unlinks a therapist by chat (the {@code /stop} command on the therapist bot).
      *
      * @param chatId the chat id
      */
     @Transactional
     public void unlinkByChat(final String chatId) {
-        final String hash = sha256(chatId);
-        settings.findByChatIdHash(hash).ifPresent(s -> unlink(s.getUserId()));
-        clientLinks.findByChatIdHash(hash).ifPresent(l -> unlinkClient(l.getClientId()));
+        settings.findByChatIdHash(sha256(chatId)).ifPresent(s -> unlink(s.getUserId()));
+    }
+
+    /**
+     * Unlinks a client by chat (the {@code /stop} command on the client bot).
+     *
+     * @param chatId the chat id
+     */
+    @Transactional
+    public void unlinkClientByChat(final String chatId) {
+        clientLinks.findByChatIdHash(sha256(chatId)).ifPresent(l -> unlinkClient(l.getClientId()));
     }
 
     /**

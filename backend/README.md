@@ -83,6 +83,21 @@ Therapists can receive their daily schedule and pre-session reminders in Telegra
 | `TELEGRAM_WEBHOOK_URL` | – | Webhook mode: `https://<host>/api/v1/telegram/webhook` |
 | `TELEGRAM_WEBHOOK_SECRET` | – | Webhook mode: random string Telegram echoes in `X-Telegram-Bot-Api-Secret-Token` (secret) |
 
+### Client bot (separate bot, optional)
+
+Clients get session reminders with a cancel button from a **second bot** with its own token, so a client chat
+can never reach therapist functions and a leaked token exposes only one audience. Create another bot with
+@BotFather and set:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TELEGRAM_CLIENT_BOT_TOKEN` | – | Client bot token (secret). Without it the client bot stays idle and invites return 503 |
+| `TELEGRAM_CLIENT_BOT_USERNAME` | – | Client bot username without `@`, used for the invite deep link |
+| `TELEGRAM_CLIENT_WEBHOOK_URL` | – | Webhook mode: `https://<host>/api/v1/telegram/client-webhook` |
+| `TELEGRAM_CLIENT_WEBHOOK_SECRET` | – | Webhook mode: its own random secret (secret); must differ from the therapist bot's |
+
+`TELEGRAM_ENABLED` and `TELEGRAM_MODE` apply to both bots. Therapists invite clients from the client page.
+
 On startup the app registers (webhook) or removes (polling) the Telegram webhook to match the mode.
 Therapists then connect from **Settings → Telegram**. Both modes are safe with several backend
 instances: in polling mode a DB lock makes exactly one instance poll, and scheduled messages are

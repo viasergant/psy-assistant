@@ -85,6 +85,7 @@ import { CreateTherapistDialogComponent } from '../../../therapists/components/c
         [lazy]="true"
         (onLazyLoad)="onLazyLoad($event)"
         [paginator]="true"
+        paginatorDropdownAppendTo="body"
         [rows]="pageSize"
         [first]="first"
         [totalRecords]="totalElements"

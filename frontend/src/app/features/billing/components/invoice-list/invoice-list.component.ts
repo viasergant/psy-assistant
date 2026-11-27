@@ -42,6 +42,7 @@ import { InvoiceService } from '../../services/invoice.service';
         [lazy]="true"
         (onLazyLoad)="onLazyLoad($event)"
         [paginator]="true"
+        paginatorDropdownAppendTo="body"
         [rows]="pageSize"
         [first]="first"
         [totalRecords]="totalRecords"

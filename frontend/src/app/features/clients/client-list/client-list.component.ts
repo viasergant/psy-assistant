@@ -108,6 +108,7 @@ import { AppModeService, isSingleTherapistMode } from '../../../core/mode/app-mo
         [lazy]="true"
         (onLazyLoad)="onLazyLoad($event)"
         [paginator]="true"
+        paginatorDropdownAppendTo="body"
         [rows]="pageSize"
         [first]="first"
         [totalRecords]="totalElements"

@@ -79,6 +79,10 @@ export const appRoutes: Routes = [
         .then(m => m.TherapistProfileWizardComponent)
   },
   {
+    path: 'contacts',
+    loadComponent: () => import('./features/contacts/contacts.component').then(m => m.ContactsComponent)
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes')
   }

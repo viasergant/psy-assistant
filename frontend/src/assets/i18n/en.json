@@ -64,7 +64,18 @@
     "admin": "Admin",
     "globalAdmin": "Global Admin",
     "settings": "Settings",
+    "contacts": "Contacts",
     "logout": "Logout"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "back": "Back",
+    "loading": "Loading…",
+    "loadError": "Could not load contacts. Please try again later.",
+    "empty": "Contact details have not been set up yet.",
+    "phone": "Phone",
+    "email": "Email",
+    "telegram": "Telegram"
   },
   "auth": {
     "login": {
@@ -784,7 +795,19 @@
     "title": "Global Admin Settings",
     "tabs": {
       "riskFlagTypes": "Risk Flag Types",
-      "users": "Users"
+      "users": "Users",
+      "contacts": "Contacts"
+    },
+    "contacts": {
+      "title": "Public contact details",
+      "invalidPhone": "Enter a valid phone number.",
+      "invalidEmail": "Enter a valid email address.",
+      "telegramLabel": "Telegram channels",
+      "telegramHint": "One per line: @handle or https://t.me/… link (up to 10).",
+      "invalidTelegram": "Use @handle or https://t.me/… links, up to 10.",
+      "save": "Save",
+      "saved": "Contacts saved.",
+      "saveError": "Could not save contacts."
     },
     "users": {
       "pageTitle": "All registered users",

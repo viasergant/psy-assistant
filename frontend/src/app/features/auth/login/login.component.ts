@@ -74,6 +74,10 @@ import { AppIfModeDirective } from '../../../core/mode/app-if-mode.directive';
             {{ 'auth.login.registerPrompt' | transloco }}
             <a routerLink="/auth/register">{{ 'auth.login.registerLink' | transloco }}</a>
           </p>
+
+          <p class="register-prompt">
+            <a routerLink="/contacts">{{ 'nav.contacts' | transloco }}</a>
+          </p>
         </form>
       </section>
     </div>

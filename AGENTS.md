@@ -15,7 +15,7 @@ Monorepo for a psychological assistance CRM: `backend/` (Spring Boot 3.4 / Java 
 - Every tenant table has `org_id`; JPA entities get `@Filter(name = "orgFilter")` + an `orgId` field. The Hibernate filter is enabled from the JWT `orgId` claim via `TenantContext`.
 - **The filter does NOT apply to native queries or `JdbcTemplate`.** Any `nativeQuery = true`, `JdbcTemplate` or `createNativeQuery` MUST include an explicit `org_id = ?` condition, taking the value from `TenantContext.require()` (fails fast if no org is bound). In Spring Data `@Query` use `:#{T(com.psyassistant.common.tenant.TenantContext).require()}`.
 - Tables without `org_id` (e.g. `payments`) must be scoped through their parent (`invoice_id IN (SELECT id FROM invoices WHERE org_id = …)`).
-- Reports, aggregates and `COUNT/SUM` queries are the most common leak — scope them too. Only global reference tables (`specialization`, `language`, `session_type`, `risk_flag_types`) are shared.
+- Reports, aggregates and `COUNT/SUM` queries are the most common leak — scope them too. Only global reference tables (`specialization`, `language`, `session_type`, `risk_flag_types`, `platform_contacts`) are shared.
 - Never trust ids from the request alone: load the entity through an org-filtered repository first, or add `org_id` to the raw query.
 - Every new or changed query touching tenant data needs a test proving two organizations never see each other's rows. Code reviews must reject raw SQL without an org condition.
 - Only the `GLOBAL_ADMIN` endpoints (`/api/v1/global-admin/**`) may read across organizations, by design.

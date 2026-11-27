@@ -37,6 +37,16 @@ import { TranslocoModule } from '@jsverse/transloco';
         >
           {{ 'globalAdmin.tabs.users' | transloco }}
         </a>
+        <a
+          routerLink="/global-admin/contacts"
+          routerLinkActive="active"
+          class="tab"
+          role="tab"
+          [attr.aria-selected]="rla3.isActive"
+          #rla3="routerLinkActive"
+        >
+          {{ 'globalAdmin.tabs.contacts' | transloco }}
+        </a>
       </nav>
 
       <div class="ga-content">

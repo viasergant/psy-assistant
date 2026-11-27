@@ -16,6 +16,11 @@ export default [
         loadChildren: () => import('../admin/risk-flag-types/risk-flag-types.routes')
       },
       {
+        path: 'contacts',
+        loadComponent: () =>
+          import('./contacts/global-contacts.component').then(m => m.GlobalContactsComponent)
+      },
+      {
         path: 'users',
         loadChildren: () => import('./users/global-users.routes')
       }

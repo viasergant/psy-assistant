@@ -115,6 +115,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/meta").permitAll()
+                .requestMatchers("/api/v1/contacts").permitAll()
                 .requestMatchers("/api/v1/setup/admin").permitAll()
                 .requestMatchers("/api/v1/register", "/api/v1/register/confirm",
                         "/api/v1/register/resend").permitAll()

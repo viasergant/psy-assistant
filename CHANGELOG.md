@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-27
 
+### Added (Public Contacts page, configured by the global admin)
+
+- New public `/contacts` page (phone, email, Telegram channels) reachable logged in and logged out; linked from the login page and the app sidebar.
+- Global admin → new **Contacts** tab to edit the values (`GET/PUT /api/v1/global-admin/contacts`, `GLOBAL_ADMIN` only). Public read: `GET /api/v1/contacts`. Stored in the new global table `platform_contacts` (migration V93); Telegram entries are limited to `@handle` / `https://t.me/` links, max 10.
+
 ### Added (Global admin — user presence and statistics)
 
 - Global admin → Users: each user now shows a presence marker (**Online** / **Offline** / **Blocked**) with a "last seen" tooltip, and a summary strip shows total, online and blocked users across all organizations (refreshed every minute and after each suspend / reactivate / delete). Blocked = suspended by an admin or temporarily locked after failed logins; the marker shows which. Online = authenticated request within the last 5 minutes (`app.presence.online-window`).

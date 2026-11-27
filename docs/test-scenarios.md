@@ -2732,3 +2732,12 @@ These TODOs indicate tests for those behaviors should be written but may be expe
 | Expected result | 401 unauthenticated; defaults without chat id; 400 on invalid input; 503 for link/test when not configured |
 | Covered by | `backend/tests/integration/test_telegram_settings.py` (requires a running backend) |
 
+
+## Platform contacts
+
+### CT-001 — Public contacts and global admin editing
+| Field | Value |
+|---|---|
+| Action | `GET /api/v1/contacts` anonymously; `GET/PUT /api/v1/global-admin/contacts` as anonymous / non-global admin / global admin |
+| Expected result | Public read 200 with `phone`, `email`, `telegramChannels`; admin endpoints 401 anonymous, 403 for non-global admin; 400 for an invalid email or a non-`t.me` channel |
+| Covered by | `ContactsControllerTest`, `PlatformContactsServiceTest`, `backend/tests/integration/test_contacts.py` |

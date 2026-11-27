@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Spring Data repository for {@link User} entities.
@@ -94,4 +95,56 @@ public interface UserRepository extends JpaRepository<User, UUID>,
     @Modifying
     @Query("UPDATE User u SET u.lockedUntil = null, u.failedLoginAttempts = 0 WHERE u.id = :id")
     void unlockAccount(@Param("id") UUID id);
+
+    /**
+     * Reads only the {@code active} flag of a user (used to reject tokens of suspended users).
+     *
+     * @param id the user's UUID
+     * @return the flag, or empty if the user does not exist
+     */
+    @Query("SELECT u.active FROM User u WHERE u.id = :id")
+    Optional<Boolean> findActiveById(@Param("id") UUID id);
+
+    /**
+     * Records the last authenticated activity of a user without touching {@code updatedAt}.
+     *
+     * @param id  the user's UUID
+     * @param now activity timestamp
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.lastSeenAt = :now WHERE u.id = :id")
+    void touchLastSeen(@Param("id") UUID id, @Param("now") Instant now);
+
+    /**
+     * Counts all users.
+     *
+     * @return total number of users across all organizations
+     */
+    @Query("SELECT COUNT(u) FROM User u")
+    long countAllUsers();
+
+    /**
+     * Counts blocked users: suspended ({@code active = false}) or temporarily locked.
+     *
+     * @param now current instant
+     * @return number of blocked users across all organizations
+     */
+    @Query("SELECT COUNT(u) FROM User u WHERE u.active = false OR u.lockedUntil > :now")
+    long countBlocked(@Param("now") Instant now);
+
+    /**
+     * Counts online users: not blocked and active since {@code since}.
+     *
+     * @param now   current instant
+     * @param since start of the online window
+     * @return number of online users across all organizations
+     */
+    @Query("""
+            SELECT COUNT(u) FROM User u
+            WHERE u.active = true
+              AND (u.lockedUntil IS NULL OR u.lockedUntil <= :now)
+              AND u.lastSeenAt >= :since
+            """)
+    long countOnline(@Param("now") Instant now, @Param("since") Instant since);
 }

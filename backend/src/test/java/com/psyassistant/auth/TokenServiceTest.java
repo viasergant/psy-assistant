@@ -2,6 +2,9 @@ package com.psyassistant.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import com.psyassistant.auth.service.ActiveUserJwtValidator;
 import com.psyassistant.auth.service.TokenService;
 import com.psyassistant.common.security.Permission;
 import com.psyassistant.common.security.RolePermissions;
@@ -16,8 +19,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 /**
  * Unit tests for {@link TokenService}.
@@ -35,11 +40,16 @@ class TokenServiceTest {
     @Autowired
     private JwtDecoder jwtDecoder;
 
+    /** Tokens here are built for transient users, so the active-user lookup is bypassed. */
+    @MockitoBean
+    private ActiveUserJwtValidator activeUserJwtValidator;
+
     private User sysAdminUser;
     private User therapistUser;
 
     @BeforeEach
     void setUp() {
+        when(activeUserJwtValidator.validate(any())).thenReturn(OAuth2TokenValidatorResult.success());
         sysAdminUser = new User("admin@example.com", "hash", Set.of(UserRole.SYSTEM_ADMINISTRATOR), true);
         setUserId(sysAdminUser, UUID.randomUUID());
 

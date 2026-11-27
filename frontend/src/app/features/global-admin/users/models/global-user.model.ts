@@ -3,6 +3,19 @@ import { UserRole } from '../../../admin/users/models/user.model';
 /** Organization kind, mirrors the backend OrganizationType enum. */
 export type OrganizationType = 'SOLO' | 'CLINIC';
 
+/** Presence marker, mirrors the backend UserPresence enum. */
+export type UserPresence = 'ONLINE' | 'OFFLINE' | 'BLOCKED';
+
+/** Reason a user is blocked, mirrors the backend BlockReason enum. */
+export type BlockReason = 'SUSPENDED' | 'LOCKED';
+
+/** Summary counts from GET /api/v1/global-admin/users/stats. */
+export interface GlobalUserStats {
+  total: number;
+  online: number;
+  blocked: number;
+}
+
 /** Read-only user record visible to the global administrator. */
 export interface GlobalUser {
   id: string;
@@ -14,6 +27,9 @@ export interface GlobalUser {
   orgId: string | null;
   orgName: string | null;
   orgType: OrganizationType | null;
+  presence: UserPresence;
+  blockReason: BlockReason | null;
+  lastSeenAt: string | null;
 }
 
 /** Paginated response of GET /api/v1/global-admin/users. */

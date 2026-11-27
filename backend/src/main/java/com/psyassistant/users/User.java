@@ -73,6 +73,9 @@ public class User {
     @Column(name = "locked_until")
     private Instant lockedUntil;
 
+    @Column(name = "last_seen_at")
+    private Instant lastSeenAt;
+
     @Column(name = "org_id", nullable = false)
     private UUID orgId;
 
@@ -392,6 +395,16 @@ public class User {
     public void setFailedLoginAttempts(final int failedLoginAttempts) {
         this.failedLoginAttempts = failedLoginAttempts;
         this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Returns the last time the user made an authenticated request, or {@code null} if never seen.
+     * Maintained by a bulk update, never through this entity.
+     *
+     * @return last activity timestamp or null
+     */
+    public Instant getLastSeenAt() {
+        return lastSeenAt;
     }
 
     /**

@@ -40,4 +40,34 @@ describe('GlobalUserService', () => {
     expect(req.request.params.get('search')).toBe('ann');
     req.flush(emptyPage);
   });
+
+  it('suspends a user with POST /{id}/suspension', () => {
+    service.suspendUser('u1').subscribe();
+    const req = httpMock.expectOne(`${BASE_URL}/u1/suspension`);
+    expect(req.request.method).toBe('POST');
+    req.flush(null);
+  });
+
+  it('reactivates a user with DELETE /{id}/suspension', () => {
+    service.reactivateUser('u1').subscribe();
+    const req = httpMock.expectOne(`${BASE_URL}/u1/suspension`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null);
+  });
+
+  it('deletes a user with DELETE /{id}', () => {
+    service.deleteUser('u1').subscribe();
+    const req = httpMock.expectOne(`${BASE_URL}/u1`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null);
+  });
+
+  it('loads summary stats with GET /stats', () => {
+    let result: unknown;
+    service.getStats().subscribe((r) => (result = r));
+    const req = httpMock.expectOne(`${BASE_URL}/stats`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ total: 10, online: 3, blocked: 2 });
+    expect(result).toEqual({ total: 10, online: 3, blocked: 2 });
+  });
 });

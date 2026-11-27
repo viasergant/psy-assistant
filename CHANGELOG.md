@@ -6,7 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — 2026-11-26
+## [Unreleased] — 2026-11-27
+
+### Added (Global admin — user presence and statistics)
+
+- Global admin → Users: each user now shows a presence marker (**Online** / **Offline** / **Blocked**) with a "last seen" tooltip, and a summary strip shows total, online and blocked users across all organizations (refreshed every minute and after each suspend / reactivate / delete). Blocked = suspended by an admin or temporarily locked after failed logins; the marker shows which. Online = authenticated request within the last 5 minutes (`app.presence.online-window`).
+- New `GET /api/v1/global-admin/users/stats`; the user list gains `presence`, `blockReason` and `lastSeenAt`. Activity is tracked in the new `users.last_seen_at` column (migration `V92`), written at most once per user per minute (`app.presence.write-interval`) from the existing per-request token check; a failed write never affects authentication.
+- Tests: `UserActivityTrackerTest`, `UserPresenceQueriesIntegrationTest` (two organizations), extended service/controller/validator tests, frontend specs, integration tests, scenarios GADM-011 – GADM-013.
+
+### Added (Global admin — suspend and remove users)
+
+- Global admin → Users list now has per-row actions: **Suspend / Reactivate** and **Delete** (with confirmation). New endpoints `POST|DELETE /api/v1/global-admin/users/{id}/suspension` and `DELETE /api/v1/global-admin/users/{id}`. Suspending sets the user inactive, revokes their refresh tokens and writes `USER_DEACTIVATED` / `USER_REACTIVATED` audit entries; delete writes `USER_DELETED`.
+- Delete is only possible for users with no related records; otherwise the API returns 409 `USER_HAS_HISTORY` and the UI suggests suspending. The caller's own account and the configured global-admin account cannot be suspended or deleted.
+- Access tokens of suspended or deleted users are now rejected immediately (new `ActiveUserJwtValidator`, one primary-key lookup of `active` per request), instead of staying valid until they expire. This also applies to deactivation through the system-admin user screen.
+- Tests: `GlobalAdminUserServiceTest`, `GlobalAdminUserControllerTest`, `ActiveUserJwtValidatorTest`, frontend list/service specs, integration tests, scenarios GADM-006 – GADM-010.
 
 ### Changed (Client rejection via Telegram)
 

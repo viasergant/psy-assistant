@@ -1,13 +1,17 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
-import { Subject, debounceTime, takeUntil } from 'rxjs';
+import { Observable, Subject, debounceTime, interval, startWith, takeUntil } from 'rxjs';
 import { ASSIGNABLE_ROLES, UserRole } from '../../../../admin/users/models/user.model';
-import { GlobalUser } from '../../models/global-user.model';
+import { GlobalUser, GlobalUserStats } from '../../models/global-user.model';
 import { GlobalUserService } from '../../services/global-user.service';
+
+/** How often the summary counts are refreshed. */
+const STATS_REFRESH_MS = 60_000;
 
 interface FilterOption<T> {
   label: string;
@@ -15,8 +19,8 @@ interface FilterOption<T> {
 }
 
 /**
- * Read-only list of all registered users across all organizations
- * (global administrator only).
+ * List of all registered users across all organizations with suspend, reactivate
+ * and delete actions (global administrator only).
  */
 @Component({
   selector: 'app-global-user-list',
@@ -27,6 +31,21 @@ interface FilterOption<T> {
       <header class="page-header">
         <h2>{{ 'globalAdmin.users.pageTitle' | transloco }}</h2>
       </header>
+
+      <div class="stats" role="status" aria-live="polite">
+        <div class="stat">
+          <span class="stat-value">{{ stats?.total ?? '—' }}</span>
+          <span class="stat-label">{{ 'globalAdmin.users.stats.total' | transloco }}</span>
+        </div>
+        <div class="stat stat-online">
+          <span class="stat-value">{{ stats?.online ?? '—' }}</span>
+          <span class="stat-label">{{ 'globalAdmin.users.stats.online' | transloco }}</span>
+        </div>
+        <div class="stat stat-blocked">
+          <span class="stat-value">{{ stats?.blocked ?? '—' }}</span>
+          <span class="stat-label">{{ 'globalAdmin.users.stats.blocked' | transloco }}</span>
+        </div>
+      </div>
 
       <div class="filters" role="group" [attr.aria-label]="'globalAdmin.users.ariaFilters' | transloco">
         <div class="filter-group">
@@ -65,6 +84,7 @@ interface FilterOption<T> {
       </div>
 
       <div *ngIf="loadError" class="alert-error" role="alert">{{ loadError }}</div>
+      <div *ngIf="actionError" class="alert-error" role="alert">{{ actionError }}</div>
 
       <p-table
         [value]="users"
@@ -102,6 +122,7 @@ interface FilterOption<T> {
               {{ 'globalAdmin.users.tableHeaders.created' | transloco }}
               <p-sortIcon field="createdAt" />
             </th>
+            <th>{{ 'globalAdmin.users.tableHeaders.actions' | transloco }}</th>
           </tr>
         </ng-template>
 
@@ -120,17 +141,47 @@ interface FilterOption<T> {
               <ng-template #noOrg>—</ng-template>
             </td>
             <td>
-              <span class="badge" [class.badge-active]="u.active" [class.badge-inactive]="!u.active">
-                {{ (u.active ? 'globalAdmin.users.statusActive' : 'globalAdmin.users.statusInactive') | transloco }}
+              <span
+                class="presence"
+                [class.presence-online]="u.presence === 'ONLINE'"
+                [class.presence-offline]="u.presence === 'OFFLINE'"
+                [class.presence-blocked]="u.presence === 'BLOCKED'"
+                [attr.title]="u.lastSeenAt
+                  ? (('globalAdmin.users.lastSeen' | transloco) + ' ' + (u.lastSeenAt | date:'dd MMM yyyy HH:mm'))
+                  : ('globalAdmin.users.neverSeen' | transloco)"
+              >
+                <span class="presence-dot" aria-hidden="true"></span>
+                {{ 'globalAdmin.users.presence.' + u.presence | transloco }}
+                <ng-container *ngIf="u.blockReason">
+                  ({{ 'globalAdmin.users.blockReason.' + u.blockReason | transloco }})
+                </ng-container>
               </span>
             </td>
             <td>{{ u.createdAt | date:'dd MMM yyyy' }}</td>
+            <td class="actions">
+              <button
+                type="button"
+                class="btn-action"
+                [disabled]="busyUserId === u.id"
+                (click)="toggleSuspension(u)"
+              >
+                {{ (u.active ? 'globalAdmin.users.suspend' : 'globalAdmin.users.reactivate') | transloco }}
+              </button>
+              <button
+                type="button"
+                class="btn-action btn-danger"
+                [disabled]="busyUserId === u.id"
+                (click)="remove(u)"
+              >
+                {{ 'globalAdmin.users.delete' | transloco }}
+              </button>
+            </td>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="6" class="state-msg">{{ 'globalAdmin.users.noResults' | transloco }}</td>
+            <td colspan="7" class="state-msg">{{ 'globalAdmin.users.noResults' | transloco }}</td>
           </tr>
         </ng-template>
       </p-table>
@@ -163,6 +214,28 @@ interface FilterOption<T> {
     .badge-muted { background: #F3F4F6; color: #6B7280; }
     .badge-active { background: #DCFCE7; color: #166534; }
     .badge-inactive { background: #F3F4F6; color: #6B7280; }
+    .stats { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .stat {
+      display: flex; flex-direction: column; min-width: 140px; padding: 1rem 1.25rem;
+      background: var(--color-surface, #fff); border-radius: 12px;
+      border: 1.5px solid var(--color-border, #E2E8F0);
+    }
+    .stat-value { font-size: 1.75rem; font-weight: 600; line-height: 1.2; }
+    .stat-label { font-size: .875rem; color: var(--color-text-secondary, #64748B); }
+    .stat-online .stat-value { color: #166534; }
+    .stat-blocked .stat-value { color: var(--color-error, #DC2626); }
+    .presence { display: inline-flex; align-items: center; gap: .4rem; font-size: .875rem; white-space: nowrap; }
+    .presence-dot { width: .6rem; height: .6rem; border-radius: 50%; background: #9CA3AF; }
+    .presence-online .presence-dot { background: #16A34A; }
+    .presence-blocked { color: var(--color-error, #DC2626); }
+    .presence-blocked .presence-dot { background: var(--color-error, #DC2626); }
+    .actions { white-space: nowrap; }
+    .btn-action {
+      padding: .3rem .7rem; margin-right: 6px; font-family: inherit; font-size: .8125rem; cursor: pointer;
+      border: 1.5px solid var(--color-border, #E2E8F0); border-radius: 6px; background: var(--color-surface, #fff);
+    }
+    .btn-action:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-danger { color: var(--color-error, #DC2626); border-color: var(--color-error-border, #FECACA); }
   `]
 })
 export class GlobalUserListComponent implements OnInit, OnDestroy {
@@ -174,6 +247,9 @@ export class GlobalUserListComponent implements OnInit, OnDestroy {
   sortDir: 'asc' | 'desc' = 'desc';
   loading = false;
   loadError: string | null = null;
+  stats: GlobalUserStats | null = null;
+  actionError: string | null = null;
+  busyUserId: string | null = null;
 
   search = '';
   roleFilter: UserRole | null = null;
@@ -192,6 +268,7 @@ export class GlobalUserListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.buildFilterOptions();
     this.search$.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(() => this.applyFilters());
+    interval(STATS_REFRESH_MS).pipe(startWith(0), takeUntil(this.destroy$)).subscribe(() => this.loadStats());
   }
 
   ngOnDestroy(): void {
@@ -212,6 +289,57 @@ export class GlobalUserListComponent implements OnInit, OnDestroy {
       this.sortDir = event.sortOrder === 1 ? 'asc' : 'desc';
     }
     this.load();
+  }
+
+  toggleSuspension(user: GlobalUser): void {
+    const key = user.active ? 'suspend' : 'reactivate';
+    if (!confirm(this.transloco.translate(`globalAdmin.users.confirm.${key}`, { name: user.email }))) {
+      return;
+    }
+    const call = user.active ? this.service.suspendUser(user.id) : this.service.reactivateUser(user.id);
+    this.runAction(user, call);
+  }
+
+  remove(user: GlobalUser): void {
+    if (!confirm(this.transloco.translate('globalAdmin.users.confirm.delete', { name: user.email }))) {
+      return;
+    }
+    this.runAction(user, this.service.deleteUser(user.id));
+  }
+
+  private runAction(user: GlobalUser, call: Observable<void>): void {
+    this.busyUserId = user.id;
+    this.actionError = null;
+    call.subscribe({
+      next: () => {
+        this.busyUserId = null;
+        this.load();
+        this.loadStats();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.busyUserId = null;
+        this.actionError = this.actionErrorMessage(err);
+      },
+    });
+  }
+
+  private actionErrorMessage(err: HttpErrorResponse): string {
+    const code = err.error?.code;
+    if (code === 'USER_HAS_HISTORY') {
+      return this.transloco.translate('globalAdmin.users.errors.hasHistory');
+    }
+    if (code === 'SELF_DEACTIVATION_FORBIDDEN') {
+      return this.transloco.translate('globalAdmin.users.errors.protectedAccount');
+    }
+    return this.transloco.translate('globalAdmin.users.errors.actionFailed');
+  }
+
+  private loadStats(): void {
+    // Best effort: a failed refresh keeps the previous numbers instead of surfacing an error.
+    this.service.getStats().subscribe({
+      next: (stats) => (this.stats = stats),
+      error: () => {},
+    });
   }
 
   private load(): void {

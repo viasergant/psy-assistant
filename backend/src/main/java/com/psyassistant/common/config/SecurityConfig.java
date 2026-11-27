@@ -1,6 +1,7 @@
 package com.psyassistant.common.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.psyassistant.auth.service.ActiveUserJwtValidator;
 import com.psyassistant.common.audit.AuditLog;
 import com.psyassistant.common.audit.AuditLogService;
 import com.psyassistant.common.exception.ErrorResponse;
@@ -13,6 +14,7 @@ import java.util.UUID;
 import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,9 +29,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -160,15 +164,29 @@ public class SecurityConfig {
     /**
      * Builds a {@link JwtDecoder} that validates HS256-signed tokens.
      *
+     * <p>Besides the default checks (signature, expiry) tokens of suspended or deleted users
+     * are rejected, so suspension takes effect immediately.
+     *
+     * <p>The active-user validator is resolved lazily so that {@code @WebMvcTest} slices, which do not
+     * scan {@code @Component} beans, can still import this configuration; in the full application
+     * the bean is always present.
+     *
+     * @param activeUserValidator provider of the validator that rejects tokens of inactive users
      * @return configured JWT decoder
      */
     @Bean
-    public JwtDecoder jwtDecoder() {
+    public JwtDecoder jwtDecoder(final ObjectProvider<ActiveUserJwtValidator> activeUserValidator) {
         byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
         SecretKeySpec key = new SecretKeySpec(keyBytes, HMAC_SHA256);
-        return NimbusJwtDecoder.withSecretKey(key)
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
+        ActiveUserJwtValidator validator = activeUserValidator.getIfAvailable();
+        if (validator != null) {
+            decoder.setJwtValidator(
+                    new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefault(), validator));
+        }
+        return decoder;
     }
 
     /**

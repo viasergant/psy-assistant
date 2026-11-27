@@ -28,7 +28,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableConfigurationProperties({CarePlanProperties.class, CaseloadProperties.class, InvoiceProperties.class,
         BillingPackageProperties.class,
         com.psyassistant.reporting.reports.ReportProperties.class, SecurityProperties.class,
-        AttendanceProperties.class, GlobalAdminProperties.class, CaptchaProperties.class})
+        AttendanceProperties.class, GlobalAdminProperties.class, CaptchaProperties.class,
+        com.psyassistant.common.config.PresenceProperties.class})
 public class PsyAssistantApplication {
 
     private static final String LEGACY_KYIV_TIME_ZONE = "Europe/Kiev";

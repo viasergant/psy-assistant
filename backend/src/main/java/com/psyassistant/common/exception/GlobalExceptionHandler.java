@@ -21,6 +21,7 @@ import com.psyassistant.notifications.template.TemplateNotInactiveException;
 import com.psyassistant.users.DuplicateEmailException;
 import com.psyassistant.users.RoleValidationException;
 import com.psyassistant.users.SelfDeactivationException;
+import com.psyassistant.users.UserHasHistoryException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -283,6 +284,28 @@ public class GlobalExceptionHandler {
                         HttpStatus.CONFLICT.value(),
                         ex.getMessage(),
                         "REGISTRATION_CONFLICT",
+                        request.getRequestURI()
+                )
+        );
+    }
+
+    /**
+     * Handles {@link UserHasHistoryException} — 409 Conflict.
+     *
+     * @param ex      the exception
+     * @param request the current HTTP request
+     * @return 409 with code {@code USER_HAS_HISTORY}
+     */
+    @ExceptionHandler(UserHasHistoryException.class)
+    public ResponseEntity<ErrorResponse> handleUserHasHistory(
+            final UserHasHistoryException ex,
+            final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage(),
+                        "USER_HAS_HISTORY",
                         request.getRequestURI()
                 )
         );

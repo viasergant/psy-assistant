@@ -21,7 +21,7 @@
 | Billing | 13 | BILL-001 – BILL-013 |
 | Notification Templates | 4 | NT-001 – NT-004 |
 | Risk Flag Types | 5 | RFT-001 – RFT-005 |
-| Global Admin — User List | 5 | GADM-001 – GADM-005 |
+| Global Admin — User List | 13 | GADM-001 – GADM-013 |
 | Role-Based Access Control | 8 | RBAC-001 – RBAC-008 |
 | **Total** | **260** | |
 
@@ -2486,7 +2486,7 @@ These TODOs indicate tests for those behaviors should be written but may be expe
 
 ## 17a. Global Admin — User List
 
-**Endpoint:** `GET /api/v1/global-admin/users` (params: `role`, `active`, `search`, `page`, `size`, `sort`)
+**Endpoints:** `GET /api/v1/global-admin/users` (params: `role`, `active`, `search`, `page`, `size`, `sort`), `POST /api/v1/global-admin/users/{id}/suspension`, `DELETE /api/v1/global-admin/users/{id}/suspension`, `DELETE /api/v1/global-admin/users/{id}`, `GET /api/v1/global-admin/users/stats`
 
 ### GADM-001 — List all users across organisations
 | Field | Value |
@@ -2534,6 +2534,78 @@ These TODOs indicate tests for those behaviors should be written but may be expe
 | HTTP status | 401 |
 
 ---
+
+### GADM-006 — Suspend a user
+| Field | Value |
+|---|---|
+| Preconditions | Active user in any organisation; caller has `GLOBAL_ADMIN` authority |
+| Actor | GLOBAL_ADMIN |
+| Action | `POST /api/v1/global-admin/users/{id}/suspension` |
+| Expected result | 204; user is inactive, refresh tokens are revoked, `USER_DEACTIVATED` audit entry written. The user's existing access token is rejected with 401 on the next request and login fails with `ACCOUNT_DISABLED` |
+| HTTP status | 204 |
+
+### GADM-007 — Reactivate a suspended user
+| Field | Value |
+|---|---|
+| Preconditions | Suspended user |
+| Actor | GLOBAL_ADMIN |
+| Action | `DELETE /api/v1/global-admin/users/{id}/suspension` |
+| Expected result | 204; user is active again and can log in; `USER_REACTIVATED` audit entry written. Repeating the call is a no-op |
+| HTTP status | 204 |
+
+### GADM-008 — Delete a user without related records
+| Field | Value |
+|---|---|
+| Preconditions | User with no appointments, care plans, invoices, risk flags or other referencing rows |
+| Actor | GLOBAL_ADMIN |
+| Action | `DELETE /api/v1/global-admin/users/{id}` |
+| Expected result | 204; user no longer listed; `USER_DELETED` audit entry written |
+| HTTP status | 204 |
+
+### GADM-009 — Delete a user with related records is refused
+| Field | Value |
+|---|---|
+| Preconditions | User referenced by other records (e.g. therapist with appointments) |
+| Actor | GLOBAL_ADMIN |
+| Action | `DELETE /api/v1/global-admin/users/{id}` |
+| Expected result | 409 with code `USER_HAS_HISTORY`; user unchanged (suspend instead) |
+| HTTP status | 409 |
+
+### GADM-010 — Protected accounts and unknown ids
+| Field | Value |
+|---|---|
+| Preconditions | Caller has `GLOBAL_ADMIN` authority |
+| Actor | GLOBAL_ADMIN |
+| Action | Suspend or delete own account / the configured global-admin account; suspend or delete an unknown id; same calls as SYSTEM_ADMINISTRATOR without `GLOBAL_ADMIN` or unauthenticated |
+| Expected result | 400 `SELF_DEACTIVATION_FORBIDDEN` for protected accounts; 404 for unknown id; 403 / 401 for unauthorised callers |
+| HTTP status | 400 / 404 / 403 / 401 |
+
+### GADM-011 — Presence marker per user
+| Field | Value |
+|---|---|
+| Preconditions | Users: one made an authenticated request within the last 5 minutes, one idle for longer, one suspended, one temporarily locked after failed logins |
+| Actor | GLOBAL_ADMIN |
+| Action | `GET /api/v1/global-admin/users` |
+| Expected result | 200; `presence` is `ONLINE`, `OFFLINE`, `BLOCKED`, `BLOCKED` respectively; `blockReason` is `SUSPENDED` / `LOCKED` for the blocked ones and null otherwise; `lastSeenAt` is set for users that were active. A blocked user is never reported as online |
+| HTTP status | 200 |
+
+### GADM-012 — Summary statistics
+| Field | Value |
+|---|---|
+| Preconditions | Users in at least two organisations, some online, some suspended or locked |
+| Actor | GLOBAL_ADMIN |
+| Action | `GET /api/v1/global-admin/users/stats` |
+| Expected result | 200 with `total`, `online`, `blocked` over all organisations, independent of list filters; `online + blocked <= total` |
+| HTTP status | 200 |
+
+### GADM-013 — Statistics access control
+| Field | Value |
+|---|---|
+| Preconditions | — |
+| Actor | SYSTEM_ADMINISTRATOR without `GLOBAL_ADMIN`; therapist; anonymous |
+| Action | `GET /api/v1/global-admin/users/stats` |
+| Expected result | 403 for authenticated callers without `GLOBAL_ADMIN`, 401 when unauthenticated |
+| HTTP status | 403 / 401 |
 
 ## 18. Role-Based Access Control
 

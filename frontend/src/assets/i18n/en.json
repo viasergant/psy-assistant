@@ -805,12 +805,42 @@
         "roles": "Roles",
         "organization": "Organization",
         "status": "Status",
-        "created": "Created"
+        "created": "Created",
+        "actions": "Actions"
       },
       "orgType": {
         "SOLO": "Solo",
         "CLINIC": "Clinic"
-      }
+      },
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "delete": "Delete",
+      "confirm": {
+        "suspend": "Suspend {{name}}? They will be signed out immediately and cannot log in until reactivated.",
+        "reactivate": "Reactivate {{name}}?",
+        "delete": "Permanently delete {{name}}? This cannot be undone."
+      },
+      "errors": {
+        "hasHistory": "This user has related records and cannot be deleted. Suspend the account instead.",
+        "protectedAccount": "You cannot suspend or delete your own account or the global administrator account.",
+        "actionFailed": "The action failed. Please try again."
+      },
+      "stats": {
+        "total": "Total users",
+        "online": "Online",
+        "blocked": "Blocked"
+      },
+      "presence": {
+        "ONLINE": "Online",
+        "OFFLINE": "Offline",
+        "BLOCKED": "Blocked"
+      },
+      "blockReason": {
+        "SUSPENDED": "Suspended",
+        "LOCKED": "Locked"
+      },
+      "lastSeen": "Last seen",
+      "neverSeen": "Never seen"
     }
   },
   "admin": {

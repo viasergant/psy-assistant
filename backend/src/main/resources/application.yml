@@ -73,6 +73,9 @@ app:
     secret-key: ${CAPTCHA_SECRET_KEY:}
   global-admin:
     username: ${GLOBAL_ADMIN_USERNAME:}
+  presence:
+    online-window: 5m
+    write-interval: 60s
   jwt:
     secret: ${JWT_SECRET}
     issuer: psy-assistant

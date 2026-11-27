@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-11-27
 
+### Changed (AGENTS.md — deployment modes documented)
+
+- `AGENTS.md` now describes all three deployment modes (`solo`, `clinic`, `saas`): purpose, organizations/users, bootstrap flow, mode-gated features, `GLOBAL_ADMIN` role, plus rules for `@Profile` backend beans and frontend `modeGuard` / `*appIfMode`. Documentation only, no behaviour change.
+
 ### Added (Public Contacts page, configured by the global admin)
 
 - New public `/contacts` page (phone, email, Telegram channels) reachable logged in and logged out; linked from the login page and the app sidebar.

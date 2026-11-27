@@ -4,10 +4,26 @@ Monorepo for a psychological assistance CRM: `backend/` (Spring Boot 3.4 / Java 
 
 ## Deployment mode (read first)
 
-- The backend **fails fast at startup** unless a `solo` or `clinic` Spring profile is active (`DeploymentModeValidator`). Always run with e.g. `-Dspring.profiles.active=solo,local`.
-- `backend/run.sh` = solo+local. `backend/debug.sh` is stale (no mode profile) — add the mode profile before using it.
-- Solo: first boot creates one user from `SOLO_USERNAME`/`SOLO_PASSWORD` env vars. Clinic: one-time `POST /api/v1/setup/admin`; admin/caseload controllers are `@Profile("clinic")` and return 404 in solo mode.
-- Frontend fetches `GET /api/v1/meta` on boot and gates routes/UI by mode (`modeGuard`, `*appIfMode`).
+The backend **fails fast at startup** (`DeploymentModeValidator`) unless one of the Spring profiles `solo`, `clinic` or `saas` is active. Always run with e.g. `-Dspring.profiles.active=solo,local`. The mode is exposed to the frontend as `SOLO | CLINIC | SAAS` via the public `GET /api/v1/meta`.
+
+| | **solo** | **clinic** | **saas** |
+|---|---|---|---|
+| Purpose | One practitioner, self-hosted | One clinic with many staff, self-hosted | Many independent solo practitioners on one shared, hosted instance |
+| Organizations | One (created on first boot) | One (created by setup) | Many — one per sign-up, type SOLO |
+| Users per org | Exactly one owner holding all five roles | Many, with distinct roles (therapist, reception/admin, finance, supervisor, system admin) | One owner per org, all five roles |
+| Bootstrap | First boot creates the user from `SOLO_USERNAME`/`SOLO_PASSWORD` (idempotent; `mustChangePassword`) via `SoloUserInitRunner` | One-time public `POST /api/v1/setup/admin` (`ClinicSetupController`) creates the admin | Public self-service `POST /api/v1/register` → email confirmation (`/register/confirm`, `/register/resend`) → account activated; optional Turnstile CAPTCHA (`CAPTCHA_ENABLED`, `CAPTCHA_SITE_KEY`, `CAPTCHA_SECRET_KEY`); `FRONTEND_BASE_URL` builds the confirmation link |
+| Clinic-only features | 404 | Admin user management and caseload reports (`@Profile("clinic")`) | 404 |
+| Therapist profile | Auto-provisioned for the owner; no therapist pickers in UI | Managed by admins | Auto-provisioned for the owner; no therapist pickers in UI |
+| Tenant isolation | Single org, but code must still be org-scoped | Single org, but code must still be org-scoped | **Critical** — orgs share tables; see below |
+| `GLOBAL_ADMIN` | n/a | n/a | Platform operator (user whose email equals `GLOBAL_ADMIN_USERNAME`) managing orgs/users/contacts via `/api/v1/global-admin/**` |
+
+Rules of thumb:
+
+- Mode-specific backend beans use `@Profile("solo" | "clinic" | "saas")`; do not branch on mode with `if` inside shared services.
+- Anything that must work in every mode (including `/api/v1/meta`) has no `@Profile`.
+- Frontend: `AppModeService` is the only caller of `/meta`. Gate routes with `modeGuard('CLINIC')` and template blocks with `*appIfMode`. `isSingleTherapistMode(mode)` is true for SOLO and SAAS.
+- New behaviour must be considered for all three modes; state which modes a change affects in the PR/CHANGELOG entry and test them (profile-specific tests for `@Profile` beans).
+- `backend/run.sh` = solo+local. `backend/debug.sh` is stale (no mode profile) — add the mode profile before using it. To try the others locally use `-Dspring-boot.run.profiles=clinic,local` or `saas,local`.
 
 ## Tenant isolation (CRITICAL)
 
